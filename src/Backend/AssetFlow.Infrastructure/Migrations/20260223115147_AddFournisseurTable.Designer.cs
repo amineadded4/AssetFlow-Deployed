@@ -89,6 +89,25 @@ namespace AssetFlow.Infrastructure.Migrations
                     b.Property<string>("Telephone")
                         .HasColumnType("varchar(20)");
 
+                    // === NOUVEAUX CHAMPS AJOUTÉS ===
+                    b.Property<int>("CommandesTotales")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("DerniereCommande")
+                        .HasColumnType("datetime");
+
+                    b.Property<decimal>("ScoreFiabilite")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(5,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<decimal>("TauxLivraisonATemps")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(5,2)")
+                        .HasDefaultValue(0m);
+
                     b.HasKey("IdFournisseur");
 
                     b.ToTable("Fournisseur", (string)null);

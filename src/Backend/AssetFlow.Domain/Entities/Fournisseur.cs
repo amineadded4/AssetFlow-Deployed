@@ -1,24 +1,8 @@
-// ============================================================
-// COUCHE  : AssetFlow.Domain
-// FICHIER : Entities/Fournisseur.cs
-// RÔLE    : Entité métier pure qui reflète exactement la table SQL.
-//           Aucune dépendance externe (pas d'EF Core, pas de HTTP).
-//
-// TABLE SQL :
-//   CREATE TABLE Fournisseur (
-//       IdFournisseur INT IDENTITY(1,1) PRIMARY KEY,
-//       Nom        VARCHAR(100) NOT NULL,
-//       Telephone  VARCHAR(20),
-//       Adresse    VARCHAR(255),
-//       Mail       VARCHAR(150)
-//   );
-// ============================================================
-
 namespace AssetFlow.Domain.Entities
 {
     /// <summary>
     /// Représente un fournisseur dans le système AssetFlow.
-    /// Les propriétés correspondent exactement aux colonnes de la table SQL.
+    /// Les propriétés correspondent aux colonnes de la table SQL.
     /// </summary>
     public class Fournisseur
     {
@@ -36,5 +20,21 @@ namespace AssetFlow.Domain.Entities
 
         /// <summary>Adresse e-mail — VARCHAR(150) nullable</summary>
         public string? Mail { get; set; }
+
+        // ─────────── Nouveaux champs ───────────
+
+        /// <summary>Nombre total de commandes passées par ce fournisseur</summary>
+        public int CommandesTotales { get; set; } = 0;
+
+        /// <summary>Taux de livraison à temps (%) — valeur entre 0 et 100</summary>
+        public decimal TauxLivraisonATemps { get; set; } = 0;
+
+        /// <summary>Score de fiabilité (par exemple de 0 à 10)</summary>
+        public decimal ScoreFiabilite { get; set; } = 0;
+
+        /// <summary>Date de la dernière commande — nullable si aucune commande</summary>
+        public DateTime? DerniereCommande { get; set; }
     }
 }
+        
+        

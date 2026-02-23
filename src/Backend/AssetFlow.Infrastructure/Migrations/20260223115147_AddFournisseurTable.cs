@@ -19,7 +19,13 @@ namespace AssetFlow.Infrastructure.Migrations
                     Nom = table.Column<string>(type: "varchar(100)", nullable: false),
                     Telephone = table.Column<string>(type: "varchar(20)", nullable: true),
                     Adresse = table.Column<string>(type: "varchar(255)", nullable: true),
-                    Mail = table.Column<string>(type: "varchar(150)", nullable: true)
+                    Mail = table.Column<string>(type: "varchar(150)", nullable: true),
+                    
+                    // === NOUVEAUX CHAMPS AJOUTÉS ===
+                    CommandesTotales = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    TauxLivraisonATemps = table.Column<decimal>(type: "decimal(5,2)", nullable: false, defaultValue: 0m),
+                    ScoreFiabilite = table.Column<decimal>(type: "decimal(5,2)", nullable: false, defaultValue: 0m),
+                    DerniereCommande = table.Column<DateTime>(type: "datetime", nullable: true)
                 },
                 constraints: table =>
                 {

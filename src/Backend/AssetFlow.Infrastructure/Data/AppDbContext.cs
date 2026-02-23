@@ -83,33 +83,35 @@ namespace AssetFlow.Infrastructure.Data
                       .OnDelete(DeleteBehavior.Restrict);
             });
             // === CONFIGURATION Fournisseur ===
-             modelBuilder.Entity<Fournisseur>(entity =>
-            {
-                // Nom exact de la table SQL
-                entity.ToTable("Fournisseur");
+modelBuilder.Entity<Fournisseur>(entity =>
+{
+    entity.ToTable("Fournisseur");
 
-                // Clé primaire → IdFournisseur (INT IDENTITY)
-                entity.HasKey(f => f.IdFournisseur);
-                entity.Property(f => f.IdFournisseur)
-                      .ValueGeneratedOnAdd();   // IDENTITY(1,1)
+    entity.HasKey(f => f.IdFournisseur);
+    entity.Property(f => f.IdFournisseur).ValueGeneratedOnAdd();
 
-                // Nom — VARCHAR(100) NOT NULL
-                entity.Property(f => f.Nom)
-                      .IsRequired()
-                      .HasColumnType("varchar(100)");
+    entity.Property(f => f.Nom).IsRequired().HasColumnType("varchar(100)");
+    entity.Property(f => f.Telephone).HasColumnType("varchar(20)");
+    entity.Property(f => f.Adresse).HasColumnType("varchar(255)");
+    entity.Property(f => f.Mail).HasColumnType("varchar(150)");
 
-                // Telephone — VARCHAR(20) nullable
-                entity.Property(f => f.Telephone)
-                      .HasColumnType("varchar(20)");
+    // === NOUVEAUX CHAMPS ===
+    entity.Property(f => f.CommandesTotales)
+          .HasColumnType("int")
+          .HasDefaultValue(0);
 
-                // Adresse — VARCHAR(255) nullable
-                entity.Property(f => f.Adresse)
-                      .HasColumnType("varchar(255)");
+    entity.Property(f => f.TauxLivraisonATemps)
+          .HasColumnType("decimal(5,2)")
+          .HasDefaultValue(0);
 
-                // Mail — VARCHAR(150) nullable
-                entity.Property(f => f.Mail)
-                      .HasColumnType("varchar(150)");
-            });
+    entity.Property(f => f.ScoreFiabilite)
+          .HasColumnType("decimal(5,2)")
+          .HasDefaultValue(0);
+
+    entity.Property(f => f.DerniereCommande)
+          .HasColumnType("datetime")
+          .IsRequired(false);
+});
         }
     }
 }

@@ -76,12 +76,30 @@ namespace AssetFlow.Infrastructure.Migrations
                     b.Property<string>("Adresse")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<int>("CommandesTotales")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("DerniereCommande")
+                        .HasColumnType("datetime");
+
                     b.Property<string>("Mail")
                         .HasColumnType("varchar(150)");
 
                     b.Property<string>("Nom")
                         .IsRequired()
                         .HasColumnType("varchar(100)");
+
+                    b.Property<decimal>("ScoreFiabilite")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(5,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<decimal>("TauxLivraisonATemps")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(5,2)")
+                        .HasDefaultValue(0m);
 
                     b.Property<string>("Telephone")
                         .HasColumnType("varchar(20)");

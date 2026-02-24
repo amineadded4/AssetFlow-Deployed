@@ -492,7 +492,14 @@ tbody tr {
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover:not(.row-expanded):not(.detail-row) { background: var(--bg-row-hover); }
 
-td { padding: 16px 18px; vertical-align: middle; font-size: 13px; }
+/* Espacement vertical généreux entre les lignes */
+td {     padding-top: 22px;padding-bottom: 22px;padding-left: 18px;padding-right: 18px; vertical-align: middle; font-size: 13px;line-height: 2; }
+
+/* Colonne date — padding-left augmenté pour s'éloigner du score */
+td.td-date {
+    padding-left: 28px;
+    white-space:  nowrap;
+}
 .td-num  { font-size: 14px; font-weight: 700; color: var(--text-primary); }
 .td-muted { color: var(--text-secondary); font-size: 12.5px; }
 .td-center { text-align: center; padding: 40px; color: var(--text-secondary); }
@@ -532,14 +539,14 @@ tbody tr:hover .supplier-avatar { color: #136dec; }
 .rate-avg  { color: #f59e0b; }
 .rate-bad  { color: #f43f5e; }
 
-/* Score barre */
-.score-cell { display: flex; align-items: center; gap: 10px; min-width: 140px; }
-.score-bar  { flex: 1; height: 6px; background: var(--bg-thead); border-radius: var(--radius-full); overflow: hidden; }
+/* Score barre — min-width élargi pour ne pas déborder sur la colonne date */
+.score-cell { display: flex; align-items: center; gap: 10px; min-width: 180px; max-width: 220px; }
+.score-bar  { flex: 1; min-width: 80px; height: 6px; background: var(--bg-thead); border-radius: var(--radius-full); overflow: hidden; }
 .score-fill { height: 100%; border-radius: var(--radius-full); transition: width 0.6s cubic-bezier(.4,0,.2,1); }
 .fill-green { background: #10b981; }
 .fill-amber { background: #f59e0b; }
 .fill-red   { background: #f43f5e; }
-.score-num  { font-size: 11px; font-weight: 700; min-width: 30px; text-align: right; }
+.score-num  { font-size: 11px; font-weight: 700; min-width: 36px; text-align: right; white-space: nowrap; }
 .score-good { color: #10b981; }
 .score-avg  { color: #f59e0b; }
 .score-bad  { color: #f43f5e; }
@@ -636,7 +643,7 @@ tbody tr:hover .supplier-avatar { color: #136dec; }
 .btn-modal-cancel:hover { background: var(--bg-row-hover); }
 .btn-modal-danger {
     padding: 10px 20px; border-radius: var(--radius-md);
-    background: #f43f5e; color: #fff; font-size: 13px; font-weight: 700;
+    background: #f43f5e; color: var(--text-secondary); font-size: 13px; font-weight: 700;
     transition: background var(--t);
 }
 .btn-modal-danger:hover { background: #e11d48; }

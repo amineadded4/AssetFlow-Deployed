@@ -133,7 +133,7 @@ public async Task<ActionResult<FournisseurReponseDto>> Ajouter(CreerFournisseurD
         /// Modifie un fournisseur existant.
         /// Réponse 200 OK ou 404 Not Found.
         /// </summary>
-        [HttpPut]
+[HttpPut("{id:int}")]
 public async Task<ActionResult<FournisseurReponseDto>> Modifier(ModifierFournisseurDto dto)
 {
     var entite = new Fournisseur

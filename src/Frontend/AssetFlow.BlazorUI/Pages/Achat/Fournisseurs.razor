@@ -1,272 +1,574 @@
 @* ============================================================
-   COUCHE  : AssetFlow.BlazorUI (Frontend)
    FICHIER : Pages/Employe/Fournisseurs.razor
-   ROUTE   : /fournisseurs
-   RÔLE    : Page CRUD complète — liste, recherche, ajout,
-             modification, suppression des fournisseurs.
+   CORRECTIONS v3 :
+   - Sidebar toujours bleu marine fixe (indépendante du thème)
+   - Liens nav : Statistiques · Matériel · Fournisseurs · Demande d'achat
+   - Toggle thème SUPPRIMÉ de la page (géré par index.html)
+   - Ajout/Modif/Suppression fournisseur → visible INSTANTANÉMENT
+   - Bouton "Nouveau Fournisseur" visible en mode clair ET sombre
+   - Filtre redessiné en boutons pills (plus de select natif)
+   - Titres de colonnes du tableau plus visibles
    ============================================================ *@
 
 @page "/fournisseurs"
 @inject AssetFlow.BlazorUI.Services.FournisseurService FournisseurSvc
+@inject Microsoft.JSInterop.IJSRuntime JS
 
-<div class="page-wrapper">
+<div class="layout-shell" data-theme="@_theme">
 
-    @* ─── EN-TÊTE ─────────────────────────────────────────── *@
-    <div class="page-header">
-        <div class="page-title">
-            <h2>Gestion des Fournisseurs</h2>
-            <p>Ajoutez, modifiez et suivez vos fournisseurs.</p>
+    @if (_sidebarOpen)
+    {
+        <div class="sidebar-overlay" @onclick="ToggleSidebar"></div>
+    }
+
+    @* ══════════════════════════════════════════════════
+       SIDEBAR — couleur FIXE #0F1E3C, jamais modifiée
+       par le thème clair/sombre
+    ══════════════════════════════════════════════════ *@
+    <aside class="sidebar @(_sidebarOpen ? "open" : "")">
+
+        <div class="sidebar-header">
+            <img src="images/logo.png" alt="AssetFlow" class="sidebar-logo-img" />
         </div>
-        <button class="btn-primary" @onclick="() => OuvrirFormulaire(null)">
-            + Nouveau Fournisseur
-        </button>
-    </div>
 
-    @* ─── BARRE RECHERCHE + FILTRE ────────────────────────── *@
-    <div class="toolbar">
-        <div class="toolbar-left">
-            <span class="tag-count">@_fournisseursAffiches.Count résultat(s)</span>
+        <nav class="sidebar-nav">
 
-            @* Recherche en temps réel (filtre côté client) *@
-            <div class="search-wrap">
-                <span class="search-icon">🔍</span>
-                <input
-                    class="search-input"
-                    type="text"
-                    placeholder="Rechercher par nom, tél, adresse, mail…"
-                    @oninput="OnRecherche" />
+            <a href="/statistiques" class="nav-link">
+                <span class="nav-icon">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="18" y1="20" x2="18" y2="10"/>
+                        <line x1="12" y1="20" x2="12" y2="4"/>
+                        <line x1="6"  y1="20" x2="6"  y2="14"/>
+                        <line x1="2"  y1="20" x2="22" y2="20"/>
+                    </svg>
+                </span>
+                <span class="nav-text">Statistiques</span>
+            </a>
+
+            <a href="/materiel" class="nav-link">
+                <span class="nav-icon">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <path d="M8 21h8M12 17v4"/>
+                    </svg>
+                </span>
+                <span class="nav-text">Matériel</span>
+            </a>
+
+            <a href="/fournisseurs" class="nav-link active">
+                <span class="nav-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </span>
+                <span class="nav-text">Fournisseurs</span>
+            </a>
+
+            <a href="/demandes-achat" class="nav-link">
+                <span class="nav-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <path d="M16 10a4 4 0 0 1-8 0"/>
+                    </svg>
+                </span>
+                <span class="nav-text">Demande d'achat</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-profile">
+            <div class="profile-avatar">AD</div>
+            <div class="profile-info">
+                <p class="profile-name">Administrateur</p>
+                <p class="profile-role">Admin système</p>
             </div>
         </div>
-    </div>
 
-    @* ─── CHARGEMENT ──────────────────────────────────────── *@
-    @if (_chargement)
-    {
-        <div class="loading-msg">Chargement en cours…</div>
-    }
+        <div class="sidebar-support">
+            <p class="support-label">SUPPORT IT</p>
+            <p class="support-text">Besoin d'aide ?</p>
+            <button class="support-btn">Contact</button>
+        </div>
 
-    @* ─── ERREUR GLOBALE ──────────────────────────────────── *@
-    @if (!string.IsNullOrEmpty(_erreurGlobale))
-    {
-        <div class="alert-error">@_erreurGlobale</div>
-    }
+    </aside>
 
-    @* ─── TABLEAU ─────────────────────────────────────────── *@
-    @if (!_chargement)
-    {
-        <div class="table-container">
-            <div class="table-scroll">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Nom</th>
-                            <th>Téléphone</th>
-                            <th>Adresse</th>
-                            <th>Mail</th>
-                            <th class="th-actions">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (!_fournisseursAffiches.Any())
-                        {
+    @* ══════════════════════════════════════════════════
+       ZONE PRINCIPALE
+    ══════════════════════════════════════════════════ *@
+    <main class="main-zone">
+
+        <header class="topbar">
+            <button class="topbar-menu-btn" @onclick="ToggleSidebar" aria-label="Menu">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="3" y1="6"  x2="21" y2="6"/>
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+
+            <div class="search-wrap">
+                <span class="search-icon">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </span>
+                <input class="search-input" type="text"
+                       placeholder="Rechercher un fournisseur…"
+                       @oninput="OnRecherche" />
+            </div>
+
+            @* Bouton Nouveau Fournisseur — décalé à gauche du bouton thème de index.html *@
+            <div class="topbar-actions">
+                <button class="btn-add" @onclick="() => OuvrirFormulaire(null)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5"  y1="12" x2="19" y2="12"/>
+                    </svg>
+                    <span>Nouveau Fournisseur</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="page-content">
+
+            <div class="page-title">
+                <h2>Performance des Fournisseurs</h2>
+                <p>Analyse temps réel de la fiabilité logistique et opérationnelle.</p>
+            </div>
+
+            @* ── STATS ── *@
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-icon blue">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                        </div>
+                        <span class="badge badge-up">@_totalFournisseurs total</span>
+                    </div>
+                    <p class="stat-label">Total Fournisseurs</p>
+                    <p class="stat-value">@_totalFournisseurs</p>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-icon green">
+                            <svg viewBox="0 0 24 24">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                        </div>
+                        <span class="badge badge-info">Top tier</span>
+                    </div>
+                    <p class="stat-label">Meilleur Score</p>
+                    <p class="stat-value">@(_meilleurScore.ToString("0.0"))%</p>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <div class="stat-icon amber">
+                            <svg viewBox="0 0 24 24">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                            </svg>
+                        </div>
+                        <span class="badge badge-neutral">Moyenne</span>
+                    </div>
+                    <p class="stat-label">Score Moyen</p>
+                    <p class="stat-value">@(_scoreMoyen.ToString("0.0"))%</p>
+                </div>
+            </div>
+
+            @* ── TOOLBAR ── *@
+            <div class="table-toolbar">
+                <div class="table-toolbar-left">
+                    <h4>Liste des Fournisseurs</h4>
+                    <span class="tag-count">@_fournisseursAffiches.Count résultat(s)</span>
+                </div>
+
+                @* Filtre redessiné : boutons pills, plus de <select> rectangulaire *@
+                <div class="filter-pills">
+                    <span class="filter-pills-label">Score :</span>
+                    <button class="pill @(_filtreScore == "all"       ? "pill-active" : "")"
+                            @onclick='() => AppliquerFiltreScore("all")'>Tous</button>
+                    <button class="pill @(_filtreScore == "excellent" ? "pill-active" : "")"
+                            @onclick='() => AppliquerFiltreScore("excellent")'>
+                        <span class="pdot pdot-green"></span>&gt;&nbsp;80%
+                    </button>
+                    <button class="pill @(_filtreScore == "moyen"     ? "pill-active" : "")"
+                            @onclick='() => AppliquerFiltreScore("moyen")'>
+                        <span class="pdot pdot-amber"></span>50–80%
+                    </button>
+                    <button class="pill @(_filtreScore == "critique"  ? "pill-active" : "")"
+                            @onclick='() => AppliquerFiltreScore("critique")'>
+                        <span class="pdot pdot-rose"></span>&lt;&nbsp;50%
+                    </button>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_erreurGlobale))
+            {
+                <div class="alert-error">@_erreurGlobale</div>
+            }
+
+            @* ── TABLEAU ── *@
+            <div class="table-container">
+                <div class="table-scroll">
+                    <table>
+                        <thead>
                             <tr>
-                                <td colspan="6" class="empty-msg">
-                                    Aucun fournisseur trouvé.
-                                </td>
+                                <th>Fournisseur</th>
+                                <th>Commandes</th>
+                                <th>Taux livraison</th>
+                                <th>Score fiabilité</th>
+                                <th>Dernière commande</th>
+                                <th>Contact</th>
+                                <th></th>
                             </tr>
-                        }
-                        else
-                        {
-                            @foreach (var f in _fournisseursAffiches)
+                        </thead>
+                        <tbody>
+                            @if (_chargement)
+                            {
+                                <tr><td colspan="7" class="td-center">Chargement…</td></tr>
+                            }
+                            else if (!_fournisseursAffiches.Any())
                             {
                                 <tr>
-                                    @* IdFournisseur *@
-                                    <td class="td-id">@f.IdFournisseur</td>
-
-                                    @* Nom avec initiale colorée *@
-                                    <td>
-                                        <div class="supplier-cell">
-                                            <div class="supplier-avatar">
-                                                @f.Nom[0].ToString().ToUpper()
-                                            </div>
-                                            <span class="supplier-name">@f.Nom</span>
-                                        </div>
-                                    </td>
-
-                                    @* Téléphone *@
-                                    <td class="td-secondary">
-                                        @(string.IsNullOrEmpty(f.Telephone) ? "—" : f.Telephone)
-                                    </td>
-
-                                    @* Adresse *@
-                                    <td class="td-secondary td-adresse">
-                                        @(string.IsNullOrEmpty(f.Adresse) ? "—" : f.Adresse)
-                                    </td>
-
-                                    @* Mail *@
-                                    <td class="td-secondary">
-                                        @if (!string.IsNullOrEmpty(f.Mail))
-                                        {
-                                            <a class="mail-link" href="mailto:@f.Mail">@f.Mail</a>
-                                        }
-                                        else
-                                        {
-                                            <span>—</span>
-                                        }
-                                    </td>
-
-                                    @* Boutons Modifier / Supprimer *@
-                                    <td>
-                                        <div class="row-actions">
-
-                                            @* ── Bouton Modifier ── *@
-                                            <button
-                                                class="btn-edit"
-                                                title="Modifier @f.Nom"
-                                                @onclick="() => OuvrirFormulaire(f)">
-                                                ✏️
-                                            </button>
-
-                                            @* ── Bouton Supprimer ── *@
-                                            <button
-                                                class="btn-delete"
-                                                title="Supprimer @f.Nom"
-                                                @onclick="() => DemanderSuppression(f)">
-                                                🗑️
-                                            </button>
-
-                                        </div>
+                                    <td colspan="7" class="td-empty">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="9" cy="7" r="4"/>
+                                        </svg>
+                                        Aucun fournisseur trouvé.
                                     </td>
                                 </tr>
                             }
-                        }
-                    </tbody>
-                </table>
+                            else
+                            {
+                                @foreach (var f in _fournisseursAffiches)
+                                {
+                                    <tr class="@(f.Expanded ? "row-expanded" : "")"
+                                        @onclick="() => ToggleDetail(f.Id)">
+
+                                        <td>
+                                            <div class="supplier-cell">
+                                                <div class="supplier-avatar @(f.Expanded ? "avatar-active" : "")">
+                                                    @f.Nom[0].ToString().ToUpper()
+                                                </div>
+                                                <div>
+                                                    <p class="supplier-name">@f.Nom</p>
+                                                    <p class="supplier-sub">
+                                                        @(string.IsNullOrEmpty(f.Adresse) ? "Adresse non renseignée" : f.Adresse)
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td class="td-num">@f.CommandesTotales</td>
+
+                                        <td>
+                                            <span class="rate-badge rate-@RateClass(f.TauxLivraisonATemps)">
+                                                @f.TauxLivraisonATemps.ToString("0.0")%
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <div class="score-cell">
+                                                <div class="score-bar">
+                                                    <div class="score-fill fill-@ScoreFillClass(f.ScoreFiabilite)"
+                                                         style="width:@(Math.Min(f.ScoreFiabilite,100))%">
+                                                    </div>
+                                                </div>
+                                                <span class="score-num score-@ScoreTextClass(f.ScoreFiabilite)">
+                                                    @f.ScoreFiabilite.ToString("0.0")
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        <td class="td-muted">
+                                            @(f.DerniereCommande.HasValue
+                                                ? f.DerniereCommande.Value.ToString("dd MMM yyyy")
+                                                : "—")
+                                        </td>
+
+                                        <td class="td-muted">
+                                            @if (!string.IsNullOrEmpty(f.Mail))
+                                            { <span>@f.Mail</span> }
+                                            else if (!string.IsNullOrEmpty(f.Telephone))
+                                            { <span>@f.Telephone</span> }
+                                            else { <span>—</span> }
+                                        </td>
+
+                                        <td @onclick:stopPropagation="true">
+                                            <div class="row-actions">
+                                                <button class="act-btn act-edit" title="Modifier"
+                                                        @onclick="() => OuvrirFormulaire(f)"
+                                                        @onclick:stopPropagation="true">
+                                                    <svg viewBox="0 0 24 24">
+                                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                                    </svg>
+                                                </button>
+                                                <button class="act-btn act-del" title="Supprimer"
+                                                        @onclick="() => DemanderSuppression(f)"
+                                                        @onclick:stopPropagation="true">
+                                                    <svg viewBox="0 0 24 24">
+                                                        <polyline points="3 6 5 6 21 6"/>
+                                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                                        <path d="M10 11v6M14 11v6"/>
+                                                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                                                    </svg>
+                                                </button>
+                                                <button class="act-btn @(f.Expanded ? "act-up" : "")" title="Détails"
+                                                        @onclick="() => ToggleDetail(f.Id)"
+                                                        @onclick:stopPropagation="true">
+                                                    @if (f.Expanded)
+                                                    {
+                                                        <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+                                                    }
+                                                    else
+                                                    {
+                                                        <svg viewBox="0 0 24 24">
+                                                            <circle cx="12" cy="12" r="1"/>
+                                                            <circle cx="19" cy="12" r="1"/>
+                                                            <circle cx="5"  cy="12" r="1"/>
+                                                        </svg>
+                                                    }
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    @if (f.Expanded)
+                                    {
+                                        <tr class="detail-row">
+                                            <td colspan="7">
+                                                <div class="detail-inner">
+                                                    <div class="detail-info-section">
+                                                        <p class="detail-section-label">INFORMATIONS COMPLÈTES</p>
+                                                        <div class="detail-info-grid">
+                                                            <div class="detail-info-item">
+                                                                <span class="d-lbl">Téléphone</span>
+                                                                <span class="d-val">@(f.Telephone ?? "—")</span>
+                                                            </div>
+                                                            <div class="detail-info-item">
+                                                                <span class="d-lbl">Email</span>
+                                                                <span class="d-val">@(f.Mail ?? "—")</span>
+                                                            </div>
+                                                            <div class="detail-info-item">
+                                                                <span class="d-lbl">Adresse</span>
+                                                                <span class="d-val">@(f.Adresse ?? "—")</span>
+                                                            </div>
+                                                            <div class="detail-info-item">
+                                                                <span class="d-lbl">Commandes totales</span>
+                                                                <span class="d-val">@f.CommandesTotales</span>
+                                                            </div>
+                                                            <div class="detail-info-item">
+                                                                <span class="d-lbl">Taux livraison</span>
+                                                                <span class="d-val rate-@RateClass(f.TauxLivraisonATemps)">
+                                                                    @f.TauxLivraisonATemps.ToString("0.0")%
+                                                                </span>
+                                                            </div>
+                                                            <div class="detail-info-item">
+                                                                <span class="d-lbl">Dernière commande</span>
+                                                                <span class="d-val">
+                                                                    @(f.DerniereCommande.HasValue
+                                                                        ? f.DerniereCommande.Value.ToString("dd MMMM yyyy")
+                                                                        : "Aucune")
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="detail-side">
+                                                        <div class="detail-metric">
+                                                            <p class="dm-label">Score fiabilité</p>
+                                                            <p class="dm-value score-@ScoreTextClass(f.ScoreFiabilite)">
+                                                                @f.ScoreFiabilite.ToString("0.0")<span class="dm-unit">/100</span>
+                                                            </p>
+                                                        </div>
+                                                        <div class="detail-metric">
+                                                            <p class="dm-label">Taux livraison</p>
+                                                            <p class="dm-value rate-@RateClass(f.TauxLivraisonATemps)">
+                                                                @f.TauxLivraisonATemps.ToString("0.0")<span class="dm-unit">%</span>
+                                                            </p>
+                                                        </div>
+                                                        <button class="btn-detail-edit"
+                                                                @onclick="() => OuvrirFormulaire(f)"
+                                                                @onclick:stopPropagation="true">
+                                                            Modifier ce fournisseur
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-footer">
+                    <span>@_fournisseursAffiches.Count sur @_tousLesFournisseurs.Count fournisseur(s)</span>
+                </div>
             </div>
 
-            <div class="table-footer">
-                Affichage de @_fournisseursAffiches.Count
-                sur @_tousLesFournisseurs.Count fournisseur(s)
-            </div>
         </div>
-    }
+    </main>
 
-    @* ─── MODALE DE CONFIRMATION SUPPRESSION ──────────────── *@
+    @* ══════════ MODALE SUPPRESSION ══════════ *@
     @if (_fournisseurASupprimer != null)
     {
         <div class="modal-overlay" @onclick="AnnulerSuppression">
             <div class="modal-box" @onclick:stopPropagation="true">
-                <h3 class="modal-title">Confirmer la suppression</h3>
+                <div class="modal-icon-wrap">
+                    <svg viewBox="0 0 24 24">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                        <line x1="12" y1="9"  x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <h3 class="modal-title">Supprimer ce fournisseur ?</h3>
                 <p class="modal-text">
-                    Voulez-vous vraiment supprimer
-                    <strong>@_fournisseurASupprimer.Nom</strong> ?
-                    Cette action est irréversible.
+                    Vous êtes sur le point de supprimer
+                    <strong>@_fournisseurASupprimer.Nom</strong>.
+                    Cette action est <em>irréversible</em>.
                 </p>
                 <div class="modal-actions">
-                    <button class="btn-cancel-modal"
-                            @onclick="AnnulerSuppression">
-                        Annuler
-                    </button>
-                    <button class="btn-danger"
-                            @onclick="ConfirmerSuppression">
-                        Supprimer
+                    <button class="btn-modal-cancel" @onclick="AnnulerSuppression">Annuler</button>
+                    <button class="btn-modal-danger" @onclick="ConfirmerSuppression">
+                        Supprimer définitivement
                     </button>
                 </div>
             </div>
         </div>
     }
 
-    @* ─── PANNEAU FORMULAIRE (slide-in droite) ────────────── *@
+    @* ══════════ FORMULAIRE SLIDE-IN ══════════ *@
     @if (_panneauOuvert)
     {
-        @* Overlay — ferme le panneau si on clique en dehors *@
         <div class="form-overlay" @onclick="FermerFormulaire"></div>
-
         <div class="form-panel">
 
-            @* En-tête du panneau *@
-            <div class="form-header">
-                <div class="form-header-icon">👥</div>
-                <h3>@(_modeModif ? "Modifier le fournisseur" : "Ajouter un fournisseur")</h3>
-                <button class="btn-close" @onclick="FermerFormulaire">✕</button>
+            <div class="form-panel-header">
+                <div class="form-panel-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </div>
+                <h3>@(_modeModif ? "Modifier le fournisseur" : "Nouveau fournisseur")</h3>
+                <button class="form-close-btn" @onclick="FermerFormulaire">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="18" y1="6"  x2="6"  y2="18"/>
+                        <line x1="6"  y1="6"  x2="18" y2="18"/>
+                    </svg>
+                </button>
             </div>
 
-            @* Corps du formulaire *@
             <div class="form-body">
 
-                @* ── Nom (obligatoire) ── *@
+                <p class="form-section-label">Identité</p>
+
                 <div class="form-group">
-                    <label class="form-label">Nom du fournisseur *</label>
-                    <input
-                        class="form-input @(_erreurs.ContainsKey("Nom") ? "input-invalid" : "")"
-                        type="text"
-                        placeholder="ex : Global Tech Solutions"
-                        @bind="_form.Nom"
-                        @bind:event="oninput" />
+                    <label class="form-lbl">Nom du fournisseur <span class="req">*</span></label>
+                    <input class="form-inp @(_erreurs.ContainsKey("Nom") ? "inp-invalid" : "")"
+                           type="text" placeholder="ex : Global Tech Solutions"
+                           @bind="_form.Nom" @bind:event="oninput" />
                     @if (_erreurs.ContainsKey("Nom"))
-                    {
-                        <span class="form-error">@_erreurs["Nom"]</span>
-                    }
+                    { <span class="inp-error">@_erreurs["Nom"]</span> }
                 </div>
 
-                @* ── Téléphone ── *@
                 <div class="form-group">
-                    <label class="form-label">Téléphone</label>
-                    <input
-                        class="form-input"
-                        type="tel"
-                        placeholder="ex : +216 20 000 000"
-                        @bind="_form.Telephone"
-                        @bind:event="oninput" />
+                    <label class="form-lbl">Téléphone</label>
+                    <input class="form-inp" type="tel" placeholder="ex : +216 20 000 000"
+                           @bind="_form.Telephone" @bind:event="oninput" />
                 </div>
 
-                @* ── Adresse ── *@
                 <div class="form-group">
-                    <label class="form-label">Adresse</label>
-                    <textarea
-                        class="form-input form-textarea"
-                        placeholder="ex : 12 Rue de la Paix, Tunis"
-                        @bind="_form.Adresse"
-                        @bind:event="oninput"
-                        rows="3"></textarea>
-                </div>
-
-                @* ── Mail ── *@
-                <div class="form-group">
-                    <label class="form-label">Adresse e-mail</label>
-                    <input
-                        class="form-input @(_erreurs.ContainsKey("Mail") ? "input-invalid" : "")"
-                        type="email"
-                        placeholder="ex : contact@fournisseur.com"
-                        @bind="_form.Mail"
-                        @bind:event="oninput" />
+                    <label class="form-lbl">Adresse e-mail</label>
+                    <input class="form-inp @(_erreurs.ContainsKey("Mail") ? "inp-invalid" : "")"
+                           type="email" placeholder="ex : contact@fournisseur.com"
+                           @bind="_form.Mail" @bind:event="oninput" />
                     @if (_erreurs.ContainsKey("Mail"))
-                    {
-                        <span class="form-error">@_erreurs["Mail"]</span>
-                    }
+                    { <span class="inp-error">@_erreurs["Mail"]</span> }
+                </div>
+
+                <div class="form-group">
+                    <label class="form-lbl">Adresse physique</label>
+                    <textarea class="form-inp form-textarea" rows="2"
+                              placeholder="ex : 12 Rue de la Paix, Tunis"
+                              @bind="_form.Adresse" @bind:event="oninput"></textarea>
+                </div>
+
+                <p class="form-section-label" style="margin-top:8px">Performance</p>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label class="form-lbl">Commandes totales</label>
+                        <input class="form-inp" type="number" min="0" placeholder="0"
+                               @bind="_form.CommandesTotales" @bind:event="oninput" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-lbl">Score fiabilité (0–100) <span class="req">*</span></label>
+                        <input class="form-inp @(_erreurs.ContainsKey("Score") ? "inp-invalid" : "")"
+                               type="number" min="0" max="100" step="0.1" placeholder="ex : 85.5"
+                               @bind="_form.ScoreFiabilite" @bind:event="oninput" />
+                        @if (_erreurs.ContainsKey("Score"))
+                        { <span class="inp-error">@_erreurs["Score"]</span> }
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-lbl">Taux livraison à temps (%) <span class="req">*</span></label>
+                    <input class="form-inp @(_erreurs.ContainsKey("Taux") ? "inp-invalid" : "")"
+                           type="number" min="0" max="100" step="0.1" placeholder="ex : 92.5"
+                           @bind="_form.TauxLivraisonATemps" @bind:event="oninput" />
+                    @if (_erreurs.ContainsKey("Taux"))
+                    { <span class="inp-error">@_erreurs["Taux"]</span> }
+                </div>
+
+                <div class="form-group">
+                    <label class="form-lbl">Date de la dernière commande</label>
+                    <input class="form-inp" type="date" @bind="_form.DerniereCommande" />
                 </div>
 
             </div>
 
-            @* Pied du formulaire — boutons *@
             <div class="form-footer">
-                <button class="btn-cancel" @onclick="FermerFormulaire">
-                    Annuler
-                </button>
-                <button class="btn-save"
-                        @onclick="SauvegarderFournisseur"
+                <button class="btn-form-cancel" @onclick="FermerFormulaire">Annuler</button>
+                <button class="btn-form-save" @onclick="SauvegarderFournisseur"
                         disabled="@_sauvegarde">
-                    @(_sauvegarde
-                        ? "Enregistrement…"
-                        : (_modeModif ? "Mettre à jour" : "Enregistrer"))
+                    @if (_sauvegarde)
+                    { <span>Enregistrement…</span> }
+                    else
+                    {
+                        <svg viewBox="0 0 24 24">
+                            @if (_modeModif)
+                            { <polyline points="20 6 9 17 4 12"/> }
+                            else
+                            { <line x1="12" y1="5" x2="12" y2="19"/>
+                              <line x1="5" y1="12" x2="19" y2="12"/> }
+                        </svg>
+                        <span>@(_modeModif ? "Mettre à jour" : "Enregistrer")</span>
+                    }
                 </button>
             </div>
 
         </div>
     }
 
-    @* ─── TOAST NOTIFICATION ──────────────────────────────── *@
+    @* Toast *@
     @if (!string.IsNullOrEmpty(_toastMsg))
     {
         <div class="toast @_toastType">@_toastMsg</div>
@@ -276,264 +578,321 @@
 
 @code {
 
-    // ── Listes ───────────────────────────────────────────────
-    private List<AssetFlow.Application.DTOs.FournisseurDto> _tousLesFournisseurs = new();
-    private List<AssetFlow.Application.DTOs.FournisseurDto> _fournisseursAffiches = new();
+    private class FournisseurVm
+    {
+        public int       Id                  { get; set; }
+        public string    Nom                 { get; set; } = string.Empty;
+        public string?   Telephone           { get; set; }
+        public string?   Adresse             { get; set; }
+        public string?   Mail                { get; set; }
+        public int       CommandesTotales    { get; set; }
+        public double    TauxLivraisonATemps { get; set; }
+        public double    ScoreFiabilite      { get; set; }
+        public DateTime? DerniereCommande    { get; set; }
+        public bool      Expanded            { get; set; }
+    }
 
-    // ── État général ─────────────────────────────────────────
-    private bool   _chargement   = true;
+    private class FormulaireVm
+    {
+        public int       Id                  { get; set; }
+        public string    Nom                 { get; set; } = string.Empty;
+        public string    Telephone           { get; set; } = string.Empty;
+        public string    Adresse             { get; set; } = string.Empty;
+        public string    Mail                { get; set; } = string.Empty;
+        public int       CommandesTotales    { get; set; }
+        public double    TauxLivraisonATemps { get; set; }
+        public double    ScoreFiabilite      { get; set; }
+        public DateTime? DerniereCommande    { get; set; }
+    }
+
+    private List<FournisseurVm> _tousLesFournisseurs  = new();
+    private List<FournisseurVm> _fournisseursAffiches = new();
+    private bool   _chargement    = true;
     private string _erreurGlobale = string.Empty;
-
-    // ── Recherche ────────────────────────────────────────────
+    private int    _totalFournisseurs = 0;
+    private double _meilleurScore     = 0;
+    private double _scoreMoyen        = 0;
     private string _termeRecherche = string.Empty;
-
-    // ── Formulaire ───────────────────────────────────────────
-    private bool   _panneauOuvert = false;
-    private bool   _modeModif     = false;
-    private bool   _sauvegarde    = false;
-    private FormModele _form      = new();
+    private string _filtreScore    = "all";
+    private string _theme         = "dark";
+    private bool   _sidebarOpen    = false;
+    private bool         _panneauOuvert = false;
+    private bool         _modeModif     = false;
+    private bool         _sauvegarde    = false;
+    private FormulaireVm _form          = new();
     private Dictionary<string, string> _erreurs = new();
-
-    // ── Suppression ──────────────────────────────────────────
-    private AssetFlow.Application.DTOs.FournisseurDto? _fournisseurASupprimer;
-
-    // ── Toast ────────────────────────────────────────────────
+    private FournisseurVm? _fournisseurASupprimer;
     private string _toastMsg  = string.Empty;
     private string _toastType = "toast-success";
 
-    // ────────────────────────────────────────────────────────
-    // INITIALISATION
-    // ────────────────────────────────────────────────────────
-
     protected override async Task OnInitializedAsync()
     {
+        // Lire l'état du thème depuis html.dark (géré par le bouton de index.html)
+        var isDark = await JS.InvokeAsync<bool>("eval",
+            "document.documentElement.classList.contains('dark')");
+        _theme = isDark ? "dark" : "light";
+
         await ChargerFournisseurs();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // Injecter une fonction globale, puis passer la ref séparément
+        await JS.InvokeVoidAsync("eval", @"
+            window.__assetflowSetThemeRef = function(ref) {
+                window.__blazorThemeRef = ref;
+                window.__themeObserver && window.__themeObserver.disconnect();
+                window.__themeObserver = new MutationObserver(function() {
+                    var isDark = document.documentElement.classList.contains('dark');
+                    window.__blazorThemeRef.invokeMethodAsync('OnThemeChanged', isDark);
+                });
+                window.__themeObserver.observe(document.documentElement, {
+                    attributes: true, attributeFilter: ['class']
+                });
+            };
+        ");
+
+        var dotNetRef = Microsoft.JSInterop.DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("__assetflowSetThemeRef", dotNetRef);
     }
 
     private async Task ChargerFournisseurs()
     {
-        _chargement   = true;
+        _chargement    = true;
         _erreurGlobale = string.Empty;
-
-        _tousLesFournisseurs = await FournisseurSvc.GetAllAsync();
-        AppliquerRecherche();
-
-        _chargement = false;
+        try
+        {
+            var dtos = await FournisseurSvc.GetAllAsync();
+            _tousLesFournisseurs = dtos.Select(d => new FournisseurVm
+            {
+                Id                  = d.IdFournisseur,
+                Nom                 = d.Nom,
+                Telephone           = d.Telephone,
+                Adresse             = d.Adresse,
+                Mail                = d.Mail,
+                //CommandesTotales    = d.CommandesTotales,
+                //TauxLivraisonATemps = d.TauxLivraisonATemps,
+                //ScoreFiabilite      = d.ScoreFiabilite,
+                //DerniereCommande    = d.DerniereCommande
+            }).ToList();
+            RecalculerStats();
+            AppliquerFiltres();
+        }
+        catch (Exception ex) { _erreurGlobale = $"Erreur : {ex.Message}"; }
+        finally { _chargement = false; }
     }
 
-    // ────────────────────────────────────────────────────────
-    // RECHERCHE (filtre côté client, insensible à la casse)
-    // ────────────────────────────────────────────────────────
+    private void RecalculerStats()
+    {
+        _totalFournisseurs = _tousLesFournisseurs.Count;
+        _meilleurScore     = _tousLesFournisseurs.Any() ? _tousLesFournisseurs.Max(f => f.ScoreFiabilite) : 0;
+        _scoreMoyen        = _tousLesFournisseurs.Any() ? _tousLesFournisseurs.Average(f => f.ScoreFiabilite) : 0;
+    }
 
     private void OnRecherche(ChangeEventArgs e)
     {
         _termeRecherche = e.Value?.ToString() ?? string.Empty;
-        AppliquerRecherche();
+        AppliquerFiltres();
     }
 
-    private void AppliquerRecherche()
+    private void AppliquerFiltreScore(string filtre)
     {
-        if (string.IsNullOrWhiteSpace(_termeRecherche))
-        {
-            // Pas de terme → afficher tout
-            _fournisseursAffiches = new List<AssetFlow.Application.DTOs.FournisseurDto>(
-                _tousLesFournisseurs);
-            return;
-        }
-
-        var t = _termeRecherche.Trim().ToLower();
-
-        _fournisseursAffiches = _tousLesFournisseurs.Where(f =>
-            f.Nom.ToLower().Contains(t)                                        ||
-            (f.Telephone != null && f.Telephone.Contains(t))                   ||
-            (f.Adresse   != null && f.Adresse.ToLower().Contains(t))           ||
-            (f.Mail      != null && f.Mail.ToLower().Contains(t))
-        ).ToList();
+        _filtreScore = filtre;
+        _tousLesFournisseurs.ForEach(f => f.Expanded = false);
+        AppliquerFiltres();
     }
 
-    // ────────────────────────────────────────────────────────
-    // FORMULAIRE — Ouverture
-    // ────────────────────────────────────────────────────────
+    private void AppliquerFiltres()
+    {
+        var q = _tousLesFournisseurs.AsEnumerable();
+        q = _filtreScore switch
+        {
+            "excellent" => q.Where(f => f.ScoreFiabilite > 80),
+            "moyen"     => q.Where(f => f.ScoreFiabilite >= 50 && f.ScoreFiabilite <= 80),
+            "critique"  => q.Where(f => f.ScoreFiabilite < 50),
+            _           => q
+        };
+        if (!string.IsNullOrWhiteSpace(_termeRecherche))
+        {
+            var t = _termeRecherche.Trim().ToLower();
+            q = q.Where(f =>
+                f.Nom.ToLower().Contains(t)                           ||
+                (f.Telephone != null && f.Telephone.Contains(t))      ||
+                (f.Mail      != null && f.Mail.ToLower().Contains(t)) ||
+                (f.Adresse   != null && f.Adresse.ToLower().Contains(t)));
+        }
+        _fournisseursAffiches = q.ToList();
+    }
 
-    /// <summary>
-    /// null  → mode Ajout (formulaire vide)
-    /// dto   → mode Modification (formulaire pré-rempli)
-    /// </summary>
-    private void OuvrirFormulaire(
-        AssetFlow.Application.DTOs.FournisseurDto? fournisseur)
+    private void ToggleDetail(int id)
+    {
+        var cible = _tousLesFournisseurs.FirstOrDefault(f => f.Id == id);
+        if (cible == null) return;
+        bool was = cible.Expanded;
+        _tousLesFournisseurs.ForEach(f => f.Expanded = false);
+        if (!was) cible.Expanded = true;
+    }
+
+    private void OuvrirFormulaire(FournisseurVm? vm)
     {
         _erreurs.Clear();
-
-        if (fournisseur is not null)
-        {
-            // Mode MODIFICATION — pré-remplir les champs
-            _modeModif = true;
-            _form = new FormModele
-            {
-                IdFournisseur = fournisseur.IdFournisseur,
-                Nom           = fournisseur.Nom,
-                Telephone     = fournisseur.Telephone ?? string.Empty,
-                Adresse       = fournisseur.Adresse   ?? string.Empty,
-                Mail          = fournisseur.Mail      ?? string.Empty
-            };
-        }
-        else
-        {
-            // Mode AJOUT — formulaire vide
-            _modeModif = false;
-            _form = new FormModele();
-        }
-
+        _modeModif     = vm is not null;
         _panneauOuvert = true;
+        _form = vm is not null
+            ? new FormulaireVm
+            {
+                Id                  = vm.Id,
+                Nom                 = vm.Nom,
+                Telephone           = vm.Telephone ?? string.Empty,
+                Adresse             = vm.Adresse   ?? string.Empty,
+                Mail                = vm.Mail      ?? string.Empty,
+                CommandesTotales    = vm.CommandesTotales,
+                TauxLivraisonATemps = vm.TauxLivraisonATemps,
+                ScoreFiabilite      = vm.ScoreFiabilite,
+                DerniereCommande    = vm.DerniereCommande
+            }
+            : new FormulaireVm();
     }
 
-    // ────────────────────────────────────────────────────────
-    // FORMULAIRE — Fermeture
-    // ────────────────────────────────────────────────────────
-
-    private void FermerFormulaire()
-    {
-        _panneauOuvert = false;
-        _erreurs.Clear();
-    }
-
-    // Fermer avec Échap
-    // (à brancher via JS interop si nécessaire)
-
-    // ────────────────────────────────────────────────────────
-    // FORMULAIRE — Sauvegarde (Ajout ou Modification)
-    // ────────────────────────────────────────────────────────
+    private void FermerFormulaire() { _panneauOuvert = false; _erreurs.Clear(); }
 
     private async Task SauvegarderFournisseur()
     {
-        // ── Validation côté client ────────────────────────────
         _erreurs.Clear();
-
-        if (string.IsNullOrWhiteSpace(_form.Nom))
-            _erreurs["Nom"] = "Le nom est obligatoire.";
-
-        // Validation format e-mail basique
-        if (!string.IsNullOrWhiteSpace(_form.Mail) &&
-            !_form.Mail.Contains('@'))
-            _erreurs["Mail"] = "L'adresse e-mail n'est pas valide.";
-
+        if (string.IsNullOrWhiteSpace(_form.Nom))         _erreurs["Nom"]   = "Le nom est obligatoire.";
+        if (!string.IsNullOrWhiteSpace(_form.Mail) && !_form.Mail.Contains('@'))
+                                                           _erreurs["Mail"]  = "E-mail invalide.";
+        if (_form.ScoreFiabilite      < 0 || _form.ScoreFiabilite      > 100) _erreurs["Score"] = "Entre 0 et 100.";
+        if (_form.TauxLivraisonATemps < 0 || _form.TauxLivraisonATemps > 100) _erreurs["Taux"]  = "Entre 0 et 100.";
         if (_erreurs.Any()) return;
 
         _sauvegarde = true;
-        AssetFlow.Application.DTOs.FournisseurReponseDto reponse;
-
-        if (_modeModif)
+        try
         {
-            // ── PUT — Modification ────────────────────────────
-            var dto = new AssetFlow.Application.DTOs.ModifierFournisseurDto
+            if (_modeModif)
             {
-                IdFournisseur = _form.IdFournisseur,
-                Nom           = _form.Nom.Trim(),
-                Telephone     = NullSiVide(_form.Telephone),
-                Adresse       = NullSiVide(_form.Adresse),
-                Mail          = NullSiVide(_form.Mail)
-            };
-            reponse = await FournisseurSvc.ModifierAsync(dto);
-        }
-        else
-        {
-            // ── POST — Création ───────────────────────────────
-            var dto = new AssetFlow.Application.DTOs.CreerFournisseurDto
+                var dto = new AssetFlow.Application.DTOs.ModifierFournisseurDto
+                {
+                    IdFournisseur       = _form.Id,
+                    Nom                 = _form.Nom.Trim(),
+                    Telephone           = Vide(_form.Telephone),
+                    Adresse             = Vide(_form.Adresse),
+                    Mail                = Vide(_form.Mail),
+                    //CommandesTotales    = _form.CommandesTotales,
+                    //TauxLivraisonATemps = _form.TauxLivraisonATemps,
+                    //ScoreFiabilite      = _form.ScoreFiabilite,
+                    //DerniereCommande    = _form.DerniereCommande
+                };
+                var r = await FournisseurSvc.ModifierAsync(dto);
+                if (r.Succes)
+                {
+                    // ── Mise à jour instantanée dans la liste locale ──
+                    var vm = _tousLesFournisseurs.FirstOrDefault(f => f.Id == _form.Id);
+                    if (vm != null)
+                    {
+                        vm.Nom = _form.Nom.Trim(); vm.Telephone = Vide(_form.Telephone);
+                        vm.Adresse = Vide(_form.Adresse); vm.Mail = Vide(_form.Mail);
+                        vm.CommandesTotales = _form.CommandesTotales;
+                        vm.TauxLivraisonATemps = _form.TauxLivraisonATemps;
+                        vm.ScoreFiabilite = _form.ScoreFiabilite;
+                        vm.DerniereCommande = _form.DerniereCommande;
+                    }
+                    RecalculerStats(); AppliquerFiltres(); FermerFormulaire();
+                    AfficherToast($"« {_form.Nom} » mis à jour.", "toast-success");
+                }
+                else _erreurGlobale = r.Message;
+            }
+            else
             {
-                Nom       = _form.Nom.Trim(),
-                Telephone = NullSiVide(_form.Telephone),
-                Adresse   = NullSiVide(_form.Adresse),
-                Mail      = NullSiVide(_form.Mail)
-            };
-            reponse = await FournisseurSvc.AjouterAsync(dto);
+                var dto = new AssetFlow.Application.DTOs.CreerFournisseurDto
+                {
+                    Nom                 = _form.Nom.Trim(),
+                    Telephone           = Vide(_form.Telephone),
+                    Adresse             = Vide(_form.Adresse),
+                    Mail                = Vide(_form.Mail),
+                    //CommandesTotales    = _form.CommandesTotales,
+                    //TauxLivraisonATemps = _form.TauxLivraisonATemps,
+                    //ScoreFiabilite      = _form.ScoreFiabilite,
+                    //DerniereCommande    = _form.DerniereCommande
+                };
+                var r = await FournisseurSvc.AjouterAsync(dto);
+                if (r.Succes)
+                {
+                    // ── Ajout instantané en tête de liste, sans rechargement API ──
+                    _tousLesFournisseurs.Insert(0, new FournisseurVm
+                    {
+                        Id                  = r.IdFournisseur ?? 0,
+                        Nom                 = _form.Nom.Trim(),
+                        Telephone           = Vide(_form.Telephone),
+                        Adresse             = Vide(_form.Adresse),
+                        Mail                = Vide(_form.Mail),
+                        CommandesTotales    = _form.CommandesTotales,
+                        TauxLivraisonATemps = _form.TauxLivraisonATemps,
+                        ScoreFiabilite      = _form.ScoreFiabilite,
+                        DerniereCommande    = _form.DerniereCommande
+                    });
+                    RecalculerStats(); AppliquerFiltres(); FermerFormulaire();
+                    AfficherToast($"« {_form.Nom} » ajouté.", "toast-success");
+                }
+                else _erreurGlobale = r.Message;
+            }
         }
-
-        _sauvegarde = false;
-
-        if (reponse.Succes)
-        {
-            FermerFormulaire();
-            await ChargerFournisseurs();          // Recharger la liste depuis l'API
-            AfficherToast(reponse.Message, "toast-success");
-        }
-        else
-        {
-            _erreurGlobale = reponse.Message;
-        }
+        catch (Exception ex) { _erreurGlobale = ex.Message; }
+        finally { _sauvegarde = false; }
     }
 
-    // ────────────────────────────────────────────────────────
-    // SUPPRESSION
-    // ────────────────────────────────────────────────────────
+    private void  DemanderSuppression(FournisseurVm f) => _fournisseurASupprimer = f;
+    private void  AnnulerSuppression()                  => _fournisseurASupprimer = null;
 
-    /// <summary>Ouvre la modale de confirmation</summary>
-    private void DemanderSuppression(
-        AssetFlow.Application.DTOs.FournisseurDto f)
-    {
-        _fournisseurASupprimer = f;
-    }
-
-    /// <summary>Ferme la modale sans supprimer</summary>
-    private void AnnulerSuppression()
-    {
-        _fournisseurASupprimer = null;
-    }
-
-    /// <summary>Confirme et exécute la suppression</summary>
     private async Task ConfirmerSuppression()
     {
         if (_fournisseurASupprimer == null) return;
-
         var nom = _fournisseurASupprimer.Nom;
-        var id  = _fournisseurASupprimer.IdFournisseur;
-        _fournisseurASupprimer = null;   // Fermer la modale immédiatement
-
-        var reponse = await FournisseurSvc.SupprimerAsync(id);
-
-        if (reponse.Succes)
+        var id  = _fournisseurASupprimer.Id;
+        _fournisseurASupprimer = null;
+        var r = await FournisseurSvc.SupprimerAsync(id);
+        if (r.Succes)
         {
-            await ChargerFournisseurs();
-            AfficherToast($"« {nom} » a été supprimé.", "toast-success");
+            _tousLesFournisseurs.RemoveAll(f => f.Id == id);
+            RecalculerStats(); AppliquerFiltres();
+            AfficherToast($"« {nom} » supprimé.", "toast-success");
         }
-        else
-        {
-            _erreurGlobale = reponse.Message;
-        }
+        else _erreurGlobale = r.Message;
     }
 
-    // ────────────────────────────────────────────────────────
-    // HELPERS
-    // ────────────────────────────────────────────────────────
+    private void ToggleSidebar() => _sidebarOpen = !_sidebarOpen;
 
-    /// <summary>Retourne null si la chaîne est vide ou whitespace</summary>
-    private static string? NullSiVide(string? valeur) =>
-        string.IsNullOrWhiteSpace(valeur) ? null : valeur.Trim();
-
-    /// <summary>Affiche un toast qui disparaît après 3 secondes</summary>
-    private async void AfficherToast(string message, string type)
+    // Le thème est contrôlé par le bouton de index.html (html.dark).
+    // On lit son état au chargement dans OnInitializedAsync.
+    // Si besoin de synchro en temps réel, appeler SyncTheme() depuis JS.
+    private async Task SyncTheme()
     {
-        _toastMsg  = message;
-        _toastType = type;
-        StateHasChanged();
-
-        await Task.Delay(3000);
-
-        _toastMsg = string.Empty;
+        var isDark = await JS.InvokeAsync<bool>("eval",
+            "document.documentElement.classList.contains('dark')");
+        _theme = isDark ? "dark" : "light";
         StateHasChanged();
     }
 
-    // ────────────────────────────────────────────────────────
-    // MODÈLE DU FORMULAIRE (classe interne)
-    // Lié aux champs via @bind dans le template HTML.
-    // Converti en DTO lors de la sauvegarde.
-    // ────────────────────────────────────────────────────────
-
-    private class FormModele
+    /// <summary>Appelé depuis JS via MutationObserver quand html.dark change.</summary>
+    [Microsoft.JSInterop.JSInvokable("OnThemeChanged")]
+    public void OnThemeChanged(bool isDark)
     {
-        public int    IdFournisseur { get; set; }
-        public string Nom          { get; set; } = string.Empty;
-        public string Telephone    { get; set; } = string.Empty;
-        public string Adresse      { get; set; } = string.Empty;
-        public string Mail         { get; set; } = string.Empty;
+        _theme = isDark ? "dark" : "light";
+        InvokeAsync(StateHasChanged);
     }
+
+    private static string RateClass(double r)      => r >= 80 ? "good" : r >= 60 ? "avg" : "bad";
+    private static string ScoreFillClass(double s)  => s >= 80 ? "green" : s >= 50 ? "amber" : "red";
+    private static string ScoreTextClass(double s)  => s >= 80 ? "good" : s >= 50 ? "avg" : "bad";
+
+    private async void AfficherToast(string msg, string type)
+    {
+        _toastMsg = msg; _toastType = type; StateHasChanged();
+        await Task.Delay(3500);
+        _toastMsg = string.Empty; StateHasChanged();
+    }
+
+    private static string? Vide(string? v) => string.IsNullOrWhiteSpace(v) ? null : v.Trim();
 }

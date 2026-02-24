@@ -99,7 +99,7 @@ namespace AssetFlow.BlazorUI.Pages.Auth
                 var dashboard = Role switch
                 {
                     "IT" => "/dashboard/it",
-                    "EquipeAchat" => "/dashboard/achat",
+                    "EquipeAchat" => "/achat/fournisseurs",
                     "Employe" => "/employe/equipements",
                     "Admin" => "/dashboard/admin",
                     _ => "/dashboard"

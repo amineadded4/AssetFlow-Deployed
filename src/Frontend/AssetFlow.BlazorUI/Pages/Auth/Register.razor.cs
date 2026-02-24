@@ -108,7 +108,7 @@ namespace AssetFlow.BlazorUI.Pages.Auth
                 // Afficher le message de succès et rediriger après 2 secondes
                 SuccessMessage = message;
                 await Task.Delay(2000);
-                Navigation.NavigateTo("/role-select");
+                Navigation.NavigateTo("/");
             }
             else
             {

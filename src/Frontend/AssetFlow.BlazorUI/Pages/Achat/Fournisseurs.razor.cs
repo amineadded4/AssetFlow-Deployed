@@ -59,21 +59,76 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private string _toastMsg = string.Empty;
         private string _toastType = "toast-success";
 
+        // ── Infos utilisateur courant (lues depuis localStorage) ──
+        private string _currentUserName = "Administrateur";
+        private string _currentUserRole = "Admin système";
+
+        /// <summary>Initiales pour l'avatar (max 2 caractères).</summary>
+        private string CurrentUserInitials
+        {
+            get
+            {
+                var parts = _currentUserName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 2) return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+                if (parts.Length == 1 && parts[0].Length >= 2) return parts[0][..2].ToUpper();
+                return "AD";
+            }
+        }
+
         protected override async Task OnInitializedAsync()
         {
-            // Lire l'état du thème depuis html.dark (géré par le bouton de index.html)
             var isDark = await JS.InvokeAsync<bool>("eval",
                 "document.documentElement.classList.contains('dark')");
             _theme = isDark ? "dark" : "light";
 
+            await ChargerInfosUtilisateur();
             await ChargerFournisseurs();
+        }
+
+        /// <summary>
+        /// Lit le nom et le rôle depuis localStorage et supprime les guillemets
+        /// éventuellement ajoutés par certains sérialiseurs JSON.
+        /// </summary>
+        private async Task ChargerInfosUtilisateur()
+        {
+            try
+            {
+                var nom = await JS.InvokeAsync<string?>("eval",
+                    "localStorage.getItem('user_name') || localStorage.getItem('userFullName') || localStorage.getItem('currentUserName')");
+                var role = await JS.InvokeAsync<string?>("eval",
+                    "localStorage.getItem('user_role') || localStorage.getItem('currentUserRole')");
+
+                if (!string.IsNullOrWhiteSpace(nom))
+                    _currentUserName = SupprimerGuillemets(nom);
+
+                if (!string.IsNullOrWhiteSpace(role))
+                    _currentUserRole = SupprimerGuillemets(role);
+            }
+            catch
+            {
+                // Valeurs par défaut conservées si localStorage inaccessible
+            }
+        }
+
+        /// <summary>Enlève les guillemets doubles ou simples en début et fin de chaîne.</summary>
+        private static string SupprimerGuillemets(string valeur)
+        {
+            valeur = valeur.Trim();
+            if (valeur.Length >= 2)
+            {
+                if ((valeur.StartsWith('"') && valeur.EndsWith('"')) ||
+                    (valeur.StartsWith('\'') && valeur.EndsWith('\'')))
+                {
+                    valeur = valeur[1..^1].Trim();
+                }
+            }
+            return valeur;
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (!firstRender) return;
 
-            // Injecter une fonction globale, puis passer la ref séparément
             await JS.InvokeVoidAsync("eval", @"
                 window.__assetflowSetThemeRef = function(ref) {
                     window.__blazorThemeRef = ref;
@@ -122,7 +177,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         {
             _totalFournisseurs = _tousLesFournisseurs.Count;
             _meilleurScore = _tousLesFournisseurs.Any() ? _tousLesFournisseurs.Max(f => f.ScoreFiabilite) : 0;
-            _scoreMoyen = _tousLesFournisseurs.Any() ? _tousLesFournisseurs.Average(f => f.ScoreFiabilite) : 0;
+            _scoreMoyen    = _tousLesFournisseurs.Any() ? _tousLesFournisseurs.Average(f => f.ScoreFiabilite) : 0;
         }
 
         private void OnRecherche(ChangeEventArgs e)
@@ -144,9 +199,9 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             q = _filtreScore switch
             {
                 "excellent" => q.Where(f => f.ScoreFiabilite > 80),
-                "moyen" => q.Where(f => f.ScoreFiabilite >= 50 && f.ScoreFiabilite <= 80),
-                "critique" => q.Where(f => f.ScoreFiabilite < 50),
-                _ => q
+                "moyen"     => q.Where(f => f.ScoreFiabilite >= 50 && f.ScoreFiabilite <= 80),
+                "critique"  => q.Where(f => f.ScoreFiabilite < 50),
+                _           => q
             };
             if (!string.IsNullOrWhiteSpace(_termeRecherche))
             {
@@ -154,8 +209,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 q = q.Where(f =>
                     f.Nom.ToLower().Contains(t) ||
                     (f.Telephone != null && f.Telephone.Contains(t)) ||
-                    (f.Mail != null && f.Mail.ToLower().Contains(t)) ||
-                    (f.Adresse != null && f.Adresse.ToLower().Contains(t)));
+                    (f.Mail     != null && f.Mail.ToLower().Contains(t)) ||
+                    (f.Adresse  != null && f.Adresse.ToLower().Contains(t)));
             }
             _fournisseursAffiches = q.ToList();
         }
@@ -172,20 +227,19 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private void OuvrirFormulaire(FournisseurVm? vm)
         {
             _erreurs.Clear();
-            _modeModif = vm is not null;
+            _modeModif  = vm is not null;
             _panneauOuvert = true;
             _form = vm is not null
                 ? new FormulaireVm
                 {
-                    Id = vm.Id,
-                    Nom = vm.Nom,
+                    Id = vm.Id, Nom = vm.Nom,
                     Telephone = vm.Telephone ?? string.Empty,
-                    Adresse = vm.Adresse ?? string.Empty,
-                    Mail = vm.Mail ?? string.Empty,
-                    CommandesTotales = vm.CommandesTotales,
+                    Adresse   = vm.Adresse   ?? string.Empty,
+                    Mail      = vm.Mail      ?? string.Empty,
+                    CommandesTotales    = vm.CommandesTotales,
                     TauxLivraisonATemps = vm.TauxLivraisonATemps,
-                    ScoreFiabilite = vm.ScoreFiabilite,
-                    DerniereCommande = vm.DerniereCommande
+                    ScoreFiabilite      = vm.ScoreFiabilite,
+                    DerniereCommande    = vm.DerniereCommande
                 }
                 : new FormulaireVm();
         }
@@ -198,7 +252,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             if (string.IsNullOrWhiteSpace(_form.Nom)) _erreurs["Nom"] = "Le nom est obligatoire.";
             if (!string.IsNullOrWhiteSpace(_form.Mail) && !_form.Mail.Contains('@'))
                 _erreurs["Mail"] = "E-mail invalide.";
-            if (_form.ScoreFiabilite < 0 || _form.ScoreFiabilite > 100) _erreurs["Score"] = "Entre 0 et 100.";
+            if (_form.ScoreFiabilite     < 0 || _form.ScoreFiabilite     > 100) _erreurs["Score"] = "Entre 0 et 100.";
             if (_form.TauxLivraisonATemps < 0 || _form.TauxLivraisonATemps > 100) _erreurs["Taux"] = "Entre 0 et 100.";
             if (_erreurs.Any()) return;
 
@@ -209,35 +263,30 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 {
                     var dto = new ModifierFournisseurDto
                     {
-                        IdFournisseur = _form.Id,
-                        Nom = _form.Nom.Trim(),
-                        Telephone = Vide(_form.Telephone),
-                        Adresse = Vide(_form.Adresse),
-                        Mail = Vide(_form.Mail),
-                        CommandesTotales = _form.CommandesTotales,
+                        IdFournisseur       = _form.Id,
+                        Nom                 = _form.Nom.Trim(),
+                        Telephone           = Vide(_form.Telephone),
+                        Adresse             = Vide(_form.Adresse),
+                        Mail                = Vide(_form.Mail),
+                        CommandesTotales    = _form.CommandesTotales,
                         TauxLivraisonATemps = _form.TauxLivraisonATemps,
-                        ScoreFiabilite = _form.ScoreFiabilite,
-                        DerniereCommande = _form.DerniereCommande
+                        ScoreFiabilite      = _form.ScoreFiabilite,
+                        DerniereCommande    = _form.DerniereCommande
                     };
                     var r = await FournisseurSvc.ModifierAsync(dto);
                     if (r.Succes)
                     {
-                        // ── Mise à jour instantanée dans la liste locale ──
                         var vm = _tousLesFournisseurs.FirstOrDefault(f => f.Id == _form.Id);
                         if (vm != null)
                         {
-                            vm.Nom = _form.Nom.Trim();
-                            vm.Telephone = Vide(_form.Telephone);
-                            vm.Adresse = Vide(_form.Adresse);
-                            vm.Mail = Vide(_form.Mail);
+                            vm.Nom = _form.Nom.Trim(); vm.Telephone = Vide(_form.Telephone);
+                            vm.Adresse = Vide(_form.Adresse); vm.Mail = Vide(_form.Mail);
                             vm.CommandesTotales = _form.CommandesTotales;
                             vm.TauxLivraisonATemps = _form.TauxLivraisonATemps;
                             vm.ScoreFiabilite = _form.ScoreFiabilite;
                             vm.DerniereCommande = _form.DerniereCommande;
                         }
-                        RecalculerStats();
-                        AppliquerFiltres();
-                        FermerFormulaire();
+                        RecalculerStats(); AppliquerFiltres(); FermerFormulaire();
                         AfficherToast($"« {_form.Nom} » mis à jour.", "toast-success");
                     }
                     else _erreurGlobale = r.Message;
@@ -246,34 +295,28 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 {
                     var dto = new CreerFournisseurDto
                     {
-                        Nom = _form.Nom.Trim(),
-                        Telephone = Vide(_form.Telephone),
-                        Adresse = Vide(_form.Adresse),
-                        Mail = Vide(_form.Mail),
-                        CommandesTotales = _form.CommandesTotales,
+                        Nom                 = _form.Nom.Trim(),
+                        Telephone           = Vide(_form.Telephone),
+                        Adresse             = Vide(_form.Adresse),
+                        Mail                = Vide(_form.Mail),
+                        CommandesTotales    = _form.CommandesTotales,
                         TauxLivraisonATemps = _form.TauxLivraisonATemps,
-                        ScoreFiabilite = _form.ScoreFiabilite,
-                        DerniereCommande = _form.DerniereCommande
+                        ScoreFiabilite      = _form.ScoreFiabilite,
+                        DerniereCommande    = _form.DerniereCommande
                     };
                     var r = await FournisseurSvc.AjouterAsync(dto);
                     if (r.Succes)
                     {
-                        // ── Ajout instantané en tête de liste, sans rechargement API ──
                         _tousLesFournisseurs.Insert(0, new FournisseurVm
                         {
-                            Id = r.IdFournisseur ?? 0,
-                            Nom = _form.Nom.Trim(),
-                            Telephone = Vide(_form.Telephone),
-                            Adresse = Vide(_form.Adresse),
-                            Mail = Vide(_form.Mail),
-                            CommandesTotales = _form.CommandesTotales,
+                            Id = r.IdFournisseur ?? 0, Nom = _form.Nom.Trim(),
+                            Telephone = Vide(_form.Telephone), Adresse = Vide(_form.Adresse),
+                            Mail = Vide(_form.Mail), CommandesTotales = _form.CommandesTotales,
                             TauxLivraisonATemps = _form.TauxLivraisonATemps,
                             ScoreFiabilite = _form.ScoreFiabilite,
                             DerniereCommande = _form.DerniereCommande
                         });
-                        RecalculerStats();
-                        AppliquerFiltres();
-                        FermerFormulaire();
+                        RecalculerStats(); AppliquerFiltres(); FermerFormulaire();
                         AfficherToast($"« {_form.Nom} » ajouté.", "toast-success");
                     }
                     else _erreurGlobale = r.Message;
@@ -290,14 +333,13 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         {
             if (_fournisseurASupprimer == null) return;
             var nom = _fournisseurASupprimer.Nom;
-            var id = _fournisseurASupprimer.Id;
+            var id  = _fournisseurASupprimer.Id;
             _fournisseurASupprimer = null;
             var r = await FournisseurSvc.SupprimerAsync(id);
             if (r.Succes)
             {
                 _tousLesFournisseurs.RemoveAll(f => f.Id == id);
-                RecalculerStats();
-                AppliquerFiltres();
+                RecalculerStats(); AppliquerFiltres();
                 AfficherToast($"« {nom} » supprimé.", "toast-success");
             }
             else _erreurGlobale = r.Message;
@@ -305,18 +347,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         private void ToggleSidebar() => _sidebarOpen = !_sidebarOpen;
 
-        // Le thème est contrôlé par le bouton de index.html (html.dark).
-        // On lit son état au chargement dans OnInitializedAsync.
-        // Si besoin de synchro en temps réel, appeler SyncTheme() depuis JS.
-        private async Task SyncTheme()
-        {
-            var isDark = await JS.InvokeAsync<bool>("eval",
-                "document.documentElement.classList.contains('dark')");
-            _theme = isDark ? "dark" : "light";
-            StateHasChanged();
-        }
-
-        /// <summary>Appelé depuis JS via MutationObserver quand html.dark change.</summary>
         [JSInvokable("OnThemeChanged")]
         public void OnThemeChanged(bool isDark)
         {
@@ -330,12 +360,9 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         private async void AfficherToast(string msg, string type)
         {
-            _toastMsg = msg;
-            _toastType = type;
-            StateHasChanged();
+            _toastMsg = msg; _toastType = type; StateHasChanged();
             await Task.Delay(3500);
-            _toastMsg = string.Empty;
-            StateHasChanged();
+            _toastMsg = string.Empty; StateHasChanged();
         }
 
         private static string? Vide(string? v) => string.IsNullOrWhiteSpace(v) ? null : v.Trim();

@@ -1,13 +1,7 @@
 @* ============================================================
-   FICHIER : Pages/Employe/Fournisseurs.razor
-   CORRECTIONS v3 :
-   - Sidebar toujours bleu marine fixe (indépendante du thème)
-   - Liens nav : Statistiques · Matériel · Fournisseurs · Demande d'achat
-   - Toggle thème SUPPRIMÉ de la page (géré par index.html)
-   - Ajout/Modif/Suppression fournisseur → visible INSTANTANÉMENT
-   - Bouton "Nouveau Fournisseur" visible en mode clair ET sombre
-   - Filtre redessiné en boutons pills (plus de select natif)
-   - Titres de colonnes du tableau plus visibles
+   FICHIER : Pages/Achat/Fournisseurs.razor
+   v4 : Sidebar style Employé + nom utilisateur dynamique
+        + headers tableau plus larges
    ============================================================ *@
 
 @page "/achat/fournisseurs"
@@ -21,8 +15,7 @@
     }
 
     @* ══════════════════════════════════════════════════
-       SIDEBAR — couleur FIXE #0F1E3C, jamais modifiée
-       par le thème clair/sombre
+       SIDEBAR — Design identique au sidebar Employé
     ══════════════════════════════════════════════════ *@
     <aside class="sidebar @(_sidebarOpen ? "open" : "")">
 
@@ -79,11 +72,12 @@
 
         </nav>
 
+        @* ── Profil utilisateur courant (comme sidebar Employé) ── *@
         <div class="sidebar-profile">
-            <div class="profile-avatar">AD</div>
+            <div class="profile-avatar">@CurrentUserInitials</div>
             <div class="profile-info">
-                <p class="profile-name">Administrateur</p>
-                <p class="profile-role">Admin système</p>
+                <p class="profile-name">@_currentUserName</p>
+                <p class="profile-role">@_currentUserRole</p>
             </div>
         </div>
 
@@ -122,7 +116,6 @@
                        @oninput="OnRecherche" />
             </div>
 
-            @* Bouton Nouveau Fournisseur — décalé à gauche du bouton thème de index.html *@
             <div class="topbar-actions">
                 <button class="btn-add" @onclick="() => OuvrirFormulaire(null)">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
@@ -194,7 +187,6 @@
                     <span class="tag-count">@_fournisseursAffiches.Count résultat(s)</span>
                 </div>
 
-                @* Filtre redessiné : boutons pills, plus de <select> rectangulaire *@
                 <div class="filter-pills">
                     <span class="filter-pills-label">Score :</span>
                     <button class="pill @(_filtreScore == "all"       ? "pill-active" : "")"
@@ -231,7 +223,7 @@
                                 <th>Score fiabilité</th>
                                 <th>Dernière commande</th>
                                 <th>Contact</th>
-                                <th></th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>

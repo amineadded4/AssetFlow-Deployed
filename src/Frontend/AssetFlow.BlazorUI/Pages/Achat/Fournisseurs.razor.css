@@ -1,12 +1,8 @@
 /* ============================================================
    FICHIER : Fournisseurs.razor.css  (CSS Isolation Blazor)
-   CORRECTIONS v3 :
-   - Sidebar couleur FIXE (#0F1E3C), indépendante du thème
-   - layout-shell réagit à html.dark (classe ajoutée par index.html)
-   - Titres de colonnes bien visibles (couleur forte, taille lisible)
-   - btn-add : visible en clair ET sombre (border solide + couleur explicite)
-   - filter-pills : boutons pills design, zéro <select> natif
-   - Ajout/Modif instantané géré en C#, pas besoin de CSS spécial
+   v4 : Sidebar redessinée pour matcher le style Employé
+        (width 200px, nav-link avec border-left pill, même dark blue)
+        + Titres de colonnes tableau plus larges
    ============================================================ */
 
 
@@ -32,7 +28,7 @@
     /* Textes */
     --text-primary:   #0f172a;
     --text-secondary: #475569;
-    --text-th:        #1e293b;   /* titres de colonnes — contraste fort */
+    --text-th:        #1e293b;
 
     /* Bordures */
     --border:         #cbd5e1;
@@ -59,7 +55,7 @@
     position:    relative;
 }
 
-/* ── Thème sombre — activé quand <html class="dark"> (index.html) ── */
+/* ── Thème sombre ── */
 .layout-shell[data-theme="dark"] {
     --bg:             #101822;
     --bg-panel:       #1a232e;
@@ -91,12 +87,12 @@
 
 
 /* ============================================================
-   3. SIDEBAR — couleur FIXE indépendante du thème
-      Jamais affectée par html.dark
+   3. SIDEBAR — Design identique au sidebar Employé
+      width: 200px, nav-link avec border-left actif
    ============================================================ */
 .sidebar {
-    width:          260px;
-    background:     #0F1E3C;   /* FIXE — ne change JAMAIS */
+    width:          200px;
+    background:     #0F1E3C;
     display:        flex;
     flex-direction: column;
     height:         100vh;
@@ -105,90 +101,138 @@
     flex-shrink:    0;
     z-index:        100;
     transition:     transform 0.3s ease;
+    border-right:   1px solid rgba(255,255,255,0.05);
 }
 
+/* ── Header logo ── */
 .sidebar-header {
-    padding:         20px 20px 14px;
+    padding:         1.5rem 1rem;
     display:         flex;
     align-items:     center;
     justify-content: center;
-    border-bottom:   1px solid rgba(255,255,255,0.07);
-    min-height:      80px;
 }
-.sidebar-logo-img { max-width: 155px; max-height: 65px; object-fit: contain; }
+.sidebar-logo-img {
+    width:      140px;
+    height:     auto;
+    object-fit: contain;
+    filter:     drop-shadow(0 0 12px rgba(19,109,236,0.5));
+}
 
+/* ── Navigation ── */
 .sidebar-nav {
     flex:           1;
-    padding:        14px 10px;
+    margin-top:     1rem;
+    padding:        0;
     display:        flex;
     flex-direction: column;
-    gap:            3px;
+    gap:            0.25rem;
     overflow-y:     auto;
 }
 
 .nav-link {
-    display:       flex;
-    align-items:   center;
-    gap:           13px;
-    padding:       11px 13px;
-    border-radius: var(--radius-md);
-    border-left:   3px solid transparent;
-    color:         rgba(255,255,255,0.7) !important;  /* BLANC forcé toujours */
-    font-size:     13.5px;
-    font-weight:   500;
-    transition:    background var(--t), color var(--t), border-color var(--t);
+    display:     flex;
+    align-items: center;
+    gap:         0.75rem;
+    padding:     0.75rem 1.5rem;
+    color:       #94a3b8 !important;
+    font-size:   0.875rem;
+    font-weight: 500;
+    transition:  all 0.2s ease;
+    border-left: 4px solid transparent;
 }
-.nav-link:hover { color: #ffffff !important; background: rgba(255,255,255,0.10); }
+.nav-link:hover {
+    color:      #ffffff !important;
+    background: rgba(255,255,255,0.05);
+}
 .nav-link.active {
-    color:        #ffffff !important;
-    background:   rgba(19,109,236,0.30);
-    border-left:  3px solid #136dec;
-    font-weight:  700;
+    color:       #ffffff !important;
+    background:  rgba(19,109,236,0.20);
+    border-left: 4px solid #136dec;
+    font-weight: 700;
 }
-.nav-icon { width: 22px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+
+/* ── Icônes nav ── */
+.nav-icon {
+    width:   20px;
+    height:  20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
 .nav-icon svg {
-    width:  20px; height: 20px;
-    fill:   none; stroke: currentColor;  /* currentColor = blanc grâce à color forcé */
-    stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
+    width:        20px;
+    height:       20px;
+    fill:         none;
+    stroke:       currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 .nav-text { line-height: 1.3; }
 
+/* ── Profil ── */
 .sidebar-profile {
-    display:       flex;
-    align-items:   center;
-    gap:           10px;
-    margin:        0 10px 8px;
-    padding:       12px 14px;
-    background:    rgba(255,255,255,0.05);
-    border-radius: var(--radius-lg);
-    border:        1px solid rgba(255,255,255,0.08);
+    padding:     1rem 1.25rem;
+    border-top:  1px solid rgba(255,255,255,0.05);
+    display:     flex;
+    align-items: center;
+    gap:         0.75rem;
 }
 .profile-avatar {
-    width: 38px; height: 38px; border-radius: var(--radius-full);
-    background: #136dec; color: #fff; font-weight: 800; font-size: 14px;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width:        36px;
+    height:       36px;
+    border-radius: 50%;
+    background:   #136dec;
+    color:        #fff;
+    font-weight:  700;
+    font-size:    0.75rem;
+    display:      flex;
+    align-items:  center;
+    justify-content: center;
+    flex-shrink:  0;
 }
-.profile-name { color: #fff;                   font-size: 13px; font-weight: 700; }
-.profile-role { color: rgba(255,255,255,0.45); font-size: 11px; }
+.profile-name {
+    font-size:  0.8rem;
+    font-weight: 600;
+    color:      #ffffff;
+    margin:     0;
+    white-space: nowrap;
+    overflow:   hidden;
+    text-overflow: ellipsis;
+}
+.profile-role {
+    font-size:  0.7rem;
+    color:      #94a3b8;
+    margin:     0;
+    margin-top: 0.1rem;
+    white-space: nowrap;
+    overflow:   hidden;
+    text-overflow: ellipsis;
+}
 
+/* ── Support ── */
 .sidebar-support {
-    margin: 0 10px 12px; padding: 13px 14px;
-    background: rgba(255,255,255,0.04); border-radius: var(--radius-lg);
-    border: 1px solid rgba(255,255,255,0.07);
+    margin:        1rem;
+    padding:       0.75rem;
+    background:    rgba(255,255,255,0.05);
+    border-radius: 0.5rem;
 }
 .support-label {
-    font-size: 9px; font-weight: 800; color: rgba(255,255,255,0.35);
-    text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 4px;
+    font-size:      0.625rem;
+    font-weight:    700;
+    color:          #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin:         0;
 }
-.support-text { color: rgba(255,255,255,0.65); font-size: 12px; margin-bottom: 8px; }
+.support-text { font-size: 0.75rem; color: #cbd5e1; margin: 0.25rem 0 0; }
 .support-btn {
-    width: 100%; padding: 7px; border-radius: var(--radius-md);
-    border: 1px solid rgba(19,109,236,0.5);
-    background: rgba(19,109,236,0.12); color: #136dec;
-    font-size: 12px; font-weight: 700; cursor: pointer;
-    transition: background var(--t);
+    width: 100%; margin-top: 0.5rem; padding: 0.375rem; background: rgba(19,109,236,0.2);
+    color: var(--primary); border: none; border-radius: 0.375rem; font-size: 0.75rem;
+    font-weight: 700; cursor: pointer; transition: background 0.2s ease;
 }
-.support-btn:hover { background: rgba(19,109,236,0.22); }
+.support-btn:hover { background: rgba(19,109,236,0.3); }
 
 .sidebar-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 90;
@@ -217,7 +261,7 @@
     position:        sticky;
     top:             0;
     z-index:         50;
-    padding:         0 68px 0 24px;   /* 68px à droite = espace pour le btn thème fixe de index.html */
+    padding:         0 68px 0 24px;
     display:         flex;
     align-items:     center;
     justify-content: space-between;
@@ -250,9 +294,6 @@
 
 .topbar-actions { display: flex; align-items: center; gap: 10px; }
 
-/* ── Bouton "Nouveau Fournisseur" — visible en CLAIR et SOMBRE ──
-   On utilise une bordure solide + background explicite pour qu'il
-   reste visible même sur fond clair (blanc sur blanc invisible).   */
 .btn-add {
     display:       flex;
     align-items:   center;
@@ -270,11 +311,7 @@
     outline:       none;
     -webkit-appearance: none;
 }
-/* Assurer que même le reset button ne casse pas la couleur */
-.layout-shell button.btn-add {
-    background: #136dec !important;
-    color:      #fff !important;
-}
+.layout-shell button.btn-add { background: #136dec !important; color: #fff !important; }
 .btn-add:hover  { background: #0f5cc7; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(19,109,236,0.5); }
 .btn-add:active { transform: scale(0.97); }
 .btn-add svg { flex-shrink: 0; stroke: #fff; }
@@ -349,7 +386,6 @@
     border-radius: var(--radius-sm); letter-spacing: 0.06em; text-transform: uppercase;
 }
 
-/* ── Filtre redessiné : pills horizontales, plus de <select> ── */
 .filter-pills {
     display:       flex;
     align-items:   center;
@@ -387,7 +423,6 @@
 }
 .pill:hover { background: var(--bg-row-hover); color: var(--text-primary); }
 
-/* ── Pill active — sélecteur doublement spécifique pour contrer le reset button{background:none} ── */
 .filter-pills .pill.pill-active,
 .layout-shell .filter-pills button.pill-active {
     background-color:  #136dec !important;
@@ -401,26 +436,11 @@
     background-color: #0f5cc7 !important;
     color:            #ffffff !important;
 }
-
-/* Pills inactives — texte lisible en mode clair ET sombre */
-.filter-pills .pill:not(.pill-active) {
-    color: var(--text-primary);
-    font-weight: 600;
-}
-.filter-pills .pill:not(.pill-active):hover {
-    background: var(--bg-row-hover);
-    color:      var(--text-primary);
-}
-/* Tout texte enfant en blanc */
-.pill-active,
-.pill-active span,
-.pill-active * { color: #fff !important; }
-/* Points colorés avec contour blanc pour rester visibles sur fond bleu */
+.filter-pills .pill:not(.pill-active) { color: var(--text-primary); font-weight: 600; }
+.filter-pills .pill:not(.pill-active):hover { background: var(--bg-row-hover); color: var(--text-primary); }
+.pill-active, .pill-active span, .pill-active * { color: #fff !important; }
 .pill-active .pdot { border: 1.5px solid rgba(255,255,255,0.7); }
-/* Points colorés dans les pills */
-.pdot {
-    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
-}
+.pdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .pdot-green { background: #10b981; }
 .pdot-amber { background: #f59e0b; }
 .pdot-rose  { background: #f43f5e; }
@@ -433,13 +453,13 @@
 
 
 /* ============================================================
-   9. TABLEAU — titres de colonnes bien visibles
+   9. TABLEAU — headers plus larges (padding augmenté)
    ============================================================ */
 .table-container {
     background:    var(--bg-panel);
     border:        1px solid var(--border);
     border-radius: var(--radius-xl);
-    overflow:      hidden;          /* nécessaire pour les coins arrondis */
+    overflow:      hidden;
     box-shadow:    var(--shadow-card);
     animation:     fadeUp 0.4s 0.22s ease both;
     transition:    background var(--t), border-color var(--t);
@@ -448,41 +468,32 @@
 
 table {
     width:           100%;
-    border-collapse: separate;      /* IMPORTANT : separate permet les coins + border-radius */
+    border-collapse: separate;
     border-spacing:  0;
-    min-width:       800px;
+    min-width:       900px;
 }
 
-/* ── En-tête : fond fort + coins arrondis sur les 1er et dernier th ── */
-thead tr { background: var(--bg-thead); }
+thead tr { background: var(--bg-thead); height: 60px; }
 
-thead tr th:first-child { border-radius: 0; }  /* géré par table-container overflow:hidden */
-
+/* ── Headers plus larges — padding horizontal généreux ── */
 th {
-    padding:          14px 18px;
+    padding:          30px 40px;       /* augmenté : 14px→16px vertical, 18px→24px horizontal */
     text-align:       left;
-    font-size:        11.5px;
+    font-size:        12px;            /* légèrement augmenté pour lisibilité */
     font-weight:      800;
     color:            var(--text-th);
     text-transform:   uppercase;
     letter-spacing:   0.09em;
     white-space:      nowrap;
     border-bottom:    2px solid var(--border);
-    background:       var(--bg-thead); /* répété pour garantir le fond sur chaque th */
-    /* S'assurer que le 1er th n'est PAS masqué par le border-radius du container */
+    background:       var(--bg-thead);
     position:         sticky;
     top:              0;
     z-index:          1;
 }
 
-/* Premier th : padding-left augmenté pour compenser le coin arrondi du container */
-th:first-child {
-    padding-left: 22px;
-}
-
-td:first-child {
-    padding-left: 22px;
-}
+th:first-child { padding-left: 28px; }
+td:first-child { padding-left: 28px; }
 
 tbody tr {
     border-bottom: 1px solid var(--border);
@@ -492,16 +503,19 @@ tbody tr {
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover:not(.row-expanded):not(.detail-row) { background: var(--bg-row-hover); }
 
-/* Espacement vertical généreux entre les lignes */
-td {     padding-top: 22px;padding-bottom: 22px;padding-left: 18px;padding-right: 18px; vertical-align: middle; font-size: 13px;line-height: 2; }
-
-/* Colonne date — padding-left augmenté pour s'éloigner du score */
-td.td-date {
-    padding-left: 28px;
-    white-space:  nowrap;
+td {
+    padding-top:    22px;
+    padding-bottom: 22px;
+    padding-left:   24px;
+    padding-right:  24px;
+    vertical-align: middle;
+    font-size:      13px;
+    line-height:    2;
 }
-.td-num  { font-size: 14px; font-weight: 700; color: var(--text-primary); }
-.td-muted { color: var(--text-secondary); font-size: 12.5px; }
+
+td.td-date { padding-left: 28px; white-space: nowrap; }
+.td-num    { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.td-muted  { color: var(--text-secondary); font-size: 12.5px; }
 .td-center { text-align: center; padding: 40px; color: var(--text-secondary); }
 
 .td-empty {
@@ -525,7 +539,6 @@ tbody tr:hover .supplier-avatar { color: #136dec; }
 .supplier-name { font-size: 13px; font-weight: 700; white-space: nowrap; }
 .supplier-sub  { font-size: 11px; color: var(--text-secondary); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
 
-/* Taux livraison — badge coloré */
 .rate-badge {
     display: inline-block; padding: 3px 9px; border-radius: var(--radius-full);
     font-size: 12px; font-weight: 700;
@@ -534,12 +547,10 @@ tbody tr:hover .supplier-avatar { color: #136dec; }
 .rate-badge.rate-avg  { background: rgba(245,158,11,0.12); color: #f59e0b; }
 .rate-badge.rate-bad  { background: rgba(244,63,94,0.12);  color: #f43f5e; }
 
-/* Couleurs aussi utilisées dans les classes rate-* des détails */
 .rate-good { color: #10b981; }
 .rate-avg  { color: #f59e0b; }
 .rate-bad  { color: #f43f5e; }
 
-/* Score barre — min-width élargi pour ne pas déborder sur la colonne date */
 .score-cell { display: flex; align-items: center; gap: 10px; min-width: 180px; max-width: 220px; }
 .score-bar  { flex: 1; min-width: 80px; height: 6px; background: var(--bg-thead); border-radius: var(--radius-full); overflow: hidden; }
 .score-fill { height: 100%; border-radius: var(--radius-full); transition: width 0.6s cubic-bezier(.4,0,.2,1); }
@@ -551,7 +562,6 @@ tbody tr:hover .supplier-avatar { color: #136dec; }
 .score-avg  { color: #f59e0b; }
 .score-bad  { color: #f43f5e; }
 
-/* Ligne étendue */
 .row-expanded { background: var(--bg-expanded) !important; border-left: 3px solid #136dec; }
 .detail-row   { background: var(--bg-expanded); border-left: 3px solid #136dec; cursor: default; }
 .detail-row td { padding: 0; }
@@ -594,7 +604,6 @@ tbody tr:hover .supplier-avatar { color: #136dec; }
 }
 .btn-detail-edit:hover { background: rgba(19,109,236,0.22); }
 
-/* Actions */
 .row-actions { display: flex; justify-content: flex-end; gap: 4px; }
 .act-btn {
     width: 32px; height: 32px; border-radius: var(--radius-md);
@@ -607,7 +616,6 @@ tbody tr:hover .supplier-avatar { color: #136dec; }
 .act-del:hover  { background: rgba(244,63,94,0.1); color: #f43f5e; }
 .act-up         { color: #136dec; }
 
-/* Pied de tableau */
 .table-footer {
     padding: 12px 18px; background: var(--bg-thead); border-top: 1px solid var(--border);
     font-size: 11px; font-weight: 700; color: var(--text-secondary);
@@ -643,7 +651,7 @@ tbody tr:hover .supplier-avatar { color: #136dec; }
 .btn-modal-cancel:hover { background: var(--bg-row-hover); }
 .btn-modal-danger {
     padding: 10px 20px; border-radius: var(--radius-md);
-    background: #f43f5e; color: var(--text-secondary); font-size: 13px; font-weight: 700;
+    background: #f43f5e; color: white; font-size: 13px; font-weight: 700;
     transition: background var(--t);
 }
 .btn-modal-danger:hover { background: #e11d48; }
@@ -699,8 +707,7 @@ tbody tr:hover .supplier-avatar { color: #136dec; }
     font-size: 13px; color: var(--text-primary); font-family: inherit;
     outline: none; width: 100%; transition: border-color var(--t), box-shadow var(--t);
 }
-.layout-shell[data-theme="dark"] .form-inp,
-.layout-shell[data-theme="dark"] .form-select { background: rgba(255,255,255,0.06); }
+.layout-shell[data-theme="dark"] .form-inp { background: rgba(255,255,255,0.06); }
 .form-inp::placeholder { color: var(--text-secondary); font-style: italic; }
 .form-inp:focus { border-color: #136dec; box-shadow: 0 0 0 3px rgba(19,109,236,0.18); }
 .form-textarea { resize: vertical; min-height: 68px; }
@@ -719,15 +726,13 @@ tbody tr:hover .supplier-avatar { color: #136dec; }
 }
 .btn-form-cancel:hover { background: var(--bg-row-hover); }
 
-/* ── Bouton Enregistrer — couleurs forcées pour rester visible
-   dans les deux modes (le reset button{background:none} est contré) */
 .btn-form-save,
 .layout-shell .form-footer .btn-form-save {
     flex:            2;
     padding:         11px 16px;
     border-radius:   var(--radius-md);
-    background:      #136dec !important;   /* bleu primary toujours visible */
-    color:           #ffffff !important;   /* texte blanc garanti */
+    background:      #136dec !important;
+    color:           #ffffff !important;
     font-size:       13px;
     font-weight:     700;
     display:         flex;

@@ -1,6 +1,6 @@
 // ============================================================
 // AssetFlow.Infrastructure / Services / MaterielService.cs
-// Implémentation du service matériel — accès EF Core direct
+// MISE À JOUR : suppression en cascade (affectations + incidents)
 // ============================================================
 
 using AssetFlow.Application.DTOs;
@@ -11,19 +11,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AssetFlow.Infrastructure.Services
 {
-    /// <summary>
-    /// Implémentation concrète de <see cref="IMaterielService"/>
-    /// utilisant Entity Framework Core et SQL Server
-    /// </summary>
     public class MaterielService : IMaterielService
     {
         private readonly AppDbContext _db;
-
         public MaterielService(AppDbContext db) => _db = db;
 
-        // ── Helpers ──────────────────────────────────────────────
-
-        /// <summary>Mappe une entité vers un DTO de lecture</summary>
+        // ── Helpers ───────────────────────────────────────────────
         private static MaterielDto ToDto(Materiel m) => new()
         {
             Id            = m.Id,
@@ -40,36 +33,25 @@ namespace AssetFlow.Infrastructure.Services
             DateAjout     = m.DateAjout
         };
 
-        /// <summary>Convertit une chaîne en enum EtatMateriel (tolérant)</summary>
         private static EtatMateriel ParseEtat(string etat) =>
             Enum.TryParse<EtatMateriel>(etat, true, out var e) ? e : EtatMateriel.Disponible;
 
         // ── Lecture ───────────────────────────────────────────────
-
-        /// <inheritdoc/>
         public async Task<IEnumerable<MaterielDto>> GetAllAsync()
         {
-            var list = await _db.Materiels
-                .AsNoTracking()
-                .OrderBy(m => m.Designation)
-                .ToListAsync();
-
+            var list = await _db.Materiels.AsNoTracking().OrderBy(m => m.Designation).ToListAsync();
             return list.Select(ToDto);
         }
 
-        /// <inheritdoc/>
         public async Task<MaterielDto?> GetByIdAsync(int id)
         {
             var m = await _db.Materiels.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
             return m is null ? null : ToDto(m);
         }
 
-        /// <inheritdoc/>
-        public async Task<IEnumerable<MaterielDto>> SearchAsync(
-            string? terme, string? categorie, string? etat)
+        public async Task<IEnumerable<MaterielDto>> SearchAsync(string? terme, string? categorie, string? etat)
         {
             var q = _db.Materiels.AsNoTracking().AsQueryable();
-
             if (!string.IsNullOrWhiteSpace(terme))
             {
                 var t = terme.Trim().ToLower();
@@ -78,21 +60,17 @@ namespace AssetFlow.Infrastructure.Services
                     m.Reference.ToLower().Contains(t)   ||
                     (m.Description != null && m.Description.ToLower().Contains(t)));
             }
-
             if (!string.IsNullOrWhiteSpace(categorie) && categorie != "all")
                 q = q.Where(m => m.Categorie.ToLower() == categorie.ToLower());
-
             if (!string.IsNullOrWhiteSpace(etat) && etat != "all")
             {
                 var etatEnum = ParseEtat(etat);
                 q = q.Where(m => m.Etat == etatEnum);
             }
-
             var list = await q.OrderBy(m => m.Designation).ToListAsync();
             return list.Select(ToDto);
         }
 
-        /// <inheritdoc/>
         public async Task<MaterielStatsDto> GetStatsAsync()
         {
             var all = await _db.Materiels.AsNoTracking().ToListAsync();
@@ -100,7 +78,6 @@ namespace AssetFlow.Infrastructure.Services
             {
                 TotalArticles   = all.Count,
                 EnStock         = all.Count(m => m.Etat == EtatMateriel.Disponible),
-                // Alerte : stock entre QuantiteMin et QuantiteMin*2 (hors rupture)
                 AlerteSeuil     = all.Count(m =>
                     m.Etat != EtatMateriel.EnRupture &&
                     m.QuantiteStock <= m.QuantiteMin * 2 &&
@@ -110,11 +87,8 @@ namespace AssetFlow.Infrastructure.Services
         }
 
         // ── Écriture ──────────────────────────────────────────────
-
-        /// <inheritdoc/>
         public async Task<MaterielResultDto> CreerAsync(CreerMaterielDto dto)
         {
-            // Vérifie l'unicité de la référence
             if (await _db.Materiels.AnyAsync(m => m.Reference == dto.Reference.Trim()))
                 return new MaterielResultDto { Succes = false, Message = "Cette référence existe déjà." };
 
@@ -136,22 +110,15 @@ namespace AssetFlow.Infrastructure.Services
             _db.Materiels.Add(materiel);
             await _db.SaveChangesAsync();
 
-            return new MaterielResultDto
-            {
-                Succes     = true,
-                Message    = "Matériel créé avec succès.",
-                IdMateriel = materiel.Id
-            };
+            return new MaterielResultDto { Succes = true, Message = "Matériel créé avec succès.", IdMateriel = materiel.Id };
         }
 
-        /// <inheritdoc/>
         public async Task<MaterielResultDto> ModifierAsync(ModifierMaterielDto dto)
         {
             var materiel = await _db.Materiels.FindAsync(dto.Id);
             if (materiel is null)
                 return new MaterielResultDto { Succes = false, Message = "Matériel introuvable." };
 
-            // Vérifie l'unicité de la référence (hors lui-même)
             if (await _db.Materiels.AnyAsync(m => m.Reference == dto.Reference.Trim() && m.Id != dto.Id))
                 return new MaterielResultDto { Succes = false, Message = "Cette référence est déjà utilisée." };
 
@@ -170,25 +137,58 @@ namespace AssetFlow.Infrastructure.Services
             return new MaterielResultDto { Succes = true, Message = "Matériel mis à jour." };
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Suppression simple (conservée pour compatibilité).
+        /// Ne supprime pas si des affectations existent sans cascade.
+        /// </summary>
         public async Task<MaterielResultDto> SupprimerAsync(int id)
+        {
+            return await SupprimerAvecCascadeAsync(id);
+        }
+
+        /// <summary>
+        /// Suppression en cascade :
+        ///   1. Supprime tous les incidents liés aux affectations du matériel
+        ///   2. Supprime toutes les affectations du matériel
+        ///   3. Supprime le matériel
+        /// </summary>
+        public async Task<MaterielResultDto> SupprimerAvecCascadeAsync(int id)
         {
             var materiel = await _db.Materiels.FindAsync(id);
             if (materiel is null)
                 return new MaterielResultDto { Succes = false, Message = "Matériel introuvable." };
 
-            // Sécurité : on ne supprime pas si des affectations existent
-            var aAffectations = await _db.Affectations.AnyAsync(a => a.MaterielId == id);
-            if (aAffectations)
-                return new MaterielResultDto
-                {
-                    Succes  = false,
-                    Message = "Ce matériel possède des affectations et ne peut pas être supprimé."
-                };
+            // 1. Récupérer toutes les affectations
+            var affectations = await _db.Affectations
+                .Where(a => a.MaterielId == id)
+                .ToListAsync();
 
+            if (affectations.Any())
+            {
+                var affectationIds = affectations.Select(a => a.Id).ToList();
+
+                // 2. Supprimer les incidents liés à ces affectations
+                var incidents = await _db.Incidents
+                    .Where(i => affectationIds.Contains(i.AffectationId))
+                    .ToListAsync();
+
+                if (incidents.Any())
+                    _db.Incidents.RemoveRange(incidents);
+
+                // 3. Supprimer les affectations
+                _db.Affectations.RemoveRange(affectations);
+            }
+
+            // 4. Supprimer le matériel
             _db.Materiels.Remove(materiel);
             await _db.SaveChangesAsync();
-            return new MaterielResultDto { Succes = true, Message = "Matériel supprimé." };
+
+            return new MaterielResultDto
+            {
+                Succes    = true,
+                Message   = "Matériel supprimé avec ses affectations et incidents associés.",
+                IdMateriel = id
+            };
         }
     }
-}   
+}

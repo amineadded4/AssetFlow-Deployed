@@ -1,6 +1,6 @@
 // ============================================================
 // AssetFlow.WebAPI / Controllers / MaterielController.cs
-// API REST pour la gestion du matériel/stock
+// CRUD + endpoint cascade delete
 // ============================================================
 
 using AssetFlow.Application.DTOs;
@@ -9,101 +9,70 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AssetFlow.WebAPI.Controllers
 {
-    /// <summary>
-    /// Contrôleur REST exposant les opérations CRUD sur le matériel.
-    /// Route de base : /api/materiel
-    /// </summary>
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/materiel")]
     public class MaterielController : ControllerBase
     {
-        private readonly IMaterielService _service;
+        private readonly IMaterielService _svc;
+        public MaterielController(IMaterielService svc) => _svc = svc;
 
-        public MaterielController(IMaterielService service) => _service = service;
-
-        // ── GET /api/materiel ─────────────────────────────────────
-        /// <summary>Retourne la liste complète du matériel</summary>
+        // GET api/materiel
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<MaterielDto>), 200)]
         public async Task<IActionResult> GetAll()
-        {
-            var result = await _service.GetAllAsync();
-            return Ok(result);
-        }
+            => Ok(await _svc.GetAllAsync());
 
-        // ── GET /api/materiel/{id} ────────────────────────────────
-        /// <summary>Retourne un matériel par son identifiant</summary>
+        // GET api/materiel/{id}
         [HttpGet("{id:int}")]
-        [ProducesResponseType(typeof(MaterielDto), 200)]
-        [ProducesResponseType(404)]
         public async Task<IActionResult> GetById(int id)
         {
-            var dto = await _service.GetByIdAsync(id);
-            return dto is null ? NotFound() : Ok(dto);
+            var m = await _svc.GetByIdAsync(id);
+            return m is null ? NotFound() : Ok(m);
         }
 
-        // ── GET /api/materiel/search?terme=&categorie=&etat= ─────
-        /// <summary>Recherche avec filtres optionnels</summary>
+        // GET api/materiel/search?terme=...&categorie=...&etat=...
         [HttpGet("search")]
-        [ProducesResponseType(typeof(IEnumerable<MaterielDto>), 200)]
         public async Task<IActionResult> Search(
             [FromQuery] string? terme,
             [FromQuery] string? categorie,
             [FromQuery] string? etat)
-        {
-            var result = await _service.SearchAsync(terme, categorie, etat);
-            return Ok(result);
-        }
+            => Ok(await _svc.SearchAsync(terme, categorie, etat));
 
-        // ── GET /api/materiel/stats ───────────────────────────────
-        /// <summary>Retourne les KPIs du stock (pour les cards)</summary>
+        // GET api/materiel/stats
         [HttpGet("stats")]
-        [ProducesResponseType(typeof(MaterielStatsDto), 200)]
-        public async Task<IActionResult> GetStats()
-        {
-            var stats = await _service.GetStatsAsync();
-            return Ok(stats);
-        }
+        public async Task<IActionResult> Stats()
+            => Ok(await _svc.GetStatsAsync());
 
-        // ── POST /api/materiel ────────────────────────────────────
-        /// <summary>Crée un nouveau matériel</summary>
+        // POST api/materiel
         [HttpPost]
-        [ProducesResponseType(typeof(MaterielResultDto), 200)]
-        [ProducesResponseType(typeof(MaterielResultDto), 400)]
-        public async Task<IActionResult> Creer([FromBody] CreerMaterielDto dto)
+        public async Task<IActionResult> Create([FromBody] CreerMaterielDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var result = await _service.CreerAsync(dto);
+            var result = await _svc.CreerAsync(dto);
             return result.Succes ? Ok(result) : BadRequest(result);
         }
 
-        // ── PUT /api/materiel/{id} ────────────────────────────────
-        /// <summary>Met à jour un matériel existant</summary>
+        // PUT api/materiel/{id}
         [HttpPut("{id:int}")]
-        [ProducesResponseType(typeof(MaterielResultDto), 200)]
-        [ProducesResponseType(typeof(MaterielResultDto), 400)]
-        public async Task<IActionResult> Modifier(int id, [FromBody] ModifierMaterielDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] ModifierMaterielDto dto)
         {
-            if (id != dto.Id)
-                return BadRequest(new MaterielResultDto { Succes = false, Message = "ID incohérent." });
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var result = await _service.ModifierAsync(dto);
+            dto.Id = id;
+            var result = await _svc.ModifierAsync(dto);
             return result.Succes ? Ok(result) : BadRequest(result);
         }
 
-        // ── DELETE /api/materiel/{id} ─────────────────────────────
-        /// <summary>Supprime un matériel</summary>
+        // DELETE api/materiel/{id}
         [HttpDelete("{id:int}")]
-        [ProducesResponseType(typeof(MaterielResultDto), 200)]
-        [ProducesResponseType(typeof(MaterielResultDto), 400)]
-        public async Task<IActionResult> Supprimer(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var result = await _service.SupprimerAsync(id);
+            var result = await _svc.SupprimerAsync(id);
+            return result.Succes ? Ok(result) : BadRequest(result);
+        }
+
+        // DELETE api/materiel/{id}/cascade
+        // Supprime le matériel + toutes ses affectations + tous les incidents associés
+        [HttpDelete("{id:int}/cascade")]
+        public async Task<IActionResult> DeleteCascade(int id)
+        {
+            var result = await _svc.SupprimerAvecCascadeAsync(id);
             return result.Succes ? Ok(result) : BadRequest(result);
         }
     }

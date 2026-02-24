@@ -27,5 +27,6 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<EmployeService>();  // ← NOUVEAU
 builder.Services.AddScoped<IncidentService>();
 builder.Services.AddScoped<FournisseurService>();
+builder.Services.AddScoped<MaterielService>();
 
 await builder.Build().RunAsync();

@@ -1,226 +1,151 @@
 @* ============================================================
-   Pages/Achat/Materiel.razor — v1
-   Page de gestion du stock matériel
+   Pages/Achat/Materiel.razor — v2 StockIT Design
    Route : /achat/materiel
-   Design : inspiré StockIT — sidebar identique à Fournisseurs
    ============================================================ *@
 
 @page "/achat/materiel"
 @using AssetFlow.BlazorUI.Pages.Achat
 
-<div class="mat-shell" data-theme="@_theme">
+<div class="sk-shell" data-theme="@_theme">
 
     @* ── Overlay sidebar mobile ── *@
     @if (_sidebarOpen)
     {
-        <div class="mat-overlay" @onclick="ToggleSidebar"></div>
+        <div class="sk-overlay" @onclick="ToggleSidebar"></div>
     }
 
     @* ══════════════════════════════════════════════════════════
-       SIDEBAR — identique à Fournisseurs
+       SIDEBAR
     ══════════════════════════════════════════════════════════ *@
-    <aside class="mat-sidebar @(_sidebarOpen ? "open" : "")">
-
-        <div class="mat-sidebar-header">
-            <img src="images/logo.png" alt="AssetFlow" class="mat-logo" />
+    <aside class="sk-sidebar @(_sidebarOpen ? "open" : "")">
+        <div class="sk-sidebar-header">
+            <img src="images/logo.png" alt="AssetFlow" class="sk-logo" />
         </div>
-
-        <nav class="mat-nav">
-            <a href="/statistiques" class="mat-nav-link">
-                <span class="mat-nav-icon">
+        <nav class="sk-nav">
+            <a href="/statistiques" class="sk-nav-link">
+                <span class="sk-nav-icon">
                     <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
                 </span>
                 <span>Statistiques</span>
             </a>
-            <a href="/achat/materiel" class="mat-nav-link active">
-                <span class="mat-nav-icon">
+            <a href="/achat/materiel" class="sk-nav-link active">
+                <span class="sk-nav-icon">
                     <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
                 </span>
                 <span>Matériel</span>
             </a>
-            <a href="/achat/fournisseurs" class="mat-nav-link">
-                <span class="mat-nav-icon">
+            <a href="/achat/fournisseurs" class="sk-nav-link">
+                <span class="sk-nav-icon">
                     <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 </span>
                 <span>Fournisseurs</span>
             </a>
-            <a href="/demandes-achat" class="mat-nav-link">
-                <span class="mat-nav-icon">
+            <a href="/demandes-achat" class="sk-nav-link">
+                <span class="sk-nav-icon">
                     <svg viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                 </span>
                 <span>Demande d'achat</span>
             </a>
         </nav>
-
-        @* Profil utilisateur *@
-        <div class="mat-profile">
-            <div class="mat-profile-avatar">@CurrentUserInitials</div>
-            <div class="mat-profile-info">
-                <p class="mat-profile-name">@_currentUserName</p>
-                <p class="mat-profile-role">@_currentUserRole</p>
+        <div class="sk-profile">
+            <div class="sk-profile-avatar">@CurrentUserInitials</div>
+            <div class="sk-profile-info">
+                <p class="sk-profile-name">@_currentUserName</p>
+                <p class="sk-profile-role">@_currentUserRole</p>
             </div>
         </div>
-
-        @* Support *@
-        <div class="mat-support">
-            <p class="mat-support-label">SUPPORT IT</p>
-            <p class="mat-support-text">Besoin d'aide ?</p>
-            <button class="mat-support-btn">Contact</button>
+        <div class="sk-support">
+            <p class="sk-support-label">SUPPORT IT</p>
+            <p class="sk-support-text">Besoin d'aide ?</p>
+            <button class="sk-support-btn">Contact</button>
         </div>
     </aside>
 
     @* ══════════════════════════════════════════════════════════
        ZONE PRINCIPALE
     ══════════════════════════════════════════════════════════ *@
-    <main class="mat-main">
+    <div class="sk-main-wrap">
 
-        @* ── En-tête de page — titre + bouton Nouvel Article ── *@
-        <header class="mat-page-header">
-            <button class="mat-menu-btn" @onclick="ToggleSidebar" aria-label="Menu">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                    <line x1="3" y1="6"  x2="21" y2="6" />
-                    <line x1="3" y1="12" x2="21" y2="12"/>
-                    <line x1="3" y1="18" x2="21" y2="18"/>
-                </svg>
-            </button>
-            <div>
-                <h2 class="mat-page-title">Consultation des Stocks</h2>
-                <p class="mat-page-sub">Gérez et suivez l'inventaire en temps réel.</p>
+        @* ── TOP NAV BAR (StockIT style) ── *@
+        <header class="sk-topbar">
+            <div class="sk-topbar-left">
+                <button class="sk-menu-btn" @onclick="ToggleSidebar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+                <div class="sk-topbar-divider"></div>
+                <h2 class="sk-topbar-title">Gestion des Produits</h2>
             </div>
-            <button class="mat-btn-add" @onclick="() => OuvrirFormulaire(null)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/>
-                    <line x1="5"  y1="12" x2="19" y2="12"/>
-                </svg>
-                Nouvel Article
-            </button>
+            <div class="sk-topbar-center">
+                <div class="sk-search-wrap">
+                    <svg class="sk-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input class="sk-search-inp" type="text" placeholder="Rechercher par nom, référence..."
+                           @oninput="OnRecherche" />
+                </div>
+                <div class="sk-cat-wrap">
+                    <select class="sk-cat-select" @onchange="OnCategorieChange">
+                        <option value="all">Toutes les catégories</option>
+                        @foreach (var cat in _categories)
+                        {
+                            <option value="@cat">@cat</option>
+                        }
+                    </select>
+                    <svg class="sk-cat-arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+            </div>
+            <div class="sk-topbar-right">
+                <button class="sk-btn-add" @onclick="() => OuvrirFormulaire(null)">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>Ajouter un produit</span>
+                </button>
+            </div>
         </header>
 
-        @* ── CONTENU ── *@
-        <div class="mat-content">
+        @* ── CONTENT ── *@
+        <main class="sk-content @(_panneauOuvert ? "panel-open" : "")">
 
-            @* ── KPI Cards (4 cards) — style StockIT ── *@
-            <div class="mat-kpi-grid">
-
-                @* Card 1 : Total Articles *@
-                <div class="mat-kpi-card">
-                    <div class="mat-kpi-top">
-                        <div class="mat-kpi-icon icon-blue">
-                            <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                        </div>
-                        <span class="mat-kpi-badge badge-emerald">
-                            <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                            +5%
-                        </span>
-                    </div>
-                    <p class="mat-kpi-label">Total Articles</p>
-                    <p class="mat-kpi-value">@_stats.TotalArticles</p>
+            <div class="sk-section-header">
+                <div>
+                    <h3 class="sk-section-title">Catalogue produits</h3>
+                    <p class="sk-section-sub">Aperçu et gestion de votre inventaire actuel.</p>
                 </div>
-
-                @* Card 2 : En Stock *@
-                <div class="mat-kpi-card">
-                    <div class="mat-kpi-top">
-                        <div class="mat-kpi-icon icon-emerald">
-                            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                        </div>
-                        <span class="mat-kpi-badge badge-emerald">
-                            <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                            +2%
-                        </span>
-                    </div>
-                    <p class="mat-kpi-label">En Stock</p>
-                    <p class="mat-kpi-value">@_stats.EnStock</p>
-                </div>
-
-                @* Card 3 : Seuil Minimum *@
-                <div class="mat-kpi-card">
-                    <div class="mat-kpi-top">
-                        <div class="mat-kpi-icon icon-amber">
-                            <svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                        </div>
-                        <span class="mat-kpi-badge badge-amber">
-                            <svg viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
-                            -10%
-                        </span>
-                    </div>
-                    <p class="mat-kpi-label">Seuil Minimum Atteint</p>
-                    <p class="mat-kpi-value">@_stats.AlerteSeuil</p>
-                </div>
-
-                @* Card 4 : Rupture Critique *@
-                <div class="mat-kpi-card">
-                    <div class="mat-kpi-top">
-                        <div class="mat-kpi-icon icon-rose">
-                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        </div>
-                        <span class="mat-kpi-badge badge-rose">
-                            <svg viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
-                            -4%
-                        </span>
-                    </div>
-                    <p class="mat-kpi-label">Rupture Critique</p>
-                    <p class="mat-kpi-value">@_stats.RuptureCritique</p>
+                <div class="sk-section-actions">
+                    <button class="sk-btn-export" title="Exporter Excel" @onclick="ExporterExcel">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        <span>Excel</span>
+                    </button>
+                    <button class="sk-btn-export" title="Exporter PDF" @onclick="ExporterPdf">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                        <span>PDF</span>
+                    </button>
+                    <select class="sk-state-select" @onchange="OnEtatChange">
+                        <option value="all">Tous les états</option>
+                        <option value="Disponible">Disponible</option>
+                        <option value="EnRupture">En rupture</option>
+                        <option value="EnCommande">En commande</option>
+                        <option value="HorsService">Hors service</option>
+                    </select>
                 </div>
             </div>
 
-            @* ── TABLEAU de stock — style StockIT ── *@
-            <div class="mat-table-card">
+            @if (!string.IsNullOrEmpty(_erreur))
+            {
+                <div class="sk-alert">@_erreur</div>
+            }
 
-                @* Barre filtres *@
-                <div class="mat-filters">
-                    <div class="mat-search-wrap">
-                        <span class="mat-search-icon">
-                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        </span>
-                        <input class="mat-search-input" type="text"
-                               placeholder="Rechercher une référence ou un produit…"
-                               @oninput="OnRecherche" />
-                    </div>
-                    <div class="mat-filter-group">
-                        <label class="mat-filter-label">Filtrer par :</label>
-                        <select class="mat-select" @onchange="OnCategorieChange">
-                            <option value="all">Toutes les catégories</option>
-                            @foreach (var cat in _categories)
-                            {
-                                <option value="@cat">@cat</option>
-                            }
-                        </select>
-                        <select class="mat-select" @onchange="OnEtatChange">
-                            <option value="all">Tous les états</option>
-                            <option value="Disponible">Disponible</option>
-                            <option value="EnRupture">En rupture</option>
-                            <option value="EnCommande">En commande</option>
-                            <option value="HorsService">Hors service</option>
-                        </select>
-                    </div>
-                </div>
-
-                @* Erreur globale *@
-                @if (!string.IsNullOrEmpty(_erreur))
-                {
-                    <div class="mat-alert">@_erreur</div>
-                }
-
-                @* Table *@
-                <div class="mat-table-scroll">
-                    <table class="mat-table">
-                        <colgroup>
-                            <col style="width:12%" />
-                            <col style="width:22%" />
-                            <col style="width:12%" />
-                            <col style="width:9%"  />
-                            <col style="width:9%"  />
-                            <col style="width:9%"  />
-                            <col style="width:14%" />
-                            <col style="width:13%" />
-                        </colgroup>
+            @* Table card *@
+            <div class="sk-table-card">
+                <div class="sk-table-scroll">
+                    <table class="sk-table">
                         <thead>
                             <tr>
+                                <th>Image</th>
                                 <th>Référence</th>
-                                <th>Nom du produit</th>
+                                <th>Nom</th>
                                 <th>Catégorie</th>
                                 <th>Quantité</th>
-                                <th>Seuil Min</th>
+                                <th>Seuil</th>
                                 <th>Emplacement</th>
                                 <th>Statut</th>
                                 <th class="th-right">Actions</th>
@@ -229,75 +154,70 @@
                         <tbody>
                             @if (_chargement)
                             {
-                                <tr><td colspan="8" class="td-center">Chargement…</td></tr>
+                                <tr><td colspan="9" class="td-loading">
+                                    <div class="sk-spinner"></div>
+                                    Chargement…
+                                </td></tr>
                             }
                             else if (!_materiels.Any())
                             {
-                                <tr>
-                                    <td colspan="8" class="td-empty">
-                                        <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                                        Aucun matériel trouvé.
-                                    </td>
-                                </tr>
+                                <tr><td colspan="9" class="td-empty">
+                                    <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                                    Aucun matériel trouvé.
+                                </td></tr>
                             }
                             else
                             {
                                 @foreach (var m in _materiels)
                                 {
-                                    <tr class="mat-row">
-                                        @* Référence *@
-                                        <td class="td-ref">@m.Reference</td>
-
-                                        @* Désignation *@
-                                        <td class="td-name">
-                                            <div class="mat-name-cell">
-                                                <div class="mat-item-icon">
-                                                    <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                                                </div>
-                                                <div>
-                                                    <p class="td-name-main">@m.Designation</p>
-                                                    @if (!string.IsNullOrEmpty(m.Description))
-                                                    {
-                                                        <p class="td-name-sub">@m.Description</p>
-                                                    }
-                                                </div>
+                                    <tr class="sk-row">
+                                        <td>
+                                            <div class="sk-img-cell">
+                                                @if (!string.IsNullOrEmpty(m.ImageUrl))
+                                                {
+                                                    <img src="@m.ImageUrl" alt="@m.Designation" class="sk-product-img" />
+                                                }
+                                                else
+                                                {
+                                                    <div class="sk-product-img-placeholder">
+                                                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                                    </div>
+                                                }
                                             </div>
                                         </td>
-
-                                        @* Catégorie *@
-                                        <td class="td-muted">@m.Categorie</td>
-
-                                        @* Quantité — colorée si faible *@
+                                        <td class="td-ref">@m.Reference</td>
+                                        <td class="td-name">
+                                            <p class="td-name-main">@m.Designation</p>
+                                            @if (!string.IsNullOrEmpty(m.Description))
+                                            {
+                                                <p class="td-name-sub">@m.Description</p>
+                                            }
+                                        </td>
                                         <td>
-                                            <span class="td-qty @(m.QuantiteStock == 0 ? "qty-zero" : m.QuantiteStock <= m.QuantiteMin ? "qty-low" : "qty-ok")">
-                                                @m.QuantiteStock <span class="td-unite">@m.Unite</span>
+                                            <span class="sk-cat-badge @CatBadgeClass(m.Categorie)">@m.Categorie</span>
+                                        </td>
+                                        <td>
+                                            <span class="td-qty @(m.QuantiteStock == 0 ? "qty-zero" : m.QuantiteStock <= m.QuantiteMin ? "qty-low" : "")">
+                                                @m.QuantiteStock
+                                                @if (m.QuantiteStock <= m.QuantiteMin && m.QuantiteStock > 0)
+                                                {
+                                                    <svg class="qty-warn-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                                }
                                             </span>
                                         </td>
-
-                                        @* Seuil min *@
-                                        <td class="td-threshold">@m.QuantiteMin</td>
-
-                                        @* Emplacement *@
+                                        <td class="td-muted">@m.QuantiteMin</td>
                                         <td class="td-muted">@(m.Emplacement ?? "—")</td>
-
-                                        @* Statut — badge pill coloré *@
                                         <td>
-                                            <span class="mat-badge @BadgeClass(m.Etat)">
-                                                @BadgeLabel(m.Etat)
-                                            </span>
+                                            <span class="sk-status @StatusClass(m.Etat)">@StatusLabel(m.Etat)</span>
                                         </td>
-
-                                        @* Actions *@
                                         <td class="td-actions">
-                                            <div class="mat-row-actions">
-                                                <button class="mat-act-btn mat-act-edit" title="Modifier"
-                                                        @onclick="() => OuvrirFormulaire(m)"
-                                                        @onclick:stopPropagation="true">
+                                            <div class="sk-row-acts">
+                                                <button class="sk-act-btn sk-act-edit" title="Modifier"
+                                                        @onclick="() => OuvrirFormulaire(m)" @onclick:stopPropagation="true">
                                                     <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                                 </button>
-                                                <button class="mat-act-btn mat-act-del" title="Supprimer"
-                                                        @onclick="() => DemanderSuppression(m)"
-                                                        @onclick:stopPropagation="true">
+                                                <button class="sk-act-btn sk-act-del" title="Supprimer"
+                                                        @onclick="() => DemanderSuppression(m)" @onclick:stopPropagation="true">
                                                     <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                                                 </button>
                                             </div>
@@ -308,130 +228,115 @@
                         </tbody>
                     </table>
                 </div>
-
-                @* Pied de table *@
-                <div class="mat-table-footer">
+                <div class="sk-table-footer">
                     <span>Affichage de @_materiels.Count sur @_totalCount articles</span>
                 </div>
             </div>
-
-        </div>
-    </main>
+        </main>
+    </div>
 
     @* ══════════════════════════════════════════════════════════
        MODALE SUPPRESSION
     ══════════════════════════════════════════════════════════ *@
     @if (_aSupprimer != null)
     {
-        <div class="mat-modal-overlay" @onclick="AnnulerSuppression">
-            <div class="mat-modal" @onclick:stopPropagation="true">
-                <div class="mat-modal-icon">
+        <div class="sk-modal-overlay" @onclick="AnnulerSuppression">
+            <div class="sk-modal" @onclick:stopPropagation="true">
+                <div class="sk-modal-icon">
                     <svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 </div>
-                <h3 class="mat-modal-title">Supprimer ce matériel ?</h3>
-                <p class="mat-modal-text">
+                <h3 class="sk-modal-title">Supprimer ce matériel ?</h3>
+                <p class="sk-modal-text">
                     Vous allez supprimer <strong>@_aSupprimer.Designation</strong>
-                    (<em>@_aSupprimer.Reference</em>). Cette action est irréversible.
+                    (<em>@_aSupprimer.Reference</em>).<br/>
+                    Toutes les affectations et incidents associés seront également supprimés. Cette action est irréversible.
                 </p>
-                <div class="mat-modal-actions">
-                    <button class="mat-btn-cancel" @onclick="AnnulerSuppression">Annuler</button>
-                    <button class="mat-btn-danger" @onclick="ConfirmerSuppression">Supprimer</button>
+                <div class="sk-modal-acts">
+                    <button class="sk-btn-cancel" @onclick="AnnulerSuppression">Annuler</button>
+                    <button class="sk-btn-danger" @onclick="ConfirmerSuppression">Supprimer</button>
                 </div>
             </div>
         </div>
     }
 
     @* ══════════════════════════════════════════════════════════
-       PANNEAU FORMULAIRE SLIDE-IN
+       PANNEAU FORMULAIRE SLIDE-IN (droite)
     ══════════════════════════════════════════════════════════ *@
     @if (_panneauOuvert)
     {
-        <div class="mat-form-overlay" @onclick="FermerFormulaire"></div>
-        <div class="mat-form-panel">
-            <div class="mat-form-header">
-                <div class="mat-form-header-icon">
-                    <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        <div class="sk-panel-overlay" @onclick="FermerFormulaire"></div>
+        <aside class="sk-panel">
+            <div class="sk-panel-header">
+                <div class="sk-panel-header-left">
+                    <div class="sk-panel-icon">
+                        <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    </div>
+                    <h3>@(_modeModif ? "Modifier le produit" : "Ajouter un produit")</h3>
                 </div>
-                <h3>@(_modeModif ? "Modifier le matériel" : "Nouvel article")</h3>
-                <button class="mat-form-close" @onclick="FermerFormulaire">
+                <button class="sk-panel-close" @onclick="FermerFormulaire">
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
             </div>
 
-            <div class="mat-form-body">
+            <div class="sk-panel-body">
 
-                @* Section — Identification *@
-                <p class="mat-form-section">Identification</p>
-
-                <div class="mat-form-row2">
-                    <div class="mat-form-group">
-                        <label class="mat-form-lbl">Référence <span class="req">*</span></label>
-                        <input class="mat-form-inp @(_erreurs.ContainsKey("Reference") ? "inp-err" : "")"
-                               type="text" placeholder="ex : SN-5592-X"
-                               @bind="_form.Reference" @bind:event="oninput" />
-                        @if (_erreurs.ContainsKey("Reference")) { <span class="inp-msg">@_erreurs["Reference"]</span> }
-                    </div>
-                    <div class="mat-form-group">
-                        <label class="mat-form-lbl">Catégorie <span class="req">*</span></label>
-                        <input class="mat-form-inp @(_erreurs.ContainsKey("Categorie") ? "inp-err" : "")"
-                               type="text" placeholder="ex : Informatique"
-                               list="cat-list"
-                               @bind="_form.Categorie" @bind:event="oninput" />
-                        <datalist id="cat-list">
-                            @foreach (var cat in _categories)
-                            {
-                                <option value="@cat" />
-                            }
-                        </datalist>
-                        @if (_erreurs.ContainsKey("Categorie")) { <span class="inp-msg">@_erreurs["Categorie"]</span> }
-                    </div>
-                </div>
-
-                <div class="mat-form-group">
-                    <label class="mat-form-lbl">Désignation <span class="req">*</span></label>
-                    <input class="mat-form-inp @(_erreurs.ContainsKey("Designation") ? "inp-err" : "")"
-                           type="text" placeholder="ex : Laptop Dell Latitude 5540"
+                @* Nom du produit *@
+                <div class="sk-field">
+                    <label class="sk-label">Nom du produit</label>
+                    <input class="sk-inp @(_erreurs.ContainsKey("Designation") ? "inp-err" : "")"
+                           type="text" placeholder="ex: Écran Dell UltraSharp 27"
                            @bind="_form.Designation" @bind:event="oninput" />
-                    @if (_erreurs.ContainsKey("Designation")) { <span class="inp-msg">@_erreurs["Designation"]</span> }
+                    @if (_erreurs.ContainsKey("Designation")) { <span class="sk-err-msg">@_erreurs["Designation"]</span> }
                 </div>
 
-                <div class="mat-form-group">
-                    <label class="mat-form-lbl">Description</label>
-                    <textarea class="mat-form-inp mat-form-ta" rows="2"
-                              placeholder="Détails supplémentaires…"
-                              @bind="_form.Description" @bind:event="oninput"></textarea>
+                @* Référence SKU *@
+                <div class="sk-field">
+                    <label class="sk-label">Référence (SKU)</label>
+                    <input class="sk-inp sk-mono @(_erreurs.ContainsKey("Reference") ? "inp-err" : "")"
+                           type="text" placeholder="ex: SN-5592-X"
+                           @bind="_form.Reference" @bind:event="oninput" />
+                    @if (_erreurs.ContainsKey("Reference")) { <span class="sk-err-msg">@_erreurs["Reference"]</span> }
                 </div>
 
-                @* Section — Stock *@
-                <p class="mat-form-section" style="margin-top:6px">Stock</p>
+                @* Catégorie *@
+                <div class="sk-field">
+                    <label class="sk-label">Catégorie</label>
+                    <div class="sk-select-wrap">
+                        <input class="sk-inp @(_erreurs.ContainsKey("Categorie") ? "inp-err" : "")"
+                               type="text" placeholder="ex: Informatique"
+                               list="cat-list-panel"
+                               @bind="_form.Categorie" @bind:event="oninput" />
+                        <datalist id="cat-list-panel">
+                            @foreach (var cat in _categories) { <option value="@cat" /> }
+                        </datalist>
+                    </div>
+                    @if (_erreurs.ContainsKey("Categorie")) { <span class="sk-err-msg">@_erreurs["Categorie"]</span> }
+                </div>
 
-                <div class="mat-form-row3">
-                    <div class="mat-form-group">
-                        <label class="mat-form-lbl">Quantité <span class="req">*</span></label>
-                        <input class="mat-form-inp" type="number" min="0" placeholder="0"
+                @* Quantité + Seuil *@
+                <div class="sk-field-row">
+                    <div class="sk-field">
+                        <label class="sk-label">Quantité initiale</label>
+                        <input class="sk-inp" type="number" min="0" placeholder="0"
                                @bind="_form.QuantiteStock" @bind:event="oninput" />
                     </div>
-                    <div class="mat-form-group">
-                        <label class="mat-form-lbl">Seuil min</label>
-                        <input class="mat-form-inp" type="number" min="0" placeholder="5"
+                    <div class="sk-field">
+                        <label class="sk-label">Seuil d'alerte</label>
+                        <input class="sk-inp" type="number" min="0" placeholder="5"
                                @bind="_form.QuantiteMin" @bind:event="oninput" />
-                    </div>
-                    <div class="mat-form-group">
-                        <label class="mat-form-lbl">Unité</label>
-                        <input class="mat-form-inp" type="text" placeholder="pièce"
-                               @bind="_form.Unite" @bind:event="oninput" />
                     </div>
                 </div>
 
-                <div class="mat-form-row2">
-                    <div class="mat-form-group">
-                        <label class="mat-form-lbl">Emplacement</label>
-                        <input class="mat-form-inp" type="text" placeholder="ex : Entrepôt A"
-                               @bind="_form.Emplacement" @bind:event="oninput" />
+                @* Unité + État *@
+                <div class="sk-field-row">
+                    <div class="sk-field">
+                        <label class="sk-label">Unité</label>
+                        <input class="sk-inp" type="text" placeholder="pièce"
+                               @bind="_form.Unite" @bind:event="oninput" />
                     </div>
-                    <div class="mat-form-group">
-                        <label class="mat-form-lbl">État</label>
-                        <select class="mat-form-inp" @bind="_form.Etat">
+                    <div class="sk-field">
+                        <label class="sk-label">État</label>
+                        <select class="sk-inp" @bind="_form.Etat">
                             <option value="Disponible">Disponible</option>
                             <option value="EnRupture">En rupture</option>
                             <option value="EnCommande">En commande</option>
@@ -440,29 +345,92 @@
                     </div>
                 </div>
 
+                @* Emplacement *@
+                <div class="sk-field">
+                    <label class="sk-label">Emplacement</label>
+                    <input class="sk-inp" type="text" placeholder="ex: Entrepôt A"
+                           @bind="_form.Emplacement" @bind:event="oninput" />
+                </div>
+
+                @* Description *@
+                <div class="sk-field">
+                    <label class="sk-label">Description</label>
+                    <textarea class="sk-inp sk-textarea" rows="2" placeholder="Détails supplémentaires…"
+                              @bind="_form.Description" @bind:event="oninput"></textarea>
+                </div>
+
+                @* Image upload *@
+                <div class="sk-field">
+                    <label class="sk-label">Image du produit</label>
+                    <label class="sk-upload-zone @(_dragOver ? "drag-over" : "")"
+                        @ondragover="OnDragOver" @ondragover:preventDefault="true"
+                        @ondragleave="OnDragLeave"
+                        @ondrop="() => { _dragOver = false; }" @ondrop:preventDefault="true">
+                        @if (!string.IsNullOrEmpty(_imagePreview))
+                        {
+                            <div class="sk-upload-preview">
+                                <img src="@_imagePreview" alt="Aperçu" class="sk-preview-img" />
+                                <button class="sk-remove-img" @onclick:stopPropagation="true" @onclick="SupprimerImage">
+                                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="sk-upload-placeholder">
+                                <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+                                <p class="sk-upload-text">Glissez une image ou cliquez</p>
+                                <p class="sk-upload-hint">JPG, PNG (max. 2Mo)</p>
+                            </div>
+                        }
+                        <InputFile OnChange="OnImageSelected" accept="image/jpeg,image/png,image/webp"
+                                style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" />
+                    </label>
+                    @if (!string.IsNullOrEmpty(_imageErreur))
+                    {
+                        <span class="sk-err-msg">@_imageErreur</span>
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(_erreurFormulaire))
+                {
+                    <div class="sk-form-alert">@_erreurFormulaire</div>
+                }
             </div>
 
-            <div class="mat-form-footer">
-                <button class="mat-btn-cancel" @onclick="FermerFormulaire">Annuler</button>
-                <button class="mat-btn-save" @onclick="Sauvegarder" disabled="@_sauvegarde">
-                    @if (_sauvegarde) { <span>Enregistrement…</span> }
+            <div class="sk-panel-footer">
+                <button class="sk-btn-save" @onclick="Sauvegarder" disabled="@_sauvegarde">
+                    @if (_sauvegarde)
+                    {
+                        <div class="sk-spinner-sm"></div>
+                        <span>Enregistrement…</span>
+                    }
                     else
                     {
-                        <svg viewBox="0 0 24 24">
-                            @if (_modeModif) { <polyline points="20 6 9 17 4 12"/> }
-                            else { <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/> }
-                        </svg>
-                        <span>@(_modeModif ? "Mettre à jour" : "Enregistrer")</span>
+                        <span>Enregistrer</span>
                     }
                 </button>
+                <button class="sk-btn-cancel" @onclick="FermerFormulaire">Annuler</button>
             </div>
-        </div>
+        </aside>
     }
 
     @* Toast *@
     @if (!string.IsNullOrEmpty(_toastMsg))
     {
-        <div class="mat-toast @_toastType">@_toastMsg</div>
+        <div class="sk-toast @_toastType">
+            <svg viewBox="0 0 24 24">
+                @if (_toastType == "toast-success")
+                {
+                    <polyline points="20 6 9 17 4 12"/>
+                }
+                else
+                {
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                }
+            </svg>
+            @_toastMsg
+        </div>
     }
 
 </div>

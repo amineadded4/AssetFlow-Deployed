@@ -38,6 +38,7 @@ builder.Services.AddHttpClient<IAuthService, KeycloakAuthService>();
 builder.Services.AddScoped<IEmployeService, EmployeService>(); // ← NOUVEAU
 builder.Services.AddScoped<IIncidentService, IncidentService>(); 
 builder.Services.AddScoped<IFournisseurService, FournisseurService>();
+builder.Services.AddScoped<IMaterielService, MaterielService>();
 
 // === CORS ===
 builder.Services.AddCors(options =>

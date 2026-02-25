@@ -1,111 +1,94 @@
 // ============================================================
 // AssetFlow.BlazorUI / Services / EmployeService.cs
-// Service frontend pour les opérations employé
-// Récupère user_id depuis localStorage
+// MISE À JOUR : ajout GetMaterielsGroupesAsync
 // ============================================================
 
 using System.Net.Http.Json;
-using Blazored.LocalStorage;
+using Microsoft.JSInterop;
 
 namespace AssetFlow.BlazorUI.Services
 {
-    /// <summary>
-    /// DTO pour recevoir les équipements depuis l'API
-    /// </summary>
+    // ── DTOs frontend (miroir du backend) ─────────────────────
+
     public class EquipementAffecteDto
     {
-        public int AffectationId { get; set; }
-        public int MaterielId { get; set; }
-        public string Reference { get; set; } = string.Empty;
-        public string Designation { get; set; } = string.Empty;
-        public string Categorie { get; set; } = string.Empty;
-        public string? ImageUrl { get; set; }
-        public DateTime DateAffectation { get; set; }
-        public int QuantiteAffectee { get; set; }
-        public string Statut { get; set; } = string.Empty;
-        public string StatutBadgeColor { get; set; } = string.Empty;
-        public string? Observations { get; set; }
+        public int      AffectationId    { get; set; }
+        public int      MaterielId       { get; set; }
+        public string   Reference        { get; set; } = string.Empty;
+        public string   Designation      { get; set; } = string.Empty;
+        public string   Categorie        { get; set; } = string.Empty;
+        public string?  ImageUrl         { get; set; }
+        public DateTime DateAffectation  { get; set; }
+        public int      QuantiteAffectee { get; set; }
+        public string   Statut           { get; set; } = string.Empty;
+        public string   StatutBadgeColor { get; set; } = string.Empty;
+        public string?  Observations     { get; set; }
     }
 
-    /// <summary>
-    /// DTO pour signaler un incident
-    /// </summary>
-    public class SignalerIncidentDto
+    public class ArticleAffecteDto
     {
-        public int AffectationId { get; set; }
-        public string TypeIncident { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public DateTime DateIncident { get; set; } = DateTime.UtcNow;
+        public int      AffectationId     { get; set; }
+        public int      ArticleId         { get; set; }
+        public string   NumeroSerie       { get; set; } = string.Empty;
+        public string   StatutArticle     { get; set; } = string.Empty;
+        public string   StatutAffectation { get; set; } = string.Empty;
+        public string   StatutBadgeColor  { get; set; } = string.Empty;
+        public DateTime DateAffectation   { get; set; }
+        public string?  Observations      { get; set; }
     }
 
-    /// <summary>
-    /// Service employé côté frontend
-    /// </summary>
+    public class MaterielAffecteGroupeDto
+    {
+        public int      MaterielId          { get; set; }
+        public string   Reference           { get; set; } = string.Empty;
+        public string   Designation         { get; set; } = string.Empty;
+        public string   Categorie           { get; set; } = string.Empty;
+        public string?  ImageUrl            { get; set; }
+        public int      NombreArticles      { get; set; }
+        public string   StatutDominant      { get; set; } = string.Empty;
+        public string   StatutBadgeColor    { get; set; } = string.Empty;
+        public DateTime DerniereAffectation { get; set; }
+        public List<ArticleAffecteDto> Articles { get; set; } = new();
+    }
+
+    // ── Service ───────────────────────────────────────────────
+
     public class EmployeService
     {
-        private readonly HttpClient _httpClient;
-        private readonly ILocalStorageService _localStorage;
+        private readonly HttpClient  _http;
+        private readonly IJSRuntime  _js;
 
-        public EmployeService(HttpClient httpClient, ILocalStorageService localStorage)
+        public EmployeService(HttpClient http, IJSRuntime js)
         {
-            _httpClient = httpClient;
-            _localStorage = localStorage;
+            _http = http;
+            _js   = js;
         }
 
-        /// <summary>
-        /// Récupère l'ID de l'utilisateur connecté depuis le localStorage
-        /// </summary>
-        public async Task<int?> GetCurrentUserIdAsync()
+        // ── Récupère les matériels groupés (NOUVELLE méthode) ──
+        public async Task<List<MaterielAffecteGroupeDto>> GetMaterielsGroupesAsync()
         {
-            return await _localStorage.GetItemAsync<int?>("user_id");
-        }
-
-        /// <summary>
-        /// Récupère le nom complet de l'utilisateur
-        /// </summary>
-        public async Task<string> GetCurrentUserNameAsync()
-        {
-            return await _localStorage.GetItemAsync<string>("user_name") ?? "Utilisateur";
-        }
-
-        /// <summary>
-        /// Récupère le rôle de l'utilisateur (traduit en français)
-        /// </summary>
-        public async Task<string> GetCurrentUserRoleAsync()
-        {
-            var role = await _localStorage.GetItemAsync<string>("user_role");
-            return role switch
-            {
-                "Employe" => "Employé",
-                "IT" => "Équipe IT",
-                "EquipeAchat" => "Équipe Achat",
-                "Admin" => "Administrateur",
-                _ => role ?? "Employé"
-            };
-        }
-
-        /// <summary>
-        /// Récupère tous les équipements affectés à l'utilisateur connecté
-        /// </summary>
-        public async Task<List<EquipementAffecteDto>> GetMesEquipementsAsync()
-        {
+            var userId = await GetCurrentUserIdAsync();
             try
             {
-                var userId = await GetCurrentUserIdAsync();
-                if (userId == null)
-                {
-                    throw new Exception("Utilisateur non connecté");
-                }
+                var result = await _http.GetFromJsonAsync<List<MaterielAffecteGroupeDto>>(
+                    $"api/employe/{userId}/materiels-groupes");
+                return result ?? new List<MaterielAffecteGroupeDto>();
+            }
+            catch
+            {
+                return new List<MaterielAffecteGroupeDto>();
+            }
+        }
 
-                var response = await _httpClient.GetAsync($"api/employe/equipements/{userId}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var data = await response.Content.ReadFromJsonAsync<List<EquipementAffecteDto>>();
-                    return data ?? new List<EquipementAffecteDto>();
-                }
-
-                return new List<EquipementAffecteDto>();
+        // ── Ancienne méthode liste plate (rétrocompat) ─────────
+        public async Task<List<EquipementAffecteDto>> GetMesEquipementsAsync()
+        {
+            var userId = await GetCurrentUserIdAsync();
+            try
+            {
+                var result = await _http.GetFromJsonAsync<List<EquipementAffecteDto>>(
+                    $"api/employe/equipements/{userId}");
+                return result ?? new List<EquipementAffecteDto>();
             }
             catch
             {
@@ -113,26 +96,48 @@ namespace AssetFlow.BlazorUI.Services
             }
         }
 
-        /// <summary>
-        /// Récupère le détail d'une affectation
-        /// </summary>
         public async Task<EquipementAffecteDto?> GetEquipementDetailAsync(int affectationId)
         {
             try
             {
-                var response = await _httpClient.GetAsync($"api/employe/equipements/detail/{affectationId}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    return await response.Content.ReadFromJsonAsync<EquipementAffecteDto>();
-                }
-
-                return null;
+                return await _http.GetFromJsonAsync<EquipementAffecteDto>(
+                    $"api/employe/equipements/detail/{affectationId}");
             }
             catch
             {
                 return null;
             }
+        }
+
+        // ── Helpers localStorage ───────────────────────────────
+        public async Task<int> GetCurrentUserIdAsync()
+        {
+            try
+            {
+                var id = await _js.InvokeAsync<string>("localStorage.getItem", "userId");
+                return int.TryParse(id, out var parsed) ? parsed : 1;
+            }
+            catch { return 1; }
+        }
+
+        public async Task<string> GetCurrentUserNameAsync()
+        {
+            try
+            {
+                var name = await _js.InvokeAsync<string>("localStorage.getItem", "userName");
+                return string.IsNullOrEmpty(name) ? "Utilisateur" : name;
+            }
+            catch { return "Utilisateur"; }
+        }
+
+        public async Task<string> GetCurrentUserRoleAsync()
+        {
+            try
+            {
+                var role = await _js.InvokeAsync<string>("localStorage.getItem", "userRole");
+                return string.IsNullOrEmpty(role) ? "Employé" : role;
+            }
+            catch { return "Employé"; }
         }
     }
 }

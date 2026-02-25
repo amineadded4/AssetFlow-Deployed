@@ -1,6 +1,6 @@
 // ============================================================
 // AssetFlow.BlazorUI / Pages / Employe / MesEquipements.razor.cs
-// MISE À JOUR : Utilise EmployeService + récup infos depuis localStorage
+// MISE À JOUR : Groupement par matériel + gestion modal articles
 // ============================================================
 
 using AssetFlow.BlazorUI.Services;
@@ -10,57 +10,54 @@ namespace AssetFlow.BlazorUI.Pages.Employe
 {
     public partial class MesEquipements
     {
-        [Inject] private EmployeService EmployeService { get; set; } = default!;
-        [Inject] private NavigationManager Navigation { get; set; } = default!;
+        [Inject] private EmployeService    EmployeService { get; set; } = default!;
+        [Inject] private NavigationManager Navigation     { get; set; } = default!;
 
-        // === DONNÉES ===
-        private List<EquipementAffecteDto> Equipements { get; set; } = new();
-        private List<EquipementAffecteDto> EquipementsFiltres { get; set; } = new();
-        
-        private bool IsLoading { get; set; } = true;
-        private string ErrorMessage { get; set; } = string.Empty;
+        // ── Données ────────────────────────────────────────────
+        private List<MaterielAffecteGroupeDto> MaterielsGroupes       { get; set; } = new();
+        private List<MaterielAffecteGroupeDto> MaterielsGroupesFiltres { get; set; } = new();
 
-        // === RECHERCHE ===
+        private bool   IsLoading     { get; set; } = true;
+        private string ErrorMessage  { get; set; } = string.Empty;
+
+        // ── Recherche principale ───────────────────────────────
         private string SearchQuery { get; set; } = string.Empty;
 
-        // === INFO UTILISATEUR (récupérées depuis localStorage) ===
+        // ── Modal ──────────────────────────────────────────────
+        private bool                     ModalOuvert          { get; set; } = false;
+        private MaterielAffecteGroupeDto? MaterielSelectionne  { get; set; } = null;
+        private string                   ModalSearchQuery      { get; set; } = string.Empty;
+
+        // ── Info utilisateur ───────────────────────────────────
         private string UserName { get; set; } = "Utilisateur";
         private string UserRole { get; set; } = "Employé";
 
-        /// <summary>
-        /// Chargement initial
-        /// </summary>
+        // ── Init ───────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
             await LoadUserInfoAsync();
-            await LoadEquipementsAsync();
+            await LoadMaterielsGroupesAsync();
         }
 
-        /// <summary>
-        /// Charge les infos utilisateur depuis localStorage
-        /// </summary>
         private async Task LoadUserInfoAsync()
         {
             UserName = await EmployeService.GetCurrentUserNameAsync();
             UserRole = await EmployeService.GetCurrentUserRoleAsync();
         }
 
-        /// <summary>
-        /// Charge les équipements depuis l'API
-        /// </summary>
-        private async Task LoadEquipementsAsync()
+        private async Task LoadMaterielsGroupesAsync()
         {
             try
             {
-                IsLoading = true;
+                IsLoading    = true;
                 ErrorMessage = string.Empty;
 
-                Equipements = await EmployeService.GetMesEquipementsAsync();
-                EquipementsFiltres = Equipements; // Initialise la liste filtrée
+                MaterielsGroupes        = await EmployeService.GetMaterielsGroupesAsync();
+                MaterielsGroupesFiltres = MaterielsGroupes;
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Erreur : {ex.Message}";
+                ErrorMessage = $"Erreur lors du chargement : {ex.Message}";
             }
             finally
             {
@@ -68,68 +65,72 @@ namespace AssetFlow.BlazorUI.Pages.Employe
             }
         }
 
-        /// <summary>
-        /// Gère la recherche en temps réel
-        /// </summary>
+        // ── Recherche ──────────────────────────────────────────
         private void OnSearchInput(ChangeEventArgs e)
         {
             SearchQuery = e.Value?.ToString() ?? string.Empty;
-            FiltrerEquipements();
+            FiltrerMateriels();
         }
 
-        /// <summary>
-        /// Filtre les équipements selon la recherche
-        /// </summary>
-        private void FiltrerEquipements()
+        private void FiltrerMateriels()
         {
             if (string.IsNullOrWhiteSpace(SearchQuery))
             {
-                EquipementsFiltres = Equipements;
+                MaterielsGroupesFiltres = MaterielsGroupes;
+                return;
             }
-            else
-            {
-                var query = SearchQuery.ToLower();
-                EquipementsFiltres = Equipements.Where(e =>
-                    e.Designation.ToLower().Contains(query) ||
-                    e.Reference.ToLower().Contains(query) ||
-                    e.Categorie.ToLower().Contains(query)
-                ).ToList();
-            }
+
+            var q = SearchQuery.Trim().ToLower();
+            MaterielsGroupesFiltres = MaterielsGroupes
+                .Where(m =>
+                    m.Designation.ToLower().Contains(q) ||
+                    m.Reference.ToLower().Contains(q)   ||
+                    m.Categorie.ToLower().Contains(q))
+                .ToList();
         }
 
-        /// <summary>
-        /// Navigue vers la page de détail
-        /// </summary>
-        private void VoirDetail(int affectationId)
+        // ── Modal ──────────────────────────────────────────────
+        private void OuvrirModal(MaterielAffecteGroupeDto materiel)
+        {
+            MaterielSelectionne = materiel;
+            ModalSearchQuery    = string.Empty;
+            ModalOuvert         = true;
+        }
+
+        private void FermerModal()
+        {
+            ModalOuvert         = false;
+            MaterielSelectionne = null;
+            ModalSearchQuery    = string.Empty;
+        }
+
+        private void OnModalSearchInput(ChangeEventArgs e)
+        {
+            ModalSearchQuery = e.Value?.ToString() ?? string.Empty;
+            StateHasChanged();
+        }
+
+        // ── Navigation vers détail ─────────────────────────────
+        private void NaviguerVersDetail(int affectationId)
         {
             Navigation.NavigateTo($"/employe/equipement/{affectationId}");
         }
 
-        /// <summary>
-        /// Traduit le statut en français
-        /// </summary>
-        private string GetStatutLabel(string statut)
+        // ── Helpers UI ─────────────────────────────────────────
+        private string GetStatutLabel(string statut) => statut switch
         {
-            return statut switch
-            {
-                "EnCours" => "BON",
-                "Retourne" => "RETOURNÉ",
-                "Perdu" => "PERDU",
-                "Endommage" => "ENDOMMAGÉ",
-                _ => statut.ToUpper()
-            };
-        }
+            "EnCours"   => "BON",
+            "Retourne"  => "RETOURNÉ",
+            "Perdu"     => "PERDU",
+            "Endommage" => "ENDOMMAGÉ",
+            _           => statut.ToUpper()
+        };
 
-        /// <summary>
-        /// Génère les initiales pour l'avatar
-        /// </summary>
         private string GetInitials()
         {
             var parts = UserName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length >= 2)
-                return $"{parts[0][0]}{parts[1][0]}".ToUpper();
-            if (parts.Length == 1 && parts[0].Length >= 2)
-                return parts[0].Substring(0, 2).ToUpper();
+            if (parts.Length >= 2) return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+            if (parts.Length == 1 && parts[0].Length >= 2) return parts[0][..2].ToUpper();
             return "??";
         }
     }

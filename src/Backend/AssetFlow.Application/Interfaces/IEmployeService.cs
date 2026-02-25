@@ -1,7 +1,6 @@
 // ============================================================
 // AssetFlow.Application / Interfaces / IEmployeService.cs
-// Interface du service Employé (contrat)
-// Implémentation dans Infrastructure
+// MISE À JOUR : ajout GetMaterielsGroupesAsync
 // ============================================================
 
 using AssetFlow.Application.DTOs;
@@ -16,15 +15,18 @@ namespace AssetFlow.Application.Interfaces
         /// <summary>
         /// Récupère tous les équipements affectés à un employé donné
         /// </summary>
-        /// <param name="utilisateurId">ID de l'employé</param>
-        /// <returns>Liste des équipements affectés</returns>
         Task<List<EquipementAffecteDto>> GetEquipementsAffectesAsync(int utilisateurId);
 
         /// <summary>
         /// Récupère le détail d'une affectation spécifique
         /// </summary>
-        /// <param name="affectationId">ID de l'affectation</param>
-        /// <returns>Détail de l'équipement affecté</returns>
         Task<EquipementAffecteDto?> GetEquipementDetailAsync(int affectationId);
+
+        /// <summary>
+        /// Récupère les matériels groupés avec leurs articles pour un employé.
+        /// Chaque matériel contient la liste des articles (affectations) qui lui appartiennent.
+        /// </summary>
+        /// <param name="utilisateurId">ID de l'employé</param>
+        Task<List<MaterielAffecteGroupeDto>> GetMaterielsGroupesAsync(int utilisateurId);
     }
 }

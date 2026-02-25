@@ -27,12 +27,11 @@ namespace AssetFlow.BlazorUI.Services
             => await _http.GetFromJsonAsync<MaterielDto>($"{Base}/{id}");
 
         public async Task<List<MaterielDto>> SearchAsync(
-            string? terme = null, string? categorie = null, string? etat = null)
+            string? terme = null, string? categorie = null)
         {
             var qs = new List<string>();
             if (!string.IsNullOrWhiteSpace(terme))     qs.Add($"terme={Uri.EscapeDataString(terme)}");
             if (!string.IsNullOrWhiteSpace(categorie)) qs.Add($"categorie={Uri.EscapeDataString(categorie)}");
-            if (!string.IsNullOrWhiteSpace(etat))      qs.Add($"etat={Uri.EscapeDataString(etat)}");
             var url    = qs.Count > 0 ? $"{Base}/search?{string.Join("&", qs)}" : $"{Base}/search";
             var result = await _http.GetFromJsonAsync<List<MaterielDto>>(url);
             return result ?? new();

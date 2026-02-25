@@ -1,6 +1,9 @@
 @* ============================================================
-   Pages/Achat/Materiel.razor — v4
-   Colonnes simplifiées + panneau détails + sidebar articles amélioré
+   Pages/Achat/Materiel.razor — v5
+   · Une ligne par commande
+   · Pas de colonne Statut
+   · Bouton "i" pour afficher les détails de commande inline
+   · Bouton "···" pour le panneau articles individuels
    ============================================================ *@
 
 @page "/achat/materiel"
@@ -13,7 +16,7 @@
         <div class="sk-overlay" @onclick="ToggleSidebar"></div>
     }
 
-    @* ── SIDEBAR ── *@
+    @* ── SIDEBAR NAVIGATION ── *@
     <aside class="sk-sidebar @(_sidebarOpen ? "open" : "")">
         <div class="sk-sidebar-header">
             <img src="images/logo.png" alt="AssetFlow" class="sk-logo" />
@@ -60,7 +63,6 @@
                         <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
                     </svg>
                 </button>
-                <div class="sk-topbar-divider"></div>
                 <h2 class="sk-topbar-title">Gestion des Produits</h2>
             </div>
             <div class="sk-topbar-center">
@@ -100,13 +102,6 @@
                         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                         <span>PDF</span>
                     </button>
-                    <select class="sk-state-select" @onchange="OnEtatChange">
-                        <option value="all">Tous les états</option>
-                        <option value="Disponible">Disponible</option>
-                        <option value="EnRupture">En rupture</option>
-                        <option value="EnCommande">En commande</option>
-                        <option value="HorsService">Hors service</option>
-                    </select>
                 </div>
             </div>
 
@@ -126,107 +121,167 @@
                                 <th>Catégorie</th>
                                 <th>N° Commande</th>
                                 <th>Stock actuel</th>
-                                <th>Statut</th>
                                 <th class="th-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @if (_chargement)
                             {
-                                <tr><td colspan="8" class="td-loading">
+                                <tr><td colspan="7" class="td-loading">
                                     <div class="sk-spinner"></div>Chargement…
                                 </td></tr>
                             }
-                            else if (!_materiels.Any())
+                            else if (!_lignes.Any())
                             {
-                                <tr><td colspan="8" class="td-empty">
+                                <tr><td colspan="7" class="td-empty">
                                     <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
                                     Aucun matériel trouvé.
                                 </td></tr>
                             }
                             else
                             {
-                                @foreach (var m in _materiels)
+                                @foreach (var lg in _lignes)
                                 {
-                                    <tr class="sk-row @(_ligneExpansee == m.Id ? "row-expanded" : "")">
+                                    var rowKey = $"{lg.MaterielId}-{lg.CommandeId}";
+                                    bool detailsOuverts = _detailsOuverts == rowKey;
+
+                                    @* ── Ligne principale ── *@
+                                    <tr class="sk-row @(detailsOuverts ? "row-highlighted" : "")">
+
+                                        @* Image *@
                                         <td>
                                             <div class="sk-img-cell">
-                                                @if (!string.IsNullOrEmpty(m.ImageUrl))
-                                                { <img src="@m.ImageUrl" alt="@m.Designation" class="sk-product-img" /> }
+                                                @if (!string.IsNullOrEmpty(lg.ImageUrl))
+                                                { <img src="@lg.ImageUrl" alt="@lg.Designation" class="sk-product-img" /> }
                                                 else
                                                 { <div class="sk-product-img-placeholder"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div> }
                                             </div>
                                         </td>
-                                        <td class="td-ref">@m.Reference</td>
+
+                                        @* Référence *@
+                                        <td class="td-ref">@lg.Reference</td>
+
+                                        @* Nom + description *@
                                         <td class="td-name">
-                                            <p class="td-name-main">@m.Designation</p>
-                                            @if (!string.IsNullOrEmpty(m.Description))
-                                            { <p class="td-name-sub">@m.Description</p> }
+                                            <p class="td-name-main">@lg.Designation</p>
+                                            @if (!string.IsNullOrEmpty(lg.Description))
+                                            { <p class="td-name-sub">@lg.Description</p> }
                                         </td>
-                                        <td><span class="sk-cat-badge @CatBadgeClass(m.Categorie)">@m.Categorie</span></td>
-                                        <td class="td-cmd">
-                                            @if (m.NbArticles > 0)
-                                            {
-                                                <span class="ns-badge">@m.NbArticles article(s)</span>
-                                            }
-                                            @(m.NumeroCommande ?? "—")
-                                        </td>
+
+                                        @* Catégorie *@
                                         <td>
-                                            <span class="td-qty @(m.QuantiteStock == 0 ? "qty-zero" : m.QuantiteStock <= m.QuantiteMin ? "qty-low" : "")">
-                                                @m.QuantiteStock
+                                            <span class="sk-cat-badge @CatBadgeClass(lg.Categorie)">@lg.Categorie</span>
+                                        </td>
+
+                                        @* N° Commande + badge *@
+                                        <td>
+                                            @if (lg.CommandeId > 0)
+                                            {
+                                                <div class="td-cmd-wrap">
+                                                    @if (lg.NbArticles > 0)
+                                                    {
+                                                        <span class="ns-badge" @onclick="() => OuvrirArticlesParCommande(lg)"
+                                                              title="Voir les articles de cette commande"
+                                                              style="cursor:pointer;">
+                                                            @lg.NbArticles art.
+                                                        </span>
+                                                    }
+                                                    <span class="td-cmd">@lg.NumeroCommande</span>
+                                                </div>
+                                            }
+                                            else
+                                            { <span class="td-muted">—</span> }
+                                        </td>
+
+                                        @* Stock actuel *@
+                                        <td>
+                                            <span class="td-qty @(lg.QuantiteStock == 0 ? "qty-zero" : lg.QuantiteStock <= lg.QuantiteMin ? "qty-low" : "")">
+                                                @lg.QuantiteStock
                                             </span>
                                         </td>
-                                        <td><span class="sk-status @StatusClass(m.Etat)">@StatusLabel(m.Etat)</span></td>
+
+                                        @* Actions *@
                                         <td class="td-actions" @onclick:stopPropagation="true">
                                             <div class="sk-row-acts">
-                                                <button class="sk-act-btn sk-act-edit" title="Modifier"
-                                                        @onclick="() => OuvrirFormulaire(m)">
+
+                                                @* Modifier le produit *@
+                                                <button class="sk-act-btn sk-act-edit" title="Modifier le produit"
+                                                        @onclick="() => OuvrirFormulaire(lg)">
                                                     <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                                 </button>
-                                                <button class="sk-act-btn sk-act-del" title="Supprimer commande"
-                                                        @onclick="() => DemanderSuppression(m)">
-                                                    <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                                                </button>
-                                                <button class="sk-act-btn sk-act-more" title="Voir détails & articles"
-                                                        @onclick="() => OuvrirArticles(m)">
+
+                                                @* Supprimer cette commande *@
+                                                @if (lg.CommandeId > 0)
+                                                {
+                                                    <button class="sk-act-btn sk-act-del" title="Supprimer cette commande"
+                                                            @onclick="() => DemanderSuppression(lg)">
+                                                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                                                    </button>
+                                                }
+
+                                                @* Détails commande (bouton "i") *@
+                                                @if (lg.CommandeId > 0)
+                                                {
+                                                    <button class="sk-act-btn sk-act-info @(detailsOuverts ? "active" : "")"
+                                                            title="@(detailsOuverts ? "Masquer les détails" : "Voir les détails de la commande")"
+                                                            @onclick="() => ToggleDetails(rowKey)">
+                                                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                                    </button>
+                                                }
+
+                                                @* Articles individuels (bouton "···") *@
+                                                <button class="sk-act-btn sk-act-more" title="Voir les articles individuels"
+                                                        @onclick="() => OuvrirArticlesMateriel(lg)">
                                                     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
                                                 </button>
+
                                             </div>
                                         </td>
                                     </tr>
 
-                                    @* Ligne expansée avec colonnes supplémentaires *@
-                                    @if (_ligneExpansee == m.Id)
+                                    @* ── Ligne détails commande (inline, style capture 4) ── *@
+                                    @if (detailsOuverts && lg.CommandeId > 0)
                                     {
-                                        <tr class="sk-row-details">
-                                            <td colspan="8">
-                                                <div class="sk-expanded-content">
-                                                    <div class="sk-detail-grid">
-                                                        <div class="sk-detail-item">
-                                                            <span class="sk-detail-lbl">Qté achetée</span>
-                                                            <span class="sk-detail-val">@(m.QuantiteAchetee > 0 ? m.QuantiteAchetee.ToString() : "—")</span>
+                                        <tr class="sk-details-row">
+                                            <td colspan="7">
+                                                <div class="sk-details-panel">
+                                                    <div class="sk-details-header">
+                                                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                                        <span>DÉTAILS — @lg.NumeroCommande</span>
+                                                    </div>
+                                                    <div class="sk-details-grid">
+                                                        <div class="sk-details-block">
+                                                            <span class="sk-details-lbl">Quantité achetée</span>
+                                                            <span class="sk-details-val">@lg.QuantiteAchetee @lg.Unite</span>
                                                         </div>
-                                                        <div class="sk-detail-item">
-                                                            <span class="sk-detail-lbl">Fournisseur</span>
-                                                            <span class="sk-detail-val">@(m.NomFournisseur ?? "—")</span>
+                                                        <div class="sk-details-block">
+                                                            <span class="sk-details-lbl">Fournisseur</span>
+                                                            <span class="sk-details-val">@(string.IsNullOrEmpty(lg.NomFournisseur) ? "—" : lg.NomFournisseur)</span>
                                                         </div>
-                                                        <div class="sk-detail-item">
-                                                            <span class="sk-detail-lbl">Date achat</span>
-                                                            <span class="sk-detail-val">@(m.DateAchat?.ToString("dd MMM yyyy") ?? "—")</span>
+                                                        <div class="sk-details-block">
+                                                            <span class="sk-details-lbl">Date d'achat</span>
+                                                            <span class="sk-details-val">@lg.DateAchat.ToString("dd MMM yyyy")</span>
                                                         </div>
-                                                        <div class="sk-detail-item">
-                                                            <span class="sk-detail-lbl">Date livraison</span>
-                                                            <span class="sk-detail-val">@(m.DateLivraison?.ToString("dd MMM yyyy") ?? "—")</span>
+                                                        <div class="sk-details-block">
+                                                            <span class="sk-details-lbl">Date de livraison</span>
+                                                            <span class="sk-details-val">@(lg.DateLivraison.HasValue ? lg.DateLivraison.Value.ToString("dd MMM yyyy") : "—")</span>
                                                         </div>
-                                                        <div class="sk-detail-item">
-                                                            <span class="sk-detail-lbl">Date fin garantie</span>
-                                                            <span class="sk-detail-val @(m.DateFinGarantie.HasValue && m.DateFinGarantie.Value < DateTime.Today ? "date-expired" : "date-ok")">
-                                                                @(m.DateFinGarantie?.ToString("dd MMM yyyy") ?? "—")
-                                                            </span>
+                                                        <div class="sk-details-block">
+                                                            <span class="sk-details-lbl">Date fin de garantie</span>
+                                                            @if (lg.DateFinGarantie.HasValue)
+                                                            {
+                                                                var expired = lg.DateFinGarantie.Value < DateTime.Today;
+                                                                <span class="sk-details-val @(expired ? "val-expired" : "val-ok")">
+                                                                    @lg.DateFinGarantie.Value.ToString("dd MMM yyyy")
+                                                                    @if (expired) { <span class="val-tag">Expirée</span> }
+                                                                </span>
+                                                            }
+                                                            else
+                                                            { <span class="sk-details-val">—</span> }
                                                         </div>
-                                                        <div class="sk-detail-item">
-                                                            <span class="sk-detail-lbl">Disponibles</span>
-                                                            <span class="sk-detail-val art-disponible">@m.NbDisponibles / @m.NbArticles</span>
+                                                        <div class="sk-details-block">
+                                                            <span class="sk-details-lbl">Articles disponibles</span>
+                                                            <span class="sk-details-val val-dispo">@lg.NbDisponibles / @lg.NbArticles</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -239,7 +294,7 @@
                     </table>
                 </div>
                 <div class="sk-table-footer">
-                    <span>Affichage de @_materiels.Count sur @_totalCount articles</span>
+                    <span>Affichage de @_lignes.Count sur @_totalCount ligne(s)</span>
                 </div>
             </div>
         </main>
@@ -253,12 +308,12 @@
                 <div class="sk-modal-icon">
                     <svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 </div>
-                <h3 class="sk-modal-title">Supprimer la dernière commande ?</h3>
+                <h3 class="sk-modal-title">Supprimer cette commande ?</h3>
                 <p class="sk-modal-text">
-                    Vous allez supprimer la commande <strong>@(_aSupprimer.NumeroCommande ?? "N/A")</strong> 
-                    pour <strong>@_aSupprimer.Designation</strong>.
-                    Le stock sera décrémenté de <strong>@_aSupprimer.QuantiteAchetee</strong> unité(s) 
-                    et les articles individuels associés seront supprimés.
+                    Commande <strong>@_aSupprimer.NumeroCommande</strong> pour
+                    <strong>@_aSupprimer.Designation</strong>.<br />
+                    Le stock sera décrémenté de <strong>@_aSupprimer.QuantiteAchetee</strong> unité(s)
+                    et les <strong>@_aSupprimer.NbArticles</strong> article(s) associé(s) seront supprimés.
                 </p>
                 <div class="sk-modal-acts">
                     <button class="sk-btn-cancel" @onclick="AnnulerSuppression">Annuler</button>
@@ -287,124 +342,93 @@
 
             <div class="sk-panel-body">
 
-                @* ── Section commande (OBLIGATOIRE) ── *@
-                <p class="sk-section-lbl">Commande d'achat <span class="req">(obligatoire)</span></p>
-
-                @* En mode ajout : liste déroulante de référence OU nouveau produit *@
                 @if (!_modeModif)
                 {
-                    <div class="sk-field">
-                        <label class="sk-label">Référence produit <span class="req">*</span></label>
-                        <div class="sk-ref-toggle">
-                            <button class="sk-ref-tab @(_nouveauProduit ? "" : "active")" @onclick="() => { _nouveauProduit = false; _form = new FormulaireVm(); }">
-                                Produit existant
-                            </button>
-                            <button class="sk-ref-tab @(_nouveauProduit ? "active" : "")" @onclick="() => { _nouveauProduit = true; _form = new FormulaireVm(); }">
-                                Nouveau produit
-                            </button>
-                        </div>
+                    @* ── CRÉATION ── *@
+                    <p class="sk-section-lbl">Produit</p>
+
+                    <div class="sk-ref-toggle">
+                        <button class="sk-ref-tab @(!_nouveauProduit ? "active" : "")"
+                                @onclick="() => { _nouveauProduit = false; _form = new FormulaireVm(); _imagePreview = string.Empty; }">
+                            Produit existant
+                        </button>
+                        <button class="sk-ref-tab @(_nouveauProduit ? "active" : "")"
+                                @onclick="() => { _nouveauProduit = true; _form = new FormulaireVm(); _imagePreview = string.Empty; }">
+                            Nouveau produit
+                        </button>
                     </div>
 
                     @if (!_nouveauProduit)
                     {
-                        @* Sélection d'un produit existant *@
                         <div class="sk-field">
                             <label class="sk-label">Choisir un produit existant <span class="req">*</span></label>
-                            <select class="sk-inp @(_erreurs.ContainsKey("Reference") ? "inp-err" : "")"
+                            <select class="sk-inp @(_erreurs.ContainsKey("Produit") ? "inp-err" : "")"
                                     @onchange="OnProduitExistantChange">
-                                <option value="">— Sélectionner un produit —</option>
-                                @foreach (var p in _produitsExistants)
+                                <option value="0">— Sélectionner —</option>
+                                @foreach (var p in _produitsUniques)
                                 {
-                                    <option value="@p.Id">@p.Reference — @p.Designation</option>
+                                    <option value="@p.MaterielId">@p.Reference — @p.Designation</option>
                                 }
                             </select>
-                            @if (_erreurs.ContainsKey("Reference")) { <span class="sk-err-msg">@_erreurs["Reference"]</span> }
+                            @if (_erreurs.ContainsKey("Produit")) { <span class="sk-err-msg">@_erreurs["Produit"]</span> }
                         </div>
 
                         @if (_form.Id > 0)
                         {
-                            @* Affichage lecture seule des infos du produit sélectionné *@
                             <div class="sk-readonly-card">
-                                <div class="sk-readonly-row">
-                                    <span class="sk-readonly-lbl">Nom</span>
-                                    <span class="sk-readonly-val">@_form.Designation</span>
-                                </div>
-                                <div class="sk-readonly-row">
-                                    <span class="sk-readonly-lbl">Catégorie</span>
-                                    <span class="sk-readonly-val">@_form.Categorie</span>
-                                </div>
-                                <div class="sk-readonly-row">
-                                    <span class="sk-readonly-lbl">Seuil alerte</span>
-                                    <span class="sk-readonly-val">@_form.QuantiteMin</span>
-                                </div>
+                                <div class="sk-readonly-row"><span class="sk-readonly-lbl">Nom</span><span class="sk-readonly-val">@_form.Designation</span></div>
+                                <div class="sk-readonly-row"><span class="sk-readonly-lbl">Catégorie</span><span class="sk-readonly-val">@_form.Categorie</span></div>
+                                <div class="sk-readonly-row"><span class="sk-readonly-lbl">Seuil</span><span class="sk-readonly-val">@_form.QuantiteMin @_form.Unite</span></div>
                                 @if (!string.IsNullOrEmpty(_form.Description))
-                                {
-                                    <div class="sk-readonly-row">
-                                        <span class="sk-readonly-lbl">Description</span>
-                                        <span class="sk-readonly-val">@_form.Description</span>
-                                    </div>
-                                }
+                                { <div class="sk-readonly-row"><span class="sk-readonly-lbl">Description</span><span class="sk-readonly-val">@_form.Description</span></div> }
                                 @if (!string.IsNullOrEmpty(_form.ImageUrl))
-                                {
-                                    <div class="sk-readonly-row">
-                                        <span class="sk-readonly-lbl">Image</span>
-                                        <img src="@_form.ImageUrl" class="sk-readonly-img" alt="produit" />
-                                    </div>
-                                }
+                                { <div class="sk-readonly-row"><span class="sk-readonly-lbl">Image</span><img src="@_form.ImageUrl" class="sk-readonly-img" /></div> }
                             </div>
                         }
                     }
                     else
                     {
-                        @* Nouveau produit — saisie complète *@
-                        <p class="sk-section-lbl" style="margin-top:8px;">Informations produit</p>
-
+                        @* Nouveau produit *@
+                        <p class="sk-section-lbl" style="margin-top:6px;">Informations produit</p>
                         <div class="sk-field">
                             <label class="sk-label">Nom du produit <span class="req">*</span></label>
-                            <input class="sk-inp @(_erreurs.ContainsKey("Designation") ? "inp-err" : "")"
-                                   type="text" placeholder="ex: Écran Dell UltraSharp 27"
+                            <input class="sk-inp @(_erreurs.ContainsKey("Designation") ? "inp-err" : "")" type="text"
+                                   placeholder="ex: Écran Dell 27"
                                    @bind="_form.Designation" @bind:event="oninput" />
                             @if (_erreurs.ContainsKey("Designation")) { <span class="sk-err-msg">@_erreurs["Designation"]</span> }
                         </div>
-
                         <div class="sk-field">
                             <label class="sk-label">Référence (SKU) <span class="req">*</span></label>
-                            <input class="sk-inp sk-mono @(_erreurs.ContainsKey("Reference") ? "inp-err" : "")"
-                                   type="text" placeholder="ex: SN-5592-X"
+                            <input class="sk-inp sk-mono @(_erreurs.ContainsKey("Reference") ? "inp-err" : "")" type="text"
+                                   placeholder="ex: SN-5592-X"
                                    @bind="_form.Reference" @bind:event="oninput" />
                             @if (_erreurs.ContainsKey("Reference")) { <span class="sk-err-msg">@_erreurs["Reference"]</span> }
                         </div>
-
                         <div class="sk-field">
                             <label class="sk-label">Catégorie <span class="req">*</span></label>
-                            <input class="sk-inp @(_erreurs.ContainsKey("Categorie") ? "inp-err" : "")"
-                                   type="text" placeholder="ex: Informatique" list="cat-list-panel"
+                            <input class="sk-inp @(_erreurs.ContainsKey("Categorie") ? "inp-err" : "")" type="text"
+                                   placeholder="ex: Informatique" list="cat-list-create"
                                    @bind="_form.Categorie" @bind:event="oninput" />
-                            <datalist id="cat-list-panel">
-                                @foreach (var cat in _categories) { <option value="@cat" /> }
+                            <datalist id="cat-list-create">
+                                @foreach (var c in _categories) { <option value="@c" /> }
                             </datalist>
                             @if (_erreurs.ContainsKey("Categorie")) { <span class="sk-err-msg">@_erreurs["Categorie"]</span> }
                         </div>
-
                         <div class="sk-field-row">
                             <div class="sk-field">
                                 <label class="sk-label">Seuil d'alerte</label>
-                                <input class="sk-inp" type="number" min="0" placeholder="5"
-                                       @bind="_form.QuantiteMin" @bind:event="oninput" />
+                                <input class="sk-inp" type="number" min="0" @bind="_form.QuantiteMin" @bind:event="oninput" />
                             </div>
                             <div class="sk-field">
                                 <label class="sk-label">Unité</label>
-                                <input class="sk-inp" type="text" placeholder="pièce"
-                                       @bind="_form.Unite" @bind:event="oninput" />
+                                <input class="sk-inp" type="text" placeholder="pièce" @bind="_form.Unite" @bind:event="oninput" />
                             </div>
                         </div>
-
                         <div class="sk-field">
                             <label class="sk-label">Description</label>
-                            <textarea class="sk-inp sk-textarea" rows="2" placeholder="Détails supplémentaires…"
+                            <textarea class="sk-inp sk-textarea" rows="2" placeholder="Détails…"
                                       @bind="_form.Description" @bind:event="oninput"></textarea>
                         </div>
-
                         <div class="sk-field">
                             <label class="sk-label">Image du produit</label>
                             <label class="sk-upload-zone @(_dragOver ? "drag-over" : "")">
@@ -421,7 +445,7 @@
                                 {
                                     <div class="sk-upload-placeholder">
                                         <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-                                        <p class="sk-upload-text">Glissez une image ou cliquez</p>
+                                        <p class="sk-upload-text">Glissez ou cliquez</p>
                                         <p class="sk-upload-hint">JPG, PNG (max. 2Mo)</p>
                                     </div>
                                 }
@@ -432,10 +456,11 @@
                         </div>
                     }
 
-                    @* ── Infos commande (OBLIGATOIRES en création) ── *@
-                    <div class="sk-commande-section" style="margin-top:8px;">
-                        <p class="sk-section-lbl">Détails de la commande</p>
-
+                    @* Commande OBLIGATOIRE *@
+                    <p class="sk-section-lbl" style="margin-top:6px;">
+                        Commande d'achat <span class="sk-lbl-required">obligatoire</span>
+                    </p>
+                    <div class="sk-commande-section">
                         <div class="sk-field">
                             <label class="sk-label">N° Commande <span class="req">*</span></label>
                             <input class="sk-inp sk-mono @(_erreursCommande.ContainsKey("NumeroCommande") ? "inp-err" : "")"
@@ -443,25 +468,20 @@
                                    @bind="_formCommande.NumeroCommande" @bind:event="oninput" />
                             @if (_erreursCommande.ContainsKey("NumeroCommande")) { <span class="sk-err-msg">@_erreursCommande["NumeroCommande"]</span> }
                         </div>
-
                         <div class="sk-field">
                             <label class="sk-label">Fournisseur <span class="req">*</span></label>
                             <select class="sk-inp @(_erreursCommande.ContainsKey("Fournisseur") ? "inp-err" : "")"
                                     @bind="_formCommande.FournisseurId">
-                                <option value="0">— Sélectionner un fournisseur —</option>
-                                @foreach (var f in _fournisseurs)
-                                {
-                                    <option value="@f.IdFournisseur">@f.Nom</option>
-                                }
+                                <option value="0">— Sélectionner —</option>
+                                @foreach (var f in _fournisseurs) { <option value="@f.IdFournisseur">@f.Nom</option> }
                             </select>
                             @if (_erreursCommande.ContainsKey("Fournisseur")) { <span class="sk-err-msg">@_erreursCommande["Fournisseur"]</span> }
                         </div>
-
                         <div class="sk-field-row">
                             <div class="sk-field">
                                 <label class="sk-label">Quantité achetée <span class="req">*</span></label>
                                 <input class="sk-inp @(_erreursCommande.ContainsKey("Quantite") ? "inp-err" : "")"
-                                       type="number" min="1" placeholder="1"
+                                       type="number" min="1"
                                        value="@_formCommande.QuantiteAchetee"
                                        @onchange="OnQuantiteAcheteeChange" />
                                 @if (_erreursCommande.ContainsKey("Quantite")) { <span class="sk-err-msg">@_erreursCommande["Quantite"]</span> }
@@ -471,7 +491,6 @@
                                 <input class="sk-inp" type="date" @bind="_formCommande.DateAchat" />
                             </div>
                         </div>
-
                         <div class="sk-field-row">
                             <div class="sk-field">
                                 <label class="sk-label">Date de livraison</label>
@@ -483,13 +502,12 @@
                             </div>
                         </div>
 
-                        @* ── Articles individuels (N° série optionnels) ── *@
                         @if (_formCommande.QuantiteAchetee > 0)
                         {
                             <div class="sk-articles-section">
                                 <p class="sk-articles-title">
-                                    <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                                    @_formCommande.QuantiteAchetee article(s) — numéros de série
+                                    <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0-2-2z"/></svg>
+                                    @_formCommande.QuantiteAchetee article(s) — N° série
                                     <span class="sk-articles-opt">(optionnel)</span>
                                 </p>
                                 <div class="sk-articles-list">
@@ -498,9 +516,7 @@
                                         var idx = i;
                                         <div class="sk-article-row">
                                             <span class="sk-article-num">@(idx + 1)</span>
-                                            <input class="sk-inp sk-mono"
-                                                   type="text"
-                                                   placeholder="N° série (optionnel)"
+                                            <input class="sk-inp sk-mono" type="text" placeholder="N° série (optionnel)"
                                                    value="@_formCommande.NumerosSerie[idx]"
                                                    @onchange="e => _formCommande.NumerosSerie[idx] = e.Value?.ToString()" />
                                             <span class="sk-article-statut">Disponible</span>
@@ -513,36 +529,30 @@
                 }
                 else
                 {
-                    @* ── Mode modification ── *@
+                    @* ── MODIFICATION ── *@
                     <p class="sk-section-lbl">Informations produit</p>
-
                     <div class="sk-field">
                         <label class="sk-label">Nom du produit <span class="req">*</span></label>
-                        <input class="sk-inp @(_erreurs.ContainsKey("Designation") ? "inp-err" : "")"
-                               type="text" placeholder="ex: Écran Dell UltraSharp 27"
+                        <input class="sk-inp @(_erreurs.ContainsKey("Designation") ? "inp-err" : "")" type="text"
                                @bind="_form.Designation" @bind:event="oninput" />
                         @if (_erreurs.ContainsKey("Designation")) { <span class="sk-err-msg">@_erreurs["Designation"]</span> }
                     </div>
-
                     <div class="sk-field">
                         <label class="sk-label">Référence (SKU) <span class="req">*</span></label>
-                        <input class="sk-inp sk-mono @(_erreurs.ContainsKey("Reference") ? "inp-err" : "")"
-                               type="text" placeholder="ex: SN-5592-X"
+                        <input class="sk-inp sk-mono @(_erreurs.ContainsKey("Reference") ? "inp-err" : "")" type="text"
                                @bind="_form.Reference" @bind:event="oninput" />
                         @if (_erreurs.ContainsKey("Reference")) { <span class="sk-err-msg">@_erreurs["Reference"]</span> }
                     </div>
-
                     <div class="sk-field">
                         <label class="sk-label">Catégorie <span class="req">*</span></label>
-                        <input class="sk-inp @(_erreurs.ContainsKey("Categorie") ? "inp-err" : "")"
-                               type="text" placeholder="ex: Informatique" list="cat-list-panel-modif"
+                        <input class="sk-inp @(_erreurs.ContainsKey("Categorie") ? "inp-err" : "")" type="text"
+                               list="cat-list-edit"
                                @bind="_form.Categorie" @bind:event="oninput" />
-                        <datalist id="cat-list-panel-modif">
-                            @foreach (var cat in _categories) { <option value="@cat" /> }
+                        <datalist id="cat-list-edit">
+                            @foreach (var c in _categories) { <option value="@c" /> }
                         </datalist>
                         @if (_erreurs.ContainsKey("Categorie")) { <span class="sk-err-msg">@_erreurs["Categorie"]</span> }
                     </div>
-
                     <div class="sk-field-row">
                         <div class="sk-field">
                             <label class="sk-label">Seuil d'alerte</label>
@@ -553,23 +563,11 @@
                             <input class="sk-inp" type="text" @bind="_form.Unite" @bind:event="oninput" />
                         </div>
                     </div>
-
-                    <div class="sk-field">
-                        <label class="sk-label">État</label>
-                        <select class="sk-inp" @bind="_form.Etat">
-                            <option value="Disponible">Disponible</option>
-                            <option value="EnRupture">En rupture</option>
-                            <option value="EnCommande">En commande</option>
-                            <option value="HorsService">Hors service</option>
-                        </select>
-                    </div>
-
                     <div class="sk-field">
                         <label class="sk-label">Description</label>
-                        <textarea class="sk-inp sk-textarea" rows="2" placeholder="Détails supplémentaires…"
+                        <textarea class="sk-inp sk-textarea" rows="2"
                                   @bind="_form.Description" @bind:event="oninput"></textarea>
                     </div>
-
                     <div class="sk-field">
                         <label class="sk-label">Image du produit</label>
                         <label class="sk-upload-zone @(_dragOver ? "drag-over" : "")">
@@ -586,7 +584,7 @@
                             {
                                 <div class="sk-upload-placeholder">
                                     <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-                                    <p class="sk-upload-text">Glissez une image ou cliquez</p>
+                                    <p class="sk-upload-text">Glissez ou cliquez</p>
                                     <p class="sk-upload-hint">JPG, PNG (max. 2Mo)</p>
                                 </div>
                             }
@@ -596,43 +594,36 @@
                         @if (!string.IsNullOrEmpty(_imageErreur)) { <span class="sk-err-msg">@_imageErreur</span> }
                     </div>
 
-                    @* Commande update *@
-                    <div class="sk-commande-section" style="margin-top:8px;">
-                        <p class="sk-section-lbl">Ajouter une nouvelle commande</p>
+                    @* Ajouter une nouvelle commande en mode modif *@
+                    <div class="sk-commande-toggle">
+                        <label class="sk-toggle-label">
+                            <input type="checkbox" @bind="_avecCommandeModif" />
+                            <span>Ajouter une nouvelle commande d'achat</span>
+                        </label>
+                    </div>
 
-                        <div class="sk-commande-toggle">
-                            <label class="sk-toggle-label">
-                                <input type="checkbox" @bind="_avecCommandeModif" />
-                                <span>Ajouter une commande d'achat</span>
-                            </label>
-                        </div>
-
-                        @if (_avecCommandeModif)
-                        {
-                            <div class="sk-field" style="margin-top:10px;">
+                    @if (_avecCommandeModif)
+                    {
+                        <div class="sk-commande-section">
+                            <div class="sk-field">
                                 <label class="sk-label">N° Commande <span class="req">*</span></label>
                                 <input class="sk-inp sk-mono @(_erreursCommande.ContainsKey("NumeroCommande") ? "inp-err" : "")"
                                        type="text" placeholder="ex: CMD-2026-002"
                                        @bind="_formCommande.NumeroCommande" @bind:event="oninput" />
                                 @if (_erreursCommande.ContainsKey("NumeroCommande")) { <span class="sk-err-msg">@_erreursCommande["NumeroCommande"]</span> }
                             </div>
-
                             <div class="sk-field">
                                 <label class="sk-label">Fournisseur <span class="req">*</span></label>
                                 <select class="sk-inp @(_erreursCommande.ContainsKey("Fournisseur") ? "inp-err" : "")"
                                         @bind="_formCommande.FournisseurId">
-                                    <option value="0">— Sélectionner un fournisseur —</option>
-                                    @foreach (var f in _fournisseurs)
-                                    {
-                                        <option value="@f.IdFournisseur">@f.Nom</option>
-                                    }
+                                    <option value="0">— Sélectionner —</option>
+                                    @foreach (var f in _fournisseurs) { <option value="@f.IdFournisseur">@f.Nom</option> }
                                 </select>
                                 @if (_erreursCommande.ContainsKey("Fournisseur")) { <span class="sk-err-msg">@_erreursCommande["Fournisseur"]</span> }
                             </div>
-
                             <div class="sk-field-row">
                                 <div class="sk-field">
-                                    <label class="sk-label">Quantité achetée <span class="req">*</span></label>
+                                    <label class="sk-label">Quantité <span class="req">*</span></label>
                                     <input class="sk-inp" type="number" min="1"
                                            value="@_formCommande.QuantiteAchetee"
                                            @onchange="OnQuantiteAcheteeChange" />
@@ -642,24 +633,22 @@
                                     <input class="sk-inp" type="date" @bind="_formCommande.DateAchat" />
                                 </div>
                             </div>
-
                             <div class="sk-field-row">
                                 <div class="sk-field">
-                                    <label class="sk-label">Date de livraison</label>
+                                    <label class="sk-label">Date livraison</label>
                                     <input class="sk-inp" type="date" @bind="_formCommande.DateLivraison" />
                                 </div>
                                 <div class="sk-field">
-                                    <label class="sk-label">Date fin de garantie</label>
+                                    <label class="sk-label">Date fin garantie</label>
                                     <input class="sk-inp" type="date" @bind="_formCommande.DateFinGarantie" />
                                 </div>
                             </div>
-
                             @if (_formCommande.QuantiteAchetee > 0)
                             {
                                 <div class="sk-articles-section">
                                     <p class="sk-articles-title">
                                         <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0-2-2z"/></svg>
-                                        @_formCommande.QuantiteAchetee article(s) — numéros de série
+                                        @_formCommande.QuantiteAchetee art. — N° série
                                         <span class="sk-articles-opt">(optionnel)</span>
                                     </p>
                                     <div class="sk-articles-list">
@@ -668,8 +657,7 @@
                                             var idx = i;
                                             <div class="sk-article-row">
                                                 <span class="sk-article-num">@(idx + 1)</span>
-                                                <input class="sk-inp sk-mono" type="text"
-                                                       placeholder="N° série (optionnel)"
+                                                <input class="sk-inp sk-mono" type="text" placeholder="N° série (optionnel)"
                                                        value="@_formCommande.NumerosSerie[idx]"
                                                        @onchange="e => _formCommande.NumerosSerie[idx] = e.Value?.ToString()" />
                                                 <span class="sk-article-statut">Disponible</span>
@@ -678,8 +666,8 @@
                                     </div>
                                 </div>
                             }
-                        }
-                    </div>
+                        </div>
+                    }
                 }
 
                 @if (!string.IsNullOrEmpty(_erreurFormulaire))
@@ -698,8 +686,8 @@
         </aside>
     }
 
-    @* ══════ PANNEAU ARTICLES (3 points) ══════ *@
-    @if (_panneauArticlesOuvert && _materielArticles is not null)
+    @* ══════ PANNEAU ARTICLES INDIVIDUELS (···) ══════ *@
+    @if (_panneauArticlesOuvert)
     {
         <div class="sk-panel-overlay" @onclick="FermerArticles"></div>
         <aside class="sk-panel sk-panel-articles">
@@ -710,7 +698,7 @@
                     </div>
                     <div>
                         <h3>Articles individuels</h3>
-                        <p class="sk-panel-subtitle">@_materielArticles.Designation</p>
+                        <p class="sk-panel-subtitle">@_panneauArticlesTitre</p>
                     </div>
                 </div>
                 <button class="sk-panel-close" @onclick="FermerArticles">
@@ -727,8 +715,7 @@
                 {
                     <div class="sk-art-empty">
                         <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0-2-2z"/></svg>
-                        <p>Aucun article individuel pour ce matériel.</p>
-                        <p class="sk-art-hint">Ajoutez une commande d'achat pour générer des articles.</p>
+                        <p>Aucun article individuel.</p>
                     </div>
                 }
                 else
@@ -752,7 +739,6 @@
                         </div>
                     </div>
 
-                    @* Barre de recherche par numéro de série *@
                     <div class="sk-art-search-wrap">
                         <svg class="sk-art-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                         <input class="sk-art-search" type="text"
@@ -769,13 +755,10 @@
                                     <div>
                                         @if (_editArticleId == art.Id)
                                         {
-                                            @* Mode édition N° série *@
                                             <div class="sk-art-edit-wrap">
-                                                <input class="sk-inp sk-mono sk-art-edit-inp"
-                                                       type="text"
+                                                <input class="sk-inp sk-mono sk-art-edit-inp" type="text"
                                                        placeholder="Nouveau N° série"
-                                                       @bind="_editArticleNs"
-                                                       @bind:event="oninput" />
+                                                       @bind="_editArticleNs" @bind:event="oninput" />
                                                 <button class="sk-art-save-btn" @onclick="() => SauvegarderNumeroSerie(art.Id)" title="Enregistrer">
                                                     <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                                                 </button>
@@ -787,8 +770,7 @@
                                         else
                                         {
                                             <p class="sk-art-ns">
-                                                @if (!string.IsNullOrEmpty(art.NumeroSerie))
-                                                { @art.NumeroSerie }
+                                                @if (!string.IsNullOrEmpty(art.NumeroSerie)) { @art.NumeroSerie }
                                                 else { <span class="td-muted">Sans numéro de série</span> }
                                             </p>
                                         }
@@ -796,9 +778,7 @@
                                     </div>
                                 </div>
                                 <div class="sk-art-item-right">
-                                    <span class="sk-art-badge @StatutArticleClass(art.Statut)">
-                                        @art.Statut
-                                    </span>
+                                    <span class="sk-art-badge @StatutArticleClass(art.Statut)">@art.Statut</span>
                                     @if (_editArticleId != art.Id)
                                     {
                                         <button class="sk-art-edit-btn" title="Modifier le N° série"
@@ -813,7 +793,7 @@
                         {
                             <div class="sk-art-no-result">
                                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                                <p>Aucun article avec le numéro « @_rechercheArticle »</p>
+                                <p>Aucun article avec « @_rechercheArticle »</p>
                             </div>
                         }
                     </div>

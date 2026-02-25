@@ -1,5 +1,5 @@
 // ============================================================
-// AssetFlow.BlazorUI / Services / CommandeService.cs
+// AssetFlow.BlazorUI / Services / CommandeService.cs — v3
 // ============================================================
 
 using System.Net.Http.Json;
@@ -26,15 +26,25 @@ namespace AssetFlow.BlazorUI.Services
             return r ?? new();
         }
 
-        public async Task<List<MaterielAvecCommandeDto>> GetMaterielsEnrichisAsync()
+        /// <summary>
+        /// Retourne UNE LIGNE PAR COMMANDE.
+        /// Un même produit apparaît sur N lignes s'il a N commandes.
+        /// </summary>
+        public async Task<List<LigneCommandeMaterielDto>> GetLignesCommandesAsync()
         {
-            var r = await _http.GetFromJsonAsync<List<MaterielAvecCommandeDto>>($"{Base}/materiels-enrichis");
+            var r = await _http.GetFromJsonAsync<List<LigneCommandeMaterielDto>>($"{Base}/lignes-commandes");
             return r ?? new();
         }
 
         public async Task<List<ArticleDto>> GetArticlesByMaterielAsync(int materielId)
         {
             var r = await _http.GetFromJsonAsync<List<ArticleDto>>($"{Base}/articles/{materielId}");
+            return r ?? new();
+        }
+
+        public async Task<List<ArticleDto>> GetArticlesByCommandeAsync(int commandeId)
+        {
+            var r = await _http.GetFromJsonAsync<List<ArticleDto>>($"{Base}/{commandeId}/articles");
             return r ?? new();
         }
 

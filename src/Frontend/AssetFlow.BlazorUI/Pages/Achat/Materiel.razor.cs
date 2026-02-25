@@ -1,6 +1,6 @@
 // ============================================================
-// Pages/Achat/Materiel.razor.cs — v3
-// Nouvelles colonnes + formulaire commande + panneau articles
+// Pages/Achat/Materiel.razor.cs — v4
+// Ref dropdown, commande obligatoire, update N° série, ligne expansée
 // ============================================================
 
 using AssetFlow.Application.DTOs;
@@ -12,9 +12,10 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 {
     public partial class Materiel : ComponentBase
     {
-        [Inject] private AssetFlow.BlazorUI.Services.MaterielService    MaterielSvc { get; set; } = default!;
-        [Inject] private AssetFlow.BlazorUI.Services.CommandeService    CommandeSvc { get; set; } = default!;
+        [Inject] private AssetFlow.BlazorUI.Services.MaterielService    MaterielSvc    { get; set; } = default!;
+        [Inject] private AssetFlow.BlazorUI.Services.CommandeService    CommandeSvc    { get; set; } = default!;
         [Inject] private AssetFlow.BlazorUI.Services.FournisseurService FournisseurSvc { get; set; } = default!;
+        [Inject] private AssetFlow.BlazorUI.Services.ArticleService     ArticleSvc     { get; set; } = default!;
         [Inject] private IJSRuntime JS { get; set; } = default!;
 
         // ── VM liste enrichie ─────────────────────────────────────
@@ -30,7 +31,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             public string   Unite            { get; set; } = "pièce";
             public string   Etat             { get; set; } = "Disponible";
             public string?  ImageUrl         { get; set; }
-            // Commande
             public string?  NumeroCommande   { get; set; }
             public string?  NomFournisseur   { get; set; }
             public int?     FournisseurId    { get; set; }
@@ -65,15 +65,15 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             public DateTime DateAchat        { get; set; } = DateTime.Today;
             public DateTime? DateLivraison   { get; set; }
             public DateTime? DateFinGarantie { get; set; }
-            // Articles saisis
             public List<string?> NumerosSerie { get; set; } = new();
         }
 
-        // ── État ──────────────────────────────────────────────────
+        // ── État principal ────────────────────────────────────────
         private List<MaterielVm>           _materiels        = new();
         private List<MaterielVm>           _tousMateriels    = new();
         private List<string>               _categories       = new();
         private List<FournisseurDto>       _fournisseurs     = new();
+        private List<MaterielVm>           _produitsExistants = new(); // Pour la liste déroulante
         private int                        _totalCount       = 0;
         private bool                       _chargement       = true;
         private string                     _erreur           = string.Empty;
@@ -81,19 +81,21 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private string                     _categorieFiltre  = "all";
         private string                     _etatFiltre       = "all";
         private bool                       _sidebarOpen      = false;
+        private int?                       _ligneExpansee    = null; // ID de la ligne avec détails visibles
 
-        // Formulaire matériel
+        // Formulaire
         private bool                       _panneauOuvert    = false;
         private bool                       _modeModif        = false;
         private bool                       _sauvegarde       = false;
         private FormulaireVm               _form             = new();
         private Dictionary<string, string> _erreurs          = new();
         private string                     _erreurFormulaire = string.Empty;
+        private bool                       _nouveauProduit   = false; // En création : nouveau vs existant
+        private bool                       _avecCommandeModif = false; // En modification : ajouter commande
 
-        // Formulaire commande (sous le formulaire matériel)
+        // Formulaire commande
         private FormulaireCommandeVm       _formCommande     = new();
         private Dictionary<string, string> _erreursCommande  = new();
-        private bool                       _avecCommande     = false; // Si création avec commande
 
         // Image
         private string  _imagePreview = string.Empty;
@@ -102,14 +104,19 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private string? _imageBase64  = null;
         private string? _imageMime    = null;
 
-        // Suppression
+        // Suppression (supprime la dernière commande et ses articles)
         private MaterielVm? _aSupprimer = null;
 
-        // Panneau articles (3 points)
+        // Panneau articles
         private bool              _panneauArticlesOuvert = false;
         private MaterielVm?       _materielArticles      = null;
         private List<ArticleDto>  _articles              = new();
         private bool              _chargementArticles    = false;
+        private string            _rechercheArticle      = string.Empty;
+
+        // Édition numéro de série
+        private int?   _editArticleId = null;
+        private string _editArticleNs = string.Empty;
 
         // Toast
         private string _toastMsg  = string.Empty;
@@ -130,6 +137,13 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             }
         }
 
+        // Articles filtrés par recherche
+        private IEnumerable<ArticleDto> ArticlesFiltres =>
+            string.IsNullOrWhiteSpace(_rechercheArticle)
+                ? _articles
+                : _articles.Where(a => a.NumeroSerie != null &&
+                    a.NumeroSerie.Contains(_rechercheArticle, StringComparison.OrdinalIgnoreCase));
+
         // ── Cycle de vie ──────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
@@ -137,7 +151,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             await Task.WhenAll(ChargerDonnees(), ChargerFournisseurs());
         }
 
-        // ── Chargement données enrichies ──────────────────────────
+        // ── Chargement ────────────────────────────────────────────
         private async Task ChargerDonnees()
         {
             _chargement = true; _erreur = string.Empty;
@@ -172,6 +186,9 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     NbDisponibles    = d.NbDisponibles
                 }).ToList();
 
+                // Liste déroulante produits existants (tous les produits distincts)
+                _produitsExistants = _tousMateriels.ToList();
+
                 AppliquerFiltres();
             }
             catch (Exception ex) { _erreur = $"Erreur de chargement : {ex.Message}"; }
@@ -180,10 +197,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         private async Task ChargerFournisseurs()
         {
-            try
-            {
-                _fournisseurs = await FournisseurSvc.GetAllAsync();
-            }
+            try { _fournisseurs = await FournisseurSvc.GetAllAsync(); }
             catch { }
         }
 
@@ -224,7 +238,43 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             AppliquerFiltres();
         }
 
-        // ── Formulaire matériel ───────────────────────────────────
+        // ── Toggle ligne expansée (bouton 3 points du tableau) ────
+        private void ToggleLigneExpansee(int id)
+        {
+            _ligneExpansee = _ligneExpansee == id ? null : id;
+        }
+
+        // ── Sélection produit existant dans le formulaire ─────────
+        private void OnProduitExistantChange(ChangeEventArgs e)
+        {
+            if (int.TryParse(e.Value?.ToString(), out var id) && id > 0)
+            {
+                var vm = _produitsExistants.FirstOrDefault(p => p.Id == id);
+                if (vm != null)
+                {
+                    _form = new FormulaireVm
+                    {
+                        Id          = vm.Id,
+                        Reference   = vm.Reference,
+                        Designation = vm.Designation,
+                        Description = vm.Description,
+                        Categorie   = vm.Categorie,
+                        QuantiteMin = vm.QuantiteMin,
+                        Unite       = vm.Unite,
+                        Etat        = vm.Etat,
+                        ImageUrl    = vm.ImageUrl
+                    };
+                    _imagePreview = vm.ImageUrl ?? string.Empty;
+                }
+            }
+            else
+            {
+                _form = new FormulaireVm();
+                _imagePreview = string.Empty;
+            }
+        }
+
+        // ── Formulaire ────────────────────────────────────────────
         private void OuvrirFormulaire(MaterielVm? vm)
         {
             _erreurs.Clear(); _erreursCommande.Clear();
@@ -232,7 +282,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             _imageErreur      = string.Empty;
             _modeModif        = vm is not null;
             _panneauOuvert    = true;
-            _avecCommande     = false;
+            _nouveauProduit   = false;
+            _avecCommandeModif = false;
             _formCommande     = new FormulaireCommandeVm();
 
             if (vm is not null)
@@ -262,12 +313,13 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         private void FermerFormulaire()
         {
-            _panneauOuvert = false; _erreurs.Clear(); _erreursCommande.Clear();
+            _panneauOuvert = false;
+            _erreurs.Clear(); _erreursCommande.Clear();
             _erreurFormulaire = string.Empty;
             _imagePreview = string.Empty; _imageBase64 = null; _imageMime = null;
+            _nouveauProduit = false; _avecCommandeModif = false;
         }
 
-        // Ajouter/supprimer articles dans le formulaire commande
         private void AjusterArticles()
         {
             var qte = _formCommande.QuantiteAchetee;
@@ -290,14 +342,39 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             _erreurs.Clear(); _erreursCommande.Clear();
             _erreurFormulaire = string.Empty;
 
-            // Validation matériel
-            if (string.IsNullOrWhiteSpace(_form.Designation)) _erreurs["Designation"] = "Obligatoire.";
-            if (string.IsNullOrWhiteSpace(_form.Reference))   _erreurs["Reference"]   = "Obligatoire.";
-            if (string.IsNullOrWhiteSpace(_form.Categorie))   _erreurs["Categorie"]   = "Obligatoire.";
-
-            // Validation commande (si nouvelle + avec commande)
-            if (!_modeModif && _avecCommande)
+            if (_modeModif)
             {
+                // Validation modification
+                if (string.IsNullOrWhiteSpace(_form.Designation)) _erreurs["Designation"] = "Obligatoire.";
+                if (string.IsNullOrWhiteSpace(_form.Reference))   _erreurs["Reference"]   = "Obligatoire.";
+                if (string.IsNullOrWhiteSpace(_form.Categorie))   _erreurs["Categorie"]   = "Obligatoire.";
+
+                // Validation commande si ajoutée
+                if (_avecCommandeModif)
+                {
+                    if (string.IsNullOrWhiteSpace(_formCommande.NumeroCommande))
+                        _erreursCommande["NumeroCommande"] = "Obligatoire.";
+                    if (_formCommande.FournisseurId == 0)
+                        _erreursCommande["Fournisseur"] = "Sélectionnez un fournisseur.";
+                    if (_formCommande.QuantiteAchetee <= 0)
+                        _erreursCommande["Quantite"] = "La quantité doit être > 0.";
+                }
+            }
+            else
+            {
+                // Validation création
+                if (_nouveauProduit)
+                {
+                    if (string.IsNullOrWhiteSpace(_form.Designation)) _erreurs["Designation"] = "Obligatoire.";
+                    if (string.IsNullOrWhiteSpace(_form.Reference))   _erreurs["Reference"]   = "Obligatoire.";
+                    if (string.IsNullOrWhiteSpace(_form.Categorie))   _erreurs["Categorie"]   = "Obligatoire.";
+                }
+                else
+                {
+                    if (_form.Id == 0) _erreurs["Reference"] = "Sélectionnez un produit existant.";
+                }
+
+                // Commande toujours obligatoire en création
                 if (string.IsNullOrWhiteSpace(_formCommande.NumeroCommande))
                     _erreursCommande["NumeroCommande"] = "Obligatoire.";
                 if (_formCommande.FournisseurId == 0)
@@ -311,10 +388,12 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             _sauvegarde = true;
             try
             {
-                MaterielResultDto result;
+                int materielId;
+
                 if (_modeModif)
                 {
-                    result = await MaterielSvc.ModifierAsync(new ModifierMaterielDto
+                    // Mise à jour du matériel
+                    var result = await MaterielSvc.ModifierAsync(new ModifierMaterielDto
                     {
                         Id            = _form.Id,
                         Reference     = _form.Reference.Trim(),
@@ -326,36 +405,65 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                         Unite         = (_form.Unite ?? "pièce").Trim(),
                         Emplacement   = null,
                         Etat          = _form.Etat,
-                        ImageUrl      = Vide(_form.ImageUrl)
+                        ImageUrl      = string.IsNullOrEmpty(_imagePreview) ? Vide(_form.ImageUrl) : _imagePreview
                     });
+
+                    if (!result.Succes) { _erreurFormulaire = result.Message; return; }
+                    materielId = _form.Id;
+
+                    // Ajouter commande si demandé
+                    if (_avecCommandeModif)
+                    {
+                        AjusterArticles();
+                        var cmd = await CommandeSvc.CreerAsync(new CreerCommandeDto
+                        {
+                            NumeroCommande  = _formCommande.NumeroCommande.Trim(),
+                            MaterielId      = materielId,
+                            FournisseurId   = _formCommande.FournisseurId,
+                            QuantiteAchetee = _formCommande.QuantiteAchetee,
+                            DateAchat       = _formCommande.DateAchat,
+                            DateLivraison   = _formCommande.DateLivraison,
+                            DateFinGarantie = _formCommande.DateFinGarantie,
+                            NumerosSerie    = _formCommande.NumerosSerie
+                        });
+                        if (!cmd.Succes) { _erreurFormulaire = cmd.Message; return; }
+                    }
+
+                    AfficherToast($"« {_form.Designation} » mis à jour.", "toast-success");
                 }
                 else
                 {
-                    result = await MaterielSvc.AjouterAsync(new CreerMaterielDto
+                    if (_nouveauProduit)
                     {
-                        Reference     = _form.Reference.Trim(),
-                        Designation   = _form.Designation.Trim(),
-                        Description   = Vide(_form.Description),
-                        Categorie     = _form.Categorie.Trim(),
-                        QuantiteStock = 0,
-                        QuantiteMin   = _form.QuantiteMin,
-                        Unite         = (_form.Unite ?? "pièce").Trim(),
-                        Emplacement   = null,
-                        Etat          = _form.Etat,
-                        ImageUrl      = Vide(_form.ImageUrl)
-                    });
-                }
+                        // Créer nouveau matériel
+                        var result = await MaterielSvc.AjouterAsync(new CreerMaterielDto
+                        {
+                            Reference     = _form.Reference.Trim(),
+                            Designation   = _form.Designation.Trim(),
+                            Description   = Vide(_form.Description),
+                            Categorie     = _form.Categorie.Trim(),
+                            QuantiteStock = 0,
+                            QuantiteMin   = _form.QuantiteMin,
+                            Unite         = (_form.Unite ?? "pièce").Trim(),
+                            Emplacement   = null,
+                            Etat          = "Disponible",
+                            ImageUrl      = string.IsNullOrEmpty(_imagePreview) ? null : _imagePreview
+                        });
+                        if (!result.Succes) { _erreurFormulaire = result.Message; return; }
+                        materielId = result.IdMateriel!.Value;
+                    }
+                    else
+                    {
+                        // Produit existant sélectionné
+                        materielId = _form.Id;
+                    }
 
-                if (!result.Succes) { _erreurFormulaire = result.Message; return; }
-
-                // Créer la commande si demandé
-                if (!_modeModif && _avecCommande && result.IdMateriel.HasValue)
-                {
+                    // Créer la commande (obligatoire)
                     AjusterArticles();
                     var cmd = await CommandeSvc.CreerAsync(new CreerCommandeDto
                     {
                         NumeroCommande  = _formCommande.NumeroCommande.Trim(),
-                        MaterielId      = result.IdMateriel.Value,
+                        MaterielId      = materielId,
                         FournisseurId   = _formCommande.FournisseurId,
                         QuantiteAchetee = _formCommande.QuantiteAchetee,
                         DateAchat       = _formCommande.DateAchat,
@@ -364,25 +472,26 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                         NumerosSerie    = _formCommande.NumerosSerie
                     });
                     if (!cmd.Succes) { _erreurFormulaire = cmd.Message; return; }
+
+                    AfficherToast($"Commande {_formCommande.NumeroCommande} ajoutée.", "toast-success");
                 }
 
                 FermerFormulaire();
-                AfficherToast(
-                    _modeModif ? $"« {_form.Designation} » mis à jour." : $"« {_form.Designation} » ajouté.",
-                    "toast-success");
                 await ChargerDonnees();
             }
             catch (Exception ex) { _erreurFormulaire = ex.Message; }
             finally { _sauvegarde = false; }
         }
 
-        // ── Panneau articles (3 points) ───────────────────────────
+        // ── Panneau articles ──────────────────────────────────────
         private async Task OuvrirArticles(MaterielVm vm)
         {
             _materielArticles      = vm;
             _panneauArticlesOuvert = true;
             _chargementArticles    = true;
             _articles              = new();
+            _rechercheArticle      = string.Empty;
+            _editArticleId         = null;
             StateHasChanged();
             try
             {
@@ -392,25 +501,94 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             finally { _chargementArticles = false; }
         }
 
-        private void FermerArticles() => _panneauArticlesOuvert = false;
+        private void FermerArticles()
+        {
+            _panneauArticlesOuvert = false;
+            _editArticleId = null;
+        }
 
-        // ── Suppression matériel ──────────────────────────────────
-        private void DemanderSuppression(MaterielVm vm) => _aSupprimer = vm;
+        // ── Édition numéro de série ───────────────────────────────
+        private void OuvrirEditArticle(ArticleDto art)
+        {
+            _editArticleId = art.Id;
+            _editArticleNs = art.NumeroSerie ?? string.Empty;
+        }
+
+        private void AnnulerEditArticle()
+        {
+            _editArticleId = null;
+            _editArticleNs = string.Empty;
+        }
+
+        private async Task SauvegarderNumeroSerie(int articleId)
+        {
+            try
+            {
+                var result = await ArticleSvc.UpdateNumeroSerieAsync(articleId, _editArticleNs);
+                if (result)
+                {
+                    var art = _articles.FirstOrDefault(a => a.Id == articleId);
+                    if (art != null)
+                        art.NumeroSerie = string.IsNullOrWhiteSpace(_editArticleNs) ? null : _editArticleNs.Trim();
+                    AfficherToast("Numéro de série mis à jour.", "toast-success");
+                }
+                else
+                    AfficherToast("Erreur lors de la mise à jour.", "toast-error");
+            }
+            catch (Exception ex)
+            {
+                AfficherToast($"Erreur : {ex.Message}", "toast-error");
+            }
+            finally
+            {
+                _editArticleId = null;
+                _editArticleNs = string.Empty;
+            }
+        }
+
+        // ── Suppression (supprime la DERNIÈRE commande et ses articles) ──
+        private void DemanderSuppression(MaterielVm vm)
+        {
+            if (string.IsNullOrEmpty(vm.NumeroCommande))
+            {
+                AfficherToast("Aucune commande à supprimer pour ce produit.", "toast-error");
+                return;
+            }
+            _aSupprimer = vm;
+        }
+
         private void AnnulerSuppression() => _aSupprimer = null;
 
         private async Task ConfirmerSuppression()
         {
             if (_aSupprimer is null) return;
-            var nom = _aSupprimer.Designation;
-            var id  = _aSupprimer.Id;
+            var vm = _aSupprimer;
             _aSupprimer = null;
-            var result = await MaterielSvc.SupprimerAvecCascadeAsync(id);
-            if (result.Succes)
+
+            try
             {
-                AfficherToast($"« {nom} » supprimé.", "toast-success");
-                await ChargerDonnees();
+                // Trouver la dernière commande par numéro et la supprimer
+                var commandes = await CommandeSvc.GetByMaterielAsync(vm.Id);
+                var derniere = commandes.OrderByDescending(c => c.DateAchat).FirstOrDefault();
+                if (derniere == null)
+                {
+                    AfficherToast("Aucune commande trouvée.", "toast-error");
+                    return;
+                }
+
+                var result = await CommandeSvc.SupprimerAsync(derniere.Id);
+                if (result.Succes)
+                {
+                    AfficherToast($"Commande {derniere.NumeroCommande} supprimée.", "toast-success");
+                    await ChargerDonnees();
+                }
+                else
+                    AfficherToast(result.Message, "toast-error");
             }
-            else _erreur = result.Message;
+            catch (Exception ex)
+            {
+                AfficherToast($"Erreur : {ex.Message}", "toast-error");
+            }
         }
 
         // ── Export ────────────────────────────────────────────────

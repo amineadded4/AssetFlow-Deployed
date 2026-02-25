@@ -29,5 +29,6 @@ builder.Services.AddScoped<IncidentService>();
 builder.Services.AddScoped<FournisseurService>();
 builder.Services.AddScoped<MaterielService>();
 builder.Services.AddScoped<CommandeService>();
+builder.Services.AddScoped<ArticleService>();
 
 await builder.Build().RunAsync();

@@ -28,5 +28,6 @@ builder.Services.AddScoped<EmployeService>();  // ← NOUVEAU
 builder.Services.AddScoped<IncidentService>();
 builder.Services.AddScoped<FournisseurService>();
 builder.Services.AddScoped<MaterielService>();
+builder.Services.AddScoped<CommandeService>();
 
 await builder.Build().RunAsync();

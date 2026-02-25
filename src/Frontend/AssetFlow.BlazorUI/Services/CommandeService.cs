@@ -1,0 +1,55 @@
+// ============================================================
+// AssetFlow.BlazorUI / Services / CommandeService.cs
+// ============================================================
+
+using System.Net.Http.Json;
+using AssetFlow.Application.DTOs;
+
+namespace AssetFlow.BlazorUI.Services
+{
+    public class CommandeService
+    {
+        private readonly HttpClient _http;
+        private const string Base = "api/commandes";
+
+        public CommandeService(HttpClient http) => _http = http;
+
+        public async Task<List<CommandeDto>> GetAllAsync()
+        {
+            var r = await _http.GetFromJsonAsync<List<CommandeDto>>(Base);
+            return r ?? new();
+        }
+
+        public async Task<List<CommandeDto>> GetByMaterielAsync(int materielId)
+        {
+            var r = await _http.GetFromJsonAsync<List<CommandeDto>>($"{Base}/materiel/{materielId}");
+            return r ?? new();
+        }
+
+        public async Task<List<MaterielAvecCommandeDto>> GetMaterielsEnrichisAsync()
+        {
+            var r = await _http.GetFromJsonAsync<List<MaterielAvecCommandeDto>>($"{Base}/materiels-enrichis");
+            return r ?? new();
+        }
+
+        public async Task<List<ArticleDto>> GetArticlesByMaterielAsync(int materielId)
+        {
+            var r = await _http.GetFromJsonAsync<List<ArticleDto>>($"{Base}/articles/{materielId}");
+            return r ?? new();
+        }
+
+        public async Task<CommandeReponseDto> CreerAsync(CreerCommandeDto dto)
+        {
+            var resp = await _http.PostAsJsonAsync(Base, dto);
+            return await resp.Content.ReadFromJsonAsync<CommandeReponseDto>()
+                   ?? new() { Succes = false, Message = "Réponse vide." };
+        }
+
+        public async Task<CommandeReponseDto> SupprimerAsync(int id)
+        {
+            var resp = await _http.DeleteAsync($"{Base}/{id}");
+            return await resp.Content.ReadFromJsonAsync<CommandeReponseDto>()
+                   ?? new() { Succes = false, Message = "Réponse vide." };
+        }
+    }
+}

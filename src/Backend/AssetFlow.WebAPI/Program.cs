@@ -1,6 +1,6 @@
 // ============================================================
-// AssetFlow.WebAPI / Program.cs - VERSION MISE À JOUR
-// Ajout du service EmployeService dans l'injection de dépendances
+// AssetFlow.WebAPI / Program.cs — MISE À JOUR
+// Ajout de CommandeService
 // ============================================================
 
 using AssetFlow.Application.Interfaces;
@@ -24,10 +24,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true,
+            ValidateIssuer   = true,
             ValidateAudience = false,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
+            ClockSkew        = TimeSpan.Zero
         };
     });
 
@@ -35,10 +35,11 @@ builder.Services.AddAuthorization();
 
 // === INJECTION DES SERVICES ===
 builder.Services.AddHttpClient<IAuthService, KeycloakAuthService>();
-builder.Services.AddScoped<IEmployeService, EmployeService>(); // ← NOUVEAU
-builder.Services.AddScoped<IIncidentService, IncidentService>(); 
+builder.Services.AddScoped<IEmployeService,   EmployeService>();
+builder.Services.AddScoped<IIncidentService,  IncidentService>();
 builder.Services.AddScoped<IFournisseurService, FournisseurService>();
-builder.Services.AddScoped<IMaterielService, MaterielService>();
+builder.Services.AddScoped<IMaterielService,  MaterielService>();
+builder.Services.AddScoped<ICommandeService,  CommandeService>(); // ← NOUVEAU
 
 // === CORS ===
 builder.Services.AddCors(options =>

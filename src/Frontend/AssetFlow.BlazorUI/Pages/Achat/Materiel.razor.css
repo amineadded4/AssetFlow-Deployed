@@ -39,7 +39,7 @@
     --t:             0.15s ease;
 
     display:    flex;
-    height: 100vh;
+    
     background: var(--bg);
     color:      var(--text);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -565,7 +565,7 @@ html.dark .sk-shell {
 
 .sk-btn-danger {
     padding: 9px 20px; border-radius: var(--r-lg);
-    background: #f43f5e !important; color: #fff; font-size: 13px; font-weight: 700;
+    background: #f43f5e; color: #fff; font-size: 13px; font-weight: 700;
     transition: background var(--t);
 }
 .sk-btn-danger:hover { background: #e11d48; }
@@ -623,3 +623,138 @@ html.dark .sk-shell {
     .sk-field-row { grid-template-columns: 1fr; }
     .sk-content { padding: 1rem; }
 }
+/* ═══════════════════════════════════════════════════════════
+   14. NOUVELLES COLONNES & STYLES v3
+   ═══════════════════════════════════════════════════════════ */
+
+/* Numéro de série */
+.td-ns  { white-space: nowrap; }
+.ns-badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: var(--r-full);
+    background: var(--primary-10); color: var(--primary);
+    font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+
+/* Numéro commande */
+.td-cmd { font-family: 'Courier New', monospace; font-size: 12px; font-weight: 600; color: var(--text-md); white-space: nowrap; }
+.td-num { font-weight: 700; color: var(--text); }
+.td-date { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+
+/* Dates garantie */
+.date-expired { color: #f43f5e; font-weight: 700; }
+.date-ok      { color: #10b981; font-weight: 600; }
+
+/* Bouton 3 points */
+.sk-act-more:hover { background: var(--primary-10); color: var(--primary); }
+
+/* ── Section commande dans formulaire ── */
+.sk-section-lbl {
+    font-size: 10px; font-weight: 800; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    padding-bottom: 6px; border-bottom: 1px solid var(--border);
+    margin-top: 4px;
+}
+.req { color: #f43f5e; margin-left: 2px; }
+
+.sk-commande-toggle {
+    padding: 10px 12px; border-radius: var(--r-lg);
+    background: var(--surface-2); border: 1px solid var(--border);
+}
+.sk-toggle-label {
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text);
+}
+.sk-toggle-label input[type="checkbox"] {
+    width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary);
+}
+
+.sk-commande-section {
+    display: flex; flex-direction: column; gap: 14px;
+    padding: 14px; border-radius: var(--r-lg);
+    background: var(--surface-2); border: 1px solid var(--border);
+    animation: skFadeUp 0.2s ease;
+}
+
+/* ── Articles individuels dans formulaire ── */
+.sk-articles-section {
+    display: flex; flex-direction: column; gap: 10px;
+}
+.sk-articles-title {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; font-weight: 700; color: var(--text-md);
+}
+.sk-articles-title svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; flex-shrink: 0; }
+.sk-articles-opt { font-size: 10px; color: var(--text-faint); font-weight: 400; }
+
+.sk-articles-list { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; }
+.sk-article-row {
+    display: grid; grid-template-columns: 24px 1fr auto;
+    align-items: center; gap: 8px;
+}
+.sk-article-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--primary-10); color: var(--primary);
+    font-size: 10px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.sk-article-statut {
+    font-size: 10px; font-weight: 700; color: #10b981;
+    background: rgba(16,185,129,0.1); padding: 2px 7px;
+    border-radius: var(--r-full); white-space: nowrap;
+}
+
+/* ── Panneau articles (3 points) ── */
+.sk-panel-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.sk-art-loading, .sk-art-empty {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 10px; min-height: 200px;
+    color: var(--text-muted); text-align: center;
+}
+.sk-art-empty svg { width: 40px; height: 40px; fill: none; stroke: currentColor; stroke-width: 1.5; opacity: 0.3; }
+.sk-art-empty p { font-size: 13px; }
+.sk-art-hint { font-size: 11px; color: var(--text-faint) !important; }
+
+.sk-art-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px; margin-bottom: 16px;
+}
+.sk-art-stat {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 10px 6px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: var(--r-lg);
+}
+.sk-art-stat-val { font-size: 20px; font-weight: 800; color: var(--text); }
+.sk-art-stat-lbl { font-size: 9px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; }
+
+.sk-art-list { display: flex; flex-direction: column; gap: 6px; }
+.sk-art-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: var(--r-lg);
+    transition: background var(--t);
+}
+.sk-art-item:hover { background: var(--row-hover); }
+.sk-art-item-left { display: flex; align-items: center; gap: 10px; }
+.sk-art-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.sk-art-ns  { font-size: 13px; font-weight: 700; font-family: 'Courier New', monospace; }
+.sk-art-cmd { font-size: 10px; color: var(--text-faint); margin-top: 2px; }
+
+.sk-art-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 8px;
+    border-radius: var(--r-full); text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* Statuts articles */
+.art-disponible     { background: rgba(16,185,129,0.12); color: #10b981; }
+.art-disponible.sk-art-dot { background: #10b981; }
+.art-affecte        { background: rgba(19,109,236,0.12); color: #136dec; }
+.art-affecte.sk-art-dot    { background: #136dec; }
+.art-hors           { background: rgba(244,63,94,0.12);  color: #f43f5e; }
+.art-hors.sk-art-dot       { background: #f43f5e; }
+.art-rep            { background: rgba(245,158,11,0.12); color: #f59e0b; }
+.art-rep.sk-art-dot        { background: #f59e0b; }

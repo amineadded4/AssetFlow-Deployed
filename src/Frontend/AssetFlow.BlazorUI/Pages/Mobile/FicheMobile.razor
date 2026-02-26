@@ -12,7 +12,7 @@
    - CSS isolé, zéro dépendance externe
    ============================================================ *@
 
-@page "/fiche/{AffectationId:int}"
+@page "/fiche/{AffectationId:int}/article/{ArticleId:int?}"
 @using AssetFlow.BlazorUI.Services
 
 @* PAS de @attribute [Authorize] — page publique *@
@@ -24,8 +24,8 @@
         <div class="fiche-brand">
             <div class="fiche-brand-icon">
                 <svg viewBox="0 0 24 24">
-                    <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/>
-                    <path d="M7 7h.01"/>
+                    <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z" />
+                    <path d="M7 7h.01" />
                 </svg>
             </div>
             <div>
@@ -35,9 +35,10 @@
         </div>
         @if (Equipement != null)
         {
-            <span class="fiche-statut fiche-statut-@Equipement.Statut.ToLower()">
+            <!-- APRÈS -->
+            <span class="fiche-statut fiche-statut-@(Equipement.EtatArticle?.ToLower() ?? "bon")">
                 <span class="fiche-statut-dot"></span>
-                @GetStatutLabel(Equipement.Statut)
+                @(Equipement.EtatArticle == "Panne" ? "⚠ En panne" : "✓ Bon état")
             </span>
         }
     </header>
@@ -56,8 +57,8 @@
         {
             <div class="fiche-error">
                 <svg viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="m15 9-6 6M9 9l6 6"/>
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m15 9-6 6M9 9l6 6" />
                 </svg>
                 <h3>Fiche introuvable</h3>
                 <p>Cet équipement n'existe pas ou a été retiré du système.</p>
@@ -69,7 +70,7 @@
             @if (!string.IsNullOrEmpty(Equipement.ImageUrl))
             {
                 <div class="fiche-photo-wrap">
-                    <img class="fiche-photo" src="@Equipement.ImageUrl" alt="@Equipement.Designation"/>
+                    <img class="fiche-photo" src="@Equipement.ImageUrl" alt="@Equipement.Designation" />
                 </div>
             }
 
@@ -82,31 +83,34 @@
             @* Grille de spécifications *@
             <div class="fiche-specs">
 
+                <!-- APRÈS -->
                 <div class="spec-row">
+                    <div class="spec-item">
+                        <span class="spec-item-label">Numéro de série</span>
+                        <span class="spec-item-value spec-mono">
+                            @(string.IsNullOrEmpty(Equipement.NumeroSerie) ? "Non renseigné" : Equipement.NumeroSerie)
+                        </span>
+                    </div>
                     <div class="spec-item">
                         <span class="spec-item-label">Catégorie</span>
                         <span class="spec-item-value">@Equipement.Categorie</span>
-                    </div>
-                    <div class="spec-item">
-                        <span class="spec-item-label">État</span>
-                        <span class="spec-item-value">
-                            <span class="etat-tag etat-@Equipement.Statut.ToLower()">
-                                @GetStatutLabel(Equipement.Statut)
-                            </span>
-                        </span>
                     </div>
                 </div>
 
                 <div class="spec-row">
                     <div class="spec-item">
+                        <span class="spec-item-label">État</span>
+                        <span class="spec-item-value">
+                            <span class="etat-tag etat-@(Equipement.EtatArticle?.ToLower() ?? "bon")">
+                                @(Equipement.EtatArticle == "Panne" ? "⚠ En panne" : "✓ Bon état")
+                            </span>
+                        </span>
+                    </div>
+                    <div class="spec-item">
                         <span class="spec-item-label">Date d'affectation</span>
                         <span class="spec-item-value">
                             @Equipement.DateAffectation.ToString("dd MMM yyyy")
                         </span>
-                    </div>
-                    <div class="spec-item">
-                        <span class="spec-item-label">Quantité</span>
-                        <span class="spec-item-value">@Equipement.QuantiteAffectee pièce(s)</span>
                     </div>
                 </div>
 
@@ -122,9 +126,9 @@
             @* Info de scan *@
             <div class="fiche-scan-info">
                 <svg viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
                 <p>Fiche consultée via QR Code · ID affectation #@AffectationId</p>
             </div>

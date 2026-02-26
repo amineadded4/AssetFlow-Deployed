@@ -14,7 +14,7 @@
     --fm-muted:    #64748b;
     --fm-faint:    #94a3b8;
     --fm-primary:  #136dec;
-    --fm-brand-bg: #0F1E3C;
+    --fm-brand-bg: #0F1E3C;  /* ← déjà là, ne pas toucher */
 }
 @media (prefers-color-scheme: dark) {
     :root {
@@ -242,3 +242,26 @@
         min-height: unset;
     }
 }
+/* AJOUTER à la fin du fichier */
+.fiche-header {
+    background: #0F1E3C !important;  /* forcer indépendamment du thème app */
+}
+
+.fiche-footer {
+    background: #0F1E3C !important;
+}
+
+/* AJOUTER : style mono pour numéro de série */
+.spec-mono {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.06em;
+    font-size: 0.8rem;
+}
+
+/* AJOUTER : badges état Bon/Panne */
+.etat-bon   { background: rgba(16,185,129,0.1); color: #10b981; border-color: rgba(16,185,129,0.3); }
+.etat-panne { background: rgba(239,68,68,0.1);  color: #ef4444; border-color: rgba(239,68,68,0.3); }
+
+/* AJOUTER : badge statut header pour Bon/Panne */
+.fiche-statut-bon   { background: rgba(16,185,129,0.2); color: #10b981; }
+.fiche-statut-panne { background: rgba(239,68,68,0.2);  color: #ef4444; }

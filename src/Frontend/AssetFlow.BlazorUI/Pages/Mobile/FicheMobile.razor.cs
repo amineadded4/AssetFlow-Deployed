@@ -14,6 +14,7 @@ namespace AssetFlow.BlazorUI.Pages.Mobile
 
         // Paramètre URL : /fiche/{AffectationId}
         [Parameter] public int AffectationId { get; set; }
+        [Parameter] public int ArticleId { get; set; } = 0;
 
         private EquipementAffecteDto? Equipement { get; set; }
         private bool IsLoading { get; set; } = true;
@@ -24,7 +25,7 @@ namespace AssetFlow.BlazorUI.Pages.Mobile
             {
                 // Réutilise GetEquipementDetailAsync — endpoint public
                 // (côté backend, cet endpoint n'a pas [Authorize] pour le QR)
-                Equipement = await EmployeService.GetEquipementDetailAsync(AffectationId);
+                Equipement = await EmployeService.GetEquipementDetailAsync(AffectationId, ArticleId);
             }
             catch
             {

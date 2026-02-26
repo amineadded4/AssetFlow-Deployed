@@ -36,7 +36,7 @@ namespace AssetFlow.BlazorUI.Pages.Employe
         private string UserRole { get; set; } = "Employé";
 
         // ── QR Code ────────────────────────────────────────────
-        private string FicheUrl => $"{Navigation.BaseUri}fiche/{AffectationId}";
+        private string FicheUrl => $"{Navigation.BaseUri}fiche/{AffectationId}/article/{ArticleId}";
         private string QrSvg    { get; set; } = string.Empty;
 
         // ── Init ───────────────────────────────────────────────
@@ -143,7 +143,7 @@ namespace AssetFlow.BlazorUI.Pages.Employe
         private async Task ImprimerQR()
         {
             var designation = Equipement?.Designation ?? "Équipement";
-            var reference   = Equipement?.Reference   ?? "";
+            var reference   = Equipement?.NumeroSerie   ?? "";
 
             var printHtml = $@"<!DOCTYPE html>
 <html lang=""fr"">
@@ -169,7 +169,7 @@ namespace AssetFlow.BlazorUI.Pages.Employe
 <body>
   {QrSvg}
   <h2>{designation}</h2>
-  <p>Référence : {reference}</p>
+  <p>Numéro de série : {reference}</p>
   <code>{FicheUrl}</code>
   <script>window.onload = () => window.print();<\/script>
 </body>

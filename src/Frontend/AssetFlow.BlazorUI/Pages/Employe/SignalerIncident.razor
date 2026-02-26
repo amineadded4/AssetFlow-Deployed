@@ -10,6 +10,7 @@
 
 @page "/employe/incident"
 @page "/employe/incident/{AffectationId:int}"
+@page "/employe/incident/{AffectationId:int}/article/{ArticleId:int}"
 @using AssetFlow.BlazorUI.Services
 
 <div class="incident-container">
@@ -92,7 +93,7 @@
                                     <path d="M12 17v4" />
                                 </svg>
 
-                                @if (Equipements.Count == 0)
+                                @if (Articles.Count == 0)
                                 {
                                     @* Aucun équipement : select désactivé *@
                                     <select class="form-select" disabled>
@@ -102,12 +103,12 @@
                                 else
                                 {
                                     @* Liste déroulante des équipements de l'utilisateur *@
-                                    <select class="form-select" @bind="SelectedAffectationId">
-                                        <option value="0">— Sélectionner un équipement —</option>
-                                        @foreach (var eq in Equipements)
+                                    <select class="form-select" @bind="SelectedArticleId">
+                                        <option value="0">— Sélectionner un article —</option>
+                                        @foreach (var art in Articles)
                                         {
-                                            <option value="@eq.AffectationId">
-                                                @eq.Designation (@eq.Reference)
+                                            <option value="@art.ArticleId">
+                                                @art.NumeroSerie — @GetDesignation(art.AffectationId)
                                             </option>
                                         }
                                     </select>

@@ -21,27 +21,24 @@ namespace AssetFlow.BlazorUI.Pages.Employe
         // Renseigné depuis DetailsEquipement via NaviguerVersSignalement()
         // Vaut 0 si on arrive depuis /employe/incident (sidebar)
         [Parameter] public int AffectationId { get; set; } = 0;
+        [Parameter] public int ArticleId { get; set; } = 0;
+        private List<ArticleAffecteDto> Articles { get; set; } = new();
+        private List<MaterielAffecteGroupeDto> Groupes { get; set; } = new();
+        private int SelectedArticleId { get; set; } = 0;
 
         // ── Injections ─────────────────────────────────────────
-        [Inject] private IncidentService   IncidentService { get; set; } = default!;
-        [Inject] private EmployeService    EmployeService  { get; set; } = default!;
-        [Inject] private NavigationManager Navigation      { get; set; } = default!;
-
-        // ── Données dropdown ───────────────────────────────────
-        // Liste de tous les équipements affectés à l'utilisateur connecté
-        private List<EquipementAffecteDto> Equipements { get; set; } = new();
-
-        // Valeur liée au <select> — initialisée à AffectationId si fourni
-        private int SelectedAffectationId { get; set; } = 0;
+        [Inject] private IncidentService IncidentService { get; set; } = default!;
+        [Inject] private EmployeService EmployeService { get; set; } = default!;
+        [Inject] private NavigationManager Navigation { get; set; } = default!;
 
         // ── Formulaire ──────────────────────────────────────────
         private string TypeIncident { get; set; } = "Panne";
-        private string Description  { get; set; } = string.Empty;
-        private int    Urgence      { get; set; } = 50;
+        private string Description { get; set; } = string.Empty;
+        private int Urgence { get; set; } = 50;
 
         // ── États ───────────────────────────────────────────────
-        private bool   IsLoading    { get; set; } = true;
-        private bool   IsSubmitting { get; set; } = false;
+        private bool IsLoading { get; set; } = true;
+        private bool IsSubmitting { get; set; } = false;
         private string ErrorMessage { get; set; } = string.Empty;
 
         // ── Infos utilisateur ──────────────────────────────────
@@ -50,27 +47,13 @@ namespace AssetFlow.BlazorUI.Pages.Employe
         // ── Initialisation ─────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
-            // 1. Nom de l'utilisateur pour l'avatar
             UserName = await EmployeService.GetCurrentUserNameAsync();
 
-            // 2. Chargement des équipements depuis l'API
-            try
-            {
-                Equipements = await EmployeService.GetMesEquipementsAsync();
-            }
-            catch
-            {
-                Equipements = new List<EquipementAffecteDto>();
-            }
+            Groupes = await EmployeService.GetMaterielsGroupesAsync();
+            Articles = Groupes.SelectMany(g => g.Articles).ToList();
 
-            // 3. Pré-sélection :
-            //    - Si AffectationId > 0 (arrivé depuis DetailsEquipement),
-            //      on sélectionne cet équipement dans la dropdown.
-            //    - Sinon (arrivé depuis la sidebar), rien de sélectionné.
-            if (AffectationId > 0 && Equipements.Any(e => e.AffectationId == AffectationId))
-            {
-                SelectedAffectationId = AffectationId;
-            }
+            if (ArticleId > 0 && Articles.Any(a => a.ArticleId == ArticleId))
+                SelectedArticleId = ArticleId;
 
             IsLoading = false;
         }
@@ -97,10 +80,10 @@ namespace AssetFlow.BlazorUI.Pages.Employe
         {
             ErrorMessage = string.Empty;
 
-            // Validation : un équipement doit être sélectionné
-            if (SelectedAffectationId <= 0)
+            // Validation sur SelectedArticleId (pas SelectedAffectationId)
+            if (SelectedArticleId <= 0)
             {
-                ErrorMessage = "Veuillez sélectionner un équipement.";
+                ErrorMessage = "Veuillez sélectionner un article.";
                 return;
             }
 
@@ -114,23 +97,22 @@ namespace AssetFlow.BlazorUI.Pages.Employe
             {
                 IsSubmitting = true;
 
+                var article = Articles.FirstOrDefault(a => a.ArticleId == SelectedArticleId);
+                if (article == null) { ErrorMessage = "Article introuvable."; return; }
+
                 var result = await IncidentService.SignalerIncidentAsync(new SignalerIncidentRequestDto
                 {
-                    AffectationId = SelectedAffectationId,
-                    TypeIncident  = TypeIncident,
-                    Urgence       = Urgence,
-                    Description   = Description
+                    AffectationId = article.AffectationId,  // ← tiré de l'article, pas d'une variable séparée
+                    ArticleId = article.ArticleId,
+                    TypeIncident = TypeIncident,
+                    Urgence = Urgence,
+                    Description = Description
                 });
 
                 if (result.Success)
-                {
-                    // Redirection vers la page de succès (inchangée)
                     Navigation.NavigateTo($"/employe/incident/success?numero={result.NumeroIncident}");
-                }
                 else
-                {
                     ErrorMessage = result.Message;
-                }
             }
             catch (Exception ex)
             {
@@ -165,6 +147,13 @@ namespace AssetFlow.BlazorUI.Pages.Employe
             if (parts.Length == 1 && parts[0].Length >= 2)
                 return parts[0][..2].ToUpper();
             return "??";
+        }
+        // Helper pour afficher la désignation dans le select :
+        private string GetDesignation(int affectationId)
+        {
+            var groupe = Groupes.FirstOrDefault(g =>
+                g.Articles.Any(a => a.AffectationId == affectationId));
+            return groupe?.Designation ?? "Équipement";
         }
     }
 }

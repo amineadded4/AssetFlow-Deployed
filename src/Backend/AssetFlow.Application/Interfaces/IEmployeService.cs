@@ -20,7 +20,7 @@ namespace AssetFlow.Application.Interfaces
         /// <summary>
         /// Récupère le détail d'une affectation spécifique
         /// </summary>
-        Task<EquipementAffecteDto?> GetEquipementDetailAsync(int affectationId);
+        Task<EquipementAffecteDto?> GetEquipementDetailAsync(int affectationId, int articleId = 0);
 
         /// <summary>
         /// Récupère les matériels groupés avec leurs articles pour un employé.

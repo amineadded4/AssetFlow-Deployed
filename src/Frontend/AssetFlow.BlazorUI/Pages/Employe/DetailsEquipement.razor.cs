@@ -20,6 +20,8 @@ namespace AssetFlow.BlazorUI.Pages.Employe
 
         // ── Paramètre URL ──────────────────────────────────────
         [Parameter] public int AffectationId { get; set; }
+        [Parameter] public int ArticleId { get; set; } = 0;
+
 
         // ── Données équipement ─────────────────────────────────
         private EquipementAffecteDto? Equipement    { get; set; }
@@ -61,7 +63,7 @@ namespace AssetFlow.BlazorUI.Pages.Employe
             IsLoading = true;
             try
             {
-                Equipement = await EmployeService.GetEquipementDetailAsync(AffectationId);
+                Equipement = await EmployeService.GetEquipementDetailAsync(AffectationId, ArticleId);
             }
             catch
             {

@@ -38,10 +38,9 @@ namespace AssetFlow.WebAPI.Controllers
         /// Détail d'une affectation
         /// </summary>
         [HttpGet("equipements/detail/{affectationId}")]
-        public async Task<IActionResult> GetEquipementDetail(int affectationId)
+        public async Task<IActionResult> GetEquipementDetail(int affectationId, [FromQuery] int articleId = 0)
         {
-            var equipement = await _employeService.GetEquipementDetailAsync(affectationId);
-            if (equipement == null) return NotFound("Affectation introuvable.");
+            var equipement = await _employeService.GetEquipementDetailAsync(affectationId, articleId); 
             return Ok(equipement);
         }
 

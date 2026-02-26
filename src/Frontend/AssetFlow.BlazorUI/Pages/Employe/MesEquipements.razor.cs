@@ -111,9 +111,9 @@ namespace AssetFlow.BlazorUI.Pages.Employe
         }
 
         // ── Navigation vers détail ─────────────────────────────
-        private void NaviguerVersDetail(int affectationId)
+        private void NaviguerVersDetail(int affectationId, int articleId)
         {
-            Navigation.NavigateTo($"/employe/equipement/{affectationId}");
+            Navigation.NavigateTo($"/employe/equipement/{affectationId}/article/{articleId}");
         }
 
         // ── Helpers UI ─────────────────────────────────────────

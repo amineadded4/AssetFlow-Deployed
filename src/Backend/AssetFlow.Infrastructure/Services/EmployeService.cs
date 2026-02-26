@@ -43,7 +43,7 @@ namespace AssetFlow.Infrastructure.Services
             }).ToList();
         }
 
-        public async Task<EquipementAffecteDto?> GetEquipementDetailAsync(int affectationId)
+        public async Task<EquipementAffecteDto?> GetEquipementDetailAsync(int affectationId,int articleId = 0)
         {
             var affectation = await _context.Affectations
                 .Include(a => a.Materiel)
@@ -52,8 +52,10 @@ namespace AssetFlow.Infrastructure.Services
 
             if (affectation == null) return null;
 
-            // Premier article lié à cette affectation
-            var premierArticle = affectation.Articles.FirstOrDefault();
+             var article = articleId > 0
+            ? affectation.Articles.FirstOrDefault(a => a.Id == articleId)
+            ?? affectation.Articles.FirstOrDefault()
+            : affectation.Articles.FirstOrDefault();
             return new EquipementAffecteDto
             {
                 AffectationId    = affectation.Id,
@@ -65,8 +67,8 @@ namespace AssetFlow.Infrastructure.Services
                 DateAffectation  = affectation.DateAffectation,
                 QuantiteAffectee = affectation.QuantiteAffectee,
                 Observations     = affectation.Observations,
-                NumeroSerie      = premierArticle?.NumeroSerie,      // ← AJOUTER
-                EtatArticle      = premierArticle?.Etat.ToString() ?? "Bon"  // ← AJOUTER
+                NumeroSerie = article?.NumeroSerie,
+                EtatArticle = article?.Etat.ToString() ?? "Bon"
             };
         }
 

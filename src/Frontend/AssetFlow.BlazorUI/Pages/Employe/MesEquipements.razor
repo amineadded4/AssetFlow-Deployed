@@ -255,7 +255,7 @@
                     <div class="articles-list">
                         @foreach (var article in articlesFiltres)
                         {
-                            <div class="article-row" @onclick="() => NaviguerVersDetail(article.AffectationId)">
+                            <div class="article-row" @onclick="() => NaviguerVersDetail(article.AffectationId,article.ArticleId)">
                                 @* Icône + numéro de série *@
                                 <div class="article-serie">
                                     <div class="article-icon">
@@ -290,7 +290,7 @@
                                 @* Bouton voir détail *@
                                 <div class="article-action">
                                     <button class="btn-voir-detail" @onclick:stopPropagation="true"
-                                            @onclick="() => NaviguerVersDetail(article.AffectationId)">
+                                            @onclick="() => NaviguerVersDetail(article.AffectationId,article.ArticleId)">
                                         Voir détail
                                         <svg viewBox="0 0 24 24">
                                             <path d="M5 12h14M12 5l7 7-7 7" />

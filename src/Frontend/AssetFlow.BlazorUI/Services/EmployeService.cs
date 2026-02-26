@@ -104,17 +104,10 @@ namespace AssetFlow.BlazorUI.Services
             }
         }
 
-        public async Task<EquipementAffecteDto?> GetEquipementDetailAsync(int affectationId)
+        public async Task<EquipementAffecteDto?> GetEquipementDetailAsync(int affectationId, int articleId = 0)
         {
-            try
-            {
-                return await _http.GetFromJsonAsync<EquipementAffecteDto>(
-                    $"api/employe/equipements/detail/{affectationId}");
-            }
-            catch
-            {
-                return null;
-            }
+            return await _http.GetFromJsonAsync<EquipementAffecteDto>(
+                $"api/employe/equipements/detail/{affectationId}?articleId={articleId}");
         }
 
         // ── Helpers localStorage ───────────────────────────────

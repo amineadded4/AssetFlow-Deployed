@@ -37,13 +37,23 @@ namespace AssetFlow.Infrastructure.Services
                 var incident = new Incident
                 {
                     AffectationId = request.AffectationId,
+                    ArticleId     = request.ArticleId,
                     TypeIncident = request.TypeIncident,
                     Urgence = request.Urgence,
                     Description = request.Description,
                     DateIncident = DateTime.UtcNow,
                     Statut = StatutIncident.EnAttente
                 };
-
+                // ← AJOUTER : mettre l'article en Panne si ArticleId fourni
+                if (request.ArticleId.HasValue)
+                {
+                    var article = await _context.ArticlesIndividuels
+                        .FindAsync(request.ArticleId.Value);
+                    if (article != null)
+                    {
+                        article.Etat = EtatArticle.Panne;
+                    }
+                }
                 _context.Incidents.Add(incident);
                 await _context.SaveChangesAsync();
 

@@ -39,6 +39,8 @@ namespace AssetFlow.Domain.Entities
 
         /// <summary>Commentaires de résolution (équipe IT)</summary>
         public string? CommentairesResolution { get; set; }
+        public int? ArticleId { get; set; }
+        public ArticleIndividuel? Article { get; set; }
     }
 
     /// <summary>

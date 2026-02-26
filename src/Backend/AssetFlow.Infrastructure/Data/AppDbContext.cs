@@ -75,6 +75,11 @@ namespace AssetFlow.Infrastructure.Data
                       .WithMany()
                       .HasForeignKey(i => i.AffectationId)
                       .OnDelete(DeleteBehavior.Restrict);
+                  entity.HasOne(i => i.Article)
+                  .WithMany()
+                  .HasForeignKey(i => i.ArticleId)
+                  .OnDelete(DeleteBehavior.SetNull)
+                  .IsRequired(false);
             });
 
             // === FOURNISSEUR ===

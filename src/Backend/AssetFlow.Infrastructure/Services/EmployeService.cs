@@ -70,17 +70,8 @@ namespace AssetFlow.Infrastructure.Services
         /// Retourne les matériels distincts affectés à l'employé,
         /// chacun avec la liste de ses articles (affectations EnCours).
         ///
-        /// Logique :
-        ///   - On charge toutes les affectations EnCours de l'employé
-        ///   - On les groupe par MaterielId
-        ///   - Pour chaque groupe, on cherche l'ArticleIndividuel correspondant
-        ///     via CommandeId + MaterielId (relation Article → Commande → Materiel)
-        ///   - Si pas d'article individuel trouvé (matériel sans série),
-        ///     on crée un article "virtuel" à partir de l'affectation
-        /// </summary>
         public async Task<List<MaterielAffecteGroupeDto>> GetMaterielsGroupesAsync(int utilisateurId)
         {
-            // 1. Charger toutes les affectations actives de l'employé
             var affectations = await _context.Affectations
                 .Include(a => a.Materiel)
                 .Where(a => a.UtilisateurId == utilisateurId)
@@ -90,46 +81,51 @@ namespace AssetFlow.Infrastructure.Services
             if (!affectations.Any())
                 return new List<MaterielAffecteGroupeDto>();
 
-            // 2. Récupérer tous les articles individuels liés aux matériels concernés
             var materielIds = affectations.Select(a => a.MaterielId).Distinct().ToList();
+            
+            // ← CORRECTION : supprimer le filtre Affecte, prendre tous les articles
             var articles = await _context.ArticlesIndividuels
-                .Where(art => materielIds.Contains(art.MaterielId)
-                           && art.Statut == StatutArticle.Affecte)
+                .Where(art => materielIds.Contains(art.MaterielId))
                 .ToListAsync();
 
-            // 3. Grouper par matériel
             var groupes = affectations
                 .GroupBy(a => a.MaterielId)
                 .Select(g =>
                 {
                     var premiereMat = g.First().Materiel;
-
-                    // Articles individuels pour ce matériel
                     var articlesMatériel = articles
                         .Where(art => art.MaterielId == g.Key)
                         .ToList();
 
-                    // Construire la liste des ArticleAffecteDto
-                    // Stratégie : on associe chaque affectation à un article si possible
                     var articlesDto = new List<ArticleAffecteDto>();
 
                     foreach (var affectation in g)
                     {
-                        // Tenter de trouver un article individuel non encore associé
                         var article = articlesMatériel.FirstOrDefault(
                             art => !articlesDto.Any(dto => dto.ArticleId == art.Id));
 
+                        if (article != null)
+                        {
+                            // Marquer comme affecté
+                            article.Statut = StatutArticle.Affecte;
+                        }
+
                         articlesDto.Add(new ArticleAffecteDto
                         {
-                            AffectationId    = affectation.Id,
-                            ArticleId        = article?.Id ?? 0,
-                            NumeroSerie      = article?.NumeroSerie
-                                               ?? $"S/N non renseigné — Aff. #{affectation.Id}",
-                            StatutArticle    = article?.Statut.ToString() ?? "Affecte",
-                            DateAffectation  = affectation.DateAffectation,
-                            Observations     = affectation.Observations
+                            AffectationId   = affectation.Id,
+                            ArticleId       = article?.Id ?? 0,
+                            NumeroSerie     = article?.NumeroSerie ?? "S/N non renseigné",
+                            StatutArticle   = article?.Statut.ToString() ?? "Disponible",
+                            // ← BADGE selon Etat
+                            EtatArticle     = article?.Etat.ToString() ?? "Bon",
+                            StatutBadgeColor = GetEtatColor(article?.Etat ?? EtatArticle.Bon),
+                            DateAffectation = affectation.DateAffectation,
+                            Observations    = affectation.Observations
                         });
                     }
+
+                    var etatDominant = articlesDto.Any(a => a.EtatArticle == "Panne")
+                        ? EtatArticle.Panne : EtatArticle.Bon;
 
                     return new MaterielAffecteGroupeDto
                     {
@@ -138,7 +134,9 @@ namespace AssetFlow.Infrastructure.Services
                         Designation         = premiereMat.Designation,
                         Categorie           = premiereMat.Categorie,
                         ImageUrl            = premiereMat.ImageUrl,
-                        NombreArticles      = g.Count(),
+                        NombreArticles      = articlesMatériel.Count, // ← vrais articles
+                        StatutDominant      = etatDominant.ToString(),
+                        StatutBadgeColor    = GetEtatColor(etatDominant),
                         DerniereAffectation = g.Max(a => a.DateAffectation),
                         Articles            = articlesDto
                     };
@@ -148,6 +146,13 @@ namespace AssetFlow.Infrastructure.Services
 
             return groupes;
         }
+
+private string GetEtatColor(EtatArticle etat) => etat switch
+{
+    EtatArticle.Bon   => "#10B981",
+    EtatArticle.Panne => "#EF4444",
+    _                 => "#6B7280"
+};
 
         // ── Helpers ────────────────────────────────────────────
 

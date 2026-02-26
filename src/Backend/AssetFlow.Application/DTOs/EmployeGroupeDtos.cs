@@ -22,6 +22,8 @@ namespace AssetFlow.Application.DTOs
 
         /// <summary>Statut de l'article (Disponible, Affecte, HorsService, EnReparation)</summary>
         public string StatutArticle { get; set; } = string.Empty;
+        public string EtatArticle { get; set; } = "Bon";        // ← AJOUTER
+
 
         /// <summary>Couleur du badge statut affectation</summary>
         public string StatutBadgeColor { get; set; } = string.Empty;

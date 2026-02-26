@@ -22,6 +22,8 @@ namespace AssetFlow.Domain.Entities
         /// <summary>FK → Commande</summary>
         public int CommandeId { get; set; }
         public Commande Commande { get; set; } = null!;
+        public EtatArticle Etat { get; set; } = EtatArticle.Bon;  // ← AJOUTER
+
     }
 
     public enum StatutArticle
@@ -30,5 +32,10 @@ namespace AssetFlow.Domain.Entities
         Affecte,
         HorsService,
         EnReparation
+    }
+    public enum EtatArticle  // ← AJOUTER
+    {
+        Bon = 0,
+        Panne = 1
     }
 }

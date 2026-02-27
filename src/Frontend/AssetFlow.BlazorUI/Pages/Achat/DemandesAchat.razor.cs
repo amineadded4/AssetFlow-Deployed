@@ -440,5 +440,108 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             _toastMsg = string.Empty;
             StateHasChanged();
         }
+
+        // ─── Export Excel ────────────────────────────────────────
+        // Génère un CSV téléchargeable (compatible Excel).
+        // Même logique que ExporterExcel dans Matériel.razor.cs
+        private async Task ExporterExcel()
+        {
+            try
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("Référence;Produit;Quantité;Statut;Demandeur;Date création;Motif refus");
+
+                foreach (var d in _demandes)
+                {
+                    var motif = (d.MotifRefus ?? "").Replace(";", ",");
+                    sb.AppendLine(
+                        $"{d.Reference};" +
+                        $"{d.NomProduit.Replace(";", ",")};" +
+                        $"{d.Quantite};" +
+                        $"{LibelleStatut(d.Statut)};" +
+                        $"{d.DemandeurNom.Replace(";", ",")};" +
+                        $"{d.DateCreation.ToLocalTime():dd/MM/yyyy HH:mm};" +
+                        $"{motif}");
+                }
+
+                var bytes   = System.Text.Encoding.UTF8.GetPreamble()
+                              .Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString()))
+                              .ToArray();
+                var base64  = Convert.ToBase64String(bytes);
+                var nom     = $"demandes-achat-{DateTime.Now:yyyyMMdd-HHmm}.csv";
+
+                await JS.InvokeVoidAsync("eval", $@"
+                    (function(){{
+                        var a = document.createElement('a');
+                        a.href = 'data:text/csv;base64,{base64}';
+                        a.download = '{nom}';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    }})();
+                ");
+                AfficherToast("Export Excel téléchargé.", "toast-success");
+            }
+            catch (Exception ex)
+            {
+                AfficherToast($"Erreur export : {ex.Message}", "toast-error");
+            }
+        }
+
+        // ─── Export PDF ──────────────────────────────────────────
+        // Ouvre une fenêtre d'impression navigateur avec un tableau HTML.
+        // Même logique que ExporterPdf dans Matériel.razor.cs
+        private async Task ExporterPdf()
+        {
+            try
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.Append(@"<html><head><meta charset='utf-8'/>
+                    <style>
+                        body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; }
+                        h2   { font-size: 16px; margin-bottom: 10px; }
+                        p    { font-size: 11px; color: #666; margin-bottom: 14px; }
+                        table{ border-collapse: collapse; width: 100%; }
+                        th   { background: #1e293b; color: #fff; padding: 8px 10px; text-align: left; font-size: 11px; }
+                        td   { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; font-size: 11px; }
+                        tr:nth-child(even) td { background: #f8fafc; }
+                        .en_attente { color: #f59e0b; font-weight: 600; }
+                        .commande   { color: #3b82f6; font-weight: 600; }
+                        .traite     { color: #10b981; font-weight: 600; }
+                        .refuse     { color: #ef4444; font-weight: 600; }
+                    </style></head><body>");
+                sb.Append($"<h2>Liste des demandes d'achat</h2>");
+                sb.Append($"<p>Exporté le {DateTime.Now:dd/MM/yyyy à HH:mm} — {_demandes.Count} demande(s)</p>");
+                sb.Append("<table><thead><tr><th>Référence</th><th>Produit</th><th>Qté</th><th>Statut</th><th>Demandeur</th><th>Date</th></tr></thead><tbody>");
+
+                foreach (var d in _demandes)
+                {
+                    sb.Append($"<tr>" +
+                              $"<td>{d.Reference}</td>" +
+                              $"<td>{d.NomProduit}</td>" +
+                              $"<td>{d.Quantite}</td>" +
+                              $"<td class='{d.Statut}'>{LibelleStatut(d.Statut)}</td>" +
+                              $"<td>{d.DemandeurNom}</td>" +
+                              $"<td>{d.DateCreation.ToLocalTime():dd/MM/yyyy}</td>" +
+                              $"</tr>");
+                }
+                sb.Append("</tbody></table></body></html>");
+
+                var html   = sb.ToString().Replace("'", "\\'").Replace("\r\n", "").Replace("\n", "");
+                await JS.InvokeVoidAsync("eval", $@"
+                    (function(){{
+                        var w = window.open('','_blank','width=900,height=700');
+                        w.document.write('{html}');
+                        w.document.close();
+                        setTimeout(function(){{ w.print(); }}, 400);
+                    }})();
+                ");
+                AfficherToast("Fenêtre d'impression ouverte.", "toast-success");
+            }
+            catch (Exception ex)
+            {
+                AfficherToast($"Erreur export : {ex.Message}", "toast-error");
+            }
+        }
     }
 }

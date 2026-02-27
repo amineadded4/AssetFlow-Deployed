@@ -278,7 +278,7 @@ html.dark .layout-shell {
     stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
 }
 .search-input {
-    width:         100%;
+    width:         80%;
     background:    var(--bg-panel);
     border:        1px solid var(--border);
     border-radius: var(--radius-md);
@@ -1251,4 +1251,179 @@ html.dark .motif-textarea { background: rgba(255,255,255,0.06); }
     .topbar-search { display: none; }
     .status-tabs   { gap: 0; }
     .status-tab    { padding: 6px 8px; font-size: 11px; }
+}
+
+/* ============================================================
+   11. NOUVEAUX ÉLÉMENTS — Export + Responsive search + Scraping
+   ============================================================ */
+
+/* ── Topbar restructurée en 2 rows ── */
+.topbar {
+    flex-direction: column !important;
+    align-items:    stretch !important;
+    height:         auto !important;
+    padding:        0 !important;
+}
+
+.topbar-row1 {
+    display:         flex;
+    align-items:     center;
+    gap:             12px;
+    padding:         0 20px;
+    height:          60px;
+    flex-shrink:     0;
+    border-bottom:   1px solid transparent;
+}
+
+/* row2 = barre de recherche mobile (cachée sur desktop) */
+.topbar-row2 {
+    display:         none;
+    justify-content: center;   /* centrage horizontal */
+    align-items:     center;
+    padding:         8px 16px;
+    background:      var(--bg-header);
+    border-bottom:   1px solid var(--border);
+}
+
+/* barre desktop = visible par défaut, cachée en mobile */
+.topbar-search-desktop { display: flex; }
+
+/* barre mobile = centrée dans row2, largeur max limitée */
+.topbar-search-mobile {
+    display:   flex;
+    width:     100%;
+    max-width: 480px;
+    margin:    0 auto;
+}
+
+/* ── Boutons Export ── */
+.topbar-export-btns {
+    display:    flex;
+    gap:        6px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* On pousse la barre de recherche desktop après les boutons export */
+.topbar-export-btns + .topbar-search-desktop {
+    margin-left: 0;
+}
+
+.btn-export {
+    display:         flex;
+    align-items:     center;
+    gap:             6px;
+    padding:         6px 12px;
+    border:          1px solid var(--border);
+    border-radius:   var(--radius-sm);
+    background:      var(--bg-panel);
+    color:           var(--text-secondary);
+    font-size:       13px;
+    font-weight:     500;
+    cursor:          pointer;
+    transition:      all var(--t);
+    white-space:     nowrap;
+}
+
+.btn-export svg {
+    width:          14px;
+    height:         14px;
+    stroke:         currentColor;
+    stroke-width:   2;
+    fill:           none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink:    0;
+}
+
+.btn-export:hover {
+    background: var(--bg-row-hover);
+    border-color: var(--primary);
+    color:        var(--primary);
+}
+
+.btn-export-pdf:hover {
+    border-color: #ef4444;
+    color:        #ef4444;
+}
+
+/* ── Bouton Recherche de prix (web scraping) ── */
+.btn-scraping {
+    display:         inline-flex;
+    align-items:     center;
+    gap:             6px;
+    padding:         6px 14px;
+    border-radius:   var(--radius-sm);
+    background:      linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+    color:           #fff;
+    font-size:       12px;
+    font-weight:     600;
+    text-decoration: none;
+    cursor:          pointer;
+    transition:      all var(--t);
+    white-space:     nowrap;
+    border:          none;
+    flex-shrink:     0;
+}
+
+.btn-scraping svg {
+    width:          13px;
+    height:         13px;
+    stroke:         #fff;
+    stroke-width:   2.2;
+    fill:           none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.btn-scraping:hover {
+    background:  linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+    box-shadow:  0 4px 12px rgba(99, 102, 241, 0.4);
+    transform:   translateY(-1px);
+}
+
+/* section-title-row = titre + bouton sur la même ligne */
+.section-title-row {
+    display:     flex;
+    align-items: center;
+    gap:         10px;
+    flex-wrap:   wrap;
+    margin-bottom: 12px;
+}
+
+.section-title-row .section-title {
+    margin-bottom: 0;
+    flex:          1;
+}
+
+/* ============================================================
+   12. RESPONSIVE — fixes complets
+   ============================================================ */
+@media (max-width: 768px) {
+    /* Masquer barre desktop */
+    .topbar-search-desktop { display: none !important; }
+
+    /* Afficher row2 avec centrage — flex + justify-content déjà définis sur .topbar-row2 */
+    .topbar-row2 { display: flex; }
+
+    .topbar-row1 { padding: 0 12px; gap: 8px; }
+
+    /* Boutons export : icône seule */
+    .btn-export span { display: none; }
+    .btn-export      { padding: 6px 8px; }
+
+    .btn-scraping span { font-size: 11px; }
+    .topbar-export-btns { margin-left: 0; }
+
+    /* Barre mobile centrée, largeur quasi-totale */
+    .topbar-search-mobile {
+        max-width: calc(100% - 32px);
+        margin:    0 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .topbar-search-desktop { display: none !important; }
+    .topbar-row2           { display: flex; }
+    .topbar-search-mobile  { max-width: 100%; }
 }

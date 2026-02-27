@@ -424,7 +424,7 @@ html.dark .sk-shell {
     .sk-sidebar { position: fixed; left: 0; top: 0; transform: translateX(-100%); }
     .sk-sidebar.open { transform: translateX(0); }
     .sk-menu-btn { display: flex !important; }
-    .sk-btn-export span, .sk-btn-add span { display: none; }
+    
 }
 @media (max-width: 680px) {
     .sk-topbar { flex-wrap: wrap; gap: 0.5rem; }

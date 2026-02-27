@@ -755,53 +755,6 @@ html.dark .layout-shell .form-inp { background: rgba(255,255,255,0.06); }
     flex-shrink: 0;
 }
 .btn-form-save span { color: #ffffff !important; }
-/* ============================================================
-   BOUTONS EXPORT (ajoutés)
-   ============================================================ */
-.topbar-export-btns {
-    display:    flex;
-    gap:        6px;
-    margin-left: 0;
-    flex-shrink: 0;
-}
-
-.btn-export {
-    display:         flex;
-    align-items:     center;
-    gap:             6px;
-    padding:         6px 12px;
-    border:          1px solid var(--border);
-    border-radius:   var(--radius-sm);
-    background:      var(--bg-panel);
-    color:           var(--text-secondary);
-    font-size:       13px;
-    font-weight:     500;
-    cursor:          pointer;
-    transition:      all var(--t);
-    white-space:     nowrap;
-}
-
-.btn-export svg {
-    width:          14px;
-    height:         14px;
-    stroke:         currentColor;
-    stroke-width:   2;
-    fill:           none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    flex-shrink:    0;
-}
-
-.btn-export:hover {
-    background: var(--bg-row-hover);
-    border-color: var(--primary);
-    color:        var(--primary);
-}
-
-.btn-export-pdf:hover {
-    border-color: #ef4444;
-    color:        #ef4444;
-}
 
 /* ============================================================
    12. TOAST
@@ -854,4 +807,37 @@ html.dark .layout-shell .form-inp { background: rgba(255,255,255,0.06); }
     .search-wrap { display: none; }
     .table-toolbar { flex-direction: column; align-items: flex-start; }
     .filter-pills { flex-wrap: wrap; }
+}
+.page-title-row {
+    display:         flex;
+    align-items:     flex-start;
+    justify-content: space-between;
+    margin-bottom:   26px;
+}
+
+.page-title-actions {
+    display:     flex;
+    align-items: center;
+    gap:         8px;
+    margin-top:  4px;
+}
+
+.btn-export {
+    display:       flex;
+    align-items:   center;
+    gap:           6px;
+    padding:       7px 14px;
+    background:    transparent;
+    border:        1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size:     13px;
+    font-weight:   600;
+    color:         var(--text-secondary);
+    cursor:        pointer;
+    transition:    background var(--t), color var(--t), border-color var(--t);
+}
+.btn-export:hover {
+    background: var(--bg-row-hover);
+    color:      var(--text-primary);
+    border-color: var(--primary);
 }

@@ -13,7 +13,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
     {
         [Inject] private IJSRuntime JS { get; set; } = default!;
         [Inject] private NavigationManager Nav { get; set; } = default!;
-        [Inject] private HttpClient Http { get; set; } = default!;
+        
+        [Inject] private IHttpClientFactory HttpFactory { get; set; } = default!;
 
         private class ResultatScraping
         {
@@ -256,8 +257,10 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
             try
             {
-                var url = $"http://localhost:5000/scrape?q={Uri.EscapeDataString(_nomRecherche)}";
-                var reponse = await Http.GetFromJsonAsync<ReponseScraping>(url);
+                var http = HttpFactory.CreateClient("PythonScraper");
+                var reponse = await http.GetFromJsonAsync<ReponseScraping>(
+                    $"scrape?q={Uri.EscapeDataString(_nomRecherche)}"
+                );
 
                 if (reponse?.succes == true && reponse.resultats != null && reponse.resultats.Any())
                 {

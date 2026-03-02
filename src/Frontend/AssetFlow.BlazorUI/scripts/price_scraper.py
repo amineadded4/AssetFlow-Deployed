@@ -46,7 +46,7 @@ def scraper_mytek(nom_article, driver):
     print(f"\n[MyTek] URL : {url}")
 
     driver.get(url)
-    time.sleep(5)
+    time.sleep(3)
 
     produits = driver.find_elements(By.CSS_SELECTOR, "div.product-container")
     print(f"[MyTek] {len(produits)} produit(s) trouvé(s)")
@@ -116,7 +116,7 @@ def scraper_tunisianet(nom_article, driver):
     print(f"\n[Tunisianet] URL : {url}")
 
     driver.get(url)
-    time.sleep(5)
+    time.sleep(3)
 
     produits = driver.find_elements(By.CSS_SELECTOR, "article.product-miniature")
     print(f"[Tunisianet] {len(produits)} produit(s) trouvé(s)")
@@ -204,7 +204,7 @@ def scraper_spacenet(nom_article, driver):
     print(f"\n[Spacenet] URL : {url}")
 
     driver.get(url)
-    time.sleep(5)
+    time.sleep(3)
 
     produits = driver.find_elements(By.CSS_SELECTOR, "div.field-product-item.product-miniature")
     print(f"[Spacenet] {len(produits)} produit(s) trouvé(s)")

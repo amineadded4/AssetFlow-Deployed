@@ -1,18 +1,5 @@
 // ============================================================
 // FICHIER  : Pages/Achat/WebScraping.razor.cs
-// RÔLE     : Code-behind de la page Scraping Marché.
-//
-// COMPORTEMENT :
-//   · Si la page est ouverte via /achat/web-scraping?q=Souris
-//     (depuis le bouton "Recherche de prix" de DemandesAchat),
-//     le champ de recherche est pré-rempli et la recherche se
-//     lance automatiquement.
-//   · Si la page est ouverte sans paramètre (depuis le sidebar),
-//     l'utilisateur saisit lui-même le produit.
-//
-// LIAISON PYTHON :
-//   La méthode LancerRecherche() appelle le service Python
-//   via HttpClient sur http://localhost:5000/scrape?q=...
 // ============================================================
 
 using Microsoft.AspNetCore.Components;
@@ -24,16 +11,10 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 {
     public partial class WebScraping : ComponentBase
     {
-        // ── Injection ───────────────────────────────────────────
         [Inject] private IJSRuntime JS { get; set; } = default!;
         [Inject] private NavigationManager Nav { get; set; } = default!;
         [Inject] private HttpClient Http { get; set; } = default!;
 
-        // ── Modèle d'un résultat de scraping ────────────────────
-        /// <summary>
-        /// Représente un résultat renvoyé par le scraper Python.
-        /// Sera mappé depuis le JSON de l'API Python.
-        /// </summary>
         private class ResultatScraping
         {
             public string Site { get; set; } = string.Empty;
@@ -45,7 +26,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             public string Url { get; set; } = string.Empty;
         }
 
-        // ── Classes pour désérialiser la réponse JSON du script Python ──
         private class ReponseScraping
         {
             public bool succes { get; set; }
@@ -88,21 +68,24 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         // ── État ────────────────────────────────────────────────
         private string _theme = "dark";
         private bool _sidebarOpen = false;
-
-        // Profil utilisateur (lu depuis localStorage)
         private string _nomUtilisateur = "Adem Added";
         private string _roleUtilisateur = "EquipeAchat";
         private string _initiales = "AA";
 
-        // Recherche
-        private string _recherche = string.Empty; // valeur du champ
-        private string? _nomRecherche = null;     // dernier terme soumis
-        private string? _derniereRecherche = null; // null = pas encore cherché
+        private string _recherche = string.Empty;
+        private string? _nomRecherche = null;
+        private string? _derniereRecherche = null;
         private bool _chargement = false;
 
-        // Résultats et filtre
         private List<ResultatScraping> _resultats = new();
-        private string _filtreActif = "prix"; // "prix" | "dispo"
+        private string _filtreActif = "prix";
+
+        // ── Filtres avancés ─────────────────────────────────────
+        private HashSet<string> _filtresSites = new();
+        private decimal _prixMin = 0;
+        private decimal _prixMax = 9999;
+        private decimal _prixAbsoluMin = 0;
+        private decimal _prixAbsoluMax = 9999;
 
         // Toast
         private string _toastMsg = string.Empty;
@@ -112,7 +95,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         protected override async Task OnInitializedAsync()
         {
-            // Lire le thème depuis le DOM
             try
             {
                 var isDark = await JS.InvokeAsync<bool>("eval",
@@ -121,10 +103,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             }
             catch { }
 
-            // Lire les infos utilisateur depuis localStorage
             await ChargerInfosUtilisateur();
-
-            // Lire le query string ?q= transmis par DemandesAchat
             LireQueryString();
         }
 
@@ -132,7 +111,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         {
             if (!firstRender) return;
 
-            // Abonnement aux changements de thème (bouton lune)
             try
             {
                 await JS.InvokeVoidAsync("eval", @"
@@ -155,12 +133,10 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             }
             catch { }
 
-            // Si un terme était dans le query string → lancer la recherche auto
             if (!string.IsNullOrWhiteSpace(_recherche))
                 await LancerRecherche();
         }
 
-        /// <summary>Appelé par JS quand le thème change.</summary>
         [JSInvokable("OnThemeChanged")]
         public void OnThemeChanged(bool isDark)
         {
@@ -168,17 +144,12 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             InvokeAsync(StateHasChanged);
         }
 
-        // ── Lecture du query string ─────────────────────────────
+        // ── Query string ────────────────────────────────────────
 
-        /// <summary>
-        /// Extrait ?q= de l'URL pour pré-remplir le champ
-        /// quand l'utilisateur arrive depuis "Recherche de prix".
-        /// </summary>
         private void LireQueryString()
         {
             var uri = new Uri(Nav.Uri);
             var query = uri.Query.TrimStart('?');
-
             foreach (var param in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
             {
                 var parts = param.Split('=', 2);
@@ -192,7 +163,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             }
         }
 
-        // ── Infos utilisateur ───────────────────────────────────
+        // ── Utilisateur ─────────────────────────────────────────
 
         private async Task ChargerInfosUtilisateur()
         {
@@ -231,19 +202,46 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             _nomRecherche = null;
             _derniereRecherche = null;
             _resultats = new();
+            _filtresSites = new();
         }
 
-        /// <summary>Lancer la recherche quand l'utilisateur appuie sur Entrée.</summary>
         private async Task OnKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
         {
             if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_recherche))
                 await LancerRecherche();
         }
 
-        /// <summary>
-        /// Lance la recherche de prix.
-        /// Appelle le service Python via HTTP sur http://localhost:5000/scrape?q=...
-        /// </summary>
+        // ── Filtres avancés ─────────────────────────────────────
+
+        private void ToggleSite(string site)
+        {
+            if (_filtresSites.Contains(site))
+                _filtresSites.Remove(site);
+            else
+                _filtresSites.Add(site);
+        }
+
+        private void OnPrixMinChange(ChangeEventArgs e)
+        {
+            if (decimal.TryParse(e.Value?.ToString(), out var val))
+                _prixMin = Math.Min(val, _prixMax - 1);
+        }
+
+        private void OnPrixMaxChange(ChangeEventArgs e)
+        {
+            if (decimal.TryParse(e.Value?.ToString(), out var val))
+                _prixMax = Math.Max(val, _prixMin + 1);
+        }
+
+        private void ResetFiltres()
+        {
+            _filtresSites = new();
+            _prixMin = _prixAbsoluMin;
+            _prixMax = _prixAbsoluMax;
+        }
+
+        // ── Recherche principale ────────────────────────────────
+
         private async Task LancerRecherche()
         {
             if (string.IsNullOrWhiteSpace(_recherche)) return;
@@ -252,12 +250,12 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             _derniereRecherche = _nomRecherche;
             _chargement = true;
             _resultats = new();
+            _filtresSites = new();
             _filtreActif = "prix";
             StateHasChanged();
 
             try
             {
-                // Appel à l'API Python Flask
                 var url = $"http://localhost:5000/scrape?q={Uri.EscapeDataString(_nomRecherche)}";
                 var reponse = await Http.GetFromJsonAsync<ReponseScraping>(url);
 
@@ -268,13 +266,18 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                         Site = r.site,
                         NomProduit = r.nom_produit,
                         Prix = r.prix,
-                        // Adapter selon le texte exact de 'stock' (ex: "En stock", "Épuisé", "Non indiqué")
                         EnStock = r.stock?.Contains("stock", StringComparison.OrdinalIgnoreCase) == true ||
                                   r.stock?.Contains("En stock", StringComparison.OrdinalIgnoreCase) == true,
-                        Livraison = "Non précisé", // Le script ne fournit pas encore ces infos
-                        Garantie = "Non précisée", // Le script ne fournit pas encore ces infos
+                        Livraison = "Non précisé",
+                        Garantie = "Non précisée",
                         Url = r.url
                     }).ToList();
+
+                    // Initialiser la plage de prix avec les données réelles
+                    _prixAbsoluMin = _resultats.Min(r => r.Prix);
+                    _prixAbsoluMax = _resultats.Max(r => r.Prix);
+                    _prixMin = _prixAbsoluMin;
+                    _prixMax = _prixAbsoluMax;
 
                     AfficherToast($"{_resultats.Count} résultat(s) trouvé(s)", "ws-toast-success");
                 }
@@ -301,27 +304,15 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         // ── Export CSV ──────────────────────────────────────────
 
-        /// <summary>
-        /// Exporte les résultats en CSV téléchargeable (sans frais de port).
-        /// </summary>
         private async Task ExporterCsv()
         {
             if (!_resultats.Any()) return;
-
             try
             {
                 var sb = new System.Text.StringBuilder();
                 sb.AppendLine("Site;Produit;Prix (DT);Disponibilité;Lien");
-
                 foreach (var r in _resultats)
-                {
-                    sb.AppendLine(
-                        $"{r.Site};" +
-                        $"{r.NomProduit.Replace(";", ",")};" +
-                        $"{r.Prix:N3};" +
-                        $"{(r.EnStock ? "En stock" : "Rupture")};" +
-                        $"{r.Url}");
-                }
+                    sb.AppendLine($"{r.Site};{r.NomProduit.Replace(";", ",")};{r.Prix:N3};{(r.EnStock ? "En stock" : "Rupture")};{r.Url}");
 
                 var bytes = System.Text.Encoding.UTF8.GetPreamble()
                              .Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString()))

@@ -1,6 +1,6 @@
 // ============================================================
 // AssetFlow.BlazorUI / Services / AuthService.cs
-// MISE À JOUR : Stocke UserId dans localStorage après login
+// MISE À JOUR : Stocke refresh_token + token_expires_at pour refresh automatique
 // ============================================================
 
 using System.Net.Http.Json;
@@ -10,34 +10,34 @@ namespace AssetFlow.BlazorUI.Services
 {
     public class LoginRequest
     {
-        public string Email { get; set; } = string.Empty;
+        public string Email    { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
+        public string Role     { get; set; } = string.Empty;
     }
 
     public class LoginResponse
     {
-        public int UserId { get; set; }                    // ← NOUVEAU
-        public string AccessToken { get; set; } = string.Empty;
+        public int    UserId      { get; set; }
+        public string AccessToken  { get; set; } = string.Empty;
         public string RefreshToken { get; set; } = string.Empty;
-        public int ExpiresIn { get; set; }
-        public string Role { get; set; } = string.Empty;
-        public string FullName { get; set; } = string.Empty;
+        public int    ExpiresIn    { get; set; }
+        public string Role         { get; set; } = string.Empty;
+        public string FullName     { get; set; } = string.Empty;
     }
 
     public class RegisterRequest
     {
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-        public string Department { get; set; } = string.Empty;
+        public string FirstName     { get; set; } = string.Empty;
+        public string LastName      { get; set; } = string.Empty;
+        public string Email         { get; set; } = string.Empty;
+        public string Password      { get; set; } = string.Empty;
+        public string Department    { get; set; } = string.Empty;
         public string RequestedRole { get; set; } = string.Empty;
     }
 
     public class RegisterResponse
     {
-        public bool Success { get; set; }
+        public bool   Success { get; set; }
         public string Message { get; set; } = string.Empty;
     }
 
@@ -51,7 +51,7 @@ namespace AssetFlow.BlazorUI.Services
 
         public AuthService(HttpClient httpClient, ILocalStorageService localStorage)
         {
-            _httpClient = httpClient;
+            _httpClient   = httpClient;
             _localStorage = localStorage;
         }
 
@@ -70,10 +70,12 @@ namespace AssetFlow.BlazorUI.Services
                     if (result != null)
                     {
                         // ===== STOCKAGE DANS LOCALSTORAGE =====
-                        await _localStorage.SetItemAsync("user_id", result.UserId);      // ← ID
-                        await _localStorage.SetItemAsync("access_token", result.AccessToken);
-                        await _localStorage.SetItemAsync("user_role", result.Role);
-                        await _localStorage.SetItemAsync("user_name", result.FullName);
+                        await _localStorage.SetItemAsync("user_id",          result.UserId);
+                        await _localStorage.SetItemAsync("access_token",     result.AccessToken);
+                        await _localStorage.SetItemAsync("refresh_token",    result.RefreshToken);  // ← pour refresh auto
+                        await _localStorage.SetItemAsync("token_expires_at", DateTime.UtcNow.AddSeconds(result.ExpiresIn).ToString("o")); // ← date expiration
+                        await _localStorage.SetItemAsync("user_role",        result.Role);
+                        await _localStorage.SetItemAsync("user_name",        result.FullName);
 
                         return (true, "Connexion réussie");
                     }
@@ -92,7 +94,7 @@ namespace AssetFlow.BlazorUI.Services
             try
             {
                 var response = await _httpClient.PostAsJsonAsync("api/auth/register", request);
-                var result = await response.Content.ReadFromJsonAsync<RegisterResponse>();
+                var result   = await response.Content.ReadFromJsonAsync<RegisterResponse>();
 
                 if (result != null)
                     return (result.Success, result.Message);
@@ -105,10 +107,15 @@ namespace AssetFlow.BlazorUI.Services
             }
         }
 
+        /// <summary>
+        /// Déconnexion : supprime toutes les clés du localStorage
+        /// </summary>
         public async Task LogoutAsync()
         {
-            await _localStorage.RemoveItemAsync("user_id");        // ← Supprimer ID
+            await _localStorage.RemoveItemAsync("user_id");
             await _localStorage.RemoveItemAsync("access_token");
+            await _localStorage.RemoveItemAsync("refresh_token");
+            await _localStorage.RemoveItemAsync("token_expires_at");
             await _localStorage.RemoveItemAsync("user_role");
             await _localStorage.RemoveItemAsync("user_name");
         }

@@ -5,6 +5,7 @@
 @page "/achat/web-scraping"
 @using Microsoft.JSInterop
 @using AssetFlow.BlazorUI.Pages.Achat
+@using AssetFlow.BlazorUI.Components
 
 <RoleAuthGuard AllowedRoles="@(new[]{"EquipeAchat"})">
     <div class="ws-shell" data-theme="@_theme">
@@ -75,11 +76,7 @@
                     <p class="profile-role">@_roleUtilisateur</p>
                 </div>
             </div>
-            <div class="sidebar-support">
-                <p class="support-label">SUPPORT IT</p>
-                <p class="support-text">Besoin d'aide ?</p>
-                <button class="support-btn">Contact</button>
-            </div>
+            <LogoutButton />
         </aside>
 
         @* ══════ ZONE PRINCIPALE ══════ *@

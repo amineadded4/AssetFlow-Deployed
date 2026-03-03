@@ -8,6 +8,7 @@
 
 @page "/achat/materiel"
 @using AssetFlow.BlazorUI.Pages.Achat
+@using AssetFlow.BlazorUI.Components
 
 <RoleAuthGuard AllowedRoles="@(new[]{"EquipeAchat"})">
     <div class="sk-shell">
@@ -58,11 +59,7 @@
                     <p class="sk-profile-role">@_currentUserRole</p>
                 </div>
             </div>
-            <div class="sk-support">
-                <p class="sk-support-label">SUPPORT IT</p>
-                <p class="sk-support-text">Besoin d'aide ?</p>
-                <button class="sk-support-btn">Contact</button>
-            </div>
+            <LogoutButton />
         </aside>
 
         @* ── ZONE PRINCIPALE ── *@

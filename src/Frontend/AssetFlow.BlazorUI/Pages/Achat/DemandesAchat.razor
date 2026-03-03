@@ -10,7 +10,9 @@
 
 @page "/demandes-achat"
 @using Microsoft.JSInterop
+@using AssetFlow.BlazorUI.Components
 @using Microsoft.AspNetCore.Components.Forms
+
 
 <RoleAuthGuard AllowedRoles="@(new[]{"EquipeAchat"})">
     <div class="layout-shell" data-theme="@_theme">
@@ -59,11 +61,7 @@
                     <p class="profile-role">@_roleUtilisateur</p>
                 </div>
             </div>
-            <div class="sidebar-support">
-                <p class="support-label">SUPPORT IT</p>
-                <p class="support-text">Besoin d'aide ?</p>
-                <button class="support-btn">Contact</button>
-            </div>
+            <LogoutButton />
         </aside>
 
         @* ══════ ZONE PRINCIPALE ══════ *@

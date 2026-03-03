@@ -174,3 +174,37 @@ body {
     from { opacity: 0; transform: translateY(16px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Bouton déconnexion sidebar ── */
+.sidebar-logout {
+    padding: 1rem 1.2rem;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+}
+
+.btn-logout {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.65rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.btn-logout:hover {
+    background: rgba(239, 68, 68, 0.18);
+    border-color: rgba(239, 68, 68, 0.6);
+}
+
+.btn-logout svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}

@@ -9,12 +9,20 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// === HTTP CLIENT — API .NET ===
-builder.Services.AddScoped(sp => new HttpClient
+// === AUTH TOKEN HANDLER ===
+builder.Services.AddScoped<AuthTokenHandler>();
+
+// === HTTP CLIENT — API .NET (avec token automatique) ===
+builder.Services.AddHttpClient("ApiClient", client =>
 {
-    BaseAddress = new Uri("http://localhost:5235/"),
-    Timeout = TimeSpan.FromMinutes(2)
-});
+    client.BaseAddress = new Uri("http://localhost:5235/");
+    client.Timeout = TimeSpan.FromMinutes(2);
+})
+.AddHttpMessageHandler<AuthTokenHandler>();
+
+// Rendre ce client disponible comme HttpClient par défaut
+builder.Services.AddScoped(sp =>
+    sp.GetRequiredService<IHttpClientFactory>().CreateClient("ApiClient"));
 
 // === HTTP CLIENT — API Python ===
 builder.Services.AddHttpClient("PythonScraper", client =>

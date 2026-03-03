@@ -5,13 +5,14 @@
 
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AssetFlow.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    // [Authorize]
+    [Authorize(Policy = "EmployeOnly")]
     public class EmployeController : ControllerBase
     {
         private readonly IEmployeService _employeService;

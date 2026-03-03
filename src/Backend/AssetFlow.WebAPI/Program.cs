@@ -27,11 +27,44 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuer   = true,
             ValidateAudience = false,
             ValidateLifetime = true,
-            ClockSkew        = TimeSpan.Zero
+            ClockSkew        = TimeSpan.Zero,
+            // Mapper le claim "roles" Keycloak → ClaimTypes.Role ASP.NET
+            RoleClaimType    = System.Security.Claims.ClaimTypes.Role
+        };
+        // Transformer les realm_access.roles de Keycloak
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = ctx =>
+            {
+                var identity = ctx.Principal?.Identity as System.Security.Claims.ClaimsIdentity;
+                if (identity == null) return Task.CompletedTask;
+
+                // Keycloak met les rôles dans realm_access.roles
+                var realmAccess = ctx.Principal?.FindFirst("realm_access");
+                if (realmAccess != null)
+                {
+                    var doc = System.Text.Json.JsonDocument.Parse(realmAccess.Value);
+                    if (doc.RootElement.TryGetProperty("roles", out var roles))
+                    {
+                        foreach (var role in roles.EnumerateArray())
+                            identity.AddClaim(new System.Security.Claims.Claim(
+                                System.Security.Claims.ClaimTypes.Role, role.GetString()!));
+                    }
+                }
+                return Task.CompletedTask;
+            }
         };
     });
-
-builder.Services.AddAuthorization();
+    
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly",      p => p.RequireRole("Admin"));
+    options.AddPolicy("ITOnly",         p => p.RequireRole("IT"));
+    options.AddPolicy("EquipeAchatOnly",p => p.RequireRole("EquipeAchat"));
+    options.AddPolicy("EmployeOnly",    p => p.RequireRole("Employe"));
+    options.AddPolicy("ITOrAdmin",      p => p.RequireRole("IT", "Admin"));
+    options.AddPolicy("AchatOrAdmin",   p => p.RequireRole("EquipeAchat", "Admin"));
+});
 
 // === INJECTION DES SERVICES ===
 builder.Services.AddHttpClient<IAuthService, KeycloakAuthService>();

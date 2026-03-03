@@ -12,270 +12,271 @@
 @page "/employe/incident/{AffectationId:int}"
 @page "/employe/incident/{AffectationId:int}/article/{ArticleId:int}"
 @using AssetFlow.BlazorUI.Services
+<RoleAuthGuard AllowedRoles="@(new[]{"Employe"})">
+    <div class="incident-container">
 
-<div class="incident-container">
-
-    @* === HEADER === *@
-    <header class="incident-header">
-        <div class="header-content">
-            <a href="/employe/equipements" class="header-logo">
-                <div class="logo-brand">
-                    <span class="logo-text-asset">Asset</span><span class="logo-text-flow">Flow</span>
-                </div>
-            </a>
-            @* <div class="header-actions">
-                <div class="header-nav-badge">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-                        <path d="M12 9v4"/><path d="M12 17h.01"/>
-                    </svg>
-                    <span>Signalement</span>
-                </div>
-                <div class="header-divider"></div>
-                <div class="header-avatar">
-                    <span>@GetUserInitials()</span>
-                </div>
-            </div> *@
-        </div>
-    </header>
-
-    @* === MAIN CONTENT === *@
-    <main class="incident-main">
-        <div class="incident-wrapper">
-
-            @* Breadcrumbs *@
-            <nav class="breadcrumbs">
-                <a href="/employe/equipements" class="breadcrumb-link">Dashboard</a>
-                <svg class="breadcrumb-separator" viewBox="0 0 24 24">
-                    <path d="m9 18 6-6-6-6" />
-                </svg>
-                <span class="breadcrumb-current">Signalement</span>
-            </nav>
-
-            @* Card principale *@
-            <div class="incident-card">
-
-                @* Header de la card *@
-                <div class="card-header">
-                    <div class="header-icon-wrapper">
-                        <svg class="header-icon" viewBox="0 0 24 24">
-                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-                            <path d="M12 9v4" />
-                            <path d="M12 17h.01" />
+        @* === HEADER === *@
+        <header class="incident-header">
+            <div class="header-content">
+                <a href="/employe/equipements" class="header-logo">
+                    <div class="logo-brand">
+                        <span class="logo-text-asset">Asset</span><span class="logo-text-flow">Flow</span>
+                    </div>
+                </a>
+                @* <div class="header-actions">
+                    <div class="header-nav-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                            <path d="M12 9v4"/><path d="M12 17h.01"/>
                         </svg>
+                        <span>Signalement</span>
                     </div>
-                    <div class="header-text">
-                        <h1 class="header-title">Signaler un incident</h1>
-                        <p class="header-subtitle">Veuillez détailler le problème pour une prise en charge rapide.</p>
+                    <div class="header-divider"></div>
+                    <div class="header-avatar">
+                        <span>@GetUserInitials()</span>
                     </div>
-                </div>
+                </div> *@
+            </div>
+        </header>
 
-                @* ── État chargement ── *@
-                @if (IsLoading)
-                {
-                    <div class="loading-state">
-                        <div class="spinner"></div>
-                        <p>Chargement...</p>
-                    </div>
-                }
-                else
-                {
-                    @* ── Formulaire ── *@
-                    <form class="incident-form" @onsubmit="SoumettreIncident">
+        @* === MAIN CONTENT === *@
+        <main class="incident-main">
+            <div class="incident-wrapper">
 
-                        @* Équipement concerné — DROPDOWN (modifié) *@
-                        <div class="form-group">
-                            <label class="form-label">Équipement concerné</label>
-                            <div class="select-wrapper">
-                                <svg class="select-icon" viewBox="0 0 24 24">
-                                    <rect x="2" y="3" width="20" height="14" rx="2" />
-                                    <path d="M8 21h8" />
-                                    <path d="M12 17v4" />
-                                </svg>
+                @* Breadcrumbs *@
+                <nav class="breadcrumbs">
+                    <a href="/employe/equipements" class="breadcrumb-link">Dashboard</a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 24 24">
+                        <path d="m9 18 6-6-6-6" />
+                    </svg>
+                    <span class="breadcrumb-current">Signalement</span>
+                </nav>
 
-                                @if (Articles.Count == 0)
-                                {
-                                    @* Aucun équipement : select désactivé *@
-                                    <select class="form-select" disabled>
-                                        <option>Aucun équipement affecté</option>
-                                    </select>
-                                }
-                                else
-                                {
-                                    @* Liste déroulante des équipements de l'utilisateur *@
-                                    <select class="form-select" @bind="SelectedArticleId">
-                                        <option value="0">— Sélectionner un article —</option>
-                                        @foreach (var art in Articles)
-                                        {
-                                            <option value="@art.ArticleId">
-                                                @art.NumeroSerie — @GetDesignation(art.AffectationId)
-                                            </option>
-                                        }
-                                    </select>
-                                }
+                @* Card principale *@
+                <div class="incident-card">
 
-                                <svg class="select-arrow" viewBox="0 0 24 24">
-                                    <path d="m6 9 6 6 6-6" />
-                                </svg>
-                            </div>
-                        </div>
-
-                        @* Type d'incident *@
-                        <div class="form-group">
-                            <label class="form-label">Type d'incident</label>
-                            <div class="radio-grid">
-                                <label class="radio-option @(TypeIncident == "Panne" ? "selected" : "")"
-                                       @onclick='() => SelectType("Panne")'>
-                                    <input type="radio" name="type" value="Panne" checked="@(TypeIncident == "Panne")" />
-                                    <svg class="option-icon" viewBox="0 0 24 24">
-                                        <path
-                                        d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-                                    </svg>
-                                    <span class="option-text">Panne</span>
-                                </label>
-
-                                <label class="radio-option @(TypeIncident == "Casse" ? "selected" : "")"
-                                       @onclick='() => SelectType("Casse")'>
-                                    <input type="radio" name="type" value="Casse" checked="@(TypeIncident == "Casse")" />
-                                    <svg class="option-icon" viewBox="0 0 24 24">
-                                        <path
-                                        d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                                        <path d="m12 5-1 1" />
-                                        <path d="m6 10 2-2" />
-                                    </svg>
-                                    <span class="option-text">Casse</span>
-                                </label>
-
-                                <label class="radio-option @(TypeIncident == "Vol" ? "selected" : "")"
-                                       @onclick='() => SelectType("Vol")'>
-                                    <input type="radio" name="type" value="Vol" checked="@(TypeIncident == "Vol")" />
-                                    <svg class="option-icon" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="16" r="1" />
-                                        <rect x="3" y="10" width="18" height="12" rx="2" />
-                                        <path d="M7 10V7a5 5 0 0 1 10 0v3" />
-                                    </svg>
-                                    <span class="option-text">Vol</span>
-                                </label>
-
-                                <label class="radio-option @(TypeIncident == "Autre" ? "selected" : "")"
-                                       @onclick='() => SelectType("Autre")'>
-                                    <input type="radio" name="type" value="Autre" checked="@(TypeIncident == "Autre")" />
-                                    <svg class="option-icon" viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" />
-                                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                                        <path d="M12 17h.01" />
-                                    </svg>
-                                    <span class="option-text">Autre</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        @* Description *@
-                        <div class="form-group">
-                            <label class="form-label">Description</label>
-                            <textarea class="form-textarea"   placeholder="Décrivez le problème en quelques mots..."                rows="4"
-                                      @bind="Description"></textarea>
-                        </div>
-
-                        @* Niveau d'urgence *@
-                        <div class="form-group">
-                            <div class="urgency-header">
-                                <label class="form-label">Niveau d'urgence</label>
-                                <span class="urgency-badge @GetUrgencyClass()">@GetUrgencyLabel()</span>
-                            </div>
-                            <div class="slider-wrapper">
-                                <input type="range"                                    class="urgency-slider"                                  min="0"                                 max="100"                               step="1"                              @bind="Urgence"
-                                       @oninput="OnUrgencyChange" />
-                            </div>
-                            <div class="urgency-labels">
-                                <span>Faible</span>
-                                <span>Moyen</span>
-                                <span>Critique</span>
-                            </div>
-                        </div>
-
-                        @* Message d'erreur formulaire *@
-                        @if (!string.IsNullOrEmpty(ErrorMessage))
-                        {
-                            <div class="error-message">
-                                <svg viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <path d="m15 9-6 6" />
-                                    <path d="m9 9 6 6" />
-                                </svg>
-                                <span>@ErrorMessage</span>
-                            </div>
-                        }
-
-                        @* Bouton submit *@
-                        <div class="form-actions">
-                            <button type="submit" class="btn-submit" disabled="@IsSubmitting">
-                                <svg class="btn-icon" viewBox="0 0 24 24">
-                                    <path d="m22 2-7 20-4-9-9-4Z" />
-                                    <path d="M22 2 11 13" />
-                                </svg>
-                                @if (IsSubmitting)
-                                {
-                                    <span>Envoi en cours...</span>
-                                }
-                                else
-                                {
-                                    <span>Envoyer le signalement</span>
-                                }
-                            </button>
-                        </div>
-                    </form>
-
-                    @* Footer info *@
-                    <div class="card-footer">
-                        <div class="footer-icon">
-                            <svg viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M12 16v-4" />
-                                <path d="M12 8h.01" />
+                    @* Header de la card *@
+                    <div class="card-header">
+                        <div class="header-icon-wrapper">
+                            <svg class="header-icon" viewBox="0 0 24 24">
+                                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                                <path d="M12 9v4" />
+                                <path d="M12 17h.01" />
                             </svg>
                         </div>
-                        <div class="footer-text">
-                            <p>Une notification sera envoyée automatiquement à l'équipe IT via <strong>Microsoft
-                                Teams</strong>. Vous recevrez une réponse dans les 24 heures.</p>
-                            </div>
+                        <div class="header-text">
+                            <h1 class="header-title">Signaler un incident</h1>
+                            <p class="header-subtitle">Veuillez détailler le problème pour une prise en charge rapide.</p>
+                        </div>
+                    </div>
+
+                    @* ── État chargement ── *@
+                    @if (IsLoading)
+                    {
+                        <div class="loading-state">
+                            <div class="spinner"></div>
+                            <p>Chargement...</p>
                         </div>
                     }
-                </div>
+                    else
+                    {
+                        @* ── Formulaire ── *@
+                        <form class="incident-form" @onsubmit="SoumettreIncident">
 
-                @* Quick Links *@
-                <div class="quick-links">
-                    <a href="/employe/equipements" class="quick-link">
-                        <svg viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                            <path d="M12 17h.01" />
-                        </svg>
-                        <span>Aide en direct</span>
-                    </a>
-                    <a href="/employe/equipements" class="quick-link">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-                            <path d="M21 3v5h-5" />
-                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-                            <path d="M3 21v-5h5" />
-                        </svg>
-                        <span>Mes équipements</span>
-                    </a>
-                </div>
-            </div>
-        </main>
+                            @* Équipement concerné — DROPDOWN (modifié) *@
+                            <div class="form-group">
+                                <label class="form-label">Équipement concerné</label>
+                                <div class="select-wrapper">
+                                    <svg class="select-icon" viewBox="0 0 24 24">
+                                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                                        <path d="M8 21h8" />
+                                        <path d="M12 17v4" />
+                                    </svg>
 
-        @* === FOOTER === *@
-        <footer class="incident-footer">
-            <div class="footer-content">
-                <p>© 2024 AssetFlow Inventory Management. All rights reserved.</p>
-                <div class="footer-links">
-                    <a href="#">Politique de confidentialité</a>
-                    <a href="#">Support technique</a>
-                    <a href="#">Statut système</a>
+                                    @if (Articles.Count == 0)
+                                    {
+                                        @* Aucun équipement : select désactivé *@
+                                        <select class="form-select" disabled>
+                                            <option>Aucun équipement affecté</option>
+                                        </select>
+                                    }
+                                    else
+                                    {
+                                        @* Liste déroulante des équipements de l'utilisateur *@
+                                        <select class="form-select" @bind="SelectedArticleId">
+                                            <option value="0">— Sélectionner un article —</option>
+                                            @foreach (var art in Articles)
+                                            {
+                                                <option value="@art.ArticleId">
+                                                    @art.NumeroSerie — @GetDesignation(art.AffectationId)
+                                                </option>
+                                            }
+                                        </select>
+                                    }
+
+                                    <svg class="select-arrow" viewBox="0 0 24 24">
+                                        <path d="m6 9 6 6 6-6" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            @* Type d'incident *@
+                            <div class="form-group">
+                                <label class="form-label">Type d'incident</label>
+                                <div class="radio-grid">
+                                    <label class="radio-option @(TypeIncident == "Panne" ? "selected" : "")"
+                                        @onclick='() => SelectType("Panne")'>
+                                        <input type="radio" name="type" value="Panne" checked="@(TypeIncident == "Panne")" />
+                                        <svg class="option-icon" viewBox="0 0 24 24">
+                                            <path
+                                            d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                                        </svg>
+                                        <span class="option-text">Panne</span>
+                                    </label>
+
+                                    <label class="radio-option @(TypeIncident == "Casse" ? "selected" : "")"
+                                        @onclick='() => SelectType("Casse")'>
+                                        <input type="radio" name="type" value="Casse" checked="@(TypeIncident == "Casse")" />
+                                        <svg class="option-icon" viewBox="0 0 24 24">
+                                            <path
+                                            d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                                            <path d="m12 5-1 1" />
+                                            <path d="m6 10 2-2" />
+                                        </svg>
+                                        <span class="option-text">Casse</span>
+                                    </label>
+
+                                    <label class="radio-option @(TypeIncident == "Vol" ? "selected" : "")"
+                                        @onclick='() => SelectType("Vol")'>
+                                        <input type="radio" name="type" value="Vol" checked="@(TypeIncident == "Vol")" />
+                                        <svg class="option-icon" viewBox="0 0 24 24">
+                                            <circle cx="12" cy="16" r="1" />
+                                            <rect x="3" y="10" width="18" height="12" rx="2" />
+                                            <path d="M7 10V7a5 5 0 0 1 10 0v3" />
+                                        </svg>
+                                        <span class="option-text">Vol</span>
+                                    </label>
+
+                                    <label class="radio-option @(TypeIncident == "Autre" ? "selected" : "")"
+                                        @onclick='() => SelectType("Autre")'>
+                                        <input type="radio" name="type" value="Autre" checked="@(TypeIncident == "Autre")" />
+                                        <svg class="option-icon" viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                            <path d="M12 17h.01" />
+                                        </svg>
+                                        <span class="option-text">Autre</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            @* Description *@
+                            <div class="form-group">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-textarea"   placeholder="Décrivez le problème en quelques mots..."                rows="4"
+                                        @bind="Description"></textarea>
+                            </div>
+
+                            @* Niveau d'urgence *@
+                            <div class="form-group">
+                                <div class="urgency-header">
+                                    <label class="form-label">Niveau d'urgence</label>
+                                    <span class="urgency-badge @GetUrgencyClass()">@GetUrgencyLabel()</span>
+                                </div>
+                                <div class="slider-wrapper">
+                                    <input type="range"                                    class="urgency-slider"                                  min="0"                                 max="100"                               step="1"                              @bind="Urgence"
+                                        @oninput="OnUrgencyChange" />
+                                </div>
+                                <div class="urgency-labels">
+                                    <span>Faible</span>
+                                    <span>Moyen</span>
+                                    <span>Critique</span>
+                                </div>
+                            </div>
+
+                            @* Message d'erreur formulaire *@
+                            @if (!string.IsNullOrEmpty(ErrorMessage))
+                            {
+                                <div class="error-message">
+                                    <svg viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <path d="m15 9-6 6" />
+                                        <path d="m9 9 6 6" />
+                                    </svg>
+                                    <span>@ErrorMessage</span>
+                                </div>
+                            }
+
+                            @* Bouton submit *@
+                            <div class="form-actions">
+                                <button type="submit" class="btn-submit" disabled="@IsSubmitting">
+                                    <svg class="btn-icon" viewBox="0 0 24 24">
+                                        <path d="m22 2-7 20-4-9-9-4Z" />
+                                        <path d="M22 2 11 13" />
+                                    </svg>
+                                    @if (IsSubmitting)
+                                    {
+                                        <span>Envoi en cours...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Envoyer le signalement</span>
+                                    }
+                                </button>
+                            </div>
+                        </form>
+
+                        @* Footer info *@
+                        <div class="card-footer">
+                            <div class="footer-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 16v-4" />
+                                    <path d="M12 8h.01" />
+                                </svg>
+                            </div>
+                            <div class="footer-text">
+                                <p>Une notification sera envoyée automatiquement à l'équipe IT via <strong>Microsoft
+                                    Teams</strong>. Vous recevrez une réponse dans les 24 heures.</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    @* Quick Links *@
+                    <div class="quick-links">
+                        <a href="/employe/equipements" class="quick-link">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                <path d="M12 17h.01" />
+                            </svg>
+                            <span>Aide en direct</span>
+                        </a>
+                        <a href="/employe/equipements" class="quick-link">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                                <path d="M21 3v5h-5" />
+                                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                                <path d="M3 21v-5h5" />
+                            </svg>
+                            <span>Mes équipements</span>
+                        </a>
+                    </div>
                 </div>
-            </div>
-        </footer>
+            </main>
+
+            @* === FOOTER === *@
+            <footer class="incident-footer">
+                <div class="footer-content">
+                    <p>© 2024 AssetFlow Inventory Management. All rights reserved.</p>
+                    <div class="footer-links">
+                        <a href="#">Politique de confidentialité</a>
+                        <a href="#">Support technique</a>
+                        <a href="#">Statut système</a>
+                    </div>
+                </div>
+            </footer>
 
     </div>
+</RoleAuthGuard>

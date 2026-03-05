@@ -1248,6 +1248,21 @@ html.dark .aff-comment-ta {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ══════════════════════════
+   HAMBURGER + DRAWER
+══════════════════════════ */
+.aff-hamburger { display:none; flex-direction:column; justify-content:center; gap:5px; width:36px; height:36px; background:transparent; border:none; cursor:pointer; padding:4px; flex-shrink:0; }
+.aff-hamburger span { display:block; width:22px; height:2px; background:var(--text); border-radius:2px; transition:all 0.2s; }
+
+.aff-menu-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(3px); z-index:900; display:flex; }
+.aff-menu-drawer { width:270px; height:100%; background:#0F1E3C; display:flex; flex-direction:column; box-shadow:4px 0 24px rgba(0,0,0,0.4); animation:affDrawerIn 0.22s cubic-bezier(0.16,1,0.3,1); }
+html.dark .aff-menu-drawer { background:#060d18; }
+@keyframes affDrawerIn { from{transform:translateX(-100%)} to{transform:translateX(0)} }
+.aff-menu-drawer-logo { padding:1.5rem 1.25rem 1rem; display:flex; align-items:center; }
+.aff-menu-drawer-nav { flex:1; display:flex; flex-direction:column; gap:0.15rem; padding:0.5rem 0.625rem; overflow-y:auto; }
+.aff-menu-drawer-nav .aff-nav-link { flex-direction:row; gap:0.7rem; padding:0.75rem 0.875rem; border-radius:0.5rem; font-size:0.85rem; border-left:3px solid transparent; border-bottom:none; min-width:unset; text-align:left; }
+.aff-menu-drawer-nav .aff-nav-link.active { border-left-color:var(--primary); background:rgba(19,109,236,0.18); border-bottom:none; }
+
+/* ══════════════════════════
    RESPONSIVE
 ══════════════════════════ */
 @media (max-width: 1200px) {
@@ -1269,48 +1284,8 @@ html.dark .aff-comment-ta {
 
 @media (max-width: 768px) {
     .aff-layout { flex-direction: column; }
-
-    .aff-sidebar {
-        width: 100%;
-        height: auto;
-        flex-direction: row;
-        align-items: center;
-        padding: 0.5rem 1rem;
-        border-right: none;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .sidebar-logo-wrap { padding: 0; }
-    .aff-sidebar-logo { width: 80px; }
-
-    .aff-sidebar-nav {
-        flex-direction: row;
-        flex: 1;
-        justify-content: flex-end;
-        padding: 0;
-        gap: 0.25rem;
-        overflow-x: auto;
-    }
-
-    .aff-nav-link {
-        padding: 0.5rem 0.625rem;
-        flex-direction: column;
-        gap: 0.2rem;
-        border-left: none;
-        border-bottom: 3px solid transparent;
-        border-radius: 0;
-        font-size: 0.6rem;
-        text-align: center;
-        min-width: 52px;
-    }
-
-    .aff-nav-link.active {
-        border-left: none;
-        border-bottom-color: var(--primary);
-        background: transparent;
-    }
-
-    .aff-sidebar-profile { display: none; }
+    .aff-sidebar { display: none; }
+    .aff-hamburger { display: flex; }
 
     .aff-header {
         padding: 0.875rem 1rem;

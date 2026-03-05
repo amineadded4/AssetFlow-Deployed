@@ -25,6 +25,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private string                       MaterielSearch       { get; set; } = string.Empty;
         private bool                         LoadingMateriels     { get; set; } = false;
         private System.Timers.Timer?         _materielDebounce;
+        private bool                          _menuOpen = false;
 
         // ── Données utilisateurs ───────────────────────────────
         private List<UtilisateurDisponibleDto> UtilisateursDisponibles { get; set; } = new();

@@ -24,6 +24,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private bool   IsRetiring          { get; set; } = false;
 
         private System.Timers.Timer? _debounce;
+        private bool _menuOpen = false;
 
         private List<AffectationEmployeDto> AffectationsFiltrees =>
             FiltreEtat == "tous" ? Affectations

@@ -30,6 +30,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private string              ModalCommentaire       { get; set; } = string.Empty;
 
         private System.Timers.Timer? _debounce;
+        private bool _menuOpen = false;
 
         protected override async Task OnInitializedAsync()
         {

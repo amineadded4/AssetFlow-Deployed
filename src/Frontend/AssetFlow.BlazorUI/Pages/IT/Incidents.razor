@@ -25,9 +25,37 @@
         <LogoutButton />
     </aside>
 
+    @* ── OVERLAY MENU MOBILE ── *@
+    @if (_menuOpen)
+    {
+        <div class="inc-menu-overlay" @onclick="() => _menuOpen = false">
+            <div class="inc-menu-drawer" @onclick:stopPropagation="true">
+                <div class="inc-menu-drawer-logo">
+                    <img src="images/logo.png" alt="AssetFlow" class="inc-sidebar-logo" />
+                </div>
+                <nav class="inc-menu-drawer-nav">
+                    <a href="/dashboard/it"   class="inc-nav-link" @onclick="() => _menuOpen = false"><svg class="inc-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
+                    <a href="/it/employes"    class="inc-nav-link" @onclick="() => _menuOpen = false"><svg class="inc-nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Employés</span></a>
+                    <a href="/it/affectation" class="inc-nav-link" @onclick="() => _menuOpen = false"><svg class="inc-nav-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Affectations</span></a>
+                    <a href="/it/incidents"   class="inc-nav-link active" @onclick="() => _menuOpen = false"><svg class="inc-nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg><span>Incidents</span></a>
+                    <a href="/it/inventaire"  class="inc-nav-link" @onclick="() => _menuOpen = false"><svg class="inc-nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>Inventaire</span></a>
+                    <a href="/it/rapports"    class="inc-nav-link" @onclick="() => _menuOpen = false"><svg class="inc-nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg><span>Rapports</span></a>
+                </nav>
+                <div class="inc-sidebar-profile">
+                    <div class="inc-profile-avatar">@GetInitials()</div>
+                    <div><p class="inc-profile-name">@UserName</p><p class="inc-profile-role">IT</p></div>
+                </div>
+                <LogoutButton />
+            </div>
+        </div>
+    }
+
     @* ── MAIN ── *@
     <main class="inc-main">
         <header class="inc-header">
+            <button class="inc-hamburger" @onclick="() => _menuOpen = !_menuOpen" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
             <div>
                 <h1 class="inc-page-title">Gestion des Incidents</h1>
                 <p class="inc-page-sub">Suivez et résolvez les incidents signalés par les employés</p>

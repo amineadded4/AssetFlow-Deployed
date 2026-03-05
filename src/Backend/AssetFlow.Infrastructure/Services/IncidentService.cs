@@ -106,6 +106,173 @@ namespace AssetFlow.Infrastructure.Services
 
             return incident == null ? null : MapToDto(incident);
         }
+        public async Task<List<IncidentEmployeDto>> GetEmployesAvecIncidentsAsync(string? search = null)
+        {
+            // Récupérer les utilisateurIds ayant des incidents actifs
+            var userIdsAvecIncidents = await _context.Incidents
+                .Where(i => i.Statut == StatutIncident.EnAttente || i.Statut == StatutIncident.EnCours)
+                .Select(i => i.Affectation.UtilisateurId)
+                .Distinct()
+                .ToListAsync();
+
+            var query = _context.Users.AsNoTracking()
+                .Where(u => u.IsApproved && u.Role == "Employe");
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.Trim().ToLower();
+                query = query.Where(u =>
+                    u.FirstName.ToLower().Contains(s) ||
+                    u.LastName.ToLower().Contains(s)  ||
+                    u.Department.ToLower().Contains(s));
+            }
+
+            var users = await query.OrderBy(u => u.FirstName).ToListAsync();
+
+            // Compter incidents actifs par user
+            var counts = await _context.Incidents
+                .Include(i => i.Affectation)
+                .Where(i => (i.Statut == StatutIncident.EnAttente || i.Statut == StatutIncident.EnCours)
+                        && users.Select(u => u.Id).Contains(i.Affectation.UtilisateurId))
+                .GroupBy(i => i.Affectation.UtilisateurId)
+                .Select(g => new { UserId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            return users.Select(u => new IncidentEmployeDto
+            {
+                UtilisateurId    = u.Id,
+                FullName         = $"{u.FirstName} {u.LastName}",
+                Department       = u.Department,
+                Initials         = $"{u.FirstName[0]}{u.LastName[0]}".ToUpper(),
+                NbIncidentsActifs = counts.FirstOrDefault(c => c.UserId == u.Id)?.Count ?? 0
+            }).ToList();
+        }
+
+        public async Task<List<IncidentMaterielDto>> GetMaterielsAvecIncidentsAsync(int utilisateurId)
+        {
+            var affectations = await _context.Affectations
+                .Include(a => a.Materiel)
+                .Include(a => a.Articles)
+                .Where(a => a.UtilisateurId == utilisateurId && a.Etat == EtatAffectation.Courante)
+                .ToListAsync();
+
+            var affectationIds = affectations.Select(a => a.Id).ToList();
+
+            var incidents = await _context.Incidents
+                .Where(i => affectationIds.Contains(i.AffectationId))
+                .OrderByDescending(i => i.DateIncident)
+                .ToListAsync();
+
+            // Ne retourner que les matériels ayant au moins 1 incident
+            return affectations
+                .Select(aff =>
+                {
+                    var incidentsAff = incidents.Where(i => i.AffectationId == aff.Id).ToList();
+                    if (!incidentsAff.Any()) return null;
+
+                    var articlesAvecIncidents = aff.Articles
+                        .Select(art =>
+                        {
+                            var incidentsArt = incidentsAff
+                                .Where(i => i.ArticleId == art.Id)
+                                .Select(MapToDto)
+                                .ToList();
+                            if (!incidentsArt.Any()) return null;
+
+                            return new IncidentArticleDto
+                            {
+                                ArticleId   = art.Id,
+                                NumeroSerie = art.NumeroSerie ?? $"S/N #{art.Id}",
+                                EtatArticle = art.Etat.ToString(),
+                                Incidents   = incidentsArt
+                            };
+                        })
+                        .Where(x => x != null)
+                        .Cast<IncidentArticleDto>()
+                        .ToList();
+
+                    return new IncidentMaterielDto
+                    {
+                        MaterielId       = aff.MaterielId,
+                        AffectationId    = aff.Id,
+                        Designation      = aff.Materiel.Designation,
+                        Reference        = aff.Materiel.Reference,
+                        ImageUrl         = aff.Materiel.ImageUrl,
+                        Categorie        = aff.Materiel.Categorie,
+                        NbIncidentsActifs = incidentsAff.Count(i =>
+                            i.Statut == StatutIncident.EnAttente || i.Statut == StatutIncident.EnCours),
+                        Articles         = articlesAvecIncidents
+                    };
+                })
+                .Where(x => x != null)
+                .Cast<IncidentMaterielDto>()
+                .ToList();
+        }
+
+        public async Task<SignalerIncidentResponseDto> ChangerStatutAsync(int incidentId, ChangerStatutIncidentDto dto)
+        {
+            var incident = await _context.Incidents
+                .Include(i => i.Article)
+                .FirstOrDefaultAsync(i => i.Id == incidentId);
+
+            if (incident == null)
+                return new SignalerIncidentResponseDto { Success = false, Message = "Incident introuvable." };
+
+            if (!Enum.TryParse<StatutIncident>(dto.NouveauStatut, out var nouveauStatut))
+                return new SignalerIncidentResponseDto { Success = false, Message = "Statut invalide." };
+
+            incident.Statut = nouveauStatut;
+
+            if (nouveauStatut == StatutIncident.Resolu)
+            {
+                incident.DateResolution          = DateTime.UtcNow;
+                incident.CommentairesResolution  = dto.CommentairesResolution?.Trim();
+
+                // Remettre l'article en Bon si plus aucun incident actif sur cet article
+                if (incident.ArticleId.HasValue)
+                {
+                    var autresIncidentsActifs = await _context.Incidents
+                        .AnyAsync(i => i.ArticleId == incident.ArticleId
+                                    && i.Id != incidentId
+                                    && (i.Statut == StatutIncident.EnAttente || i.Statut == StatutIncident.EnCours));
+
+                    if (!autresIncidentsActifs && incident.Article != null)
+                        incident.Article.Etat = EtatArticle.Bon;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return new SignalerIncidentResponseDto { Success = true, Message = "Statut mis à jour." };
+        }
+
+        public async Task<SignalerIncidentResponseDto> ResolveAllByArticleAsync(ResolveAllArticleDto dto)
+        {
+            var incidents = await _context.Incidents
+                .Where(i => i.ArticleId == dto.ArticleId
+                        && (i.Statut == StatutIncident.EnAttente || i.Statut == StatutIncident.EnCours))
+                .ToListAsync();
+
+            if (!incidents.Any())
+                return new SignalerIncidentResponseDto { Success = false, Message = "Aucun incident actif." };
+
+            foreach (var inc in incidents)
+            {
+                inc.Statut                  = StatutIncident.Resolu;
+                inc.DateResolution          = DateTime.UtcNow;
+                inc.CommentairesResolution  = dto.CommentairesResolution?.Trim();
+            }
+
+            // Remettre l'article en Bon
+            var article = await _context.ArticlesIndividuels.FindAsync(dto.ArticleId);
+            if (article != null) article.Etat = EtatArticle.Bon;
+
+            await _context.SaveChangesAsync();
+            return new SignalerIncidentResponseDto
+            {
+                Success = true,
+                Message = $"{incidents.Count} incident(s) résolus. Article remis en état Bon."
+            };
+        }
 
         private IncidentDto MapToDto(Incident incident)
         {

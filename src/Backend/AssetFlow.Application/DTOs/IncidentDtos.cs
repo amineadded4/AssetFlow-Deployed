@@ -50,4 +50,46 @@ namespace AssetFlow.Application.DTOs
         public string MaterielDesignation { get; set; } = string.Empty;
         public string MaterielReference { get; set; } = string.Empty;
     }
+
+    /// <summary>Vue hiérarchique : Employé → Matériels → Articles → Incidents</summary>
+    public class IncidentArticleDto
+    {
+        public int    ArticleId    { get; set; }
+        public string NumeroSerie  { get; set; } = string.Empty;
+        public string EtatArticle  { get; set; } = string.Empty;
+        public List<IncidentDto> Incidents { get; set; } = new();
+    }
+
+    public class IncidentMaterielDto
+    {
+        public int    MaterielId  { get; set; }
+        public string Designation { get; set; } = string.Empty;
+        public string Reference   { get; set; } = string.Empty;
+        public string? ImageUrl   { get; set; }
+        public string Categorie   { get; set; } = string.Empty;
+        public int    AffectationId { get; set; }
+        public int    NbIncidentsActifs { get; set; }
+        public List<IncidentArticleDto> Articles { get; set; } = new();
+    }
+
+    public class IncidentEmployeDto
+    {
+        public int    UtilisateurId { get; set; }
+        public string FullName      { get; set; } = string.Empty;
+        public string Department    { get; set; } = string.Empty;
+        public string Initials      { get; set; } = string.Empty;
+        public int    NbIncidentsActifs { get; set; }
+    }
+
+    public class ChangerStatutIncidentDto
+    {
+        public string NouveauStatut          { get; set; } = string.Empty; // "EnCours" | "Resolu"
+        public string? CommentairesResolution { get; set; }
+    }
+
+    public class ResolveAllArticleDto
+    {
+        public int    ArticleId              { get; set; }
+        public string? CommentairesResolution { get; set; }
+    }
 }

@@ -27,5 +27,10 @@ namespace AssetFlow.Application.Interfaces
         /// Récupère le détail d'un incident
         /// </summary>
         Task<IncidentDto?> GetIncidentDetailAsync(int incidentId);
+
+        Task<List<IncidentEmployeDto>> GetEmployesAvecIncidentsAsync(string? search = null);
+        Task<List<IncidentMaterielDto>> GetMaterielsAvecIncidentsAsync(int utilisateurId);
+        Task<SignalerIncidentResponseDto> ChangerStatutAsync(int incidentId, ChangerStatutIncidentDto dto);
+        Task<SignalerIncidentResponseDto> ResolveAllByArticleAsync(ResolveAllArticleDto dto);
     }
 }

@@ -1,0 +1,311 @@
+@page "/it/incidents"
+@using AssetFlow.BlazorUI.Services
+@using AssetFlow.BlazorUI.Components
+
+<RoleAuthGuard AllowedRoles="@(new[]{"IT"})">
+<div class="inc-layout">
+
+    @* ── SIDEBAR ── *@
+    <aside class="inc-sidebar">
+        <div class="sidebar-logo-wrap">
+            <img src="images/logo.png" alt="AssetFlow" class="inc-sidebar-logo" />
+        </div>
+        <nav class="inc-sidebar-nav">
+            <a href="/dashboard/it"   class="inc-nav-link"><svg class="inc-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
+            <a href="/it/employes"    class="inc-nav-link"><svg class="inc-nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Employés</span></a>
+            <a href="/it/affectation" class="inc-nav-link"><svg class="inc-nav-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Affectations</span></a>
+            <a href="/it/incidents"   class="inc-nav-link active"><svg class="inc-nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg><span>Incidents</span></a>
+            <a href="/it/inventaire"  class="inc-nav-link"><svg class="inc-nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>Inventaire</span></a>
+            <a href="/it/rapports"    class="inc-nav-link"><svg class="inc-nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg><span>Rapports</span></a>
+        </nav>
+        <div class="inc-sidebar-profile">
+            <div class="inc-profile-avatar">@GetInitials()</div>
+            <div><p class="inc-profile-name">@UserName</p><p class="inc-profile-role">IT</p></div>
+        </div>
+        <LogoutButton />
+    </aside>
+
+    @* ── MAIN ── *@
+    <main class="inc-main">
+        <header class="inc-header">
+            <div>
+                <h1 class="inc-page-title">Gestion des Incidents</h1>
+                <p class="inc-page-sub">Suivez et résolvez les incidents signalés par les employés</p>
+            </div>
+            <div class="inc-header-search">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="text" placeholder="Rechercher un employé..." value="@Search" @oninput="OnSearchInput" />
+            </div>
+        </header>
+
+        @* Alerts *@
+        @if (!string.IsNullOrEmpty(SuccessMsg))
+        {
+            <div class="inc-alert inc-alert-success">
+                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                @SuccessMsg
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(ErrorMsg))
+        {
+            <div class="inc-alert inc-alert-error">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+                @ErrorMsg
+            </div>
+        }
+
+        @* ── BODY 3 colonnes ── *@
+        <div class="inc-body">
+
+            @* COL 1 : Employés *@
+            <div class="inc-col-employes">
+                <div class="inc-col-head">
+                    <span class="inc-col-title">Employés</span>
+                    <span class="inc-badge-count">@Employes.Count</span>
+                </div>
+                @if (LoadingEmployes)
+                {
+                    <div class="inc-loading"><div class="inc-spinner"></div></div>
+                }
+                else if (!Employes.Any())
+                {
+                    <div class="inc-empty"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><p>Aucun employé</p></div>
+                }
+                else
+                {
+                    <div class="inc-emp-list">
+                        @foreach (var emp in Employes)
+                        {
+                            var sel = EmployeSelectionne?.UtilisateurId == emp.UtilisateurId;
+                            <div class="inc-emp-row @(sel ? "selected" : "")" @onclick="() => SelectEmploye(emp)">
+                                <div class="inc-emp-av @(sel ? "sel" : "")">@emp.Initials</div>
+                                <div class="inc-emp-info">
+                                    <p class="inc-emp-name">@emp.FullName</p>
+                                    <p class="inc-emp-dept">@emp.Department</p>
+                                </div>
+                                @if (emp.NbIncidentsActifs > 0)
+                                {
+                                    <span class="inc-emp-nb">@emp.NbIncidentsActifs</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            @* COL 2 : Matériels *@
+            <div class="inc-col-materiels">
+                @if (EmployeSelectionne == null)
+                {
+                    <div class="inc-placeholder"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><p>Sélectionnez un employé</p></div>
+                }
+                else
+                {
+                    <div class="inc-col-head">
+                        <span class="inc-col-title">@EmployeSelectionne.FullName</span>
+                        <span class="inc-badge-count">@Materiels.Count matériel(s)</span>
+                    </div>
+                    @if (LoadingMateriels)
+                    {
+                        <div class="inc-loading"><div class="inc-spinner"></div></div>
+                    }
+                    else if (!Materiels.Any())
+                    {
+                        <div class="inc-empty"><svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/></svg><p>Aucun incident actif</p></div>
+                    }
+                    else
+                    {
+                        <div class="inc-mat-list">
+                            @foreach (var mat in Materiels)
+                            {
+                                var sel = MaterielSelectionne?.MaterielId == mat.MaterielId;
+                                <div class="inc-mat-row @(sel ? "selected" : "")" @onclick="() => SelectMateriel(mat)">
+                                    <div class="inc-mat-img">
+                                        @if (!string.IsNullOrEmpty(mat.ImageUrl))
+                                        { <img src="@mat.ImageUrl" alt="@mat.Designation" /> }
+                                        else
+                                        { <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> }
+                                    </div>
+                                    <div class="inc-mat-info">
+                                        <p class="inc-mat-name">@mat.Designation</p>
+                                        <p class="inc-mat-ref">@mat.Reference</p>
+                                    </div>
+                                    @if (mat.NbIncidentsActifs > 0)
+                                    {
+                                        <span class="inc-mat-nb">@mat.NbIncidentsActifs</span>
+                                    }
+                                    <svg class="inc-mat-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+
+            @* COL 3 : Articles + Incidents *@
+            <div class="inc-col-incidents">
+                @if (MaterielSelectionne == null)
+                {
+                    <div class="inc-placeholder"><svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg><p>Sélectionnez un matériel</p></div>
+                }
+                else
+                {
+                    <div class="inc-col-head">
+                        <span class="inc-col-title">@MaterielSelectionne.Designation</span>
+                        <div class="inc-filtre-tabs">
+                            <button class="inc-ftab @(FiltreStatut == "actifs" ? "active" : "")"   @onclick='() => FiltreStatut = "actifs"'>Actifs</button>
+                            <button class="inc-ftab @(FiltreStatut == "tous" ? "active" : "")"    @onclick='() => FiltreStatut = "tous"'>Tous</button>
+                        </div>
+                    </div>
+
+                    <div class="inc-incidents-scroll">
+                        @foreach (var art in MaterielSelectionne.Articles)
+                        {
+                            var incidentsFiltres = FiltreStatut == "actifs"
+                                ? art.Incidents.Where(i => i.Statut == "EnAttente" || i.Statut == "EnCours").ToList()
+                                : art.Incidents;
+
+                            if (!incidentsFiltres.Any()) { continue; }
+
+                            @* Capturer nbActifs dans une variable locale AVANT les boucles imbriquées *@
+                            var nbActifs = art.Incidents.Count(i => i.Statut == "EnAttente" || i.Statut == "EnCours");
+                            var artLocal = art; @* Capturer art pour éviter le problème de closure *@
+
+                            @* ── Article header ── *@
+                            <div class="inc-article-header">
+                                <div class="inc-art-left">
+                                    <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                                    <span class="inc-art-sn">@artLocal.NumeroSerie</span>
+                                    <span class="inc-art-etat @(artLocal.EtatArticle == "Panne" ? "panne" : "bon")">@artLocal.EtatArticle</span>
+                                </div>
+                                @if (nbActifs > 1)
+                                {
+                                    <button class="inc-btn-resolve-all" disabled="@IsProcessing"
+                                            @onclick="() => OuvrirModalResolveAll(artLocal)">
+                                        <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                                        Tout résoudre (@nbActifs)
+                                    </button>
+                                }
+                                else if (nbActifs == 1)
+                                {
+                                    var incActif = artLocal.Incidents.First(i => i.Statut == "EnAttente" || i.Statut == "EnCours");
+                                    @if (incActif.Statut == "EnAttente")
+                                    {
+                                        <button class="inc-btn-encours" disabled="@IsProcessing"
+                                                @onclick='() => ChangerStatut(incActif.Id, artLocal, "EnCours")'>
+                                            <svg viewBox="0 0 24 24"><path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z"/><path d="M12 6v6l4 2"/></svg>
+                                            En cours
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="inc-btn-resolu" disabled="@IsProcessing"
+                                                @onclick="() => OuvrirModalResolu(incActif, artLocal)">
+                                            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                                            Résoudre
+                                        </button>
+                                    }
+                                }
+                            </div>
+
+                            @* ── Liste incidents de cet article ── *@
+                            @foreach (var inc in incidentsFiltres)
+                            {
+                                var incLocal = inc;
+                                var nbActifsLocal = nbActifs; @* Capturer pour la closure *@
+
+                                <div class="inc-card @GetStatutClass(incLocal.Statut)">
+                                    <div class="inc-card-top">
+                                        <div class="inc-card-left">
+                                            <span class="inc-numero">@incLocal.NumeroIncident</span>
+                                            <span class="inc-type-badge">@incLocal.TypeIncident</span>
+                                        </div>
+                                        <div class="inc-card-right">
+                                            <span class="inc-urgence @GetUrgenceClass(incLocal.Urgence)">@incLocal.UrgenceLabel</span>
+                                            <span class="inc-statut-badge @GetStatutClass(incLocal.Statut)">@incLocal.StatutLabel</span>
+                                        </div>
+                                    </div>
+                                    <p class="inc-desc">@incLocal.Description</p>
+                                    <div class="inc-card-footer">
+                                        <span class="inc-date">@incLocal.DateIncident.ToString("dd/MM/yyyy HH:mm")</span>
+                                        @if (nbActifsLocal > 1 && (incLocal.Statut == "EnAttente" || incLocal.Statut == "EnCours"))
+                                        {
+                                            <div class="inc-card-actions">
+                                                @if (incLocal.Statut == "EnAttente")
+                                                {
+                                                    <button class="inc-btn-sm inc-btn-encours" disabled="@IsProcessing"
+                                                            @onclick='() => ChangerStatut(incLocal.Id, artLocal, "EnCours")'>
+                                                        En cours
+                                                    </button>
+                                                }
+                                                <button class="inc-btn-sm inc-btn-resolu" disabled="@IsProcessing"
+                                                        @onclick='() => OuvrirModalResolu(incLocal, artLocal)'>
+                                                    Résoudre
+                                                </button>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(incLocal.CommentairesResolution))
+                                        {
+                                            <p class="inc-comment">💬 @incLocal.CommentairesResolution</p>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+            </div>
+
+        </div>
+    </main>
+</div>
+
+@* ── Modal Résoudre avec commentaire ── *@
+@if (ModalIncident != null)
+{
+    <div class="inc-modal-backdrop" @onclick="FermerModal">
+        <div class="inc-modal" @onclick:stopPropagation="true">
+            <h3 class="inc-modal-title">
+                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                Marquer comme résolu
+            </h3>
+            <p class="inc-modal-sub">Incident <strong>@ModalIncident.NumeroIncident</strong> · @ModalIncident.TypeIncident</p>
+            <div class="inc-modal-field">
+                <label>Commentaire de résolution (facultatif)</label>
+                <textarea rows="3" placeholder="Décrivez la solution apportée..."
+                          @bind="ModalCommentaire"></textarea>
+            </div>
+            <div class="inc-modal-actions">
+                <button class="inc-modal-cancel" @onclick="FermerModal">Annuler</button>
+                <button class="inc-modal-confirm" disabled="@IsProcessing" @onclick="ConfirmerResolu">
+                    @if (IsProcessing) { <div class="inc-btn-spinner"></div> } else { <span>Confirmer</span> }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Modal Tout résoudre ── *@
+@if (ModalArticleResolveAll != null)
+{
+    <div class="inc-modal-backdrop" @onclick="FermerModal">
+        <div class="inc-modal" @onclick:stopPropagation="true">
+            <h3 class="inc-modal-title">
+                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                Résoudre tous les incidents
+            </h3>
+            <p class="inc-modal-sub">Article <strong>@ModalArticleResolveAll.NumeroSerie</strong> · @(ModalArticleResolveAll.Incidents.Count(i => i.Statut == "EnAttente" || i.Statut == "EnCours")) incident(s) actif(s)</p>
+            <div class="inc-modal-field">
+                <label>Commentaire de résolution (facultatif)</label>
+                <textarea rows="3" placeholder="Solution apportée..." @bind="ModalCommentaire"></textarea>
+            </div>
+            <div class="inc-modal-actions">
+                <button class="inc-modal-cancel" @onclick="FermerModal">Annuler</button>
+                <button class="inc-modal-confirm" disabled="@IsProcessing" @onclick="ConfirmerResolveAll">
+                    @if (IsProcessing) { <div class="inc-btn-spinner"></div> } else { <span>Tout résoudre</span> }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+</RoleAuthGuard>

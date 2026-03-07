@@ -1,6 +1,6 @@
 // ============================================================
-// AssetFlow.Infrastructure / Services / CommandeService.cs — v3
-// GetLignesCommandesAsync : UNE LIGNE PAR COMMANDE
+// AssetFlow.Infrastructure / Services / CommandeService.cs — v4
+// CreerAsync : validation N° série + transaction atomique
 // ============================================================
 
 using AssetFlow.Application.DTOs;
@@ -176,6 +176,7 @@ namespace AssetFlow.Infrastructure.Services
         // ── Création ───────────────────────────────────────────────
         public async Task<CommandeReponseDto> CreerAsync(CreerCommandeDto dto)
         {
+            // 1. Vérifications préalables
             var materiel = await _db.Materiels.FindAsync(dto.MaterielId);
             if (materiel is null)
                 return new CommandeReponseDto { Succes = false, Message = "Matériel introuvable." };
@@ -187,40 +188,95 @@ namespace AssetFlow.Infrastructure.Services
             if (await _db.Commandes.AnyAsync(c => c.NumeroCommande == dto.NumeroCommande.Trim()))
                 return new CommandeReponseDto { Succes = false, Message = "Ce numéro de commande existe déjà." };
 
-            var commande = new Commande
-            {
-                NumeroCommande  = dto.NumeroCommande.Trim(),
-                MaterielId      = dto.MaterielId,
-                FournisseurId   = dto.FournisseurId,
-                QuantiteAchetee = dto.QuantiteAchetee,
-                DateAchat       = dto.DateAchat,
-                DateLivraison   = dto.DateLivraison,
-                DateFinGarantie = dto.DateFinGarantie
-            };
-            _db.Commandes.Add(commande);
-            await _db.SaveChangesAsync();
+            // 2. Vérification des numéros de série
+            var numerosSerieFournis = dto.NumerosSerie
+                .Where(ns => !string.IsNullOrWhiteSpace(ns))
+                .Select(ns => ns!.Trim())
+                .ToList();
 
-            for (int i = 0; i < dto.QuantiteAchetee; i++)
-            {
-                var ns = (i < dto.NumerosSerie.Count) ? dto.NumerosSerie[i] : null;
-                _db.ArticlesIndividuels.Add(new ArticleIndividuel
+            // Doublons dans la saisie elle-même
+            var doublonsInternes = numerosSerieFournis
+                .GroupBy(ns => ns, StringComparer.OrdinalIgnoreCase)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .ToList();
+
+            if (doublonsInternes.Any())
+                return new CommandeReponseDto
                 {
-                    NumeroSerie = string.IsNullOrWhiteSpace(ns) ? null : ns.Trim(),
-                    Statut      = StatutArticle.Disponible,
-                    MaterielId  = dto.MaterielId,
-                    CommandeId  = commande.Id
-                });
+                    Succes  = false,
+                    Message = $"Numéro(s) de série en double dans la saisie : {string.Join(", ", doublonsInternes)}."
+                };
+
+            // Doublons avec la base de données
+            if (numerosSerieFournis.Any())
+            {
+                var existants = await _db.ArticlesIndividuels
+                    .Where(a => numerosSerieFournis.Contains(a.NumeroSerie!))
+                    .Select(a => a.NumeroSerie!)
+                    .ToListAsync();
+
+                if (existants.Any())
+                    return new CommandeReponseDto
+                    {
+                        Succes  = false,
+                        Message = $"Numéro(s) de série déjà utilisé(s) : {string.Join(", ", existants)}."
+                    };
             }
 
-            materiel.QuantiteStock += dto.QuantiteAchetee;
-            await _db.SaveChangesAsync();
-
-            return new CommandeReponseDto
+            // 3. Tout est valide → création dans une transaction atomique
+            await using var transaction = await _db.Database.BeginTransactionAsync();
+            try
             {
-                Succes     = true,
-                Message    = $"Commande {commande.NumeroCommande} créée avec {dto.QuantiteAchetee} article(s).",
-                IdCommande = commande.Id
-            };
+                var commande = new Commande
+                {
+                    NumeroCommande  = dto.NumeroCommande.Trim(),
+                    MaterielId      = dto.MaterielId,
+                    FournisseurId   = dto.FournisseurId,
+                    QuantiteAchetee = dto.QuantiteAchetee,
+                    DateAchat       = dto.DateAchat,
+                    DateLivraison   = dto.DateLivraison,
+                    DateFinGarantie = dto.DateFinGarantie
+                };
+                _db.Commandes.Add(commande);
+                await _db.SaveChangesAsync();
+
+                for (int i = 0; i < dto.QuantiteAchetee; i++)
+                {
+                    var ns = (i < dto.NumerosSerie.Count) ? dto.NumerosSerie[i] : null;
+                    _db.ArticlesIndividuels.Add(new ArticleIndividuel
+                    {
+                        NumeroSerie = string.IsNullOrWhiteSpace(ns) ? null : ns.Trim(),
+                        Statut      = StatutArticle.Disponible,
+                        MaterielId  = dto.MaterielId,
+                        CommandeId  = commande.Id
+                    });
+                }
+
+                materiel.QuantiteStock += dto.QuantiteAchetee;
+                await _db.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return new CommandeReponseDto
+                {
+                    Succes     = true,
+                    Message    = $"Commande {commande.NumeroCommande} créée avec {dto.QuantiteAchetee} article(s).",
+                    IdCommande = commande.Id
+                };
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                // Message lisible si violation de contrainte unique (filet de sécurité)
+                var inner = ex.InnerException?.Message ?? ex.Message;
+                var msg   = inner.Contains("UNIQUE",    StringComparison.OrdinalIgnoreCase)
+                         || inner.Contains("unique",    StringComparison.OrdinalIgnoreCase)
+                         || inner.Contains("duplicate", StringComparison.OrdinalIgnoreCase)
+                    ? "Un numéro de série est déjà utilisé dans la base de données."
+                    : $"Erreur lors de la création : {inner}";
+
+                return new CommandeReponseDto { Succes = false, Message = msg };
+            }
         }
 
         // ── Suppression ───────────────────────────────────────────

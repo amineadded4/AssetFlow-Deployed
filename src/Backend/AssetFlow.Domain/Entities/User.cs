@@ -28,7 +28,7 @@ namespace AssetFlow.Domain.Entities
         public string Role { get; set; } = string.Empty;
 
         /// <summary>Indique si le compte est activé par l'admin</summary>
-        public bool IsApproved { get; set; } = false;
+        public bool IsApproved { get; set; } = true;
 
         /// <summary>ID utilisateur dans Keycloak</summary>
         public string? KeycloakId { get; set; }

@@ -1,6 +1,6 @@
 // ============================================================
-// AssetFlow.Infrastructure / Services / MaterielService.cs
-// MISE À JOUR : suppression en cascade (affectations + incidents)
+// AssetFlow.Infrastructure / Services / MaterielService.cs — v2
+// Suppression cascade : commandes + articles + affectations + incidents
 // ============================================================
 
 using AssetFlow.Application.DTOs;
@@ -16,7 +16,6 @@ namespace AssetFlow.Infrastructure.Services
         private readonly AppDbContext _db;
         public MaterielService(AppDbContext db) => _db = db;
 
-        // ── Helpers ───────────────────────────────────────────────
         private static MaterielDto ToDto(Materiel m) => new()
         {
             Id            = m.Id,
@@ -32,7 +31,6 @@ namespace AssetFlow.Infrastructure.Services
             DateAjout     = m.DateAjout
         };
 
-        // ── Lecture ───────────────────────────────────────────────
         public async Task<IEnumerable<MaterielDto>> GetAllAsync()
         {
             var list = await _db.Materiels.AsNoTracking().OrderBy(m => m.Designation).ToListAsync();
@@ -53,7 +51,7 @@ namespace AssetFlow.Infrastructure.Services
                 var t = terme.Trim().ToLower();
                 q = q.Where(m =>
                     m.Designation.ToLower().Contains(t) ||
-                    m.Reference.ToLower().Contains(t)   ||
+                    m.Reference.ToLower().Contains(t) ||
                     (m.Description != null && m.Description.ToLower().Contains(t)));
             }
             if (!string.IsNullOrWhiteSpace(categorie) && categorie != "all")
@@ -74,7 +72,6 @@ namespace AssetFlow.Infrastructure.Services
             };
         }
 
-        // ── Écriture ──────────────────────────────────────────────
         public async Task<MaterielResultDto> CreerAsync(CreerMaterielDto dto)
         {
             if (await _db.Materiels.AnyAsync(m => m.Reference == dto.Reference.Trim()))
@@ -96,7 +93,6 @@ namespace AssetFlow.Infrastructure.Services
 
             _db.Materiels.Add(materiel);
             await _db.SaveChangesAsync();
-
             return new MaterielResultDto { Succes = true, Message = "Matériel créé avec succès.", IdMateriel = materiel.Id };
         }
 
@@ -123,20 +119,17 @@ namespace AssetFlow.Infrastructure.Services
             return new MaterielResultDto { Succes = true, Message = "Matériel mis à jour." };
         }
 
-        /// <summary>
-        /// Suppression simple (conservée pour compatibilité).
-        /// Ne supprime pas si des affectations existent sans cascade.
-        /// </summary>
         public async Task<MaterielResultDto> SupprimerAsync(int id)
-        {
-            return await SupprimerAvecCascadeAsync(id);
-        }
+            => await SupprimerAvecCascadeAsync(id);
 
         /// <summary>
-        /// Suppression en cascade :
-        ///   1. Supprime tous les incidents liés aux affectations du matériel
-        ///   2. Supprime toutes les affectations du matériel
-        ///   3. Supprime le matériel
+        /// Suppression complète en cascade :
+        ///   1. Incidents liés aux articles de toutes les commandes
+        ///   2. Articles individuels de toutes les commandes
+        ///   3. Commandes du matériel
+        ///   4. Incidents liés aux affectations (via AffectationId)
+        ///   5. Affectations du matériel
+        ///   6. Le matériel lui-même
         /// </summary>
         public async Task<MaterielResultDto> SupprimerAvecCascadeAsync(int id)
         {
@@ -144,37 +137,70 @@ namespace AssetFlow.Infrastructure.Services
             if (materiel is null)
                 return new MaterielResultDto { Succes = false, Message = "Matériel introuvable." };
 
-            // 1. Récupérer toutes les affectations
-            var affectations = await _db.Affectations
-                .Where(a => a.MaterielId == id)
-                .ToListAsync();
-
-            if (affectations.Any())
+            await using var tx = await _db.Database.BeginTransactionAsync();
+            try
             {
-                var affectationIds = affectations.Select(a => a.Id).ToList();
-
-                // 2. Supprimer les incidents liés à ces affectations
-                var incidents = await _db.Incidents
-                    .Where(i => affectationIds.Contains(i.AffectationId))
+                // 1. Articles de toutes les commandes de ce matériel
+                var articles = await _db.ArticlesIndividuels
+                    .Where(a => a.MaterielId == id)
                     .ToListAsync();
 
-                if (incidents.Any())
-                    _db.Incidents.RemoveRange(incidents);
+                var articleIds = articles.Select(a => a.Id).ToList();
 
-                // 3. Supprimer les affectations
-                _db.Affectations.RemoveRange(affectations);
+                // 2. Incidents liés aux articles
+                if (articleIds.Any())
+                {
+                    var incidentsArticles = await _db.Incidents
+                        .Where(i => i.ArticleId.HasValue && articleIds.Contains(i.ArticleId.Value))
+                        .ToListAsync();
+                    if (incidentsArticles.Any()) _db.Incidents.RemoveRange(incidentsArticles);
+                }
+
+                // 3. Affectations du matériel
+                var affectations = await _db.Affectations
+                    .Where(a => a.MaterielId == id)
+                    .ToListAsync();
+
+                var affectationIds = affectations.Select(a => a.Id).ToList();
+
+                // 4. Incidents liés aux affectations
+                if (affectationIds.Any())
+                {
+                    var incidentsAffect = await _db.Incidents
+                        .Where(i => affectationIds.Contains(i.AffectationId))
+                        .ToListAsync();
+                    if (incidentsAffect.Any()) _db.Incidents.RemoveRange(incidentsAffect);
+
+                    _db.Affectations.RemoveRange(affectations);
+                }
+
+                // 5. Articles individuels
+                if (articles.Any()) _db.ArticlesIndividuels.RemoveRange(articles);
+
+                // 6. Commandes
+                var commandes = await _db.Commandes
+                    .Where(c => c.MaterielId == id)
+                    .ToListAsync();
+                if (commandes.Any()) _db.Commandes.RemoveRange(commandes);
+
+                // 7. Matériel
+                _db.Materiels.Remove(materiel);
+
+                await _db.SaveChangesAsync();
+                await tx.CommitAsync();
+
+                return new MaterielResultDto
+                {
+                    Succes     = true,
+                    Message    = "Matériel supprimé avec toutes ses données associées.",
+                    IdMateriel = id
+                };
             }
-
-            // 4. Supprimer le matériel
-            _db.Materiels.Remove(materiel);
-            await _db.SaveChangesAsync();
-
-            return new MaterielResultDto
+            catch (Exception ex)
             {
-                Succes    = true,
-                Message   = "Matériel supprimé avec ses affectations et incidents associés.",
-                IdMateriel = id
-            };
+                await tx.RollbackAsync();
+                return new MaterielResultDto { Succes = false, Message = $"Erreur : {ex.InnerException?.Message ?? ex.Message}" };
+            }
         }
     }
 }

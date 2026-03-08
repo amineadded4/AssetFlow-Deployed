@@ -1,5 +1,6 @@
 // ============================================================
-// AssetFlow.WebAPI / Controllers / CommandesController.cs — v3
+// AssetFlow.WebAPI / Controllers / CommandesController.cs — v4
+// Ajout : PUT /{id} pour modifier une commande
 // ============================================================
 
 using AssetFlow.Application.DTOs;
@@ -32,10 +33,12 @@ namespace AssetFlow.WebAPI.Controllers
             return c is null ? NotFound() : Ok(c);
         }
 
-        /// <summary>
-        /// UNE LIGNE PAR COMMANDE — remplace /materiels-enrichis
-        /// Même produit peut apparaître plusieurs fois (une fois par commande).
-        /// </summary>
+        /// <summary>UNE LIGNE PAR MATERIEL avec commandes imbriquées</summary>
+        [HttpGet("lignes-materiels")]
+        public async Task<IActionResult> GetLignesMateriels()
+            => Ok(await _svc.GetLignesMaterielsAsync());
+
+        /// <summary>Compatibilité : une ligne par commande</summary>
         [HttpGet("lignes-commandes")]
         public async Task<IActionResult> GetLignesCommandes()
             => Ok(await _svc.GetLignesCommandesAsync());
@@ -52,6 +55,15 @@ namespace AssetFlow.WebAPI.Controllers
         public async Task<IActionResult> Create([FromBody] CreerCommandeDto dto)
         {
             var result = await _svc.CreerAsync(dto);
+            return result.Succes ? Ok(result) : BadRequest(result);
+        }
+
+        /// <summary>Modifier N°commande, fournisseur, dates (sans toucher à la quantité)</summary>
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] ModifierCommandeDto dto)
+        {
+            dto.Id = id;
+            var result = await _svc.ModifierAsync(dto);
             return result.Succes ? Ok(result) : BadRequest(result);
         }
 

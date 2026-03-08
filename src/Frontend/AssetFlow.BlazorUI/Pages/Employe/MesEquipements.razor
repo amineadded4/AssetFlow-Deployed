@@ -111,7 +111,7 @@
                 else
                 {
                     <div class="equipements-grid">
-                        @foreach (var materiel in MaterielsGroupesFiltres)
+                        @foreach (var materiel in MaterielsGroupesFiltres.Where(m => m.NombreArticles > 0))
                         {
                             <div class="equipment-card @(materiel.StatutDominant == "Endommage" ? "card-damaged" : "")">
 

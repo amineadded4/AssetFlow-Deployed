@@ -1,5 +1,6 @@
 // ============================================================
-// AssetFlow.Application / DTOs / CommandeDtos.cs — v3
+// AssetFlow.Application / DTOs / CommandeDtos.cs — v4
+// Ajout : ModifierCommandeDto
 // ============================================================
 
 namespace AssetFlow.Application.DTOs
@@ -41,6 +42,21 @@ namespace AssetFlow.Application.DTOs
         public List<string?> NumerosSerie { get; set; } = new();
     }
 
+    /// <summary>
+    /// Modification d'une commande existante (sans changer la quantité ni les articles).
+    /// </summary>
+    public class ModifierCommandeDto
+    {
+        public int       Id               { get; set; }
+        public string    NumeroCommande   { get; set; } = string.Empty;
+        public int       FournisseurId    { get; set; }
+        /// <summary>Nom libre si le fournisseur n'existe pas encore</summary>
+        public string    NomFournisseurLibre { get; set; } = string.Empty;
+        public DateTime  DateAchat        { get; set; }
+        public DateTime? DateLivraison    { get; set; }
+        public DateTime? DateFinGarantie  { get; set; }
+    }
+
     public class CommandeReponseDto
     {
         public bool Succes { get; set; }
@@ -49,11 +65,10 @@ namespace AssetFlow.Application.DTOs
     }
 
     /// <summary>
-    /// UNE LIGNE PAR COMMANDE dans le tableau matériel.
-    /// Même produit → N lignes si N commandes.
-    /// Produit sans commande → 1 ligne avec CommandeId = 0.
+    /// UNE LIGNE PAR MATERIEL dans le tableau.
+    /// Les commandes associées sont dans la liste Commandes.
     /// </summary>
-    public class LigneCommandeMaterielDto
+    public class LigneMaterielDto
     {
         // Matériel
         public int      MaterielId    { get; set; }
@@ -67,7 +82,24 @@ namespace AssetFlow.Application.DTOs
         public string?  ImageUrl      { get; set; }
         public DateTime DateAjout     { get; set; }
 
-        // Commande
+        /// <summary>Toutes les commandes de ce matériel</summary>
+        public List<CommandeDto> Commandes { get; set; } = new();
+    }
+
+    // Conservé pour compatibilité interne
+    public class LigneCommandeMaterielDto
+    {
+        public int      MaterielId    { get; set; }
+        public string   Reference     { get; set; } = string.Empty;
+        public string   Designation   { get; set; } = string.Empty;
+        public string?  Description   { get; set; }
+        public string   Categorie     { get; set; } = string.Empty;
+        public int      QuantiteStock { get; set; }
+        public int      QuantiteMin   { get; set; }
+        public string   Unite         { get; set; } = "pièce";
+        public string?  ImageUrl      { get; set; }
+        public DateTime DateAjout     { get; set; }
+
         public int       CommandeId      { get; set; }
         public string    NumeroCommande  { get; set; } = string.Empty;
         public int       FournisseurId   { get; set; }
@@ -77,7 +109,6 @@ namespace AssetFlow.Application.DTOs
         public DateTime? DateLivraison   { get; set; }
         public DateTime? DateFinGarantie { get; set; }
 
-        // Articles de cette commande
         public int NbArticles    { get; set; }
         public int NbDisponibles { get; set; }
     }

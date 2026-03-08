@@ -1,5 +1,6 @@
 // ============================================================
-// AssetFlow.BlazorUI / Services / CommandeService.cs — v3
+// AssetFlow.BlazorUI / Services / CommandeService.cs — v4
+// Ajout : ModifierAsync, GetLignesMaterielsAsync
 // ============================================================
 
 using System.Net.Http.Json;
@@ -26,10 +27,14 @@ namespace AssetFlow.BlazorUI.Services
             return r ?? new();
         }
 
-        /// <summary>
-        /// Retourne UNE LIGNE PAR COMMANDE.
-        /// Un même produit apparaît sur N lignes s'il a N commandes.
-        /// </summary>
+        /// <summary>UNE LIGNE PAR MATERIEL avec commandes imbriquées</summary>
+        public async Task<List<LigneMaterielDto>> GetLignesMaterielsAsync()
+        {
+            var r = await _http.GetFromJsonAsync<List<LigneMaterielDto>>($"{Base}/lignes-materiels");
+            return r ?? new();
+        }
+
+        /// <summary>Compatibilité : une ligne par commande</summary>
         public async Task<List<LigneCommandeMaterielDto>> GetLignesCommandesAsync()
         {
             var r = await _http.GetFromJsonAsync<List<LigneCommandeMaterielDto>>($"{Base}/lignes-commandes");
@@ -51,6 +56,13 @@ namespace AssetFlow.BlazorUI.Services
         public async Task<CommandeReponseDto> CreerAsync(CreerCommandeDto dto)
         {
             var resp = await _http.PostAsJsonAsync(Base, dto);
+            return await resp.Content.ReadFromJsonAsync<CommandeReponseDto>()
+                   ?? new() { Succes = false, Message = "Réponse vide." };
+        }
+
+        public async Task<CommandeReponseDto> ModifierAsync(int id, ModifierCommandeDto dto)
+        {
+            var resp = await _http.PutAsJsonAsync($"{Base}/{id}", dto);
             return await resp.Content.ReadFromJsonAsync<CommandeReponseDto>()
                    ?? new() { Succes = false, Message = "Réponse vide." };
         }

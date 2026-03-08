@@ -1,6 +1,7 @@
 // ============================================================
-// AssetFlow.Infrastructure / Services / CommandeService.cs — v4
-// CreerAsync : validation N° série + transaction atomique
+// AssetFlow.Infrastructure / Services / CommandeService.cs — v5
+// Ajout : ModifierAsync, GetLignesMaterielsAsync
+// Suppression matériel : cascade articles + affectations + incidents
 // ============================================================
 
 using AssetFlow.Application.DTOs;
@@ -91,10 +92,63 @@ namespace AssetFlow.Infrastructure.Services
             return arts.Select(ToArticleDto);
         }
 
-        // ── Vue principale : UNE LIGNE PAR COMMANDE ───────────────
+        // ── UNE LIGNE PAR MATERIEL ────────────────────────────────
+        public async Task<IEnumerable<LigneMaterielDto>> GetLignesMaterielsAsync()
+        {
+            var materiels = await _db.Materiels
+                .AsNoTracking()
+                .OrderBy(m => m.Designation)
+                .ToListAsync();
+
+            var commandes = await _db.Commandes
+                .Include(c => c.Fournisseur)
+                .Include(c => c.Articles)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var result = materiels.Select(m => new LigneMaterielDto
+            {
+                MaterielId    = m.Id,
+                Reference     = m.Reference,
+                Designation   = m.Designation,
+                Description   = m.Description,
+                Categorie     = m.Categorie,
+                QuantiteStock = m.QuantiteStock,
+                QuantiteMin   = m.QuantiteMin,
+                Unite         = m.Unite,
+                ImageUrl      = m.ImageUrl,
+                DateAjout     = m.DateAjout,
+                Commandes     = commandes
+                    .Where(c => c.MaterielId == m.Id)
+                    .OrderByDescending(c => c.DateAchat)
+                    .Select(c => new CommandeDto
+                    {
+                        Id              = c.Id,
+                        NumeroCommande  = c.NumeroCommande,
+                        MaterielId      = c.MaterielId,
+                        FournisseurId   = c.FournisseurId ?? 0,
+                        NomFournisseur  = c.Fournisseur?.Nom ?? string.Empty,
+                        QuantiteAchetee = c.QuantiteAchetee,
+                        DateAchat       = c.DateAchat,
+                        DateLivraison   = c.DateLivraison,
+                        DateFinGarantie = c.DateFinGarantie,
+                        Articles        = c.Articles.Select(a => new ArticleDto
+                        {
+                            Id             = a.Id,
+                            NumeroSerie    = a.NumeroSerie,
+                            Statut         = a.Statut.ToString(),
+                            CommandeId     = a.CommandeId,
+                            NumeroCommande = c.NumeroCommande
+                        }).ToList()
+                    }).ToList()
+            }).ToList();
+
+            return result;
+        }
+
+        // ── Compatibilité (une ligne par commande) ─────────────────
         public async Task<IEnumerable<LigneCommandeMaterielDto>> GetLignesCommandesAsync()
         {
-            // 1. Toutes les commandes avec leurs articles et leur matériel
             var commandes = await _db.Commandes
                 .Include(c => c.Materiel)
                 .Include(c => c.Fournisseur)
@@ -102,7 +156,6 @@ namespace AssetFlow.Infrastructure.Services
                 .AsNoTracking()
                 .ToListAsync();
 
-            // 2. Matériels sans aucune commande
             var materielIdsAvecCommande = commandes.Select(c => c.MaterielId).Distinct().ToHashSet();
             var materielsSeuls = await _db.Materiels
                 .Where(m => !materielIdsAvecCommande.Contains(m.Id))
@@ -110,24 +163,21 @@ namespace AssetFlow.Infrastructure.Services
 
             var result = new List<LigneCommandeMaterielDto>();
 
-            // 3. Une ligne par commande
             foreach (var c in commandes)
             {
                 var m = c.Materiel;
                 result.Add(new LigneCommandeMaterielDto
                 {
-                    // Matériel
-                    MaterielId    = m.Id,
-                    Reference     = m.Reference,
-                    Designation   = m.Designation,
-                    Description   = m.Description,
-                    Categorie     = m.Categorie,
-                    QuantiteStock = m.QuantiteStock,
-                    QuantiteMin   = m.QuantiteMin,
-                    Unite         = m.Unite,
-                    ImageUrl      = m.ImageUrl,
-                    DateAjout     = m.DateAjout,
-                    // Commande
+                    MaterielId      = m.Id,
+                    Reference       = m.Reference,
+                    Designation     = m.Designation,
+                    Description     = m.Description,
+                    Categorie       = m.Categorie,
+                    QuantiteStock   = m.QuantiteStock,
+                    QuantiteMin     = m.QuantiteMin,
+                    Unite           = m.Unite,
+                    ImageUrl        = m.ImageUrl,
+                    DateAjout       = m.DateAjout,
                     CommandeId      = c.Id,
                     NumeroCommande  = c.NumeroCommande,
                     FournisseurId   = c.FournisseurId ?? 0,
@@ -136,28 +186,26 @@ namespace AssetFlow.Infrastructure.Services
                     DateAchat       = c.DateAchat,
                     DateLivraison   = c.DateLivraison,
                     DateFinGarantie = c.DateFinGarantie,
-                    // Articles de CETTE commande
-                    NbArticles    = c.Articles.Count,
-                    NbDisponibles = c.Articles.Count(a => a.Statut == StatutArticle.Disponible)
+                    NbArticles      = c.Articles.Count,
+                    NbDisponibles   = c.Articles.Count(a => a.Statut == StatutArticle.Disponible)
                 });
             }
 
-            // 4. Une ligne pour les matériels sans commande
             foreach (var m in materielsSeuls)
             {
                 result.Add(new LigneCommandeMaterielDto
                 {
-                    MaterielId    = m.Id,
-                    Reference     = m.Reference,
-                    Designation   = m.Designation,
-                    Description   = m.Description,
-                    Categorie     = m.Categorie,
-                    QuantiteStock = m.QuantiteStock,
-                    QuantiteMin   = m.QuantiteMin,
-                    Unite         = m.Unite,
-                    ImageUrl      = m.ImageUrl,
-                    DateAjout     = m.DateAjout,
-                    CommandeId    = 0,
+                    MaterielId      = m.Id,
+                    Reference       = m.Reference,
+                    Designation     = m.Designation,
+                    Description     = m.Description,
+                    Categorie       = m.Categorie,
+                    QuantiteStock   = m.QuantiteStock,
+                    QuantiteMin     = m.QuantiteMin,
+                    Unite           = m.Unite,
+                    ImageUrl        = m.ImageUrl,
+                    DateAjout       = m.DateAjout,
+                    CommandeId      = 0,
                     NumeroCommande  = string.Empty,
                     NomFournisseur  = string.Empty,
                     QuantiteAchetee = 0,
@@ -167,16 +215,12 @@ namespace AssetFlow.Infrastructure.Services
                 });
             }
 
-            // Trier : produit alphabétique, puis date achat décroissante
-            return result
-                .OrderBy(r => r.Designation)
-                .ThenByDescending(r => r.DateAchat);
+            return result.OrderBy(r => r.Designation).ThenByDescending(r => r.DateAchat);
         }
 
         // ── Création ───────────────────────────────────────────────
         public async Task<CommandeReponseDto> CreerAsync(CreerCommandeDto dto)
         {
-            // 1. Vérifications préalables
             var materiel = await _db.Materiels.FindAsync(dto.MaterielId);
             if (materiel is null)
                 return new CommandeReponseDto { Succes = false, Message = "Matériel introuvable." };
@@ -188,43 +232,29 @@ namespace AssetFlow.Infrastructure.Services
             if (await _db.Commandes.AnyAsync(c => c.NumeroCommande == dto.NumeroCommande.Trim()))
                 return new CommandeReponseDto { Succes = false, Message = "Ce numéro de commande existe déjà." };
 
-            // 2. Vérification des numéros de série
             var numerosSerieFournis = dto.NumerosSerie
                 .Where(ns => !string.IsNullOrWhiteSpace(ns))
                 .Select(ns => ns!.Trim())
                 .ToList();
 
-            // Doublons dans la saisie elle-même
             var doublonsInternes = numerosSerieFournis
                 .GroupBy(ns => ns, StringComparer.OrdinalIgnoreCase)
                 .Where(g => g.Count() > 1)
-                .Select(g => g.Key)
-                .ToList();
+                .Select(g => g.Key).ToList();
 
             if (doublonsInternes.Any())
-                return new CommandeReponseDto
-                {
-                    Succes  = false,
-                    Message = $"Numéro(s) de série en double dans la saisie : {string.Join(", ", doublonsInternes)}."
-                };
+                return new CommandeReponseDto { Succes = false, Message = $"Numéro(s) de série en double : {string.Join(", ", doublonsInternes)}." };
 
-            // Doublons avec la base de données
             if (numerosSerieFournis.Any())
             {
                 var existants = await _db.ArticlesIndividuels
                     .Where(a => numerosSerieFournis.Contains(a.NumeroSerie!))
-                    .Select(a => a.NumeroSerie!)
-                    .ToListAsync();
+                    .Select(a => a.NumeroSerie!).ToListAsync();
 
                 if (existants.Any())
-                    return new CommandeReponseDto
-                    {
-                        Succes  = false,
-                        Message = $"Numéro(s) de série déjà utilisé(s) : {string.Join(", ", existants)}."
-                    };
+                    return new CommandeReponseDto { Succes = false, Message = $"Numéro(s) de série déjà utilisé(s) : {string.Join(", ", existants)}." };
             }
 
-            // 3. Tout est valide → création dans une transaction atomique
             await using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
@@ -267,19 +297,64 @@ namespace AssetFlow.Infrastructure.Services
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                // Message lisible si violation de contrainte unique (filet de sécurité)
                 var inner = ex.InnerException?.Message ?? ex.Message;
-                var msg   = inner.Contains("UNIQUE",    StringComparison.OrdinalIgnoreCase)
-                         || inner.Contains("unique",    StringComparison.OrdinalIgnoreCase)
-                         || inner.Contains("duplicate", StringComparison.OrdinalIgnoreCase)
+                var msg = inner.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase)
+                       || inner.Contains("unique", StringComparison.OrdinalIgnoreCase)
+                       || inner.Contains("duplicate", StringComparison.OrdinalIgnoreCase)
                     ? "Un numéro de série est déjà utilisé dans la base de données."
                     : $"Erreur lors de la création : {inner}";
-
                 return new CommandeReponseDto { Succes = false, Message = msg };
             }
         }
 
-        // ── Suppression ───────────────────────────────────────────
+        // ── Modification (sans changer la quantité) ───────────────
+        public async Task<CommandeReponseDto> ModifierAsync(ModifierCommandeDto dto)
+        {
+            var commande = await _db.Commandes.FindAsync(dto.Id);
+            if (commande is null)
+                return new CommandeReponseDto { Succes = false, Message = "Commande introuvable." };
+
+            // Vérifier unicité du nouveau numéro
+            var numTrimmed = dto.NumeroCommande.Trim();
+            if (await _db.Commandes.AnyAsync(c => c.NumeroCommande == numTrimmed && c.Id != dto.Id))
+                return new CommandeReponseDto { Succes = false, Message = "Ce numéro de commande est déjà utilisé." };
+
+            // Résoudre le fournisseur
+            int fournisseurId = dto.FournisseurId;
+            if (fournisseurId == 0 && !string.IsNullOrWhiteSpace(dto.NomFournisseurLibre))
+            {
+                var existing = await _db.Fournisseurs
+                    .FirstOrDefaultAsync(f => f.Nom.ToLower() == dto.NomFournisseurLibre.Trim().ToLower());
+                if (existing is not null)
+                {
+                    fournisseurId = existing.IdFournisseur;
+                }
+                else
+                {
+                    var newF = new AssetFlow.Domain.Entities.Fournisseur { Nom = dto.NomFournisseurLibre.Trim() };
+                    _db.Fournisseurs.Add(newF);
+                    await _db.SaveChangesAsync();
+                    fournisseurId = newF.IdFournisseur;
+                }
+            }
+
+            commande.NumeroCommande  = numTrimmed;
+            commande.FournisseurId   = fournisseurId > 0 ? fournisseurId : commande.FournisseurId;
+            commande.DateAchat       = dto.DateAchat;
+            commande.DateLivraison   = dto.DateLivraison;
+            commande.DateFinGarantie = dto.DateFinGarantie;
+
+            await _db.SaveChangesAsync();
+
+            return new CommandeReponseDto
+            {
+                Succes     = true,
+                Message    = $"Commande {commande.NumeroCommande} modifiée.",
+                IdCommande = commande.Id
+            };
+        }
+
+        // ── Suppression commande ──────────────────────────────────
         public async Task<CommandeReponseDto> SupprimerAsync(int id)
         {
             var commande = await _db.Commandes
@@ -288,6 +363,23 @@ namespace AssetFlow.Infrastructure.Services
 
             if (commande is null)
                 return new CommandeReponseDto { Succes = false, Message = "Commande introuvable." };
+
+            // Supprimer incidents liés aux articles
+            var articleIds = commande.Articles.Select(a => a.Id).ToList();
+            if (articleIds.Any())
+            {
+                var incidents = await _db.Incidents
+                    .Where(i => i.ArticleId.HasValue && articleIds.Contains(i.ArticleId.Value))
+                    .ToListAsync();
+                if (incidents.Any()) _db.Incidents.RemoveRange(incidents);
+
+                // Détacher les articles des affectations
+                var articlesAvecAffect = await _db.ArticlesIndividuels
+                    .Where(a => articleIds.Contains(a.Id) && a.AffectationId.HasValue)
+                    .ToListAsync();
+                foreach (var art in articlesAvecAffect)
+                    art.AffectationId = null;
+            }
 
             var materiel = await _db.Materiels.FindAsync(commande.MaterielId);
             if (materiel is not null)

@@ -108,6 +108,11 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         // ── Suppression commande ───────────────────────────────────
         private (int CommandeId, string NumeroCommande, string NomMateriel)? _commandeASupprimer = null;
+        // ── Configuration seuil ────────────────────────────────────
+        private LigneMaterielDto? _materielSeuil   = null;
+        private int               _seuilMin        = 0;
+        private string            _seuilErrorMsg   = string.Empty;
+        private bool              _isSavingSeuil   = false;
 
         // ── Panneau articles ───────────────────────────────────────
         private bool             _panneauArticlesOuvert = false;
@@ -761,5 +766,60 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 v = v[1..^1].Trim();
             return v;
         }
+
+        // ── Modal configuration seuil ─────────────────────────────
+        private void OuvrirSeuil(LigneMaterielDto lg)
+        {
+            _materielSeuil = lg;
+            _seuilMin      = lg.QuantiteMin;
+            _seuilErrorMsg = string.Empty;
+        }
+
+        private void FermerSeuil()
+        {
+            _materielSeuil = null;
+            _seuilErrorMsg  = string.Empty;
+        }
+
+        private async Task SauvegarderSeuil()
+        {
+            if (_materielSeuil == null) return;
+            if (_seuilMin < 0) { _seuilErrorMsg = "Le seuil doit être positif."; return; }
+
+            _isSavingSeuil = true;
+            try
+            {
+                var lg = _toutesLignes.FirstOrDefault(l => l.MaterielId == _materielSeuil.MaterielId);
+                var result = await MaterielSvc.ModifierAsync(new ModifierMaterielDto
+                {
+                    Id            = _materielSeuil.MaterielId,
+                    Reference     = _materielSeuil.Reference,
+                    Designation   = _materielSeuil.Designation,
+                    Description   = _materielSeuil.Description,
+                    Categorie     = _materielSeuil.Categorie,
+                    QuantiteStock = _materielSeuil.QuantiteStock,
+                    QuantiteMin   = _seuilMin,
+                    Unite         = _materielSeuil.Unite,
+                    ImageUrl      = _materielSeuil.ImageUrl
+                });
+
+                if (result.Succes)
+                {
+                    AfficherToast($"Seuil de « {_materielSeuil.Designation} » mis à jour.", "toast-success");
+                    FermerSeuil();
+                    await ChargerDonnees();
+                }
+                else { _seuilErrorMsg = result.Message; }
+            }
+            catch (Exception ex) { _seuilErrorMsg = ex.Message; }
+            finally { _isSavingSeuil = false; StateHasChanged(); }
+        }
+
+        private int GetZonePct(int from, int to)
+        {
+            var total = Math.Max(1, to);
+            return Math.Min(100, Math.Max(0, (int)((double)(to - from) / total * 100)));
+        }
     }
+
 }

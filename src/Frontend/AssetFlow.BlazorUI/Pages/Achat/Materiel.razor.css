@@ -479,3 +479,5 @@ html.dark .sk-shell {
         font-size: 11px;
     }
 }
+.sk-act-seuil:hover { background: rgba(245,158,11,0.10); color: #f59e0b; }
+.sk-act-seuil.active { background: rgba(245,158,11,0.15); color: #f59e0b; }

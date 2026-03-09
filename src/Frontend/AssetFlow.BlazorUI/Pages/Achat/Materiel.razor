@@ -166,6 +166,13 @@
                                                     @onclick="() => ToggleCommandesMateriel(lg.MaterielId)">
                                                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                                             </button>
+                                            <button class="sk-act-btn sk-act-seuil" title="Configurer le seuil"
+                                                    @onclick="() => OuvrirSeuil(lg)">
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                                                    <circle cx="12" cy="12" r="3"/>
+                                                </svg>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -641,6 +648,103 @@
                     <button class="sk-btn-cancel" @onclick="AnnulerSuppressionCommande">Annuler</button>
                     <button class="sk-btn-danger" @onclick="ConfirmerSuppressionCommande">Supprimer</button>
                 </div>
+            </div>
+        </div>
+    }
+    @* ── MODAL CONFIGURATION SEUIL ── *@
+    @if (_materielSeuil != null)
+    {
+        <div class="sk-modal-overlay" @onclick="FermerSeuil">
+            <div class="sk-modal stk-modal" style="max-width:520px;text-align:left;padding:0;overflow:hidden;" @onclick:stopPropagation="true">
+
+                @* Header *@
+                <div class="stk-modal-header" style="display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--border);background:var(--surface-2);">
+                    <div class="stk-modal-icon" style="width:36px;height:36px;border-radius:8px;background:var(--primary-10);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <h3 style="font-size:15px;font-weight:800;color:var(--text);margin:0;">Configuration : @_materielSeuil.Designation</h3>
+                        <p style="font-size:11px;color:var(--text-muted);margin-top:2px;">Définissez le niveau de vigilance pour ce matériel</p>
+                    </div>
+                    <button class="sk-panel-close" @onclick="FermerSeuil">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px;">
+
+                    @* Seuil Minimum *@
+                    <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:14px 16px;">
+                        <div style="display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;color:#d97706;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>
+                            SEUIL MINIMUM
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <input type="number" min="0" class="sk-inp"
+                                style="font-size:22px;font-weight:800;padding:10px 14px;background:var(--surface);border:1px solid var(--border);"
+                                value="@_seuilMin"
+                                @oninput="e => { if(int.TryParse(e.Value?.ToString(), out var v) && v >= 0) { _seuilMin = v; StateHasChanged(); } }" />
+                            <span style="font-size:13px;color:var(--text-muted);white-space:nowrap;">unités</span>
+                        </div>
+                        <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">Déclenche une alerte de réapprovisionnement.</p>
+                    </div>
+
+                    @* Visualisation des zones *@
+                    <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                            <span style="font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;">VISUALISATION DES ZONES DE STOCK</span>
+                            <span style="font-size:11px;color:var(--text-muted);">Capacité actuelle : @_materielSeuil.QuantiteStock unités</span>
+                        </div>
+                        <div style="display:flex;border-radius:6px;overflow:hidden;height:34px;">
+                            @{
+                                var capacite   = Math.Max(_materielSeuil.QuantiteStock, _seuilMin + 1);
+                                var pctAlerte  = Math.Min(100, Math.Max(5, (int)Math.Round((double)(_seuilMin + 1) / capacite * 100)));
+                                var pctSain    = 100 - pctAlerte;
+                            }
+                            <div style="background:#f59e0b;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:800;letter-spacing:.05em;width:@(pctAlerte)%;min-width:60px;transition:width .3s ease;">
+                                ALERTE
+                            </div>
+                            <div style="background:#10b981;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:800;letter-spacing:.05em;width:@(pctSain)%;min-width:80px;transition:width .3s ease;">
+                                STOCK SAIN
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;color:var(--text-muted);">
+                            <span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle;"></i>0 – @_seuilMin unités</span>
+                            <span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:4px;vertical-align:middle;"></i>@(_seuilMin + 1)+ unités</span>
+                        </div>
+                    </div>
+
+                    @* Aperçu déclencheurs *@
+                    <div>
+                        <div style="font-size:10px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">⚡ APERÇU DES DÉCLENCHEURS</div>
+                        <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.20);border-radius:8px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/></svg>
+                            <div>
+                                <p style="font-size:13px;font-weight:600;color:var(--text);margin:0;">Si stock ≤ <strong>@_seuilMin</strong></p>
+                                <p style="font-size:11.5px;color:var(--text-muted);margin-top:3px;">Alerte de réapprovisionnement envoyée à l'équipe Achat.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(_seuilErrorMsg))
+                    {
+                        <div class="sk-form-alert">@_seuilErrorMsg</div>
+                    }
+                </div>
+
+                @* Footer actions *@
+                <div class="sk-panel-footer">
+                    <button class="sk-btn-cancel" @onclick="FermerSeuil">Annuler</button>
+                    <button class="sk-btn-save" disabled="@_isSavingSeuil" @onclick="SauvegarderSeuil">
+                        @if (_isSavingSeuil) { <div class="sk-spinner-sm"></div> }
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+                        Sauvegarder
+                    </button>
+                </div>
+
             </div>
         </div>
     }

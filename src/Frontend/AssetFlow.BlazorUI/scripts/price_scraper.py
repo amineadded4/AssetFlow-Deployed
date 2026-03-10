@@ -41,8 +41,9 @@ def charger_categories(fichier: str, site: str) -> dict:
         return {}
 
 
-MYTEK_CATEGORIES   = charger_categories("mytek_categories.json",   "MyTek")
-SPACENET_CATEGORIES = charger_categories("spacenet_categories.json", "Spacenet")
+MYTEK_CATEGORIES       = charger_categories("mytek_categories.json",      "MyTek")
+SPACENET_CATEGORIES    = charger_categories("spacenet_categories.json",   "Spacenet")
+TUNISIANET_CATEGORIES  = charger_categories("tunisianet_categories.json", "Tunisianet")
 
 
 def trouver_url_categorie(query: str, categories: dict) -> str | None:
@@ -171,17 +172,26 @@ def scraper_mytek(nom_article: str, driver) -> list:
 
 
 # =============================================================================
-# SCRAPING TUNISIANET — recherche textuelle (inchangé)
+# SCRAPING TUNISIANET — PAR CATÉGORIE (même architecture que MyTek/Spacenet)
 # =============================================================================
 
 def scraper_tunisianet(nom_article: str, driver) -> list:
-    url = (
-        "https://www.tunisianet.com.tn/recherche?controller=search"
-        "&orderby=price&orderway=asc&s="
-        + nom_article.replace(" ", "+")
-        + "&submit_search="
-    )
-    print(f"\n[Tunisianet] URL : {url}")
+    url_categorie = trouver_url_categorie(nom_article, TUNISIANET_CATEGORIES)
+
+    if url_categorie:
+        print(f"\n[Tunisianet] ✅ Catégorie trouvée → {url_categorie}")
+        url           = url_categorie
+        par_categorie = True
+    else:
+        url = (
+            "https://www.tunisianet.com.tn/recherche?controller=search"
+            "&orderby=price&orderway=asc&s="
+            + nom_article.replace(" ", "+")
+            + "&submit_search="
+        )
+        par_categorie = False
+        print(f"\n[Tunisianet] ⚠ Fallback recherche → {url}")
+
     driver.get(url)
     time.sleep(3)
 
@@ -190,7 +200,9 @@ def scraper_tunisianet(nom_article: str, driver) -> list:
     if not produits:
         return []
 
-    resultats = []
+    resultats          = []
+    mots_significatifs = [m for m in nom_article.lower().split() if len(m) > 3]
+
     for produit in produits:
 
         try:
@@ -201,8 +213,14 @@ def scraper_tunisianet(nom_article: str, driver) -> list:
             nom  = nom_article
             lien = url
 
+        # Filtre mot-clé si recherche par catégorie avec 2+ mots significatifs
+        if par_categorie and len(mots_significatifs) >= 2:
+            if not any(m in nom.lower() for m in mots_significatifs):
+                continue
+
+        # PRIX — Tunisianet : "1 234,500 DT" ou attribut content="1234.5"
         try:
-            prix_els = produit.find_elements(By.CSS_SELECTOR, "span[itemprop='price']")
+            prix_els = produit.find_elements(By.CSS_SELECTOR, "span[itemprop=\'price\']")
             if not prix_els:
                 prix_els = produit.find_elements(By.CSS_SELECTOR, "span.price")
             prix_txt = ""
@@ -217,14 +235,21 @@ def scraper_tunisianet(nom_article: str, driver) -> list:
                     if content:
                         prix_txt = content
                         break
-            prix = float(
-                prix_txt.replace("DT", "").replace("TND", "")
-                        .replace(",", ".").replace(" ", "").replace("\xa0", "").strip()
+            prix_clean = (
+                prix_txt
+                .replace("DT", "").replace("TND", "")
+                .replace("\u202f", "").replace("\xa0", "").replace("\u2009", "")
+                .replace(" ", "").strip()
             )
+            # Format FR : virgule = décimal
+            if "," in prix_clean:
+                prix_clean = prix_clean.replace(".", "").replace(",", ".")
+            prix = float(prix_clean)
         except Exception as e:
             print(f"  [Tunisianet] ⚠ Prix introuvable pour : {nom[:50]} ({e})")
             continue
 
+        # STOCK
         stock = "Non indiqué"
         try:
             spans = produit.find_elements(By.CSS_SELECTOR, "div#stock_availability span")

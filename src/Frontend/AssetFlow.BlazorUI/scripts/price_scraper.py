@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Script de Web Scraping MyTek (par catégorie) + Tunisianet + SpaceNet (Selenium)
+Script de Web Scraping MyTek (par catégorie) + Tunisianet + SpaceNet (par catégorie)
 Auteur: STAMBOULI Nada
 Projet: AssetFlow — Gestion de Parc Informatique
 """
@@ -20,41 +20,43 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 # =============================================================================
-# CHARGEMENT DU MAPPING CATÉGORIES MYTEK DEPUIS LE FICHIER JSON
+# CHARGEMENT DES CATÉGORIES DEPUIS LES FICHIERS JSON
 # =============================================================================
 
-def charger_categories_mytek() -> dict:
-    json_path = os.path.join(os.path.dirname(__file__), "mytek_categories.json")
+def charger_categories(fichier: str, site: str) -> dict:
+    json_path = os.path.join(os.path.dirname(__file__), fichier)
     try:
         with open(json_path, "r", encoding="utf-8") as f:
             data = json.load(f)
         plat = {}
         for section in data.values():
             plat.update(section)
-        print(f"[MyTek] ✅ {len(plat)} entrées de catégories chargées")
+        print(f"[{site}] ✅ {len(plat)} entrées de catégories chargées depuis {fichier}")
         return plat
     except FileNotFoundError:
-        print(f"[MyTek] ❌ mytek_categories.json introuvable : {json_path}")
+        print(f"[{site}] ❌ {fichier} introuvable")
         return {}
     except json.JSONDecodeError as e:
-        print(f"[MyTek] ❌ Erreur JSON : {e}")
+        print(f"[{site}] ❌ Erreur JSON dans {fichier} : {e}")
         return {}
 
 
-MYTEK_CATEGORIES = charger_categories_mytek()
+MYTEK_CATEGORIES   = charger_categories("mytek_categories.json",   "MyTek")
+SPACENET_CATEGORIES = charger_categories("spacenet_categories.json", "Spacenet")
 
 
-def trouver_url_categorie_mytek(query: str) -> str | None:
+def trouver_url_categorie(query: str, categories: dict) -> str | None:
+    """Recherche générique dans un dict de catégories."""
     q = query.lower().strip()
     # 1. Correspondance exacte
-    if q in MYTEK_CATEGORIES:
-        return MYTEK_CATEGORIES[q]
-    # 2. La clé est contenue dans la query (ex: "souris logitech" contient "souris")
-    for cle, url in MYTEK_CATEGORIES.items():
+    if q in categories:
+        return categories[q]
+    # 2. La clé est contenue dans la query (ex: "souris logitech" → clé "souris")
+    for cle, url in categories.items():
         if cle in q:
             return url
     # 3. La query est contenue dans la clé
-    for cle, url in MYTEK_CATEGORIES.items():
+    for cle, url in categories.items():
         if q in cle:
             return url
     return None
@@ -77,12 +79,11 @@ def creer_driver():
 
 
 # =============================================================================
-# SCRAPING MYTEK
-# Sélecteur unifié : div.product-container (même HTML pour catégorie ET recherche)
+# SCRAPING MYTEK — PAR CATÉGORIE
 # =============================================================================
 
 def scraper_mytek(nom_article: str, driver) -> list:
-    url_categorie = trouver_url_categorie_mytek(nom_article)
+    url_categorie = trouver_url_categorie(nom_article, MYTEK_CATEGORIES)
 
     if url_categorie:
         print(f"\n[MyTek] ✅ Catégorie trouvée → {url_categorie}")
@@ -99,73 +100,51 @@ def scraper_mytek(nom_article: str, driver) -> list:
     driver.get(url)
     time.sleep(3)
 
-    # ── Sélecteur unifié ──────────────────────────────────────────────────────
-    # Les pages de catégorie ET de recherche utilisent le même div.product-container
     produits = driver.find_elements(By.CSS_SELECTOR, "div.product-container")
     print(f"[MyTek] {len(produits)} produit(s) trouvé(s)")
-
     if not produits:
         return []
 
-    resultats = []
-    # Pour les catégories larges (ex: "pc portable"), on ne filtre pas par mot-clé.
-    # Pour les recherches précises (ex: "macbook pro 14"), on filtre.
+    resultats          = []
     mots_significatifs = [m for m in nom_article.lower().split() if len(m) > 3]
 
     for produit in produits:
 
         # NOM
         try:
-            nom = produit.find_element(
-                By.CSS_SELECTOR, "a.product-item-link"
-            ).text.strip()
+            nom = produit.find_element(By.CSS_SELECTOR, "a.product-item-link").text.strip()
         except:
             nom = nom_article
 
-        # Filtre mot-clé : seulement si recherche précise (2+ mots significatifs)
-        # Ex: "macbook" dans catégorie Mac → pas de filtre (tout est pertinent)
-        # Ex: "macbook pro 14" → filtre sur "macbook", "pro"
+        # Filtre mot-clé (seulement si recherche précise avec 2+ mots significatifs)
         if par_categorie and len(mots_significatifs) >= 2:
-            nom_lower = nom.lower()
-            if not any(m in nom_lower for m in mots_significatifs):
+            if not any(m in nom.lower() for m in mots_significatifs):
                 continue
 
-        # PRIX — span.final-price (identique catégorie et recherche)
+        # PRIX
         try:
-            prix_txt = produit.find_element(
-                By.CSS_SELECTOR, "span.final-price"
-            ).text
-            # Nettoyage complet : tous types d'espaces + séparateurs
+            prix_txt = produit.find_element(By.CSS_SELECTOR, "span.final-price").text
             prix_clean = (
                 prix_txt
-                .replace("DT", "")
-                .replace("TND", "")
-                .replace("\xa0", "")   # espace insécable
-                .replace("\u202f", "") # espace fine insécable
-                .replace("\u2009", "") # espace fine
-                .replace(" ", "")      # espace normal
-                .replace("\t", "")
-                .strip()
+                .replace("DT", "").replace("TND", "")
+                .replace("\xa0", "").replace("\u202f", "").replace("\u2009", "")
+                .replace(" ", "").replace("\t", "").strip()
             )
-            # MyTek utilise la virgule comme séparateur décimal : "2499,000" → "2499.000"
             prix_clean = prix_clean.replace(",", ".")
-            # Si plusieurs points (ex: "2.499.000"), garder uniquement le dernier
             parties = prix_clean.split(".")
             if len(parties) > 2:
                 prix_clean = "".join(parties[:-1]) + "." + parties[-1]
             prix = float(prix_clean)
         except Exception as e:
-            print(f"  [MyTek] ⚠ Prix introuvable pour : {nom[:50]} — '{prix_txt if 'prix_txt' in dir() else '?'}' ({e})")
+            print(f"  [MyTek] ⚠ Prix introuvable pour : {nom[:50]} ({e})")
             continue
 
         # STOCK
         stock = "Non indiqué"
         try:
-            classes = produit.find_element(
-                By.CSS_SELECTOR, "div.stock"
-            ).get_attribute("class")
-            if "availables"     in classes: stock = "En stock"
-            elif "incoming"     in classes: stock = "En arrivage"
+            classes = produit.find_element(By.CSS_SELECTOR, "div.stock").get_attribute("class")
+            if "availables"    in classes: stock = "En stock"
+            elif "incoming"    in classes: stock = "En arrivage"
             elif "out-of-stock" in classes: stock = "Épuisé"
             elif "special-order" in classes: stock = "Sur commande"
             else:                           stock = "État inconnu"
@@ -174,9 +153,7 @@ def scraper_mytek(nom_article: str, driver) -> list:
 
         # LIEN
         try:
-            lien = produit.find_element(
-                By.CSS_SELECTOR, "a.product-item-link"
-            ).get_attribute("href")
+            lien = produit.find_element(By.CSS_SELECTOR, "a.product-item-link").get_attribute("href")
         except:
             lien = url
 
@@ -194,7 +171,7 @@ def scraper_mytek(nom_article: str, driver) -> list:
 
 
 # =============================================================================
-# SCRAPING TUNISIANET (inchangé)
+# SCRAPING TUNISIANET — recherche textuelle (inchangé)
 # =============================================================================
 
 def scraper_tunisianet(nom_article: str, driver) -> list:
@@ -215,6 +192,7 @@ def scraper_tunisianet(nom_article: str, driver) -> list:
 
     resultats = []
     for produit in produits:
+
         try:
             lien_el = produit.find_element(By.CSS_SELECTOR, "h2.product-title a")
             nom     = lien_el.text.strip()
@@ -272,29 +250,47 @@ def scraper_tunisianet(nom_article: str, driver) -> list:
 
 
 # =============================================================================
-# SCRAPING SPACENET (inchangé)
+# SCRAPING SPACENET — PAR CATÉGORIE (nouvelle approche)
 # =============================================================================
 
 def scraper_spacenet(nom_article: str, driver) -> list:
-    url = (
-        "https://spacenet.tn/recherche?controller=search"
-        "&orderby=position&orderway=desc&search_query="
-        + nom_article.replace(" ", "+")
-        + "&submit_search="
-    )
-    print(f"\n[Spacenet] URL : {url}")
+    url_categorie = trouver_url_categorie(nom_article, SPACENET_CATEGORIES)
+
+    if url_categorie:
+        print(f"\n[Spacenet] ✅ Catégorie trouvée → {url_categorie}")
+        url           = url_categorie
+        par_categorie = True
+    else:
+        url = (
+            "https://spacenet.tn/recherche?controller=search"
+            "&orderby=position&orderway=desc&search_query="
+            + nom_article.replace(" ", "+")
+            + "&submit_search="
+        )
+        par_categorie = False
+        print(f"\n[Spacenet] ⚠ Fallback recherche → {url}")
+
     driver.get(url)
     time.sleep(3)
 
+    # Spacenet affiche les produits en DOUBLE : vue grille + vue liste
+    # On cible uniquement la vue grille pour éviter les doublons
     produits = driver.find_elements(
-        By.CSS_SELECTOR, "div.field-product-item.product-miniature"
+        By.CSS_SELECTOR, "div#box-product-grid div.field-product-item.product-miniature"
     )
+    if not produits:
+        produits = driver.find_elements(By.CSS_SELECTOR, "div.field-product-item.product-miniature")
+
     print(f"[Spacenet] {len(produits)} produit(s) trouvé(s)")
     if not produits:
         return []
 
-    resultats = []
+    resultats          = []
+    mots_significatifs = [m for m in nom_article.lower().split() if len(m) > 3]
+
     for produit in produits:
+
+        # NOM
         try:
             lien_el = produit.find_element(By.CSS_SELECTOR, "h2.product_name a")
             nom     = lien_el.text.strip()
@@ -303,6 +299,13 @@ def scraper_spacenet(nom_article: str, driver) -> list:
             nom  = nom_article
             lien = url
 
+        # Filtre mot-clé
+        if par_categorie and len(mots_significatifs) >= 2:
+            if not any(m in nom.lower() for m in mots_significatifs):
+                continue
+
+        # PRIX — Spacenet utilise \u202f (espace fine) comme séparateur de milliers
+        # Format typique : "49,900\u202fDT" ou "1\u202f069,000\u202fDT"
         try:
             prix_els = produit.find_elements(By.CSS_SELECTOR, "span.price")
             prix_txt = ""
@@ -311,18 +314,39 @@ def scraper_spacenet(nom_article: str, driver) -> list:
                 if txt and any(c.isdigit() for c in txt):
                     prix_txt = txt
                     break
-            prix = float(
-                prix_txt.replace("DT", "").replace("TND", "")
-                        .replace(",", ".").replace("\xa0", "").replace(" ", "").strip()
+            prix_clean = (
+                prix_txt
+                .replace("DT", "").replace("TND", "")
+                .replace("\u202f", "")
+                .replace("\u00a0", "")
+                .replace("\u2009", "")
+                .replace("\xa0", "")
+                .replace(" ", "")
+                .replace("\t", "")
+                .strip()
             )
+            # Format FR : virgule = décimal, point = milliers
+            if "," in prix_clean:
+                # "1069,000" → "1069.000"
+                prix_clean = prix_clean.replace(".", "").replace(",", ".")
+            prix = float(prix_clean)
         except Exception as e:
             print(f"  [Spacenet] ⚠ Prix introuvable pour : {nom[:50]} ({e})")
             continue
 
+        # STOCK — deux cas selon Spacenet :
+        # "En stock"    → <label class="label">En stock</label>
+        # "En Arrivage" → <label class="label-available">En Arrivage</label>
+        # "Sur commande"→ <label class="label-available">Sur commande</label>
         stock = "Non indiqué"
         try:
-            label = produit.find_element(By.CSS_SELECTOR, "label.label-available")
-            stock = label.text.strip()
+            qty_div = produit.find_element(By.CSS_SELECTOR, "div.product-quantities")
+            labels = qty_div.find_elements(By.CSS_SELECTOR, "label")
+            for lbl in labels:
+                txt = lbl.text.strip()
+                if txt:
+                    stock = txt
+                    break
         except:
             pass
 

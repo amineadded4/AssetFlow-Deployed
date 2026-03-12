@@ -1,0 +1,374 @@
+/* ============================================================
+   OffresDemandeIT.razor.css — préfixe oda-
+   Sidebar copiée depuis MesDemandesAchat (préfixe oda- pour éviter les conflits de scope)
+   ============================================================ */
+
+/* ══════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════ */
+.oda-layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--bg);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.oda-body-wrap { flex: 1; display: flex; overflow: hidden; min-width: 0; }
+.oda-main      { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+/* ══════════════════════════════════════
+   SIDEBAR — identique à MesDemandesAchat
+══════════════════════════════════════ */
+.oda-sidebar {
+    width: 210px;
+    height: 100%;
+    background: #0F1E3C;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+    z-index: 20;
+}
+
+html.dark .oda-sidebar { background: #060d18; border-right-color: rgba(255,255,255,0.05); }
+
+.sidebar-logo-wrap { padding: 1.25rem 1rem; display: flex; align-items: center; }
+.oda-sidebar-logo  { width: 130px; height: auto; object-fit: contain; filter: drop-shadow(0 0 12px rgba(19,109,236,0.45)); }
+
+.oda-sidebar-nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.5rem 0.625rem;
+    overflow-y: auto;
+}
+
+.oda-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.65rem 0.875rem;
+    border-radius: 0.5rem;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: all 0.18s ease;
+    border-left: 3px solid transparent;
+}
+
+.oda-nav-link:hover  { color: #e2e8f0; background: rgba(255,255,255,0.06); }
+.oda-nav-link.active { color: #fff; background: rgba(19,109,236,0.18); border-left-color: #136dec; font-weight: 600; }
+
+.oda-nav-icon { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.oda-nav-text { flex: 1; }
+
+.oda-sidebar-profile { padding: 0.875rem 1rem; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 0.625rem; }
+.oda-profile-avatar  { width: 34px; height: 34px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; }
+.oda-profile-info    { flex: 1; overflow: hidden; }
+.oda-profile-name    { font-size: 0.78rem; font-weight: 600; color: #e2e8f0; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.oda-profile-role    { font-size: 0.68rem; color: #64748b; margin: 0.1rem 0 0; }
+
+/* ══════════════════════════════════════
+   HAMBURGER + DRAWER MOBILE
+══════════════════════════════════════ */
+.oda-hamburger { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 36px; height: 36px; background: transparent; border: none; cursor: pointer; padding: 4px; flex-shrink: 0; }
+.oda-hamburger span { display: block; width: 22px; height: 2px; background: var(--text); border-radius: 2px; }
+
+.oda-menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(3px); z-index: 900; display: flex; }
+.oda-menu-drawer  { width: 270px; height: 100%; background: #0F1E3C; display: flex; flex-direction: column; box-shadow: 4px 0 24px rgba(0,0,0,0.4); animation: odaDrawerIn 0.22s cubic-bezier(0.16,1,0.3,1); }
+html.dark .oda-menu-drawer { background: #060d18; }
+
+@keyframes odaDrawerIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+
+.oda-menu-drawer-logo { padding: 1.5rem 1.25rem 1rem; display: flex; align-items: center; }
+.oda-menu-drawer-nav  { flex: 1; display: flex; flex-direction: column; gap: 0.15rem; padding: 0.5rem 0.625rem; overflow-y: auto; }
+
+/* ══════════════════════════════════════
+   MODALE PDF PLEIN ÉCRAN
+══════════════════════════════════════ */
+.oda-pdf-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    animation: odaFadeIn 0.18s ease;
+}
+
+@keyframes odaFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.oda-pdf-modal {
+    background: var(--surface);
+    border-radius: 1rem;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    width: min(90vw, 1100px);
+    height: min(90vh, 850px);
+    overflow: hidden;
+    animation: odaModalIn 0.2s cubic-bezier(0.16,1,0.3,1);
+}
+
+html.dark .oda-pdf-modal { background: #111827; border: 1px solid #1e2d42; }
+
+@keyframes odaModalIn { from { opacity: 0; transform: scale(0.96) translateY(12px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+.oda-pdf-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+html.dark .oda-pdf-modal-header { border-bottom-color: #1e2d42; }
+
+.oda-pdf-modal-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.oda-pdf-modal-title-wrap svg {
+    width: 16px; height: 16px;
+    stroke: #ef4444; fill: none;
+    stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+}
+
+.oda-pdf-modal-close {
+    width: 32px; height: 32px;
+    border-radius: 0.5rem;
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s;
+}
+.oda-pdf-modal-close svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+.oda-pdf-modal-close:hover { background: rgba(239,68,68,0.08); border-color: #ef4444; color: #ef4444; }
+
+.oda-pdf-modal-frame {
+    flex: 1;
+    width: 100%;
+    border: none;
+    display: block;
+}
+
+/* ══════════════════════════════════════
+   HEADER
+══════════════════════════════════════ */
+.oda-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+html.dark .oda-header { background: rgba(16,24,34,0.9); border-bottom-color: rgba(255,255,255,0.07); }
+
+.oda-header-left { min-width: 0; flex: 1; }
+
+.oda-breadcrumb { display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.3rem; }
+.oda-bc-sep     { width: 13px; height: 13px; stroke: var(--text-faint); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.oda-bc-link    { font-size: 0.75rem; color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
+.oda-bc-link:hover { color: var(--primary); }
+.oda-bc-current { font-size: 0.75rem; color: var(--text); font-weight: 600; }
+
+.oda-page-title { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 0.15rem; letter-spacing: -0.025em; }
+.oda-page-sub   { font-size: 0.78rem; color: var(--text-muted); margin: 0; }
+
+.oda-pill { display: inline-flex; align-items: center; padding: 0.3rem 0.75rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; border: 1.5px solid var(--border); background: var(--surface); color: var(--text-muted); white-space: nowrap;margin-right: 50px; }
+html.dark .oda-pill { background: #161f2e; border-color: #1e2d42; }
+
+/* ══════════════════════════════════════
+   CONTENT
+══════════════════════════════════════ */
+.oda-content {
+    flex: 1; overflow-y: auto; padding: 1.25rem 1.5rem;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+
+/* ══════════════════════════════════════
+   ÉTATS
+══════════════════════════════════════ */
+.oda-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; gap: 12px; text-align: center; color: var(--text-muted); font-size: 0.875rem; }
+
+.oda-spinner { width: 30px; height: 30px; border: 2.5px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: odaSpin 0.7s linear infinite; }
+@keyframes odaSpin { to { transform: rotate(360deg); } }
+
+.oda-empty-icon { width: 56px; height: 56px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+.oda-empty-icon svg { width: 28px; height: 28px; stroke: var(--text-faint); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.oda-empty-title { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+.oda-empty-sub   { font-size: 0.8rem; }
+
+/* ══════════════════════════════════════
+   CARTES
+══════════════════════════════════════ */
+.oda-cards { display: flex; flex-direction: column; gap: 0.625rem; }
+
+.oda-card { background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; overflow: hidden; transition: border-color 0.2s; }
+html.dark .oda-card { background: #111827; border-color: #1e2d42; }
+.oda-card:hover   { border-color: rgba(19,109,236,0.35); }
+.oda-card.is-open { border-color: var(--primary); }
+
+.oda-card-head { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; cursor: pointer; user-select: none; transition: background 0.15s; }
+.oda-card-head:hover { background: rgba(0,0,0,0.02); }
+html.dark .oda-card-head:hover { background: rgba(255,255,255,0.02); }
+
+.oda-head-left { display: flex; align-items: center; gap: 0.75rem; }
+
+.oda-num { width: 28px; height: 28px; border-radius: 7px; background: var(--bg, #f1f5f9); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--text-muted); flex-shrink: 0; }
+html.dark .oda-num { background: #1c2128; }
+
+.oda-filename { font-size: 0.84rem; font-weight: 600; color: var(--text); margin: 0; }
+.oda-filesize  { font-size: 0.72rem; color: var(--text-muted); margin: 0.1rem 0 0; }
+
+.oda-chevron { width: 16px; height: 16px; stroke: var(--text-faint); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s; }
+.oda-chevron.open { transform: rotate(180deg); }
+
+.oda-card-body { border-top: 1px solid var(--border); padding: 1.125rem; }
+html.dark .oda-card-body { border-top-color: #1e2d42; }
+
+.oda-two-col { display: grid; grid-template-columns: 1fr 1.5fr; gap: 1.125rem; }
+
+.oda-col-label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.625rem; }
+.oda-col-label svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ══════════════════════════════════════
+   COLONNE PDF
+══════════════════════════════════════ */
+.oda-col-pdf { display: flex; flex-direction: column; }
+
+/* Miniature cliquable */
+.oda-pdf-thumb {
+    position: relative;
+    height: 260px;
+    border: 1.5px solid var(--border);
+    border-radius: 0.625rem;
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--bg, #f8fafc);
+    transition: border-color 0.2s;
+}
+html.dark .oda-pdf-thumb { background: #0d1520; }
+.oda-pdf-thumb:hover { border-color: var(--primary); }
+
+.oda-pdf-thumb:hover .oda-pdf-thumb-overlay { opacity: 1; }
+
+.oda-pdf-thumb-frame {
+    width: 100%; height: 100%;
+    border: none; display: block;
+    pointer-events: none; /* le clic va à la div parente */
+}
+
+.oda-pdf-thumb-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.5rem; color: #fff; font-size: 0.82rem; font-weight: 700;
+    opacity: 0; transition: opacity 0.2s;
+}
+.oda-pdf-thumb-overlay svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Placeholder si PDF pas encore chargé */
+.oda-pdf-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 0.75rem; padding: 1.25rem; }
+.oda-pdf-icon { width: 50px; height: 50px; border-radius: 12px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); display: flex; align-items: center; justify-content: center; }
+.oda-pdf-icon svg { width: 26px; height: 26px; }
+.oda-pdf-name { font-size: 0.72rem; color: var(--text-muted); text-align: center; word-break: break-all; margin: 0; }
+.oda-pdf-hint { font-size: 0.7rem; color: var(--primary); font-weight: 600; }
+
+.oda-pdf-btns { display: flex; gap: 0.5rem; margin-top: 0.625rem; }
+
+.oda-btn-view {
+    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+    padding: 0.5rem 0.75rem; background: rgba(19,109,236,0.08);
+    border: 1.5px solid rgba(19,109,236,0.25); color: var(--primary);
+    font-size: 0.78rem; font-weight: 600; border-radius: 0.5rem;
+    cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.oda-btn-view svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.oda-btn-view:hover { background: rgba(19,109,236,0.15); border-color: var(--primary); }
+
+/* Bouton OCR */
+.oda-btn-ocr {
+    flex: 1.4; display: inline-flex; align-items: center; justify-content: center;
+    gap: 0.45rem; padding: 0.5rem 0.875rem; white-space: nowrap;
+    background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(59,130,246,0.12));
+    border: 1.5px solid rgba(139,92,246,0.35); color: #8b5cf6;
+    font-size: 0.78rem; font-weight: 700; border-radius: 0.5rem;
+    cursor: pointer; transition: all 0.2s; font-family: inherit;
+}
+.oda-btn-ocr svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.oda-btn-ocr:hover { background: linear-gradient(135deg, rgba(139,92,246,0.22), rgba(59,130,246,0.2)); border-color: #8b5cf6; box-shadow: 0 0 12px rgba(139,92,246,0.25); transform: translateY(-1px); }
+.oda-btn-ocr:active { transform: scale(0.98); }
+
+/* ══════════════════════════════════════
+   COLONNE FORMULAIRE
+══════════════════════════════════════ */
+.oda-col-form { display: flex; flex-direction: column; }
+
+.oda-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.625rem; margin-bottom: 0.875rem; }
+.oda-fg      { display: flex; flex-direction: column; gap: 0.3rem; }
+.oda-fg-full { grid-column: span 2; }
+
+.oda-fg label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+
+.oda-fi { position: relative; display: flex; align-items: center; }
+.oda-fi > svg { position: absolute; left: 0.625rem; width: 13px; height: 13px; stroke: var(--text-faint); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; flex-shrink: 0; }
+
+.oda-fi input {
+    width: 100%; background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 0.5rem; padding: 0.5rem 0.75rem 0.5rem 2rem;
+    color: var(--text); font-size: 0.84rem; font-family: inherit;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+html.dark .oda-fi input { background: #0d1520; border-color: #1e2d42; }
+.oda-fi input::placeholder { color: var(--text-faint); }
+.oda-fi input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(19,109,236,0.1); }
+.oda-fi-sfx input { padding-right: 2.5rem; }
+.oda-sfx { position: absolute; right: 0.625rem; font-size: 0.68rem; font-weight: 700; color: var(--text-faint); pointer-events: none; }
+
+.oda-form-actions { display: flex; gap: 0.5rem; }
+
+.oda-btn-ghost {
+    padding: 0.5rem 0.875rem; background: transparent;
+    border: 1.5px solid var(--border); color: var(--text-muted);
+    font-size: 0.8rem; font-weight: 600; border-radius: 0.5rem;
+    cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.oda-btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 1000px) {
+    .oda-two-col { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+    .oda-sidebar   { display: none; }
+    .oda-hamburger { display: flex; }
+    .oda-header    { padding: 0.875rem 1rem; }
+    .oda-content   { padding: 0.875rem 1rem; }
+    .oda-form-grid { grid-template-columns: 1fr; }
+    .oda-fg-full   { grid-column: span 1; }
+    .oda-pdf-btns  { flex-direction: column; }
+    .oda-pdf-modal { width: 100vw; height: 100vh; border-radius: 0; }
+    .oda-pdf-modal-overlay { padding: 0; }
+}

@@ -87,6 +87,7 @@ namespace AssetFlow.Domain.Entities
     /// Offre PDF attachée par l'Agent Achat à une demande.
     /// EstChoisie = true quand l'IT a sélectionné cette offre.
     /// </summary>
+    
     public class OffreAchat
     {
         /// <summary>Clé primaire GUID</summary>

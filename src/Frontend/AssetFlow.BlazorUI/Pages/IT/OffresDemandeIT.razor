@@ -1,0 +1,323 @@
+@* ============================================================
+   AssetFlow.BlazorUI / Pages / IT / OffresDemandeIT.razor
+   ============================================================ *@
+
+@page "/it/offres/{DemandeId:int}"
+@using AssetFlow.Application.DTOs
+@using AssetFlow.BlazorUI.Components
+
+<RoleAuthGuard AllowedRoles="@(new[]{"IT","Admin"})">
+<div class="oda-layout">
+
+    @* ══════════════════════════════════════════
+       SIDEBAR — copie exacte de MesDemandesAchat
+    ══════════════════════════════════════════ *@
+    <aside class="oda-sidebar">
+        <div class="sidebar-logo-wrap">
+            <img src="images/logo.png" alt="AssetFlow" class="oda-sidebar-logo" />
+        </div>
+
+        <nav class="oda-sidebar-nav">
+            <a href="/dashboard/it" class="oda-nav-link">
+                <svg class="oda-nav-icon" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                </svg>
+                <span class="oda-nav-text">Dashboard</span>
+            </a>
+            <a href="/it/employes" class="oda-nav-link">
+                <svg class="oda-nav-icon" viewBox="0 0 24 24">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span class="oda-nav-text">Employés</span>
+            </a>
+            <a href="/it/affectation" class="oda-nav-link">
+                <svg class="oda-nav-icon" viewBox="0 0 24 24">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span class="oda-nav-text">Affectations</span>
+            </a>
+            <a href="/it/incidents" class="oda-nav-link">
+                <svg class="oda-nav-icon" viewBox="0 0 24 24">
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/>
+                </svg>
+                <span class="oda-nav-text">Incidents</span>
+            </a>
+            <a href="/it/inventaire" class="oda-nav-link">
+                <svg class="oda-nav-icon" viewBox="0 0 24 24">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    <path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/>
+                </svg>
+                <span class="oda-nav-text">Inventaire</span>
+            </a>
+            <a href="/it/demandes-achat" class="oda-nav-link active">
+                <svg class="oda-nav-icon" viewBox="0 0 24 24">
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <path d="M16 10a4 4 0 0 1-8 0"/>
+                </svg>
+                <span class="oda-nav-text">Mes achats</span>
+            </a>
+            <a href="/it/rapports" class="oda-nav-link">
+                <svg class="oda-nav-icon" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6M16 13H8M16 17H8"/>
+                </svg>
+                <span class="oda-nav-text">Rapports</span>
+            </a>
+        </nav>
+
+        <div class="oda-sidebar-profile">
+            <div class="oda-profile-avatar">@GetInitials()</div>
+            <div class="oda-profile-info">
+                <p class="oda-profile-name">@_userName</p>
+                <p class="oda-profile-role">IT</p>
+            </div>
+        </div>
+
+        <LogoutButton />
+    </aside>
+
+    @* ── OVERLAY MENU MOBILE ── *@
+    @if (_menuOpen)
+    {
+        <div class="oda-menu-overlay" @onclick="() => _menuOpen = false">
+            <div class="oda-menu-drawer" @onclick:stopPropagation="true">
+                <div class="oda-menu-drawer-logo">
+                    <img src="images/logo.png" alt="AssetFlow" class="oda-sidebar-logo" />
+                </div>
+                <nav class="oda-menu-drawer-nav">
+                    <a href="/dashboard/it"     class="oda-nav-link" @onclick="() => _menuOpen=false"><svg class="oda-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="oda-nav-text">Dashboard</span></a>
+                    <a href="/it/employes"      class="oda-nav-link" @onclick="() => _menuOpen=false"><svg class="oda-nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="oda-nav-text">Employés</span></a>
+                    <a href="/it/affectation"   class="oda-nav-link" @onclick="() => _menuOpen=false"><svg class="oda-nav-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="oda-nav-text">Affectations</span></a>
+                    <a href="/it/incidents"     class="oda-nav-link" @onclick="() => _menuOpen=false"><svg class="oda-nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg><span class="oda-nav-text">Incidents</span></a>
+                    <a href="/it/inventaire"    class="oda-nav-link" @onclick="() => _menuOpen=false"><svg class="oda-nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/></svg><span class="oda-nav-text">Inventaire</span></a>
+                    <a href="/it/demandes-achat" class="oda-nav-link active" @onclick="() => _menuOpen=false"><svg class="oda-nav-icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span class="oda-nav-text">Mes achats</span></a>
+                    <a href="/it/rapports"      class="oda-nav-link" @onclick="() => _menuOpen=false"><svg class="oda-nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg><span class="oda-nav-text">Rapports</span></a>
+                </nav>
+                <div class="oda-sidebar-profile">
+                    <div class="oda-profile-avatar">@GetInitials()</div>
+                    <div class="oda-profile-info"><p class="oda-profile-name">@_userName</p><p class="oda-profile-role">IT</p></div>
+                </div>
+                <LogoutButton />
+            </div>
+        </div>
+    }
+
+    @* ══════════════════════════════════════════
+       MODALE PDF PLEIN ÉCRAN
+    ══════════════════════════════════════════ *@
+    @if (_pdfModalUrl != null)
+    {
+        <div class="oda-pdf-modal-overlay" @onclick="ClosePdfModal">
+            <div class="oda-pdf-modal" @onclick:stopPropagation="true">
+                <div class="oda-pdf-modal-header">
+                    <div class="oda-pdf-modal-title-wrap">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <span>@_pdfModalName</span>
+                    </div>
+                    <button class="oda-pdf-modal-close" @onclick="ClosePdfModal">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <iframe src="@_pdfModalUrl" class="oda-pdf-modal-frame" title="PDF"></iframe>
+            </div>
+        </div>
+    }
+
+    @* ══════════════════════════════════════════
+       MAIN
+    ══════════════════════════════════════════ *@
+    <div class="oda-body-wrap">
+        <main class="oda-main">
+
+            <header class="oda-header">
+                <button class="oda-hamburger" @onclick="() => _menuOpen = !_menuOpen" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
+                <div class="oda-header-left">
+                    <div class="oda-breadcrumb">
+                        <a href="/it/demandes-achat" class="oda-bc-link">Mes achats</a>
+                        <svg class="oda-bc-sep" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                        <span class="oda-bc-current">Offres fournisseurs</span>
+                    </div>
+                    <h1 class="oda-page-title">Offres fournisseurs</h1>
+                    <p class="oda-page-sub">Demande&nbsp;#@DemandeId · Consultez les offres reçues</p>
+                </div>
+                @if (_offres.Count > 0)
+                {
+                    <span class="oda-pill">@_offres.Count offre(s)</span>
+                }
+            </header>
+
+            <div class="oda-content">
+
+                @if (_isLoading)
+                {
+                    <div class="oda-state">
+                        <div class="oda-spinner"></div>
+                        <p>Chargement des offres...</p>
+                    </div>
+                }
+                else if (!_offres.Any())
+                {
+                    <div class="oda-state">
+                        <div class="oda-empty-icon">
+                            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        </div>
+                        <p class="oda-empty-title">Aucune offre disponible</p>
+                        <p class="oda-empty-sub">Aucune offre fournisseur n'a été soumise pour cette demande.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="oda-cards">
+                        @foreach (var (offre, idx) in _offres.Select((o, i) => (o, i)))
+                        {
+                            var fs     = GetOrCreate(offre.IdOffre);
+                            bool isOpen = _expandedId == offre.IdOffre;
+
+                            <div class="oda-card @(isOpen ? "is-open" : "")">
+
+                                <div class="oda-card-head" @onclick="() => Toggle(offre.IdOffre)">
+                                    <div class="oda-head-left">
+                                        <div class="oda-num"><span>@(idx + 1)</span></div>
+                                        <div>
+                                            <p class="oda-filename">@offre.NomFichier</p>
+                                            <p class="oda-filesize">@FormatBytes(offre.Taille)</p>
+                                        </div>
+                                    </div>
+                                    <svg class="oda-chevron @(isOpen ? "open" : "")" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                                </div>
+
+                                @if (isOpen)
+                                {
+                                    <div class="oda-card-body">
+                                        <div class="oda-two-col">
+
+                                            @* ── Colonne PDF ── *@
+                                            <div class="oda-col-pdf">
+                                                <p class="oda-col-label">
+                                                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                                    Aperçu PDF
+                                                </p>
+
+                                                @* Miniature cliquable → modale *@
+                                                <div class="oda-pdf-thumb" @onclick="() => OpenPdfModal(offre)" @onclick:stopPropagation="true">
+                                                    @if (_pdfUrls.ContainsKey(offre.IdOffre))
+                                                    {
+                                                        <iframe src="@_pdfUrls[offre.IdOffre]#toolbar=0&scrollbar=0"
+                                                                class="oda-pdf-thumb-frame" tabindex="-1" title="miniature"></iframe>
+                                                        <div class="oda-pdf-thumb-overlay">
+                                                            <svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                                                            Agrandir
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="oda-pdf-placeholder">
+                                                            <div class="oda-pdf-icon">
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                                    <polyline points="14 2 14 8 20 8"/>
+                                                                </svg>
+                                                            </div>
+                                                            <p class="oda-pdf-name">@offre.NomFichier</p>
+                                                            <span class="oda-pdf-hint">Cliquer pour charger et visualiser</span>
+                                                        </div>
+                                                    }
+                                                </div>
+
+                                                <div class="oda-pdf-btns">
+                                                    <button class="oda-btn-view" @onclick="() => OpenPdfModal(offre)" @onclick:stopPropagation="true">
+                                                        <svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                                                        Visualiser le PDF
+                                                    </button>
+                                                    <button class="oda-btn-ocr" @onclick:stopPropagation="true">
+                                                        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                                        Analyser avec l'IA (OCR)
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            @* ── Colonne formulaire local ── *@
+                                            <div class="oda-col-form">
+                                                <p class="oda-col-label">
+                                                    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                    Données de l'offre
+                                                </p>
+                                                <div class="oda-form-grid">
+                                                    <div class="oda-fg oda-fg-full">
+                                                        <label>Nom du produit</label>
+                                                        <div class="oda-fi">
+                                                            <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                                                            <input type="text" placeholder="Ex: Laptop Dell XPS 15" @bind="fs.NomProduit" @bind:event="oninput" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="oda-fg oda-fg-full">
+                                                        <label>Référence produit</label>
+                                                        <div class="oda-fi">
+                                                            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                                            <input type="text" placeholder="Ex: DLL-XPS-2024" @bind="fs.ReferenceProduit" @bind:event="oninput" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="oda-fg">
+                                                        <label>Prix unitaire HT</label>
+                                                        <div class="oda-fi oda-fi-sfx">
+                                                            <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                                            <input type="number" step="0.01" min="0" placeholder="0.00" @bind="fs.Prix" @bind:event="oninput" />
+                                                            <span class="oda-sfx">EUR</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="oda-fg">
+                                                        <label>Frais de livraison</label>
+                                                        <div class="oda-fi oda-fi-sfx">
+                                                            <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                                                            <input type="number" step="0.01" min="0" placeholder="0.00" @bind="fs.FraisLivraison" @bind:event="oninput" />
+                                                            <span class="oda-sfx">EUR</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="oda-fg">
+                                                        <label>Délai de livraison</label>
+                                                        <div class="oda-fi oda-fi-sfx">
+                                                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                            <input type="number" min="0" placeholder="5" @bind="fs.DelaiLivraison" @bind:event="oninput" />
+                                                            <span class="oda-sfx">jours</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="oda-fg">
+                                                        <label>Garantie</label>
+                                                        <div class="oda-fi oda-fi-sfx">
+                                                            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                                            <input type="number" min="0" placeholder="12" @bind="fs.Garantie" @bind:event="oninput" />
+                                                            <span class="oda-sfx">mois</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="oda-form-actions">
+                                                    <button class="oda-btn-ghost" @onclick="() => ResetForm(offre.IdOffre)" @onclick:stopPropagation="true">
+                                                        Réinitialiser
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+        </main>
+    </div>
+
+</div>
+</RoleAuthGuard>

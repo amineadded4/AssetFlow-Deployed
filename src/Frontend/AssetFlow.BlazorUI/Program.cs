@@ -53,5 +53,7 @@ builder.Services.AddScoped<AffectationClientService>();
 builder.Services.AddScoped<EmployeManagementService>();
 builder.Services.AddScoped<ITIncidentService>();
 builder.Services.AddScoped<StockClientService>();
+builder.Services.AddScoped<DemandeAchatITClientService>();
+
 
 await builder.Build().RunAsync();

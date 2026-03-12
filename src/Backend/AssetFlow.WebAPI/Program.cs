@@ -78,6 +78,8 @@ builder.Services.AddScoped<IDemandeAchatService, DemandeAchatService>();
 builder.Services.AddScoped<IStatistiquesService, StatistiquesService>();
 builder.Services.AddScoped<IAffectationService, AffectationService>();
 builder.Services.AddScoped<IEmployeManagementService, EmployeManagementService>();
+builder.Services.AddScoped<IDemandeAchatITService, DemandeAchatITService>();
+builder.Services.AddScoped<IOffreAchatService, OffreAchatService>();
 
 // === CORS ===
 builder.Services.AddCors(options =>

@@ -35,7 +35,12 @@
     flex-shrink: 0;
     z-index: 20;
 }
-
+.sidebar-logo-wrap {
+    padding: 1.5rem 1rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 html.dark .mda-sidebar { background: #060d18; border-right-color: rgba(255,255,255,0.05); }
 
 .mda-sidebar-logo { width: 130px; height: auto; object-fit: contain; filter: drop-shadow(0 0 12px rgba(19,109,236,0.45)); }

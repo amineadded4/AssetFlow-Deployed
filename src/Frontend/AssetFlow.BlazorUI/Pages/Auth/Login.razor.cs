@@ -49,7 +49,7 @@ namespace AssetFlow.BlazorUI.Pages.Auth
 
         private string RoleDescription => Role switch
         {
-            "IT" => "En tant que membre de l'équipe IT, vous gérez le matériel, les affectations et les demandes d'achat.",
+            "IT" => "Vous gérez le matériel, les affectations et les demandes d'achat.",
             "EquipeAchat" => "Vous gérez les offres fournisseurs, l'OCR automatique et le scoring IA.",
             "Employe" => "Vous consultez vos équipements et signalez des incidents.",
             _ => "Accès administrateur complet."

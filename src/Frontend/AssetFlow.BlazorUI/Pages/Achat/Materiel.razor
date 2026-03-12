@@ -75,7 +75,7 @@
                 </button>
                 <button class="sk-btn-add" @onclick="() => OuvrirFormulaire(null)">
                     <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Ajouter un produit
+                    Ajouter un matériel
                 </button>
             </div>
         </header>
@@ -265,7 +265,7 @@
                 <div class="sk-panel-header-left">
                     <div class="sk-panel-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
                     <div>
-                        <h3>@(_modeModif ? "Modifier le produit" : "Ajouter un produit")</h3>
+                        <h3>@(_modeModif ? "Modifier le matériel" : "Ajouter un matériel")</h3>
                         <div class="sk-panel-subtitle">@(_modeModif ? _form.Reference : "Nouveau matériel ou nouvelle commande")</div>
                     </div>
                 </div>
@@ -281,8 +281,8 @@
                 {
                     <div class="sk-section-lbl">PRODUIT <span class="sk-lbl-required">*</span></div>
                     <div class="sk-ref-toggle">
-                        <button class="@TabClass(!_nouveauProduit)" @onclick="() => _nouveauProduit = false">Produit existant</button>
-                        <button class="@TabClass(_nouveauProduit)"  @onclick="() => _nouveauProduit = true">Nouveau produit</button>
+                        <button class="@TabClass(!_nouveauProduit)" @onclick="() => _nouveauProduit = false">Matériel existant</button>
+                        <button class="@TabClass(_nouveauProduit)"  @onclick="() => _nouveauProduit = true">Nouveau matériel</button>
                     </div>
 
                     @if (!_nouveauProduit)

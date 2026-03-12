@@ -1,11 +1,12 @@
 /* ============================================================
-   OffresDemandeIT.razor.css  —  préfixe odt-
+   OffresDemandeIT.razor.css — préfixe oda-
+   Sidebar copiée depuis MesDemandesAchat (préfixe oda- pour éviter les conflits de scope)
    ============================================================ */
 
 /* ══════════════════════════════════════
-   LAYOUT GLOBAL
+   LAYOUT
 ══════════════════════════════════════ */
-.odt-layout {
+.oda-layout {
     display: flex;
     height: 100vh;
     overflow: hidden;
@@ -13,18 +14,13 @@
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
-.odt-body-wrap {
-    flex: 1;
-    display: flex;
-    overflow: hidden;
-    position: relative;
-    min-width: 0;
-}
+.oda-body-wrap { flex: 1; display: flex; overflow: hidden; min-width: 0; }
+.oda-main      { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 
 /* ══════════════════════════════════════
-   SIDEBAR  (identique MesDemandesAchat)
+   SIDEBAR — identique à MesDemandesAchat
 ══════════════════════════════════════ */
-.odt-sidebar {
+.oda-sidebar {
     width: 210px;
     height: 100%;
     background: #0F1E3C;
@@ -35,13 +31,12 @@
     z-index: 20;
 }
 
-html.dark .odt-sidebar { background: #060d18; border-right-color: rgba(255,255,255,0.05); }
+html.dark .oda-sidebar { background: #060d18; border-right-color: rgba(255,255,255,0.05); }
 
-.odt-sidebar-logo { width: 130px; height: auto; object-fit: contain; filter: drop-shadow(0 0 12px rgba(19,109,236,0.45)); }
+.sidebar-logo-wrap { padding: 1.25rem 1rem; display: flex; align-items: center; }
+.oda-sidebar-logo  { width: 130px; height: auto; object-fit: contain; filter: drop-shadow(0 0 12px rgba(19,109,236,0.45)); }
 
-.sidebar-logo-wrap { padding: 1.25rem 1.25rem 0.75rem; }
-
-.odt-sidebar-nav {
+.oda-sidebar-nav {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -50,7 +45,7 @@ html.dark .odt-sidebar { background: #060d18; border-right-color: rgba(255,255,2
     overflow-y: auto;
 }
 
-.odt-nav-link {
+.oda-nav-link {
     display: flex;
     align-items: center;
     gap: 0.7rem;
@@ -64,448 +59,68 @@ html.dark .odt-sidebar { background: #060d18; border-right-color: rgba(255,255,2
     border-left: 3px solid transparent;
 }
 
-.odt-nav-link:hover  { color: #e2e8f0; background: rgba(255,255,255,0.06); }
-.odt-nav-link.active { color: #fff; background: rgba(19,109,236,0.18); border-left-color: #136dec; font-weight: 600; }
+.oda-nav-link:hover  { color: #e2e8f0; background: rgba(255,255,255,0.06); }
+.oda-nav-link.active { color: #fff; background: rgba(19,109,236,0.18); border-left-color: #136dec; font-weight: 600; }
 
-.odt-nav-icon { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
-.odt-nav-text { flex: 1; }
+.oda-nav-icon { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.oda-nav-text { flex: 1; }
 
-.odt-sidebar-profile { padding: 0.875rem 1rem; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 0.625rem; }
-.odt-profile-avatar  { width: 34px; height: 34px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; }
-.odt-profile-info    { flex: 1; overflow: hidden; }
-.odt-profile-name    { font-size: 0.78rem; font-weight: 600; color: #e2e8f0; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.odt-profile-role    { font-size: 0.68rem; color: #64748b; margin: 0.1rem 0 0; }
-
-/* ══════════════════════════════════════
-   MAIN
-══════════════════════════════════════ */
-.odt-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-width: 0;
-}
-
-/* ── Header ── */
-.odt-header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0.875rem 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-shrink: 0;
-}
-
-html.dark .odt-header { background: rgba(16,24,34,0.9); border-bottom-color: rgba(255,255,255,0.07); }
-
-.odt-header-left { flex: 1; min-width: 0; }
-
-.odt-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    margin-bottom: 0.35rem;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
-
-.odt-breadcrumb-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    color: var(--primary);
-    text-decoration: none;
-    font-weight: 600;
-    transition: opacity 0.15s;
-}
-
-.odt-breadcrumb-link svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-.odt-breadcrumb-link:hover { opacity: 0.75; }
-.odt-breadcrumb-sep { color: var(--text-faint); }
-.odt-breadcrumb-cur { color: var(--text-muted); }
-
-.odt-page-title {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: var(--text);
-    margin: 0 0 0.15rem;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.odt-page-title-product {
-    font-weight: 500;
-    color: var(--text-muted);
-    font-size: 1.05rem;
-}
-
-.odt-page-sub { font-size: 0.76rem; color: var(--text-muted); margin: 0; }
-
-/* ── Hamburger ── */
-.odt-hamburger { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 36px; height: 36px; background: transparent; border: none; cursor: pointer; padding: 4px; flex-shrink: 0; }
-.odt-hamburger span { display: block; width: 22px; height: 2px; background: var(--text); border-radius: 2px; }
-
-/* ── Alerte ── */
-.odt-alert {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin: 0.75rem 1.5rem 0;
-    padding: 0.75rem 1.125rem;
-    border-radius: 0.625rem;
-    font-size: 0.84rem;
-    font-weight: 500;
-    border: 1px solid;
-    flex-shrink: 0;
-    animation: odtSlideDown 0.25s ease;
-}
-
-@keyframes odtSlideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-
-.odt-alert svg     { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
-.odt-alert-error   { background: var(--error-bg); color: var(--error); border-color: var(--error-border); }
+.oda-sidebar-profile { padding: 0.875rem 1rem; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 0.625rem; }
+.oda-profile-avatar  { width: 34px; height: 34px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; }
+.oda-profile-info    { flex: 1; overflow: hidden; }
+.oda-profile-name    { font-size: 0.78rem; font-weight: 600; color: #e2e8f0; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.oda-profile-role    { font-size: 0.68rem; color: #64748b; margin: 0.1rem 0 0; }
 
 /* ══════════════════════════════════════
-   BANDEAU RÉSUMÉ DEMANDE
+   HAMBURGER + DRAWER MOBILE
 ══════════════════════════════════════ */
-.odt-demande-banner {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin: 0.875rem 1.5rem 0;
-    padding: 0.875rem 1.25rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 0.75rem;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-}
+.oda-hamburger { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 36px; height: 36px; background: transparent; border: none; cursor: pointer; padding: 4px; flex-shrink: 0; }
+.oda-hamburger span { display: block; width: 22px; height: 2px; background: var(--text); border-radius: 2px; }
 
-html.dark .odt-demande-banner { background: #0d1520; border-color: #1e2d42; }
+.oda-menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(3px); z-index: 900; display: flex; }
+.oda-menu-drawer  { width: 270px; height: 100%; background: #0F1E3C; display: flex; flex-direction: column; box-shadow: 4px 0 24px rgba(0,0,0,0.4); animation: odaDrawerIn 0.22s cubic-bezier(0.16,1,0.3,1); }
+html.dark .oda-menu-drawer { background: #060d18; }
 
-.odt-demande-banner-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 0.625rem;
-    background: rgba(19,109,236,0.12);
+@keyframes odaDrawerIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+
+.oda-menu-drawer-logo { padding: 1.5rem 1.25rem 1rem; display: flex; align-items: center; }
+.oda-menu-drawer-nav  { flex: 1; display: flex; flex-direction: column; gap: 0.15rem; padding: 0.5rem 0.625rem; overflow-y: auto; }
+
+/* ══════════════════════════════════════
+   MODALE PDF PLEIN ÉCRAN
+══════════════════════════════════════ */
+.oda-pdf-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-}
-
-.odt-demande-banner-icon svg { width: 20px; height: 20px; stroke: var(--primary); fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
-
-.odt-demande-banner-info { flex: 1; min-width: 140px; }
-.odt-banner-label   { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin: 0 0 0.15rem; }
-.odt-banner-product { font-size: 0.92rem; font-weight: 700; color: var(--text); margin: 0 0 0.1rem; }
-.odt-banner-ref     { font-size: 0.72rem; color: var(--text-faint); margin: 0; }
-
-.odt-demande-banner-meta {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.odt-banner-meta-item { display: flex; flex-direction: column; align-items: flex-end; gap: 0.15rem; }
-.odt-banner-meta-lbl  { font-size: 0.68rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-.odt-banner-meta-val  { font-size: 0.88rem; font-weight: 700; color: var(--text); }
-.odt-offres-count     { color: var(--primary); }
-
-/* Statut badges */
-.odt-statut-badge { display: inline-flex; align-items: center; padding: 0.2rem 0.625rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; white-space: nowrap; }
-.odt-statut-en_attente { background: rgba(245,158,11,0.12); color: #f59e0b; }
-.odt-statut-traite     { background: rgba(99,102,241,0.12);  color: #6366f1; }
-.odt-statut-approuve   { background: rgba(16,185,129,0.12);  color: #10b981; }
-.odt-statut-refuse     { background: rgba(239,68,68,0.12);   color: #ef4444; }
-
-/* ══════════════════════════════════════
-   CONTENT ZONE
-══════════════════════════════════════ */
-.odt-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1rem 1.5rem 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-/* ── Loading / Empty ── */
-.odt-loading {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    color: var(--text-muted);
-    font-size: 0.875rem;
-}
-
-.odt-spinner {
-    width: 36px;
-    height: 36px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: odtSpin 0.75s linear infinite;
-}
-
-@keyframes odtSpin { to { transform: rotate(360deg); } }
-
-.odt-empty {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 3rem;
-    text-align: center;
-}
-
-.odt-empty-icon {
-    width: 72px;
-    height: 72px;
-    border-radius: 1rem;
-    background: rgba(19,109,236,0.08);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 0.5rem;
-}
-
-.odt-empty-icon svg { width: 36px; height: 36px; stroke: var(--primary); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-
-.odt-empty-title { font-size: 1.05rem; font-weight: 800; color: var(--text); margin: 0; }
-.odt-empty-sub   { font-size: 0.84rem; color: var(--text-muted); margin: 0; max-width: 360px; }
-
-.odt-btn-back-empty {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin-top: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    border: 1.5px solid var(--border);
-    border-radius: 0.625rem;
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 0.84rem;
-    font-weight: 600;
-    transition: all 0.18s;
-}
-
-.odt-btn-back-empty svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-.odt-btn-back-empty:hover { border-color: var(--primary); color: var(--primary); }
-
-/* ══════════════════════════════════════
-   ONGLETS OFFRES
-══════════════════════════════════════ */
-.odt-offers-tabs-wrap {
-    overflow-x: auto;
-    flex-shrink: 0;
-    padding-bottom: 2px;
-}
-
-.odt-offers-tabs {
-    display: flex;
-    gap: 0.625rem;
-    min-width: max-content;
-}
-
-.odt-offer-tab {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.2rem;
-    padding: 0.75rem 1.125rem;
-    border: 2px solid var(--border);
-    border-radius: 0.625rem;
-    background: var(--surface);
-    cursor: pointer;
-    transition: all 0.18s;
-    position: relative;
-    font-family: inherit;
-    min-width: 160px;
-}
-
-html.dark .odt-offer-tab { background: #0d1520; border-color: #1e2d42; }
-.odt-offer-tab:hover     { border-color: var(--primary); }
-.odt-offer-tab.active    { border-color: var(--primary); background: rgba(19,109,236,0.08); }
-
-.odt-tab-fournisseur { font-size: 0.84rem; font-weight: 700; color: var(--text); white-space: nowrap; }
-.odt-tab-prix        { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
-
-.odt-tab-badge-best {
-    position: absolute;
-    top: -8px;
-    right: 8px;
-    padding: 0.1rem 0.5rem;
-    background: #10b981;
-    color: white;
-    border-radius: 9999px;
-    font-size: 0.6rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    white-space: nowrap;
-}
-
-/* ══════════════════════════════════════
-   LAYOUT DEUX COLONNES
-══════════════════════════════════════ */
-.odt-two-col {
-    display: grid;
-    grid-template-columns: 2fr 3fr;
-    gap: 1.25rem;
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-}
-
-/* ── Colonne PDF ── */
-.odt-col-pdf {
-    display: flex;
-    flex-direction: column;
-    gap: 0.875rem;
-    overflow: hidden;
-}
-
-.odt-col-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-}
-
-.odt-col-title { font-size: 0.92rem; font-weight: 700; color: var(--text); margin: 0; }
-.odt-col-badge { font-size: 0.68rem; font-weight: 600; padding: 0.2rem 0.625rem; border-radius: 0.375rem; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); }
-
-html.dark .odt-col-badge { background: #0d1520; }
-
-.odt-pdf-preview-box {
-    flex: 1;
-    border: 2px dashed var(--border);
-    border-radius: 0.875rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
     padding: 1.5rem;
-    background: var(--surface);
-    overflow: hidden;
+    animation: odaFadeIn 0.18s ease;
 }
 
-html.dark .odt-pdf-preview-box { background: #0a1221; }
+@keyframes odaFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.odt-pdf-icon-wrap {
-    width: 64px;
-    height: 64px;
+.oda-pdf-modal {
+    background: var(--surface);
     border-radius: 1rem;
-    background: rgba(239,68,68,0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 0.25rem;
-}
-
-.odt-pdf-icon { width: 36px; height: 36px; stroke: #ef4444; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
-
-.odt-pdf-filename { font-size: 0.84rem; font-weight: 700; color: var(--text); margin: 0; text-align: center; }
-.odt-pdf-meta     { font-size: 0.7rem; color: var(--text-faint); margin: 0 0 0.5rem; text-align: center; }
-
-/* Simulation aperçu page PDF */
-.odt-pdf-page-sim {
-    width: 100%;
-    max-width: 200px;
-    background: rgba(100,116,139,0.08);
-    border-radius: 0.5rem;
-    padding: 0.875rem;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5);
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-}
-
-.odt-pdf-page-line {
-    height: 7px;
-    background: rgba(100,116,139,0.2);
-    border-radius: 9999px;
-}
-
-.odt-pdf-page-line.w-3\/4  { width: 75%; }
-.odt-pdf-page-line.w-1\/2  { width: 50%; }
-.odt-pdf-page-line.w-full  { width: 100%; }
-.odt-pdf-page-line.w-5\/6  { width: 83%; }
-.odt-pdf-page-line.w-2\/3  { width: 67%; }
-.odt-mt2 { margin-top: 0.375rem; }
-
-.odt-btn-open-pdf {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.5rem 1rem;
-    border: 1.5px solid var(--border);
-    border-radius: 0.5rem;
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 0.78rem;
-    font-weight: 600;
-    transition: all 0.18s;
-    margin-top: 0.5rem;
-}
-
-.odt-btn-open-pdf svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.odt-btn-open-pdf:hover { border-color: var(--primary); color: var(--primary); }
-
-/* OCR Placeholder */
-.odt-ocr-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 1rem;
-    border: 2px dashed rgba(99,102,241,0.3);
-    border-radius: 0.75rem;
-    background: rgba(99,102,241,0.04);
-    text-align: center;
-    flex-shrink: 0;
-}
-
-.odt-ocr-ph-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 0.5rem;
-    background: rgba(99,102,241,0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.odt-ocr-ph-icon svg { width: 20px; height: 20px; stroke: #6366f1; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
-.odt-ocr-ph-title    { font-size: 0.78rem; font-weight: 700; color: #6366f1; margin: 0; }
-.odt-ocr-ph-sub      { font-size: 0.68rem; color: var(--text-faint); margin: 0; }
-
-/* ── Colonne Formulaire ── */
-.odt-col-form {
-    display: flex;
-    flex-direction: column;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 0.875rem;
+    width: min(90vw, 1100px);
+    height: min(90vh, 850px);
     overflow: hidden;
-    min-height: 0;
+    animation: odaModalIn 0.2s cubic-bezier(0.16,1,0.3,1);
 }
 
-html.dark .odt-col-form { background: #0d1520; border-color: #1e2d42; }
+html.dark .oda-pdf-modal { background: #111827; border: 1px solid #1e2d42; }
 
-.odt-form-header {
+@keyframes odaModalIn { from { opacity: 0; transform: scale(0.96) translateY(12px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+.oda-pdf-modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -514,311 +129,246 @@ html.dark .odt-col-form { background: #0d1520; border-color: #1e2d42; }
     flex-shrink: 0;
 }
 
-html.dark .odt-form-header { border-bottom-color: #1e2d42; }
+html.dark .oda-pdf-modal-header { border-bottom-color: #1e2d42; }
 
-.odt-form-title { font-size: 0.95rem; font-weight: 800; color: var(--text); margin: 0; }
-
-.odt-form-fournisseur-tag {
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    background: rgba(19,109,236,0.1);
-    border: 1px solid rgba(19,109,236,0.25);
-    color: var(--primary);
-    font-size: 0.72rem;
+.oda-pdf-modal-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
     font-weight: 700;
-    white-space: nowrap;
+    color: var(--text);
 }
 
-.odt-form-body {
+.oda-pdf-modal-title-wrap svg {
+    width: 16px; height: 16px;
+    stroke: #ef4444; fill: none;
+    stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+}
+
+.oda-pdf-modal-close {
+    width: 32px; height: 32px;
+    border-radius: 0.5rem;
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s;
+}
+.oda-pdf-modal-close svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+.oda-pdf-modal-close:hover { background: rgba(239,68,68,0.08); border-color: #ef4444; color: #ef4444; }
+
+.oda-pdf-modal-frame {
     flex: 1;
-    overflow-y: auto;
-    padding: 1.125rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-/* ── Champs ── */
-.odt-field      { display: flex; flex-direction: column; gap: 0.375rem; }
-.odt-field-row  { display: grid; grid-template-columns: 1fr 1fr; gap: 0.875rem; }
-
-.odt-field-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
-}
-
-.odt-optional { color: var(--text-faint); font-size: 0.65rem; font-weight: 400; text-transform: none; letter-spacing: 0; }
-
-.odt-field-input-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.odt-field-icon {
-    position: absolute;
-    left: 0.75rem;
-    width: 15px;
-    height: 15px;
-    stroke: var(--text-faint);
-    fill: none;
-    stroke-width: 1.75;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    pointer-events: none;
-    flex-shrink: 0;
-}
-
-.odt-field-input {
     width: 100%;
-    padding: 0.6rem 0.75rem 0.6rem 2.25rem;
-    background: var(--bg);
-    border: 1.5px solid var(--border);
-    border-radius: 0.5rem;
-    color: var(--text);
-    font-size: 0.84rem;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    font-family: inherit;
-    box-sizing: border-box;
-}
-
-html.dark .odt-field-input { background: #060d18; border-color: #1e2d42; }
-.odt-field-input::placeholder { color: var(--text-faint); }
-.odt-field-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(19,109,236,0.1); }
-.odt-field-input[readonly] { opacity: 0.7; cursor: default; }
-
-.odt-field-input-pr { padding-right: 2.5rem; }
-
-.odt-field-suffix {
-    position: absolute;
-    right: 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    pointer-events: none;
-}
-
-.odt-field-textarea {
-    padding: 0.6rem 0.75rem;
-    background: var(--bg);
-    border: 1.5px solid var(--border);
-    border-radius: 0.5rem;
-    color: var(--text);
-    font-size: 0.84rem;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    font-family: inherit;
-    resize: vertical;
-    min-height: 70px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-html.dark .odt-field-textarea { background: #060d18; border-color: #1e2d42; }
-.odt-field-textarea::placeholder { color: var(--text-faint); }
-.odt-field-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(19,109,236,0.1); }
-
-/* ── Lignes de facturation ── */
-.odt-lignes-section { display: flex; flex-direction: column; gap: 0.625rem; }
-
-.odt-lignes-title {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
-}
-
-.odt-lignes-title svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-.odt-lignes-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 0.5rem; }
-
-html.dark .odt-lignes-table-wrap { border-color: #1e2d42; }
-
-.odt-lignes-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.78rem;
-}
-
-.odt-lignes-table th {
-    padding: 0.5rem 0.75rem;
-    text-align: left;
-    font-weight: 700;
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-}
-
-html.dark .odt-lignes-table th { background: #0a1221; border-color: #1e2d42; }
-
-.odt-lignes-table td {
-    padding: 0.5rem 0.75rem;
-    color: var(--text);
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-}
-
-html.dark .odt-lignes-table td { border-color: #1a2535; }
-
-.odt-lignes-table tr:last-child td { border-bottom: none; }
-.odt-lignes-table tr:hover td { background: rgba(19,109,236,0.04); }
-.odt-td-total { font-weight: 700; color: var(--text); }
-
-/* Totaux */
-.odt-totaux {
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-    padding: 0.875rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    align-self: flex-end;
-    min-width: 240px;
-}
-
-html.dark .odt-totaux { background: #0a1221; border-color: #1e2d42; }
-
-.odt-totaux-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    color: var(--text-muted);
-}
-
-.odt-totaux-ttc {
-    font-size: 0.92rem;
-    font-weight: 800;
-    color: var(--primary);
-    border-top: 1px solid var(--border);
-    padding-top: 0.375rem;
-    margin-top: 0.125rem;
-}
-
-html.dark .odt-totaux-ttc { border-top-color: #1e2d42; }
-
-/* ── Info banner ── */
-.odt-info-banner {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.875rem;
-    background: rgba(19,109,236,0.06);
-    border: 1px solid rgba(19,109,236,0.2);
-    border-radius: 0.625rem;
-}
-
-.odt-info-banner svg { width: 16px; height: 16px; stroke: var(--primary); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; margin-top: 1px; }
-.odt-info-banner p   { font-size: 0.75rem; color: var(--text-muted); margin: 0; line-height: 1.5; }
-
-/* ── Footer formulaire ── */
-.odt-form-footer {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    padding: 0.875rem 1.25rem;
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-}
-
-html.dark .odt-form-footer { border-top-color: #1e2d42; }
-
-.odt-btn-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.6rem 1.125rem;
-    border: 1.5px solid var(--border);
-    border-radius: 0.625rem;
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 0.82rem;
-    font-weight: 600;
-    transition: all 0.18s;
-    margin-right: auto;
-}
-
-.odt-btn-back svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-.odt-btn-back:hover { border-color: var(--primary); color: var(--primary); }
-
-.odt-btn-save {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.6rem 1.25rem;
-    background: var(--primary);
-    color: white;
     border: none;
-    border-radius: 0.625rem;
-    font-size: 0.82rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: inherit;
-    box-shadow: 0 4px 14px rgba(19,109,236,0.3);
+    display: block;
 }
-
-.odt-btn-save svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.odt-btn-save:hover { background: #0f5cc7; transform: translateY(-1px); }
-.odt-btn-save:active { transform: scale(0.98); }
 
 /* ══════════════════════════════════════
-   MOBILE MENU OVERLAY
+   HEADER
 ══════════════════════════════════════ */
-.odt-menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(3px); z-index: 900; display: flex; }
-.odt-menu-drawer  { width: 270px; height: 100%; background: #0F1E3C; display: flex; flex-direction: column; box-shadow: 4px 0 24px rgba(0,0,0,0.4); animation: odtDrawerIn 0.22s cubic-bezier(0.16,1,0.3,1); }
-html.dark .odt-menu-drawer { background: #060d18; }
+.oda-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
 
-@keyframes odtDrawerIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+html.dark .oda-header { background: rgba(16,24,34,0.9); border-bottom-color: rgba(255,255,255,0.07); }
 
-.odt-menu-drawer-logo { padding: 1.5rem 1.25rem 1rem; display: flex; align-items: center; }
-.odt-menu-drawer-nav  { flex: 1; display: flex; flex-direction: column; gap: 0.15rem; padding: 0.5rem 0.625rem; overflow-y: auto; }
-.odt-menu-drawer-nav .odt-nav-link        { flex-direction: row; gap: 0.7rem; padding: 0.75rem 0.875rem; border-radius: 0.5rem; font-size: 0.85rem; border-left: 3px solid transparent; }
-.odt-menu-drawer-nav .odt-nav-link.active { border-left-color: var(--primary); background: rgba(19,109,236,0.18); }
+.oda-header-left { min-width: 0; flex: 1; }
+
+.oda-breadcrumb { display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.3rem; }
+.oda-bc-sep     { width: 13px; height: 13px; stroke: var(--text-faint); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.oda-bc-link    { font-size: 0.75rem; color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
+.oda-bc-link:hover { color: var(--primary); }
+.oda-bc-current { font-size: 0.75rem; color: var(--text); font-weight: 600; }
+
+.oda-page-title { font-size: 1.3rem; font-weight: 800; color: var(--text); margin: 0 0 0.15rem; letter-spacing: -0.025em; }
+.oda-page-sub   { font-size: 0.78rem; color: var(--text-muted); margin: 0; }
+
+.oda-pill { display: inline-flex; align-items: center; padding: 0.3rem 0.75rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; border: 1.5px solid var(--border); background: var(--surface); color: var(--text-muted); white-space: nowrap;margin-right: 50px; }
+html.dark .oda-pill { background: #161f2e; border-color: #1e2d42; }
+
+/* ══════════════════════════════════════
+   CONTENT
+══════════════════════════════════════ */
+.oda-content {
+    flex: 1; overflow-y: auto; padding: 1.25rem 1.5rem;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+
+/* ══════════════════════════════════════
+   ÉTATS
+══════════════════════════════════════ */
+.oda-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; gap: 12px; text-align: center; color: var(--text-muted); font-size: 0.875rem; }
+
+.oda-spinner { width: 30px; height: 30px; border: 2.5px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: odaSpin 0.7s linear infinite; }
+@keyframes odaSpin { to { transform: rotate(360deg); } }
+
+.oda-empty-icon { width: 56px; height: 56px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+.oda-empty-icon svg { width: 28px; height: 28px; stroke: var(--text-faint); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.oda-empty-title { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+.oda-empty-sub   { font-size: 0.8rem; }
+
+/* ══════════════════════════════════════
+   CARTES
+══════════════════════════════════════ */
+.oda-cards { display: flex; flex-direction: column; gap: 0.625rem; }
+
+.oda-card { background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; overflow: hidden; transition: border-color 0.2s; }
+html.dark .oda-card { background: #111827; border-color: #1e2d42; }
+.oda-card:hover   { border-color: rgba(19,109,236,0.35); }
+.oda-card.is-open { border-color: var(--primary); }
+
+.oda-card-head { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; cursor: pointer; user-select: none; transition: background 0.15s; }
+.oda-card-head:hover { background: rgba(0,0,0,0.02); }
+html.dark .oda-card-head:hover { background: rgba(255,255,255,0.02); }
+
+.oda-head-left { display: flex; align-items: center; gap: 0.75rem; }
+
+.oda-num { width: 28px; height: 28px; border-radius: 7px; background: var(--bg, #f1f5f9); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--text-muted); flex-shrink: 0; }
+html.dark .oda-num { background: #1c2128; }
+
+.oda-filename { font-size: 0.84rem; font-weight: 600; color: var(--text); margin: 0; }
+.oda-filesize  { font-size: 0.72rem; color: var(--text-muted); margin: 0.1rem 0 0; }
+
+.oda-chevron { width: 16px; height: 16px; stroke: var(--text-faint); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s; }
+.oda-chevron.open { transform: rotate(180deg); }
+
+.oda-card-body { border-top: 1px solid var(--border); padding: 1.125rem; }
+html.dark .oda-card-body { border-top-color: #1e2d42; }
+
+.oda-two-col { display: grid; grid-template-columns: 1fr 1.5fr; gap: 1.125rem; }
+
+.oda-col-label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.625rem; }
+.oda-col-label svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ══════════════════════════════════════
+   COLONNE PDF
+══════════════════════════════════════ */
+.oda-col-pdf { display: flex; flex-direction: column; }
+
+/* Miniature cliquable */
+.oda-pdf-thumb {
+    position: relative;
+    height: 260px;
+    border: 1.5px solid var(--border);
+    border-radius: 0.625rem;
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--bg, #f8fafc);
+    transition: border-color 0.2s;
+}
+html.dark .oda-pdf-thumb { background: #0d1520; }
+.oda-pdf-thumb:hover { border-color: var(--primary); }
+
+.oda-pdf-thumb:hover .oda-pdf-thumb-overlay { opacity: 1; }
+
+.oda-pdf-thumb-frame {
+    width: 100%; height: 100%;
+    border: none; display: block;
+    pointer-events: none; /* le clic va à la div parente */
+}
+
+.oda-pdf-thumb-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.5rem; color: #fff; font-size: 0.82rem; font-weight: 700;
+    opacity: 0; transition: opacity 0.2s;
+}
+.oda-pdf-thumb-overlay svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Placeholder si PDF pas encore chargé */
+.oda-pdf-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 0.75rem; padding: 1.25rem; }
+.oda-pdf-icon { width: 50px; height: 50px; border-radius: 12px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); display: flex; align-items: center; justify-content: center; }
+.oda-pdf-icon svg { width: 26px; height: 26px; }
+.oda-pdf-name { font-size: 0.72rem; color: var(--text-muted); text-align: center; word-break: break-all; margin: 0; }
+.oda-pdf-hint { font-size: 0.7rem; color: var(--primary); font-weight: 600; }
+
+.oda-pdf-btns { display: flex; gap: 0.5rem; margin-top: 0.625rem; }
+
+.oda-btn-view {
+    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+    padding: 0.5rem 0.75rem; background: rgba(19,109,236,0.08);
+    border: 1.5px solid rgba(19,109,236,0.25); color: var(--primary);
+    font-size: 0.78rem; font-weight: 600; border-radius: 0.5rem;
+    cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.oda-btn-view svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.oda-btn-view:hover { background: rgba(19,109,236,0.15); border-color: var(--primary); }
+
+/* Bouton OCR */
+.oda-btn-ocr {
+    flex: 1.4; display: inline-flex; align-items: center; justify-content: center;
+    gap: 0.45rem; padding: 0.5rem 0.875rem; white-space: nowrap;
+    background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(59,130,246,0.12));
+    border: 1.5px solid rgba(139,92,246,0.35); color: #8b5cf6;
+    font-size: 0.78rem; font-weight: 700; border-radius: 0.5rem;
+    cursor: pointer; transition: all 0.2s; font-family: inherit;
+}
+.oda-btn-ocr svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.oda-btn-ocr:hover { background: linear-gradient(135deg, rgba(139,92,246,0.22), rgba(59,130,246,0.2)); border-color: #8b5cf6; box-shadow: 0 0 12px rgba(139,92,246,0.25); transform: translateY(-1px); }
+.oda-btn-ocr:active { transform: scale(0.98); }
+
+/* ══════════════════════════════════════
+   COLONNE FORMULAIRE
+══════════════════════════════════════ */
+.oda-col-form { display: flex; flex-direction: column; }
+
+.oda-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.625rem; margin-bottom: 0.875rem; }
+.oda-fg      { display: flex; flex-direction: column; gap: 0.3rem; }
+.oda-fg-full { grid-column: span 2; }
+
+.oda-fg label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+
+.oda-fi { position: relative; display: flex; align-items: center; }
+.oda-fi > svg { position: absolute; left: 0.625rem; width: 13px; height: 13px; stroke: var(--text-faint); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; flex-shrink: 0; }
+
+.oda-fi input {
+    width: 100%; background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 0.5rem; padding: 0.5rem 0.75rem 0.5rem 2rem;
+    color: var(--text); font-size: 0.84rem; font-family: inherit;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+html.dark .oda-fi input { background: #0d1520; border-color: #1e2d42; }
+.oda-fi input::placeholder { color: var(--text-faint); }
+.oda-fi input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(19,109,236,0.1); }
+.oda-fi-sfx input { padding-right: 2.5rem; }
+.oda-sfx { position: absolute; right: 0.625rem; font-size: 0.68rem; font-weight: 700; color: var(--text-faint); pointer-events: none; }
+
+.oda-form-actions { display: flex; gap: 0.5rem; }
+
+.oda-btn-ghost {
+    padding: 0.5rem 0.875rem; background: transparent;
+    border: 1.5px solid var(--border); color: var(--text-muted);
+    font-size: 0.8rem; font-weight: 600; border-radius: 0.5rem;
+    cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.oda-btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
 
 /* ══════════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════════ */
-@media (max-width: 1100px) {
-    .odt-two-col { grid-template-columns: 1fr 1.6fr; }
-}
-
-@media (max-width: 900px) {
-    .odt-two-col { grid-template-columns: 1fr; overflow-y: auto; }
-    .odt-col-pdf { max-height: 420px; }
-    .odt-pdf-preview-box { flex-direction: row; flex-wrap: wrap; justify-content: flex-start; gap: 1rem; padding: 1rem; }
+@media (max-width: 1000px) {
+    .oda-two-col { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
-    .odt-layout    { flex-direction: column; }
-    .odt-sidebar   { display: none; }
-    .odt-hamburger { display: flex; }
-    .odt-header    { padding: 0.875rem 1rem; }
-    .odt-content   { padding: 0.75rem 1rem 1rem; }
-    .odt-demande-banner { margin: 0.75rem 1rem 0; }
-    .odt-alert     { margin: 0.75rem 1rem 0; }
-    .odt-field-row { grid-template-columns: 1fr; }
-    .odt-demande-banner-meta { gap: 1rem; }
-    .odt-banner-meta-item { align-items: flex-start; }
-}
-
-@media (max-width: 480px) {
-    .odt-two-col { gap: 0.75rem; }
-    .odt-form-footer { flex-wrap: wrap; }
-    .odt-btn-back { margin-right: 0; width: 100%; justify-content: center; order: 2; }
-    .odt-btn-save { width: 100%; justify-content: center; order: 1; }
-    .odt-offers-tabs { flex-wrap: nowrap; }
+    .oda-sidebar   { display: none; }
+    .oda-hamburger { display: flex; }
+    .oda-header    { padding: 0.875rem 1rem; }
+    .oda-content   { padding: 0.875rem 1rem; }
+    .oda-form-grid { grid-template-columns: 1fr; }
+    .oda-fg-full   { grid-column: span 1; }
+    .oda-pdf-btns  { flex-direction: column; }
+    .oda-pdf-modal { width: 100vw; height: 100vh; border-radius: 0; }
+    .oda-pdf-modal-overlay { padding: 0; }
 }

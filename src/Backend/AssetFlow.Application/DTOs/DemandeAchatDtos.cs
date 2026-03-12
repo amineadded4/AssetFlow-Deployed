@@ -32,13 +32,13 @@ namespace AssetFlow.Application.DTOs
     /// DTO d'une offre PDF — sans le binaire.
     /// EstChoisie = true → badge "Choisie par l'IT" affiché dans le frontend.
     /// </summary>
-    public class OffreAchatDto
+    /*public class OffreAchatDto
     {
         public Guid   IdOffre    { get; set; }
         public string NomFichier { get; set; } = string.Empty;
         public long   Taille     { get; set; }
         public bool   EstChoisie { get; set; }
-    }
+    }*/
 
     // ── CHANGER STATUT ───────────────────────────────────────────
 

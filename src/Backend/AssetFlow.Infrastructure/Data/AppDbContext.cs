@@ -192,27 +192,29 @@ namespace AssetFlow.Infrastructure.Data
                   });
 
                   modelBuilder.Entity<OffreAchat>(entity =>
-                  {
-                  entity.ToTable("OffreAchat");
-                  entity.HasKey(o => o.IdOffre);
+{
+    entity.ToTable("OffreAchat");
+    entity.HasKey(o => o.IdOffre);
 
-                  entity.Property(o => o.IdOffre)
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("NEWID()");
+    entity.Property(o => o.IdOffre)
+          .HasColumnType("uniqueidentifier")
+          .HasDefaultValueSql("NEWID()");
 
-                  entity.Property(o => o.NomFichier)
-                        .IsRequired()
-                        .HasColumnType("varchar(300)");
+    entity.Property(o => o.NomFichier)
+          .IsRequired()
+          .HasColumnType("varchar(300)");
 
-                  entity.Property(o => o.Taille)
-                        .HasColumnType("bigint");
+    entity.Property(o => o.Taille)
+          .HasColumnType("bigint");
 
-                  entity.Property(o => o.ContenuPdf)
-                        .HasColumnType("varbinary(max)");
+    entity.Property(o => o.ContenuPdf)
+          .HasColumnType("varbinary(max)");
 
-                  entity.Property(o => o.EstChoisie)
-                        .HasDefaultValue(false);
-                  });
+    entity.Property(o => o.EstChoisie)
+          .HasDefaultValue(false);
+
+   
+});
 
         }
     }

@@ -180,13 +180,14 @@ namespace AssetFlow.Infrastructure.Services
 
             var formData = new Dictionary<string, string>
             {
-                { "grant_type", "password" },
-                { "client_id", "admin-cli" },
-                { "username", _config["Keycloak:AdminUsername"]! },
-                { "password", _config["Keycloak:AdminPassword"]! }
+                { "grant_type", "password"    },
+                { "client_id",  "admin-cli"   },
+                { "username",   "amine" },
+                { "password",   "Password123" }
             };
 
-            var response = await _httpClient.PostAsync(tokenUrl, new FormUrlEncodedContent(formData));
+            using var freshClient = new HttpClient();
+            var response = await freshClient.PostAsync(tokenUrl, new FormUrlEncodedContent(formData));
             if (!response.IsSuccessStatusCode) return null;
 
             var json = await response.Content.ReadAsStringAsync();

@@ -12,6 +12,13 @@
         </div>
         <nav class="emp-sidebar-nav">
             <a href="/dashboard/it"      class="emp-nav-link"><svg class="emp-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
+            <a href="/employe/equipements" class="emp-nav-link">
+                    <svg class="emp-nav-icon" viewBox="0 0 24 24">
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <path d="M8 21h8M12 17v4" />
+                    </svg>
+                    <span class="emp-nav-text">Mes Équipements</span>
+            </a>
             <a href="/it/employes"       class="emp-nav-link active"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Gestion d'affectations</span></a>
             <a href="/it/affectation"    class="emp-nav-link"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg><span>Affectations</span></a>
             <a href="/it/incidents"      class="emp-nav-link"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg><span>Incidents</span></a>
@@ -34,6 +41,13 @@
                 <div class="emp-menu-drawer-logo"><img src="images/logo.png" alt="AssetFlow" class="emp-sidebar-logo" /></div>
                 <nav class="emp-menu-drawer-nav">
                     <a href="/dashboard/it"      class="emp-nav-link"        @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
+                    <a href="/employe/equipements" class="emp-nav-link">
+                            <svg class="emp-nav-icon" viewBox="0 0 24 24">
+                                <rect x="2" y="3" width="20" height="14" rx="2" />
+                                <path d="M8 21h8M12 17v4" />
+                            </svg>
+                            <span class="emp-nav-text">Mes Équipements</span>
+                    </a>
                     <a href="/it/employes"        class="emp-nav-link active" @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Gestion d'affectations</span></a>
                     <a href="/it/affectation"     class="emp-nav-link"        @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><span>Affectations</span></a>
                     <a href="/it/incidents"       class="emp-nav-link"        @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg><span>Incidents</span></a>

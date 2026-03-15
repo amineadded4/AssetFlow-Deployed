@@ -12,7 +12,7 @@ namespace AssetFlow.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    // [Authorize(Policy = "EmployeOnly")]
+    [Authorize]
     public class IncidentController : ControllerBase
     {
         private readonly IIncidentService _incidentService;

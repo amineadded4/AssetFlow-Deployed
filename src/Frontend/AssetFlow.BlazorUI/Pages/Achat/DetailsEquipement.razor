@@ -2,41 +2,71 @@
    Pages/Employe/DetailsEquipement.razor
    MISE À JOUR : Ajout de la liste des incidents sous les spécifications
    ============================================================ *@
-@namespace AssetFlow.BlazorUI.Pages.Employe
-@page "/employe/equipement/{AffectationId:int}"
-@page "/employe/equipement/{AffectationId:int}/article/{ArticleId:int}"
+@namespace AssetFlow.BlazorUI.Pages.Achat
+@page "/achat/equipement/{AffectationId:int}"
+@page "/achat/equipement/{AffectationId:int}/article/{ArticleId:int}"
 @using AssetFlow.BlazorUI.Services
 @using AssetFlow.BlazorUI.Components
 
 
     <div class="employe-layout">
 
-        @* ══════════════════════════════════════════════════════
-        SIDEBAR
-        ══════════════════════════════════════════════════════ *@
+        @* === SIDEBAR === *@
         <aside class="employe-sidebar">
-
             <div class="sidebar-header">
                 <img src="images/logo.png" alt="AssetFlow" class="sidebar-logo" />
             </div>
 
             <nav class="sidebar-nav">
-                <a href="/employe/equipements" class="nav-link active">
+                <a href="/statistiques" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <line x1="18" y1="20" x2="18" y2="10"/>
+                        <line x1="12" y1="20" x2="12" y2="4"/>
+                        <line x1="6"  y1="20" x2="6"  y2="14"/>
+                        <line x1="2"  y1="20" x2="22" y2="20"/>
+                    </svg>
+                    <span class="nav-text">Statistiques</span>
+                </a>
+                <a href="/achat/equipements" class="nav-link active">
                     <svg class="nav-icon" viewBox="0 0 24 24">
                         <rect x="2" y="3" width="20" height="14" rx="2" />
                         <path d="M8 21h8M12 17v4" />
                     </svg>
                     <span class="nav-text">Mes Équipements</span>
                 </a>
-                <a href="/employe/incident" class="nav-link">
+                <a href="/achat/materiel" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24">
-                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01" />
+                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <path d="M16 10a4 4 0 0 1-8 0"/>
                     </svg>
-                    <span class="nav-text">Signaler un Incident</span>
+                    <span class="nav-text">Matériel</span>
                 </a>
-                <a href="/employe/messagerie" class="nav-link">
-                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    <span class="nav-text">Messagerie</span>
+                <a href="/achat/fournisseurs" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span class="nav-text">Fournisseurs</span>
+                </a>
+                <a href="/demandes-achat" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <path d="M16 10a4 4 0 0 1-8 0"/>
+                    </svg>
+                    <span class="nav-text">Demande d'achat</span>
+                </a>
+                <a href="/achat/web-scraping" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        <line x1="11" y1="8"  x2="11"    y2="14"/>
+                        <line x1="8"  y1="11" x2="14"    y2="11"/>
+                    </svg>
+                    <span class="nav-text">Scraping Marché</span>
                 </a>
             </nav>
 
@@ -49,7 +79,6 @@
             </div>
 
             <LogoutButton />
-
         </aside>
 
         @* ══════════════════════════════════════════════════════

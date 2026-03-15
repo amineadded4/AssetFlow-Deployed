@@ -2,7 +2,7 @@
 // AssetFlow.Application / DTOs / OffreAchatDto.cs
 // ============================================================
 
-namespace AssetFlow.Application.DTOs
+/*namespace AssetFlow.Application.DTOs
 {
     public class OffreAchatDto
     {
@@ -12,4 +12,4 @@ namespace AssetFlow.Application.DTOs
         public long   Taille     { get; set; }
         public bool   EstChoisie { get; set; }
     }
-}
+}*/

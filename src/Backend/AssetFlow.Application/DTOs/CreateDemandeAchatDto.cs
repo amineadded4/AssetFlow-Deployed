@@ -1,6 +1,6 @@
 // AssetFlow.Application / DTOs / CreateDemandeAchatDto.cs
-
-namespace AssetFlow.Application.DTOs
+//a etet mise en commentaire pour un test
+/*namespace AssetFlow.Application.DTOs
 {
     public class CreateDemandeAchatDto
     {
@@ -10,4 +10,4 @@ namespace AssetFlow.Application.DTOs
         public string? Description  { get; set; }
         public string? DemandeurNom { get; set; }
     }
-}
+}*/

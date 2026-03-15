@@ -1,6 +1,8 @@
 // ============================================================
 // AssetFlow.BlazorUI / Pages / IT / MesDemandesAchat.razor.cs
+// MODIF : Reference par ligne (supprimée du niveau global)
 // ============================================================
+
 using AssetFlow.Application.DTOs;
 using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;
@@ -10,45 +12,35 @@ namespace AssetFlow.BlazorUI.Pages.IT
 {
     public partial class MesDemandesAchat
     {
-        // ── Injections ───────────────────────────────────────────
         [Inject] private DemandeAchatITClientService DemandeService { get; set; } = default!;
         [Inject] private NavigationManager           Navigation      { get; set; } = default!;
         [Inject] private ILocalStorageService        LocalStorage    { get; set; } = default!;
 
-        // ── État UI ──────────────────────────────────────────────
         private bool   IsLoading      { get; set; } = true;
         private bool   _menuOpen      = false;
         private string UserName       { get; set; } = "IT";
         private string ErrorMessage   { get; set; } = string.Empty;
         private string SuccessMessage { get; set; } = string.Empty;
 
-        // ── Données ──────────────────────────────────────────────
         private List<DemandeAchatITDto> Demandes         { get; set; } = new();
         private List<DemandeAchatITDto> DemandesFiltrees { get; set; } = new();
 
         private IEnumerable<DemandeAchatITDto> PagedDemandes =>
             DemandesFiltrees.Skip((CurrentPage - 1) * PageSize).Take(PageSize);
 
-        // ── Filtres & tri ────────────────────────────────────────
         private string? FilterStatut      { get; set; } = null;
         private string  SearchQuery       { get; set; } = string.Empty;
         private string  SortOrder         { get; set; } = "date_desc";
         private int?    SelectedDemandeId { get; set; } = null;
 
-        // ── Pagination ───────────────────────────────────────────
         private int CurrentPage { get; set; } = 1;
         private const int PageSize = 10;
         private int TotalPages => Math.Max(1, (int)Math.Ceiling(DemandesFiltrees.Count / (double)PageSize));
 
-        // ── Panneau création ─────────────────────────────────────
         private bool   _showCreatePanel = false;
         private bool   _isSaving        = false;
-        private CreateDemandeForm _form = new();
-        private Dictionary<string, string> _formErrors = new()
-        {
-            ["NomProduit"] = string.Empty,
-            ["Quantite"]   = string.Empty,
-        };
+        private CreateDemandeForm _form  = new();
+        private string _formError        = string.Empty;
 
         // ── Init ─────────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
@@ -57,7 +49,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             await LoadDemandesAsync();
         }
 
-        // ── Chargement données ───────────────────────────────────
         private async Task LoadDemandesAsync()
         {
             IsLoading = true;
@@ -78,7 +69,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             }
         }
 
-        // ── Filtrage & tri ───────────────────────────────────────
         private void AppliquerFiltres()
         {
             var result = Demandes.AsEnumerable();
@@ -92,7 +82,9 @@ namespace AssetFlow.BlazorUI.Pages.IT
                 result = result.Where(d =>
                     d.NomProduit.ToLower().Contains(q)              ||
                     d.Reference.ToLower().Contains(q)               ||
-                    (d.Description?.ToLower().Contains(q) ?? false));
+                    (d.Description?.ToLower().Contains(q) ?? false) ||
+                    d.Lignes.Any(l => l.NomProduit.ToLower().Contains(q) ||
+                                     l.Reference.ToLower().Contains(q)));
             }
 
             result = SortOrder switch
@@ -108,12 +100,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
             SelectedDemandeId = null;
         }
 
-        // ── Handlers liste ───────────────────────────────────────
-        private void SetFilter(string? statut)
-        {
-            FilterStatut = statut;
-            AppliquerFiltres();
-        }
+        private void SetFilter(string? statut) { FilterStatut = statut; AppliquerFiltres(); }
 
         private void OnSearchInput(ChangeEventArgs e)
         {
@@ -121,11 +108,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
             AppliquerFiltres();
         }
 
-        private void ClearSearch()
-        {
-            SearchQuery = string.Empty;
-            AppliquerFiltres();
-        }
+        private void ClearSearch() { SearchQuery = string.Empty; AppliquerFiltres(); }
 
         private void OnSortChange(ChangeEventArgs e)
         {
@@ -134,42 +117,51 @@ namespace AssetFlow.BlazorUI.Pages.IT
         }
 
         private void ToggleExpand(int id)
-        {
-            SelectedDemandeId = SelectedDemandeId == id ? null : id;
-        }
+            => SelectedDemandeId = SelectedDemandeId == id ? null : id;
 
-        // ── Navigation ───────────────────────────────────────────
         private void NavigateToOffres(int demandeId)
             => Navigation.NavigateTo($"/it/offres/{demandeId}");
 
         // ── Panneau création ─────────────────────────────────────
         private void OpenCreatePanel()
         {
-            _form = new CreateDemandeForm();
-            _formErrors["NomProduit"] = string.Empty;
-            _formErrors["Quantite"]   = string.Empty;
-            ErrorMessage              = string.Empty;
-            SuccessMessage            = string.Empty;
-            _showCreatePanel          = true;
+            _form          = new CreateDemandeForm();
+            _formError     = string.Empty;
+            ErrorMessage   = string.Empty;
+            SuccessMessage = string.Empty;
+            _showCreatePanel = true;
         }
 
-        private void CloseCreatePanel()
+        private void CloseCreatePanel() => _showCreatePanel = false;
+
+        private void AjouterLigne() => _form.Lignes.Add(new LigneForm());
+
+        private void SupprimerLigne(LigneForm ligne)
         {
-            _showCreatePanel = false;
+            if (_form.Lignes.Count > 1)
+                _form.Lignes.Remove(ligne);
         }
 
         private async Task SubmitCreate()
         {
-            // Validation
-            _formErrors["NomProduit"] = string.IsNullOrWhiteSpace(_form.NomProduit)
-                ? "Le nom du produit est obligatoire."
-                : string.Empty;
+            _formError = string.Empty;
 
-            _formErrors["Quantite"] = _form.Quantite < 1
-                ? "La quantité doit être au moins 1."
-                : string.Empty;
+            if (string.IsNullOrWhiteSpace(_form.NomDemande))
+            {
+                _formError = "Le titre de la demande est obligatoire.";
+                return;
+            }
 
-            if (_formErrors.Values.Any(e => !string.IsNullOrEmpty(e)))
+            foreach (var ligne in _form.Lignes)
+            {
+                ligne.Erreur = string.Empty;
+                if (string.IsNullOrWhiteSpace(ligne.NomProduit))
+                    ligne.Erreur = "Le nom du produit est obligatoire.";
+                else if (ligne.Quantite < 1)
+                    ligne.Erreur = "La quantité doit être au moins 1.";
+            }
+
+            if (_form.Lignes.Any(l => !string.IsNullOrEmpty(l.Erreur)))
                 return;
 
             _isSaving = true;
@@ -179,11 +171,16 @@ namespace AssetFlow.BlazorUI.Pages.IT
             {
                 await DemandeService.CreateDemandeAsync(new CreateDemandeAchatDto
                 {
-                    NomProduit   = _form.NomProduit.Trim(),
-                    Reference    = string.IsNullOrWhiteSpace(_form.Reference) ? null : _form.Reference.Trim(),
-                    Quantite     = _form.Quantite,
+                    NomProduit   = _form.NomDemande.Trim(),
                     Description  = _form.Description?.Trim(),
-                    DemandeurNom = UserName
+                    DemandeurNom = UserName,
+                    Lignes       = _form.Lignes.Select(l => new CreateLigneDemandeDto
+                    {
+                        Reference   = l.Reference?.Trim() ?? string.Empty,
+                        NomProduit  = l.NomProduit.Trim(),
+                        Quantite    = l.Quantite,
+                        Description = l.Description?.Trim()
+                    }).ToList()
                 });
 
                 SuccessMessage   = "Demande soumise avec succès !";
@@ -201,12 +198,10 @@ namespace AssetFlow.BlazorUI.Pages.IT
             }
         }
 
-        // ── Pagination ───────────────────────────────────────────
         private void PrevPage()         { if (CurrentPage > 1)         CurrentPage--; }
         private void NextPage()         { if (CurrentPage < TotalPages) CurrentPage++; }
         private void GoToPage(int page) => CurrentPage = page;
 
-        // ── Helpers ──────────────────────────────────────────────
         private string GetInitials()
         {
             var parts = UserName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -238,10 +233,19 @@ namespace AssetFlow.BlazorUI.Pages.IT
         // ── Modèles formulaire ───────────────────────────────────
         private class CreateDemandeForm
         {
+            public string  NomDemande  { get; set; } = string.Empty;
+            public string? Description { get; set; }
+            // ← plus de Reference globale
+            public List<LigneForm> Lignes { get; set; } = new() { new LigneForm() };
+        }
+
+        private class LigneForm
+        {
+            public string  Reference   { get; set; } = string.Empty;  // ← par ligne
             public string  NomProduit  { get; set; } = string.Empty;
-            public string? Reference   { get; set; }
             public int     Quantite    { get; set; } = 1;
             public string? Description { get; set; }
+            public string  Erreur      { get; set; } = string.Empty;
         }
     }
 }

@@ -4,6 +4,7 @@ using AssetFlow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AssetFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260312143154_AddLigneDemande")]
+    partial class AddLigneDemande
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -49,23 +52,18 @@ namespace AssetFlow.Infrastructure.Migrations
                     b.Property<string>("Observations")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("ProjetId")
-                        .HasColumnType("int");
-
                     b.Property<int>("QuantiteAffectee")
                         .HasColumnType("int");
 
                     b.Property<int>("QuantiteRetournee")
                         .HasColumnType("int");
 
-                    b.Property<int?>("UtilisateurId")
+                    b.Property<int>("UtilisateurId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("MaterielId");
-
-                    b.HasIndex("ProjetId");
 
                     b.HasIndex("UtilisateurId");
 
@@ -114,40 +112,6 @@ namespace AssetFlow.Infrastructure.Migrations
                         .HasFilter("[NumeroSerie] IS NOT NULL");
 
                     b.ToTable("ArticlesIndividuels");
-                });
-
-            modelBuilder.Entity("AssetFlow.Domain.Entities.ChatMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("ReceiverId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SenderId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReceiverId");
-
-                    b.HasIndex("SenderId", "ReceiverId", "SentAt");
-
-                    b.ToTable("ChatMessages");
                 });
 
             modelBuilder.Entity("AssetFlow.Domain.Entities.Commande", b =>
@@ -359,10 +323,6 @@ namespace AssetFlow.Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(1);
 
-                    b.Property<string>("Reference")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("IdLigne");
 
                     b.HasIndex("IdDemande");
@@ -456,65 +416,6 @@ namespace AssetFlow.Infrastructure.Migrations
                     b.ToTable("OffreAchat", (string)null);
                 });
 
-            modelBuilder.Entity("AssetFlow.Domain.Entities.Project", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal?>("Budget")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<DateTime?>("DateDebut")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DateFin")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<string>("Nom")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("Priorite")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasDefaultValue("Moyenne");
-
-                    b.Property<string>("Responsable")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<string>("Statut")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
-                        .HasDefaultValue("Planifie");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Projects");
-                });
-
             modelBuilder.Entity("AssetFlow.Domain.Entities.User", b =>
                 {
                     b.Property<int>("Id")
@@ -572,19 +473,13 @@ namespace AssetFlow.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AssetFlow.Domain.Entities.Project", "Projet")
-                        .WithMany()
-                        .HasForeignKey("ProjetId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("AssetFlow.Domain.Entities.User", "Utilisateur")
                         .WithMany()
                         .HasForeignKey("UtilisateurId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Materiel");
-
-                    b.Navigation("Projet");
 
                     b.Navigation("Utilisateur");
                 });
@@ -613,25 +508,6 @@ namespace AssetFlow.Infrastructure.Migrations
                     b.Navigation("Commande");
 
                     b.Navigation("Materiel");
-                });
-
-            modelBuilder.Entity("AssetFlow.Domain.Entities.ChatMessage", b =>
-                {
-                    b.HasOne("AssetFlow.Domain.Entities.User", "Receiver")
-                        .WithMany()
-                        .HasForeignKey("ReceiverId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("AssetFlow.Domain.Entities.User", "Sender")
-                        .WithMany()
-                        .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Receiver");
-
-                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("AssetFlow.Domain.Entities.Commande", b =>

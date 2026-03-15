@@ -1,5 +1,6 @@
 @* ============================================================
    AssetFlow.BlazorUI / Pages / IT / MesDemandesAchat.razor
+   MODIF : Référence par ligne de matériel (supprimée du niveau global)
    ============================================================ *@
 
 @page "/it/demandes-achat"
@@ -9,14 +10,11 @@
 <RoleAuthGuard AllowedRoles="@(new[]{"IT","Admin"})">
 <div class="mda-layout">
 
-    @* ══════════════════════════════════════════
-       SIDEBAR IT
-    ══════════════════════════════════════════ *@
+    @* ══════ SIDEBAR ══════ *@
     <aside class="mda-sidebar">
         <div class="sidebar-logo-wrap">
             <img src="images/logo.png" alt="AssetFlow" class="mda-sidebar-logo" />
         </div>
-
         <nav class="mda-sidebar-nav">
             <a href="/dashboard/it" class="mda-nav-link">
                 <svg class="mda-nav-icon" viewBox="0 0 24 24">
@@ -73,7 +71,6 @@
             <a href="/it/messagerie"  class="mda-nav-link"><svg class="mda-nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messagerie</span></a>
 
         </nav>
-
         <div class="mda-sidebar-profile">
             <div class="mda-profile-avatar">@GetInitials()</div>
             <div class="mda-profile-info">
@@ -81,18 +78,15 @@
                 <p class="mda-profile-role">IT</p>
             </div>
         </div>
-
         <LogoutButton />
     </aside>
 
-    @* ── OVERLAY MENU MOBILE ── *@
+    @* ── DRAWER MOBILE ── *@
     @if (_menuOpen)
     {
         <div class="mda-menu-overlay" @onclick="() => _menuOpen = false">
             <div class="mda-menu-drawer" @onclick:stopPropagation="true">
-                <div class="mda-menu-drawer-logo">
-                    <img src="images/logo.png" alt="AssetFlow" class="mda-sidebar-logo" />
-                </div>
+                <div class="mda-menu-drawer-logo"><img src="images/logo.png" alt="AssetFlow" class="mda-sidebar-logo" /></div>
                 <nav class="mda-menu-drawer-nav">
                     <a href="/dashboard/it"       class="mda-nav-link" @onclick="() => _menuOpen = false"><svg class="mda-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="mda-nav-text">Dashboard</span></a>
                        <a href="/employe/equipements" class="mda-nav-link">
@@ -149,31 +143,21 @@
         </div>
     }
 
-    @* ══════════════════════════════════════════
-       BODY WRAP (main + panel côte à côte)
-    ══════════════════════════════════════════ *@
     <div class="mda-body-wrap">
         <main class="mda-main">
 
-            @* ── Header ── *@
             <header class="mda-header">
-                <button class="mda-hamburger" @onclick="() => _menuOpen = !_menuOpen" aria-label="Menu">
-                    <span></span><span></span><span></span>
-                </button>
+                <button class="mda-hamburger" @onclick="() => _menuOpen = !_menuOpen"><span></span><span></span><span></span></button>
                 <div class="mda-header-left">
                     <h1 class="mda-page-title">Mes demandes d'achat</h1>
                     <p class="mda-page-sub">Consultez l'état de vos demandes et accédez aux offres fournisseurs</p>
                 </div>
                 <button class="mda-btn-new" @onclick="OpenCreatePanel">
-                    <svg viewBox="0 0 24 24">
-                        <line x1="12" y1="5" x2="12" y2="19"/>
-                        <line x1="5" y1="12" x2="19" y2="12"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     Nouvelle demande
                 </button>
             </header>
 
-            @* ── Alertes ── *@
             @if (!string.IsNullOrEmpty(ErrorMessage))
             {
                 <div class="mda-alert mda-alert-error">
@@ -189,39 +173,19 @@
                 </div>
             }
 
-            @* ── Stats Bar ── *@
             <div class="mda-stats-bar">
-                <button class="mda-stat-pill mda-stat-all @(FilterStatut == null ? "active" : "")" @onclick="() => SetFilter(null)">
-                    <span class="mda-stat-num">@Demandes.Count</span>
-                    <span class="mda-stat-lbl">Toutes</span>
-                </button>
-                <button class="mda-stat-pill mda-stat-attente @(FilterStatut == "en_attente" ? "active" : "")" @onclick='() => SetFilter("en_attente")'>
-                    <span class="mda-stat-num">@Demandes.Count(d => d.Statut == "en_attente")</span>
-                    <span class="mda-stat-lbl">En attente</span>
-                </button>
-                <button class="mda-stat-pill mda-stat-traite @(FilterStatut == "traite" ? "active" : "")" @onclick='() => SetFilter("traite")'>
-                    <span class="mda-stat-num">@Demandes.Count(d => d.Statut == "traite")</span>
-                    <span class="mda-stat-lbl">Traité</span>
-                </button>
-                <button class="mda-stat-pill mda-stat-approuve @(FilterStatut == "approuve" ? "active" : "")" @onclick='() => SetFilter("approuve")'>
-                    <span class="mda-stat-num">@Demandes.Count(d => d.Statut == "approuve")</span>
-                    <span class="mda-stat-lbl">Approuvé</span>
-                </button>
-                <button class="mda-stat-pill mda-stat-refuse @(FilterStatut == "refuse" ? "active" : "")" @onclick='() => SetFilter("refuse")'>
-                    <span class="mda-stat-num">@Demandes.Count(d => d.Statut == "refuse")</span>
-                    <span class="mda-stat-lbl">Refusé</span>
-                </button>
+                <button class="mda-stat-pill mda-stat-all @(FilterStatut==null?"active":"")" @onclick="()=>SetFilter(null)"><span class="mda-stat-num">@Demandes.Count</span><span class="mda-stat-lbl">Toutes</span></button>
+                <button class="mda-stat-pill mda-stat-attente @(FilterStatut=="en_attente"?"active":"")" @onclick='()=>SetFilter("en_attente")'><span class="mda-stat-num">@Demandes.Count(d=>d.Statut=="en_attente")</span><span class="mda-stat-lbl">En attente</span></button>
+                <button class="mda-stat-pill mda-stat-traite @(FilterStatut=="traite"?"active":"")" @onclick='()=>SetFilter("traite")'><span class="mda-stat-num">@Demandes.Count(d=>d.Statut=="traite")</span><span class="mda-stat-lbl">Traité</span></button>
+                <button class="mda-stat-pill mda-stat-approuve @(FilterStatut=="approuve"?"active":"")" @onclick='()=>SetFilter("approuve")'><span class="mda-stat-num">@Demandes.Count(d=>d.Statut=="approuve")</span><span class="mda-stat-lbl">Approuvé</span></button>
+                <button class="mda-stat-pill mda-stat-refuse @(FilterStatut=="refuse"?"active":"")" @onclick='()=>SetFilter("refuse")'><span class="mda-stat-num">@Demandes.Count(d=>d.Statut=="refuse")</span><span class="mda-stat-lbl">Refusé</span></button>
             </div>
 
-            @* ── Toolbar ── *@
             <div class="mda-toolbar">
                 <div class="mda-search-wrap">
                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    <input type="text"
-                           class="mda-search-input"
-                           placeholder="Rechercher par référence, produit..."
-                           value="@SearchQuery"
-                           @oninput="OnSearchInput" />
+                    <input type="text" class="mda-search-input" placeholder="Rechercher par référence, produit..."
+                           value="@SearchQuery" @oninput="OnSearchInput" />
                     @if (!string.IsNullOrEmpty(SearchQuery))
                     {
                         <button class="mda-search-clear" @onclick="ClearSearch">
@@ -240,30 +204,18 @@
                 </div>
             </div>
 
-            @* ── Content ── *@
             <div class="mda-content">
                 @if (IsLoading)
                 {
-                    <div class="mda-loading-state">
-                        <div class="mda-big-spinner"></div>
-                        <p>Chargement des demandes...</p>
-                    </div>
+                    <div class="mda-loading-state"><div class="mda-big-spinner"></div><p>Chargement des demandes...</p></div>
                 }
                 else if (!DemandesFiltrees.Any())
                 {
                     <div class="mda-empty-state">
-                        <div class="mda-empty-icon">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-                                <line x1="3" y1="6" x2="21" y2="6"/>
-                                <path d="M16 10a4 4 0 0 1-8 0"/>
-                            </svg>
-                        </div>
+                        <div class="mda-empty-icon"><svg viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
                         <h3>Aucune demande trouvée</h3>
-                        <p>@(string.IsNullOrEmpty(SearchQuery) && FilterStatut == null
-                            ? "Vous n'avez pas encore soumis de demande d'achat."
-                            : "Aucune demande ne correspond à vos critères.")</p>
-                        @if (string.IsNullOrEmpty(SearchQuery) && FilterStatut == null)
+                        <p>@(string.IsNullOrEmpty(SearchQuery) && FilterStatut==null ? "Vous n'avez pas encore soumis de demande d'achat." : "Aucune demande ne correspond à vos critères.")</p>
+                        @if (string.IsNullOrEmpty(SearchQuery) && FilterStatut==null)
                         {
                             <button class="mda-btn-new mda-btn-new-sm" @onclick="OpenCreatePanel">
                                 <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -274,11 +226,10 @@
                 }
                 else
                 {
-                    @* ── Table (sans colonne Demandeur) ── *@
                     <div class="mda-table">
                         <div class="mda-table-head">
-                            <div class="mda-th mda-th-produit">Produit</div>
-                            <div class="mda-th mda-th-qty">Qté</div>
+                            <div class="mda-th mda-th-produit">Demande</div>
+                            <div class="mda-th mda-th-qty">Matériels</div>
                             <div class="mda-th mda-th-date">Date</div>
                             <div class="mda-th mda-th-statut">Statut</div>
                             <div class="mda-th mda-th-actions">Actions</div>
@@ -287,79 +238,49 @@
                         <div class="mda-table-body">
                             @foreach (var demande in PagedDemandes)
                             {
-                                <div class="mda-row @(SelectedDemandeId == demande.IdDemande ? "expanded" : "")">
-
-                                    @* ── Ligne principale ── *@
+                                bool isExpanded = SelectedDemandeId == demande.IdDemande;
+                                <div class="mda-row @(isExpanded ? "expanded" : "")">
                                     <div class="mda-row-main">
-                                            <div class="mda-td mda-td-produit">
+                                        <div class="mda-td mda-td-produit">
                                             <div class="mda-produit-info">
                                                 <span class="mda-produit-name">@demande.NomProduit</span>
                                                 @if (!string.IsNullOrEmpty(demande.Description))
-                                                {
-                                                    <span class="mda-produit-desc">@demande.Description</span>
-                                                }
+                                                { <span class="mda-produit-desc">@demande.Description</span> }
                                             </div>
                                         </div>
                                         <div class="mda-td mda-td-qty">
-                                            <span class="mda-qty-badge">@demande.Quantite</span>
+                                            <span class="mda-qty-badge" title="@demande.Lignes.Count ligne(s)">@demande.Lignes.Count</span>
                                         </div>
                                         <div class="mda-td mda-td-date">
                                             <span class="mda-date-val">@demande.DateCreation.ToString("dd MMM yyyy")</span>
                                             <span class="mda-date-rel">@GetRelativeDate(demande.DateCreation)</span>
                                         </div>
                                         <div class="mda-td mda-td-statut">
-                                            <span class="mda-statut-badge mda-statut-@demande.Statut.ToLower().Replace("_","-")">
-                                                @GetStatutLabel(demande.Statut)
-                                            </span>
+                                            <span class="mda-statut-badge mda-statut-@demande.Statut.ToLower().Replace("_","-")">@GetStatutLabel(demande.Statut)</span>
                                         </div>
                                         <div class="mda-td mda-td-actions" @onclick:stopPropagation="true">
-                                            <button class="mda-btn-offres"
-                                                    @onclick="() => NavigateToOffres(demande.IdDemande)"
-                                                    title="Voir les offres fournisseurs">
-                                                <svg viewBox="0 0 24 24">
-                                                    <path d="M20 12V22H4V12"/>
-                                                    <path d="M22 7H2v5h20V7z"/>
-                                                    <path d="M12 22V7"/>
-                                                    <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
-                                                    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
-                                                </svg>
+                                            <button class="mda-btn-offres" @onclick="() => NavigateToOffres(demande.IdDemande)">
+                                                <svg viewBox="0 0 24 24"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
                                                 Offres
                                             </button>
-                                            @* Bouton Détails fonctionnel (stopPropagation pour éviter double toggle) *@
-                                            <button class="mda-btn-details"
-                                                    @onclick="() => ToggleExpand(demande.IdDemande)"
-                                                    @onclick:stopPropagation="true"
-                                                    title="@(SelectedDemandeId == demande.IdDemande ? "Masquer" : "Détails")">
-                                                <svg viewBox="0 0 24 24" class="mda-chevron @(SelectedDemandeId == demande.IdDemande ? "rotated" : "")">
-                                                    <path d="m6 9 6 6 6-6"/>
-                                                </svg>
+                                            <button class="mda-btn-details" @onclick="() => ToggleExpand(demande.IdDemande)" @onclick:stopPropagation="true">
+                                                <svg viewBox="0 0 24 24" class="mda-chevron @(isExpanded?"rotated":"")"><path d="m6 9 6 6 6-6"/></svg>
                                                 Détails
                                             </button>
                                         </div>
                                     </div>
 
-                                    @* ── Panneau détail dépliable ── *@
-                                    @if (SelectedDemandeId == demande.IdDemande)
+                                    @if (isExpanded)
                                     {
                                         <div class="mda-row-detail">
                                             <div class="mda-detail-grid">
                                                 <div class="mda-detail-block">
-                                                    <p class="mda-detail-label">Référence</p>
-                                                    <p class="mda-detail-val mda-mono">SN-@demande.Reference</p>
-                                                </div>
-                                                <div class="mda-detail-block">
-                                                    <p class="mda-detail-label">Produit</p>
-                                                    <p class="mda-detail-val">@demande.NomProduit</p>
-                                                </div>
-                                                <div class="mda-detail-block">
-                                                    <p class="mda-detail-label">Quantité</p>
-                                                    <p class="mda-detail-val">@demande.Quantite unité(s)</p>
+                                                    <p class="mda-detail-label">Référence demande</p>
+                                                    <p class="mda-detail-val mda-mono">@demande.Reference</p>
                                                 </div>
                                                 <div class="mda-detail-block">
                                                     <p class="mda-detail-label">Statut</p>
-                                                    <span class="mda-statut-badge mda-statut-@demande.Statut.ToLower().Replace("_","-")">
-                                                        @GetStatutLabel(demande.Statut)
-                                                    </span>
+                                                    <span class="mda-statut-badge mda-statut-@demande.Statut.ToLower().Replace("_","-")">@GetStatutLabel(demande.Statut)</span>
                                                 </div>
                                                 <div class="mda-detail-block">
                                                     <p class="mda-detail-label">Date de création</p>
@@ -368,7 +289,7 @@
                                                 @if (!string.IsNullOrEmpty(demande.Description))
                                                 {
                                                     <div class="mda-detail-block mda-detail-full">
-                                                        <p class="mda-detail-label">Description / Justification</p>
+                                                        <p class="mda-detail-label">Description</p>
                                                         <p class="mda-detail-val mda-detail-desc">@demande.Description</p>
                                                     </div>
                                                 }
@@ -380,130 +301,176 @@
                                                     </div>
                                                 }
                                             </div>
+
+                                            @* ── Tableau matériels ── *@
+                                            @if (demande.Lignes.Any())
+                                            {
+                                                <div class="mda-lignes-section">
+                                                    <p class="mda-lignes-title">
+                                                        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+                                                        Matériels demandés (@demande.Lignes.Count)
+                                                    </p>
+                                                    <div class="mda-lignes-table">
+                                                        <div class="mda-lignes-head">
+                                                            <span>#</span>
+                                                            <span>Référence</span>
+                                                            <span>Produit</span>
+                                                            <span>Qté</span>
+                                                            <span>Description</span>
+                                                        </div>
+                                                        @foreach (var (ligne, idx) in demande.Lignes.Select((l,i)=>(l,i)))
+                                                        {
+                                                            <div class="mda-ligne-row">
+                                                                <span class="mda-ligne-num">@(idx+1)</span>
+                                                                <span class="mda-ligne-ref">@(string.IsNullOrEmpty(ligne.Reference) ? "—" : ligne.Reference)</span>
+                                                                <span class="mda-ligne-nom">@ligne.NomProduit</span>
+                                                                <span class="mda-ligne-qty">@ligne.Quantite</span>
+                                                                <span class="mda-ligne-desc">@(ligne.Description ?? "—")</span>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+
                                             <div class="mda-detail-actions">
-                                                <button class="mda-btn-offres mda-btn-offres-lg"
-                                                        @onclick="() => NavigateToOffres(demande.IdDemande)">
-                                                    <svg viewBox="0 0 24 24">
-                                                        <path d="M20 12V22H4V12"/>
-                                                        <path d="M22 7H2v5h20V7z"/>
-                                                        <path d="M12 22V7"/>
-                                                        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
-                                                        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
-                                                    </svg>
+                                                <button class="mda-btn-offres mda-btn-offres-lg" @onclick="() => NavigateToOffres(demande.IdDemande)">
+                                                    <svg viewBox="0 0 24 24"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
                                                     Voir les offres fournisseurs
                                                 </button>
                                             </div>
                                         </div>
                                     }
-
                                 </div>
                             }
                         </div>
                     </div>
 
-                    @* ── Pagination ── *@
                     <div class="mda-pagination">
                         <span class="mda-pag-info">
-                            Affichage de @Math.Min((CurrentPage - 1) * PageSize + 1, DemandesFiltrees.Count)
-                            à @Math.Min(CurrentPage * PageSize, DemandesFiltrees.Count)
+                            Affichage de @Math.Min((CurrentPage-1)*PageSize+1, DemandesFiltrees.Count)
+                            à @Math.Min(CurrentPage*PageSize, DemandesFiltrees.Count)
                             sur @DemandesFiltrees.Count demande(s)
                         </span>
-                        @* <div class="mda-pag-controls">
-                            <button class="mda-pag-btn" disabled="@(CurrentPage == 1)" @onclick="PrevPage">
-                                <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
-                            </button>
-                            @for (int p = 1; p <= TotalPages; p++)
-                            {
-                                var page = p;
-                                <button class="mda-pag-btn mda-pag-num @(CurrentPage == page ? "active" : "")"
-                                        @onclick="() => GoToPage(page)">@page</button>
-                            }
-                            <button class="mda-pag-btn" disabled="@(CurrentPage == TotalPages)" @onclick="NextPage">
-                                <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
-                            </button>
-                        </div> *@
                     </div>
                 }
             </div>
 
         </main>
 
-        @* ══════════════════════════════════════════
-           PANNEAU CRÉATION — slide depuis la droite
-        ══════════════════════════════════════════ *@
+        @* ══════ PANNEAU CRÉATION ══════ *@
         @if (_showCreatePanel)
-        {
-            <div class="mda-panel-overlay" @onclick="CloseCreatePanel"></div>
-        }
+        { <div class="mda-panel-overlay" @onclick="CloseCreatePanel"></div> }
+
         <div class="mda-create-panel @(_showCreatePanel ? "open" : "")" @onclick:stopPropagation="true">
             <div class="mda-create-panel-header">
                 <div>
                     <h2 class="mda-create-title">Nouvelle demande d'achat</h2>
-                    <p class="mda-create-sub">Nouveau matériel ou nouveau besoin</p>
+                    <p class="mda-create-sub">Ajoutez un ou plusieurs matériels</p>
                 </div>
-
             </div>
 
             <div class="mda-create-body">
 
-                @* Produit *@
+                @if (!string.IsNullOrEmpty(_formError))
+                {
+                    <div class="mda-form-error-banner">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        @_formError
+                    </div>
+                }
+
+                @* ── Titre global ── *@
                 <div class="mda-field">
-                    <label class="mda-field-label">
-                        Produit <span class="mda-required">*</span>
-                    </label>
-                    <input type="text"
-                           class="mda-field-input @(!string.IsNullOrEmpty(_formErrors["NomProduit"]) ? "input-error" : "")"
-                           placeholder="Ex: RAM DDR4 32GB ECC"
-                           @bind="_form.NomProduit" />
-                    @if (!string.IsNullOrEmpty(_formErrors["NomProduit"]))
-                    {
-                        <span class="mda-field-error">@_formErrors["NomProduit"]</span>
-                    }
+                    <label class="mda-field-label">Titre de la demande <span class="mda-required">*</span></label>
+                    <input type="text" class="mda-field-input"
+                           placeholder="Ex: Équipements pour la salle de réunion B"
+                           @bind="_form.NomDemande" />
                 </div>
 
-                @* Référence (facultatif) *@
+                @* ── Justification globale ── *@
                 <div class="mda-field">
-                    <label class="mda-field-label">Référence <span class="mda-optional">(facultatif)</span></label>
-                    <input type="text"
-                           class="mda-field-input"
-                           placeholder="Ex: CMD-2026-001"
-                           @bind="_form.Reference" />
-                </div>
-
-                @* Quantité *@
-                <div class="mda-field">
-                    <label class="mda-field-label">
-                        Quantité <span class="mda-required">*</span>
-                    </label>
-                    <input type="number"
-                           class="mda-field-input @(!string.IsNullOrEmpty(_formErrors["Quantite"]) ? "input-error" : "")"
-                           min="1"
-                           placeholder="1"
-                           @bind="_form.Quantite" />
-                    @if (!string.IsNullOrEmpty(_formErrors["Quantite"]))
-                    {
-                        <span class="mda-field-error">@_formErrors["Quantite"]</span>
-                    }
-                </div>
-
-                @* Description / Justification *@
-                <div class="mda-field">
-                    <label class="mda-field-label">Justification</label>
-                    <textarea class="mda-field-input mda-field-textarea"
-                              placeholder="Décrivez le besoin, le contexte d'utilisation..."
-                              rows="4"
+                    <label class="mda-field-label">Justification globale <span class="mda-optional">(facultatif)</span></label>
+                    <textarea class="mda-field-input mda-field-textarea" rows="2"
+                              placeholder="Contexte général de la demande…"
                               @bind="_form.Description"></textarea>
                 </div>
+
+                @* ── Séparateur lignes ── *@
+                <div class="mda-lignes-header">
+                    <p class="mda-lignes-label">
+                        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+                        Matériels demandés
+                    </p>
+                    <button class="mda-btn-add-ligne" @onclick="AjouterLigne">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Ajouter un matériel
+                    </button>
+                </div>
+
+                @* ── Cartes lignes ── *@
+                @foreach (var (ligne, idx) in _form.Lignes.Select((l,i)=>(l,i)))
+                {
+                    <div class="mda-ligne-form @(!string.IsNullOrEmpty(ligne.Erreur) ? "has-error" : "")">
+
+                        <div class="mda-ligne-form-header">
+                            <span class="mda-ligne-badge">Matériel @(idx+1)</span>
+                            @if (_form.Lignes.Count > 1)
+                            {
+                                <button class="mda-ligne-del" @onclick="() => SupprimerLigne(ligne)" title="Supprimer">
+                                    <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                                </button>
+                            }
+                        </div>
+
+                        @* Produit + Quantité *@
+                        <div class="mda-ligne-row-inputs">
+                            <div class="mda-field" style="flex:1">
+                                <label class="mda-field-label">Produit <span class="mda-required">*</span></label>
+                                <input type="text"
+                                       class="mda-field-input @(!string.IsNullOrEmpty(ligne.Erreur) ? "input-error" : "")"
+                                       placeholder="Ex: RAM DDR4 32GB ECC"
+                                       @bind="ligne.NomProduit" @bind:event="oninput" />
+                            </div>
+                            <div class="mda-field mda-field-qty">
+                                <label class="mda-field-label">Qté <span class="mda-required">*</span></label>
+                                <input type="number" min="1" class="mda-field-input"
+                                       @bind="ligne.Quantite" @bind:event="oninput" />
+                            </div>
+                        </div>
+
+                        @* Référence par matériel ← NOUVEAU *@
+                        <div class="mda-field">
+                            <label class="mda-field-label">Référence <span class="mda-optional">(facultatif)</span></label>
+                            <input type="text" class="mda-field-input"
+                                   placeholder="Ex: CMD-2026-001"
+                                   @bind="ligne.Reference" @bind:event="oninput" />
+                        </div>
+
+                        @* Description *@
+                        <div class="mda-field">
+                            <label class="mda-field-label">Description <span class="mda-optional">(facultatif)</span></label>
+                            <input type="text" class="mda-field-input"
+                                   placeholder="Ex: Extension mémoire serveur SRV-DB-01"
+                                   @bind="ligne.Description" @bind:event="oninput" />
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(ligne.Erreur))
+                        { <span class="mda-field-error">@ligne.Erreur</span> }
+
+                    </div>
+                }
+
+                <button class="mda-btn-add-ligne-full" @onclick="AjouterLigne">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    + Ajouter un autre matériel
+                </button>
 
             </div>
 
             <div class="mda-create-footer">
                 @if (_isSaving)
                 {
-                    <button class="mda-btn-save" disabled>
-                        <div class="mda-mini-spinner"></div>
-                        Envoi en cours...
-                    </button>
+                    <button class="mda-btn-save" disabled><div class="mda-mini-spinner"></div>Envoi en cours...</button>
                 }
                 else
                 {
@@ -516,7 +483,7 @@
             </div>
         </div>
 
-    </div>@* fin mda-body-wrap *@
+    </div>
 
 </div>
 </RoleAuthGuard>

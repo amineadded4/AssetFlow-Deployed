@@ -5,7 +5,7 @@
 // des responsabilités (l'IT n'a pas besoin des offres, etc.)
 // ============================================================
 
-namespace AssetFlow.Application.DTOs
+/*namespace AssetFlow.Application.DTOs
 {
     public class DemandeAchatITDto
     {
@@ -20,3 +20,4 @@ namespace AssetFlow.Application.DTOs
         public string?  MotifRefus   { get; set; }
     }
 }
+*/

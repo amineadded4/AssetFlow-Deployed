@@ -1,5 +1,6 @@
 /* ============================================================
    MesDemandesAchat.razor.css  —  préfixe mda-
+   VERSION COMPLÈTE — multi-matériel + référence par ligne
    ============================================================ */
 
 /* ══════════════════════════════════════
@@ -13,7 +14,6 @@
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
-/* body wrap = main + panel côte à côte */
 .mda-body-wrap {
     flex: 1;
     display: flex;
@@ -35,12 +35,7 @@
     flex-shrink: 0;
     z-index: 20;
 }
-.sidebar-logo-wrap {
-    padding: 1.5rem 1rem 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+
 html.dark .mda-sidebar { background: #060d18; border-right-color: rgba(255,255,255,0.05); }
 
 .mda-sidebar-logo { width: 130px; height: auto; object-fit: contain; filter: drop-shadow(0 0 12px rgba(19,109,236,0.45)); }
@@ -267,11 +262,10 @@ html.dark .mda-sort-select { background: #161f2e; border-color: #1e2d42; }
 .mda-empty-state p  { font-size: 0.875rem; color: var(--text-muted); margin: 0; max-width: 380px; line-height: 1.6; }
 
 /* ══════════════════════════════════════
-   TABLE  (sans colonne Demandeur)
+   TABLE
 ══════════════════════════════════════ */
-.mda-table      { display: flex; flex-direction: column; margin-top: 0.5rem; }
+.mda-table { display: flex; flex-direction: column; margin-top: 0.5rem; }
 
-/* 5 colonnes : Produit | Qté | Date | Statut | Actions */
 .mda-table-head {
     display: grid;
     grid-template-columns: minmax(200px, 2fr) 80px 150px 140px 180px;
@@ -330,7 +324,6 @@ html.dark .mda-qty-badge { background: #0d1520; border-color: #1e2d42; }
 .mda-statut-refuse     { background: rgba(239,68,68,0.1);   color: #ef4444; border-color: rgba(239,68,68,0.25); }
 .mda-statut-commande   { background: rgba(99,102,241,0.1);  color: #6366f1; border-color: rgba(99,102,241,0.25); }
 
-/* Actions */
 .mda-td-actions { display: flex; align-items: center; gap: 0.5rem; justify-content: flex-end; }
 
 .mda-btn-offres {
@@ -355,7 +348,6 @@ html.dark .mda-qty-badge { background: #0d1520; border-color: #1e2d42; }
 .mda-btn-offres-lg    { padding: 0.6rem 1.25rem; font-size: 0.82rem; border-radius: 0.5rem; }
 .mda-btn-offres-lg svg{ width: 15px; height: 15px; }
 
-/* Bouton Détails */
 .mda-btn-details {
     display: inline-flex;
     align-items: center;
@@ -396,16 +388,89 @@ html.dark .mda-row-detail { background: rgba(13,21,32,0.7); border-top-color: #1
 .mda-detail-grid   { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.25rem 1.5rem; margin-bottom: 1.25rem; }
 .mda-detail-block  { display: flex; flex-direction: column; gap: 0.3rem; }
 .mda-detail-full   { grid-column: 1 / -1; }
-
 .mda-detail-label  { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); margin: 0; }
 .mda-detail-val    { font-size: 0.84rem; font-weight: 500; color: var(--text); margin: 0; }
 .mda-mono          { font-family: 'Courier New', monospace; font-weight: 700; color: var(--primary); }
 .mda-detail-desc   { font-style: italic; color: var(--text-muted); line-height: 1.5; }
-
 .mda-detail-refus  { padding: 0.875rem; background: rgba(239,68,68,0.05); border-radius: 0.5rem; border: 1px solid rgba(239,68,68,0.15); }
 .mda-detail-refus .mda-detail-val { color: #ef4444; }
-
 .mda-detail-actions { display: flex; justify-content: flex-end; }
+
+/* ══════════════════════════════════════
+   TABLEAU MATÉRIELS (détail dépliable)
+══════════════════════════════════════ */
+.mda-lignes-section {
+    margin: 1rem 0;
+    border: 1px solid var(--border);
+    border-radius: 0.625rem;
+    overflow: hidden;
+}
+
+html.dark .mda-lignes-section { border-color: #1e2d42; }
+
+.mda-lignes-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    padding: 0.625rem 0.875rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2, rgba(0,0,0,0.02));
+    margin: 0;
+}
+
+html.dark .mda-lignes-title { background: rgba(255,255,255,0.02); border-bottom-color: #1e2d42; }
+
+.mda-lignes-title svg {
+    width: 13px; height: 13px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+}
+
+.mda-lignes-table { display: flex; flex-direction: column; }
+
+/* 5 colonnes : # | Référence | Produit | Qté | Description */
+.mda-lignes-head {
+    display: grid;
+    grid-template-columns: 28px 100px 1fr 50px 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.62rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2, rgba(0,0,0,0.01));
+}
+
+html.dark .mda-lignes-head { border-bottom-color: #1e2d42; }
+
+.mda-ligne-row {
+    display: grid;
+    grid-template-columns: 28px 100px 1fr 50px 1fr;
+    gap: 0.5rem;
+    padding: 0.625rem 0.875rem;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+    transition: background 0.15s;
+}
+
+html.dark .mda-ligne-row { border-bottom-color: #1e2d42; }
+.mda-ligne-row:last-child { border-bottom: none; }
+.mda-ligne-row:hover { background: var(--bg-row-hover, rgba(0,0,0,0.02)); }
+
+.mda-ligne-num  { font-size: 0.68rem; font-weight: 700; color: var(--text-faint); text-align: center; }
+.mda-ligne-ref  { font-size: 0.72rem; font-weight: 700; color: var(--primary); font-family: 'Courier New', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mda-ligne-nom  { font-weight: 600; color: var(--text); }
+.mda-ligne-qty  { font-weight: 800; color: var(--primary); text-align: center; }
+.mda-ligne-desc { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ══════════════════════════════════════
    PAGINATION
@@ -439,7 +504,7 @@ html.dark .mda-pag-btn { background: #161f2e; border-color: #1e2d42; }
 .mda-pag-btn.active   { background: var(--primary); border-color: var(--primary); color: white; }
 
 /* ══════════════════════════════════════
-   PANNEAU CRÉATION (slide depuis droite)
+   PANNEAU CRÉATION
 ══════════════════════════════════════ */
 .mda-create-panel {
     width: 0;
@@ -456,9 +521,7 @@ html.dark .mda-pag-btn { background: #161f2e; border-color: #1e2d42; }
 
 html.dark .mda-create-panel { background: #111827; border-left-color: #1e2d42; }
 
-.mda-create-panel.open {
-    width: 420px;
-}
+.mda-create-panel.open { width: 420px; }
 
 .mda-create-panel-header {
     display: flex;
@@ -474,7 +537,6 @@ html.dark .mda-create-panel-header { border-bottom-color: #1e2d42; }
 .mda-create-title { font-size: 1.05rem; font-weight: 800; color: var(--text); margin: 0 0 0.2rem; white-space: nowrap; }
 .mda-create-sub   { font-size: 0.75rem; color: var(--text-muted); margin: 0; white-space: nowrap; }
 
-/* Overlay transparent pour fermer en cliquant dehors */
 .mda-panel-overlay {
     position: fixed;
     inset: 0;
@@ -526,8 +588,7 @@ html.dark .mda-field-input { background: #0d1520; border-color: #1e2d42; }
 .mda-field-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(19,109,236,0.1); }
 .mda-field-input.input-error { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
 
-.mda-field-textarea { resize: vertical; min-height: 90px; }
-
+.mda-field-textarea { resize: vertical; min-height: 70px; }
 .mda-field-error { font-size: 0.72rem; color: #ef4444; font-weight: 600; }
 
 /* ── Footer panel ── */
@@ -591,6 +652,152 @@ html.dark .mda-create-footer { border-top-color: #1e2d42; }
 }
 
 /* ══════════════════════════════════════
+   LIGNES — FORMULAIRE CRÉATION
+══════════════════════════════════════ */
+.mda-lignes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0.25rem 0 0.375rem;
+}
+
+.mda-lignes-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.mda-lignes-label svg {
+    width: 12px; height: 12px;
+    stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.mda-btn-add-ligne {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.75rem;
+    background: rgba(19,109,236,0.1);
+    border: 1px solid rgba(19,109,236,0.3);
+    border-radius: 0.375rem;
+    color: var(--primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+
+.mda-btn-add-ligne svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+.mda-btn-add-ligne:hover { background: rgba(19,109,236,0.18); }
+
+/* Card de ligne */
+.mda-ligne-form {
+    background: var(--surface, #fff);
+    border: 1.5px solid var(--border);
+    border-radius: 0.625rem;
+    padding: 0.875rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    animation: mdaExpandIn 0.18s ease;
+}
+
+html.dark .mda-ligne-form { background: #0d1520; border-color: #1e2d42; }
+.mda-ligne-form.has-error { border-color: rgba(239,68,68,0.4); }
+
+.mda-ligne-form-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mda-ligne-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--primary);
+    background: rgba(19,109,236,0.1);
+    border: 1px solid rgba(19,109,236,0.2);
+    border-radius: 0.375rem;
+    padding: 0.2rem 0.5rem;
+}
+
+.mda-ligne-del {
+    width: 28px; height: 28px;
+    border-radius: 0.375rem;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-faint);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.mda-ligne-del svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.mda-ligne-del:hover { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #ef4444; }
+
+.mda-ligne-row-inputs {
+    display: flex;
+    gap: 0.625rem;
+    align-items: flex-end;
+}
+
+.mda-field-qty { width: 80px; flex-shrink: 0; }
+
+.mda-btn-add-ligne-full {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.625rem;
+    background: transparent;
+    border: 1.5px dashed var(--border);
+    border-radius: 0.625rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: inherit;
+    margin-top: 0.125rem;
+}
+
+.mda-btn-add-ligne-full svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+.mda-btn-add-ligne-full:hover { border-color: var(--primary); color: var(--primary); background: rgba(19,109,236,0.04); }
+
+/* Bannière erreur globale */
+.mda-form-error-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.875rem;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 0.5rem;
+    color: #ef4444;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.mda-form-error-banner svg {
+    width: 15px; height: 15px;
+    stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round;
+    flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════
    ANIMATIONS
 ══════════════════════════════════════ */
 @keyframes mdaSpin { to { transform: rotate(360deg); } }
@@ -638,6 +845,12 @@ html.dark .mda-menu-drawer { background: #060d18; }
     .mda-content   { padding: 0 1rem 1rem; }
     .mda-btn-new   { padding: 0.5rem 0.875rem; font-size: 0.78rem; }
     .mda-create-panel.open { width: 100%; position: absolute; right: 0; top: 0; bottom: 0; z-index: 100; }
+    .mda-lignes-head,
+    .mda-ligne-row { grid-template-columns: 28px 1fr 40px; }
+    .mda-lignes-head span:nth-child(2),
+    .mda-ligne-ref,
+    .mda-lignes-head span:last-child,
+    .mda-ligne-desc { display: none; }
 }
 
 @media (max-width: 640px) {
@@ -647,4 +860,6 @@ html.dark .mda-menu-drawer { background: #060d18; }
     .mda-td-date    { display: none; }
     .mda-td-actions { justify-content: flex-start; margin-top: 0.25rem; }
     .mda-detail-grid { grid-template-columns: 1fr 1fr; }
+    .mda-ligne-row-inputs { flex-direction: column; }
+    .mda-field-qty  { width: 100%; }
 }

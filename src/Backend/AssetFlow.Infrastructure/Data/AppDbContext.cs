@@ -24,6 +24,7 @@ namespace AssetFlow.Infrastructure.Data
             public DbSet<OffreAchat> OffreAchat { get; set; }
             public DbSet<ChatMessage> ChatMessages { get; set; }
             public DbSet<Project> Projects { get; set; }
+        public DbSet<LigneDemande>  LigneDemande  { get; set; } 
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
             {
@@ -192,11 +193,15 @@ namespace AssetFlow.Infrastructure.Data
                         entity.Property(d => d.MotifRefus)
                               .HasColumnType("nvarchar(500)");
 
-                        // Relation 1→N vers OffreAchat (CASCADE DELETE)
-                        entity.HasMany(d => d.Offres)
-                              .WithOne(o => o.Demande)
-                              .HasForeignKey(o => o.IdDemande)
-                              .OnDelete(DeleteBehavior.Cascade);
+                  // Relation 1→N vers OffreAchat (CASCADE DELETE)
+                  entity.HasMany(d => d.Offres)
+                        .WithOne(o => o.Demande)
+                        .HasForeignKey(o => o.IdDemande)
+                        .OnDelete(DeleteBehavior.Cascade);
+                        entity.HasMany(d => d.Lignes)
+                        .WithOne(l => l.Demande)
+                        .HasForeignKey(l => l.IdDemande)
+                        .OnDelete(DeleteBehavior.Cascade);
                   });
 
                   modelBuilder.Entity<OffreAchat>(entity =>
@@ -256,6 +261,17 @@ namespace AssetFlow.Infrastructure.Data
                         entity.Property(p => p.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
                         entity.Property(p => p.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
                         });
+ modelBuilder.Entity<LigneDemande>(entity =>
+    {
+        entity.HasKey(l => l.IdLigne);
+        entity.Property(l => l.NomProduit).IsRequired().HasMaxLength(200);
+        entity.Property(l => l.Quantite).HasDefaultValue(1);
+
+        entity.HasOne(l => l.Demande)
+              .WithMany(d => d.Lignes)
+              .HasForeignKey(l => l.IdDemande)
+              .OnDelete(DeleteBehavior.Cascade);
+    });
 
             }
       }

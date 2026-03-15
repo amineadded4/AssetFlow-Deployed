@@ -13,6 +13,12 @@
     background: var(--bg);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
+.sidebar-logo-wrap {
+    padding: 1.5rem 1rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
 .mda-body-wrap {
     flex: 1;

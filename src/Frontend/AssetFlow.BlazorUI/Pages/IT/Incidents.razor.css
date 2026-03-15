@@ -215,3 +215,28 @@ html.dark .inc-menu-drawer { background:#060d18; }
     .inc-col-employes, .inc-col-materiels { width:100%; height:220px; border-right:none; border-bottom:1px solid var(--border); }
     .inc-col-incidents { min-height:350px; }
 }
+
+.inc-role-filter {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 0.625rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+html.dark .inc-role-filter { border-bottom-color: #1e2d42; }
+
+.inc-role-btn {
+    padding: 0.22rem 0.55rem;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+}
+.inc-role-btn:hover  { border-color: var(--primary); color: var(--primary); }
+.inc-role-btn.active { background: var(--primary); border-color: var(--primary); color: white; }

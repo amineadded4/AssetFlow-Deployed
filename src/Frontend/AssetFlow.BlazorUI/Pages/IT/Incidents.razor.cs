@@ -9,7 +9,28 @@ namespace AssetFlow.BlazorUI.Pages.IT
         [Inject] private ITIncidentService    Svc          { get; set; } = default!;
         [Inject] private ILocalStorageService LocalStorage  { get; set; } = default!;
 
-        private List<IncidentEmployeDto>  Employes            { get; set; } = new();
+        private List<IncidentEmployeDto> _allEmployes = new();
+        private string FiltreRole { get; set; } = "tous";
+        private List<IncidentEmployeDto> Employes
+        {
+            get
+            {
+                var q = _allEmployes.AsEnumerable();
+
+                if (FiltreRole != "tous")
+                    q = q.Where(u => u.Role.Equals(FiltreRole, StringComparison.OrdinalIgnoreCase));
+
+                if (!string.IsNullOrWhiteSpace(Search))
+                {
+                    var s = Search.Trim().ToLower();
+                    q = q.Where(u =>
+                        u.FullName.ToLower().Contains(s) ||
+                        u.Role.ToLower().Contains(s));
+                }
+
+                return q.ToList();
+            }
+        }
         private IncidentEmployeDto?       EmployeSelectionne  { get; set; }
         private List<IncidentMaterielDto> Materiels           { get; set; } = new();
         private IncidentMaterielDto?      MaterielSelectionne { get; set; }
@@ -41,17 +62,13 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private async Task LoadEmployesAsync(string? search = null)
         {
             LoadingEmployes = true; StateHasChanged();
-            Employes = await Svc.GetEmployesAsync(search);
+            _allEmployes   = await Svc.GetEmployesAsync(search);
             LoadingEmployes = false; StateHasChanged();
         }
 
         private void OnSearchInput(ChangeEventArgs e)
         {
             Search = e.Value?.ToString() ?? string.Empty;
-            _debounce?.Stop();
-            _debounce = new System.Timers.Timer(350);
-            _debounce.Elapsed += async (_, _) => { _debounce?.Stop(); await InvokeAsync(() => LoadEmployesAsync(Search)); };
-            _debounce.AutoReset = false; _debounce.Start();
         }
 
         private async Task SelectEmploye(IncidentEmployeDto emp)

@@ -123,6 +123,12 @@
                     <span class="inc-col-title">Employés</span>
                     <span class="inc-badge-count">@Employes.Count</span>
                 </div>
+                <div class="inc-role-filter">
+                    <button class="inc-role-btn @(FiltreRole == "tous"        ? "active" : "")" @onclick='() => FiltreRole = "tous"'>Tous</button>
+                    <button class="inc-role-btn @(FiltreRole == "Employe"     ? "active" : "")" @onclick='() => FiltreRole = "Employe"'>Employés</button>
+                    <button class="inc-role-btn @(FiltreRole == "EquipeAchat" ? "active" : "")" @onclick='() => FiltreRole = "EquipeAchat"'>Achats</button>
+                    <button class="inc-role-btn @(FiltreRole == "IT"          ? "active" : "")" @onclick='() => FiltreRole = "IT"'>IT</button>
+                </div>
                 @if (LoadingEmployes)
                 {
                     <div class="inc-loading"><div class="inc-spinner"></div></div>

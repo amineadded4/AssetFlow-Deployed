@@ -1,17 +1,17 @@
 @* ============================================================
-   AssetFlow.BlazorUI / Pages / Achat / IncidentSuccess.razor
+   AssetFlow.BlazorUI / Pages / IT / IncidentSuccess.razor
    Page de confirmation après signalement d'incident
    ============================================================ *@
 
-@page "/achat/incident/success"
+@page "/it/incident/success"
 @using Microsoft.AspNetCore.Components
 
-<RoleAuthGuard AllowedRoles="@(new[]{"EquipeAchat"})">
+<RoleAuthGuard AllowedRoles="@(new[]{"IT"})">
     <div class="success-container">
 
         <header class="success-header">
             <div class="header-content">
-                <a href="/achat/equipements" class="header-logo">
+                <a href="/it/equipements" class="header-logo">
                     <div class="logo-brand">
                         <span class="logo-text-asset">Asset</span><span class="logo-text-flow">Flow</span>
                     </div>
@@ -59,7 +59,7 @@
 
                 @* Boutons d'action *@
                 <div class="action-buttons">
-                    <a href="/achat/equipements" class="btn-primary">
+                    <a href="/it/equipements" class="btn-primary">
                         <svg viewBox="0 0 24 24">
                             <rect x="3" y="3" width="7" height="9" rx="1" />
                             <rect x="14" y="3" width="7" height="5" rx="1" />
@@ -68,7 +68,7 @@
                         </svg>
                         <span>Retour au tableau de bord</span>
                     </a>
-                    <a href="/achat/equipements" class="btn-secondary">
+                    <a href="/it/equipements" class="btn-secondary">
                         <svg viewBox="0 0 24 24">
                             <path d="M8 6h13" />
                             <path d="M8 12h13" />
@@ -101,6 +101,7 @@
 
     </div>
 </RoleAuthGuard>
+
 @code {
     [Parameter]
     [SupplyParameterFromQuery(Name = "numero")]

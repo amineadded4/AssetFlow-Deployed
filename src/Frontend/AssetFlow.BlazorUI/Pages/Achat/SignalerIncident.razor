@@ -9,6 +9,7 @@
 @using AssetFlow.BlazorUI.Services
 @using AssetFlow.BlazorUI.Components
 
+<RoleAuthGuard AllowedRoles="@(new[]{"EquipeAchat"})">
 <div class="inc-sig-layout">
 
     @* ══════ SIDEBAR ══════ *@
@@ -286,3 +287,4 @@
     </main>
 
 </div>
+</RoleAuthGuard>

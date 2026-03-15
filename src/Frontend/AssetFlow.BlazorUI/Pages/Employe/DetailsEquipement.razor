@@ -8,7 +8,7 @@
 @using AssetFlow.BlazorUI.Services
 @using AssetFlow.BlazorUI.Components
 
-
+<RoleAuthGuard AllowedRoles="@(new[]{"Employe"})">
     <div class="employe-layout">
 
         @* ══════════════════════════════════════════════════════
@@ -354,3 +354,4 @@
         </main>
 
     </div>
+</RoleAuthGuard>

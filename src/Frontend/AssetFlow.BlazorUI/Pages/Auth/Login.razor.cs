@@ -98,7 +98,7 @@ namespace AssetFlow.BlazorUI.Pages.Auth
                 // Rediriger vers le tableau de bord selon le rôle
                 var dashboard = Role switch
                 {
-                    "IT" => "/it/affectation",
+                    "IT" => "/it/equipements",
                     "EquipeAchat" => "/statistiques",
                     "Employe" => "/employe/equipements",
                     "Admin" => "/admin/projets",

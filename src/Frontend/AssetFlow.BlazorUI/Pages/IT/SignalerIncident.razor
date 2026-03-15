@@ -1,0 +1,237 @@
+@* ============================================================
+   Pages/IT/SignalerIncident.razor
+   Sidebar IT identique aux autres pages IT
+   ============================================================ *@
+@namespace AssetFlow.BlazorUI.Pages.IT
+@page "/it/incident"
+@page "/it/incident/{AffectationId:int}"
+@page "/it/incident/{AffectationId:int}/article/{ArticleId:int}"
+@using AssetFlow.BlazorUI.Services
+@using AssetFlow.BlazorUI.Components
+
+<RoleAuthGuard AllowedRoles="@(new[]{"IT"})">
+<div class="inc-sig-layout">
+
+    @* ══════ SIDEBAR ══════ *@
+    <aside class="aff-sidebar">
+        <div class="sidebar-logo-wrap">
+            <img src="images/logo.png" alt="AssetFlow" class="aff-sidebar-logo" />
+        </div>
+        <nav class="aff-sidebar-nav">
+            <a href="/dashboard/it" class="aff-nav-link">
+                <svg class="aff-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                <span class="aff-nav-text">Dashboard</span>
+            </a>
+            <a href="/it/equipements" class="aff-nav-link active">
+                <svg class="aff-nav-icon" viewBox="0 0 24 24">
+                    <rect x="2" y="3" width="20" height="14" rx="2" />
+                    <path d="M8 21h8M12 17v4" />
+                </svg>
+                <span class="aff-nav-text">Mes Équipements</span>
+            </a>
+            <a href="/it/employes" class="aff-nav-link">
+                <svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span class="aff-nav-text">Gestion d'affectations</span>
+            </a>
+            <a href="/it/affectation" class="aff-nav-link">
+                <svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                <span class="aff-nav-text">Affectations</span>
+            </a>
+            <a href="/it/incidents" class="aff-nav-link">
+                <svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg>
+                <span class="aff-nav-text">Incidents</span>
+            </a>
+            <a href="/it/inventaire" class="aff-nav-link">
+                <svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/></svg>
+                <span class="aff-nav-text">Inventaire</span>
+            </a>
+            <a href="/it/demandes-achat" class="aff-nav-link">
+                <svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span class="aff-nav-text">Mes achats</span>
+            </a>
+            <a href="/it/messagerie" class="aff-nav-link">
+                <svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <span class="aff-nav-text">Messagerie</span>
+            </a>
+        </nav>
+        <div class="aff-sidebar-profile">
+            <div class="aff-profile-avatar">@GetUserInitials()</div>
+            <div class="aff-profile-info">
+                <p class="aff-profile-name">@UserName</p>
+                <p class="aff-profile-role">IT</p>
+            </div>
+        </div>
+        <LogoutButton />
+    </aside>
+
+    @* ══════ OVERLAY MENU MOBILE ══════ *@
+    @if (_menuOpen)
+    {
+        <div class="aff-menu-overlay" @onclick="() => _menuOpen = false">
+            <div class="aff-menu-drawer" @onclick:stopPropagation="true">
+                <div class="aff-menu-drawer-logo">
+                    <img src="images/logo.png" alt="AssetFlow" class="aff-sidebar-logo" />
+                </div>
+                <nav class="aff-menu-drawer-nav">
+                    <a href="/dashboard/it"      class="aff-nav-link"        @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="aff-nav-text">Dashboard</span></a>
+                    <a href="/it/equipements"    class="aff-nav-link active" @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span class="aff-nav-text">Mes Équipements</span></a>
+                    <a href="/it/employes"       class="aff-nav-link"        @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span class="aff-nav-text">Gestion d'affectations</span></a>
+                    <a href="/it/affectation"    class="aff-nav-link"        @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><span class="aff-nav-text">Affectations</span></a>
+                    <a href="/it/incidents"      class="aff-nav-link"        @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg><span class="aff-nav-text">Incidents</span></a>
+                    <a href="/it/inventaire"     class="aff-nav-link"        @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span class="aff-nav-text">Inventaire</span></a>
+                    <a href="/it/demandes-achat" class="aff-nav-link"        @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg><span class="aff-nav-text">Mes achats</span></a>
+                    <a href="/it/messagerie"     class="aff-nav-link"        @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="aff-nav-text">Messagerie</span></a>
+                </nav>
+                <div class="aff-sidebar-profile">
+                    <div class="aff-profile-avatar">@GetUserInitials()</div>
+                    <div class="aff-profile-info"><p class="aff-profile-name">@UserName</p><p class="aff-profile-role">IT</p></div>
+                </div>
+                <LogoutButton />
+            </div>
+        </div>
+    }
+
+    @* ══════ MAIN ══════ *@
+    <main class="inc-sig-main">
+
+        @* Breadcrumb *@
+        <nav class="inc-sig-breadcrumb">
+            <a href="/it/equipements" class="bc-link">Équipements</a>
+            <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+            @if (SelectedArticleId > 0)
+            {
+                var art    = Articles.FirstOrDefault(a => a.ArticleId == SelectedArticleId);
+                var nomMat = art != null ? GetDesignation(art.AffectationId) : string.Empty;
+                if (!string.IsNullOrEmpty(nomMat))
+                {
+                    <a href="/it/equipements" class="bc-link">@nomMat</a>
+                    <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                }
+            }
+            <span class="bc-current">Signalement</span>
+        </nav>
+
+        @* Card principale *@
+        <div class="incident-card-wrap">
+
+            <div class="card-header">
+                <div class="header-icon-wrapper">
+                    <svg class="header-icon" viewBox="0 0 24 24">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                        <path d="M12 9v4"/><path d="M12 17h.01"/>
+                    </svg>
+                </div>
+                <div class="header-text">
+                    <h1 class="header-title">Signaler un incident</h1>
+                    <p class="header-subtitle">Veuillez détailler le problème pour une prise en charge rapide.</p>
+                </div>
+            </div>
+
+            @if (IsLoading)
+            {
+                <div class="loading-state"><div class="spinner"></div><p>Chargement...</p></div>
+            }
+            else
+            {
+                <form class="incident-form" @onsubmit="SoumettreIncident">
+
+                    <div class="form-group">
+                        <label class="form-label">Équipement concerné</label>
+                        <div class="select-wrapper">
+                            <svg class="select-icon" viewBox="0 0 24 24">
+                                <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>
+                            </svg>
+                            @if (Articles.Count == 0)
+                            {
+                                <select class="form-select" disabled>
+                                    <option>Aucun équipement affecté</option>
+                                </select>
+                            }
+                            else
+                            {
+                                <select class="form-select" @bind="SelectedArticleId">
+                                    <option value="0">— Sélectionner un article —</option>
+                                    @foreach (var art in Articles)
+                                    {
+                                        <option value="@art.ArticleId">@art.NumeroSerie — @GetDesignation(art.AffectationId)</option>
+                                    }
+                                </select>
+                            }
+                            <svg class="select-arrow" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Type d'incident</label>
+                        <div class="radio-grid">
+                            <label class="radio-option @(TypeIncident == "Panne" ? "selected" : "")" @onclick='() => SelectType("Panne")'>
+                                <input type="radio" name="type" value="Panne" checked="@(TypeIncident == "Panne")"/>
+                                <svg class="option-icon" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                                <span class="option-text">Panne</span>
+                            </label>
+                            <label class="radio-option @(TypeIncident == "Casse" ? "selected" : "")" @onclick='() => SelectType("Casse")'>
+                                <input type="radio" name="type" value="Casse" checked="@(TypeIncident == "Casse")"/>
+                                <svg class="option-icon" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                                <span class="option-text">Casse</span>
+                            </label>
+                            <label class="radio-option @(TypeIncident == "Vol" ? "selected" : "")" @onclick='() => SelectType("Vol")'>
+                                <input type="radio" name="type" value="Vol" checked="@(TypeIncident == "Vol")"/>
+                                <svg class="option-icon" viewBox="0 0 24 24"><circle cx="12" cy="16" r="1"/><rect x="3" y="10" width="18" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg>
+                                <span class="option-text">Vol</span>
+                            </label>
+                            <label class="radio-option @(TypeIncident == "Autre" ? "selected" : "")" @onclick='() => SelectType("Autre")'>
+                                <input type="radio" name="type" value="Autre" checked="@(TypeIncident == "Autre")"/>
+                                <svg class="option-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                                <span class="option-text">Autre</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-textarea" placeholder="Décrivez le problème en quelques mots..." rows="4" @bind="Description"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="urgency-header">
+                            <label class="form-label">Niveau d'urgence</label>
+                            <span class="urgency-badge @GetUrgencyClass()">@GetUrgencyLabel()</span>
+                        </div>
+                        <div class="slider-wrapper">
+                            <input type="range" class="urgency-slider" min="0" max="100" step="1" @bind="Urgence" @oninput="OnUrgencyChange"/>
+                        </div>
+                        <div class="urgency-labels"><span>Faible</span><span>Moyen</span><span>Critique</span></div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="error-message">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+                            <span>@ErrorMessage</span>
+                        </div>
+                    }
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-submit" disabled="@IsSubmitting">
+                            <svg class="btn-icon" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                            @if (IsSubmitting) { <span>Envoi en cours...</span> }
+                            else               { <span>Envoyer le signalement</span> }
+                        </button>
+                    </div>
+                </form>
+
+                <div class="card-footer-info">
+                    <div class="footer-icon">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    </div>
+                    <div class="footer-text">
+                        <p>Une notification sera envoyée automatiquement à l'équipe IT via <strong>Microsoft Teams</strong>. Vous recevrez une réponse dans les 24 heures.</p>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </main>
+
+</div>
+</RoleAuthGuard>

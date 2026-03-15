@@ -1,0 +1,310 @@
+@* ============================================================
+   Pages/IT/DetailsEquipement.razor
+   ============================================================ *@
+@namespace AssetFlow.BlazorUI.Pages.IT
+@page "/it/equipement/{AffectationId:int}"
+@page "/it/equipement/{AffectationId:int}/article/{ArticleId:int}"
+@using AssetFlow.BlazorUI.Services
+@using AssetFlow.BlazorUI.Components
+
+<RoleAuthGuard AllowedRoles="@(new[]{"IT"})">
+    <div class="employe-layout">
+
+        @* ══════ SIDEBAR ══════ *@
+        <aside class="aff-sidebar">
+            <div class="sidebar-logo-wrap">
+                <img src="images/logo.png" alt="AssetFlow" class="aff-sidebar-logo" />
+            </div>
+            <nav class="aff-sidebar-nav">
+                <a href="/dashboard/it" class="aff-nav-link">
+                    <svg class="aff-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    <span class="aff-nav-text">Dashboard</span>
+                </a>
+                <a href="/it/equipements" class="aff-nav-link active">
+                    <svg class="aff-nav-icon" viewBox="0 0 24 24">
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <path d="M8 21h8M12 17v4" />
+                    </svg>
+                    <span class="aff-nav-text">Mes Équipements</span>
+                </a>
+                <a href="/it/employes" class="aff-nav-link">
+                    <svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span class="aff-nav-text">Gestion d'affectations</span>
+                </a>
+                <a href="/it/affectation" class="aff-nav-link">
+                    <svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                    <span class="aff-nav-text">Affectations</span>
+                </a>
+                <a href="/it/incidents" class="aff-nav-link">
+                    <svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg>
+                    <span class="aff-nav-text">Incidents</span>
+                </a>
+                <a href="/it/inventaire" class="aff-nav-link">
+                    <svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/></svg>
+                    <span class="aff-nav-text">Inventaire</span>
+                </a>
+                <a href="/it/demandes-achat" class="aff-nav-link">
+                    <svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    <span class="aff-nav-text">Mes achats</span>
+                </a>
+                <a href="/it/messagerie" class="aff-nav-link">
+                    <svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <span class="aff-nav-text">Messagerie</span>
+                </a>
+            </nav>
+            <div class="aff-sidebar-profile">
+                <div class="aff-profile-avatar">@GetInitials()</div>
+                <div class="aff-profile-info">
+                    <p class="aff-profile-name">@UserName</p>
+                    <p class="aff-profile-role">IT</p>
+                </div>
+            </div>
+            <LogoutButton />
+        </aside>
+
+        @* ══════ OVERLAY MENU MOBILE ══════ *@
+        @if (_menuOpen)
+        {
+            <div class="aff-menu-overlay" @onclick="() => _menuOpen = false">
+                <div class="aff-menu-drawer" @onclick:stopPropagation="true">
+                    <div class="aff-menu-drawer-logo">
+                        <img src="images/logo.png" alt="AssetFlow" class="aff-sidebar-logo" />
+                    </div>
+                    <nav class="aff-menu-drawer-nav">
+                        <a href="/dashboard/it"      class="aff-nav-link"        @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="aff-nav-text">Dashboard</span></a>
+                        <a href="/it/equipements"    class="aff-nav-link active" @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span class="aff-nav-text">Mes Équipements</span></a>
+                        <a href="/it/employes"       class="aff-nav-link"        @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span class="aff-nav-text">Gestion d'affectations</span></a>
+                        <a href="/it/affectation"    class="aff-nav-link"        @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><span class="aff-nav-text">Affectations</span></a>
+                        <a href="/it/incidents"      class="aff-nav-link"        @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg><span class="aff-nav-text">Incidents</span></a>
+                        <a href="/it/inventaire"     class="aff-nav-link"        @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span class="aff-nav-text">Inventaire</span></a>
+                        <a href="/it/demandes-achat" class="aff-nav-link"        @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg><span class="aff-nav-text">Mes achats</span></a>
+                        <a href="/it/messagerie"     class="aff-nav-link"        @onclick="() => _menuOpen = false"><svg class="aff-nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="aff-nav-text">Messagerie</span></a>
+                    </nav>
+                    <div class="aff-sidebar-profile">
+                        <div class="aff-profile-avatar">@GetInitials()</div>
+                        <div class="aff-profile-info"><p class="aff-profile-name">@UserName</p><p class="aff-profile-role">IT</p></div>
+                    </div>
+                    <LogoutButton />
+                </div>
+            </div>
+        }
+
+        @* ══════ MAIN ══════ *@
+        <main class="detail-main">
+
+            <header class="detail-header">
+                <button class="aff-hamburger" @onclick="() => _menuOpen = !_menuOpen" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
+                <nav class="breadcrumb">
+                    <a href="/it/equipements" class="breadcrumb-back" title="Retour">
+                        <svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
+                    </a>
+                    <a href="/it/equipements" class="breadcrumb-sep">Équipements</a>
+                    <svg class="breadcrumb-chevron" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+                    <span class="breadcrumb-current">@(Equipement?.Designation ?? "Chargement...")</span>
+                </nav>
+            </header>
+
+            <div class="detail-content">
+
+                @if (IsLoading)
+                {
+                    <div class="state-center">
+                        <div class="spinner"></div>
+                        <p>Chargement de l'équipement...</p>
+                    </div>
+                }
+                else if (Equipement == null)
+                {
+                    <div class="state-center">
+                        <svg class="state-icon" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="m15 9-6 6M9 9l6 6"/>
+                        </svg>
+                        <p>Équipement introuvable ou non autorisé.</p>
+                        <a href="/it/equipements" class="btn-back-link">← Retour</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="detail-grid">
+
+                        @* ════ COLONNE GAUCHE (60%) ════ *@
+                        <section class="col-left">
+
+                            @* Titre + badge statut *@
+                            <div class="equip-heading">
+                                <div>
+                                    <h2 class="equip-title">@Equipement.Designation</h2>
+                                    <p class="equip-ref">Référence : @Equipement.Reference</p>
+                                </div>
+                                <span class="statut-pill statut-@Equipement.EtatArticle.ToLower()">
+                                    <span class="statut-dot"></span>
+                                    @GetStatutLabel(Equipement.EtatArticle)
+                                </span>
+                            </div>
+
+                            @* Photo *@
+                            <div class="equip-photo-box">
+                                @if (!string.IsNullOrEmpty(Equipement.ImageUrl))
+                                {
+                                    <img class="equip-photo" src="@Equipement.ImageUrl" alt="@Equipement.Designation" />
+                                }
+                                else
+                                {
+                                    <div class="photo-placeholder">
+                                        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                                        <span>Aucune photo disponible</span>
+                                    </div>
+                                }
+                            </div>
+
+                            @* Spécifications techniques *@
+                            <div class="specs-card">
+                                <div class="specs-header">
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    <h3>Spécifications Techniques</h3>
+                                </div>
+                                <table class="specs-table">
+                                    <tbody>
+                                        <tr><td class="spec-lbl">Nom du matériel</td><td class="spec-val">@Equipement.Designation</td></tr>
+                                        <tr>
+                                            <td class="spec-lbl">Numéro de série</td>
+                                            <td class="spec-val spec-mono">@(string.IsNullOrEmpty(Equipement.NumeroSerie) ? "Non renseigné" : Equipement.NumeroSerie)</td>
+                                        </tr>
+                                        <tr><td class="spec-lbl">Catégorie</td><td class="spec-val">@Equipement.Categorie</td></tr>
+                                        <tr>
+                                            <td class="spec-lbl">État</td>
+                                            <td class="spec-val">
+                                                <span class="etat-tag etat-@(Equipement.EtatArticle?.ToLower() ?? "bon")">
+                                                    @(Equipement.EtatArticle == "Panne" ? "⚠ En panne" : "✓ Bon état")
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr><td class="spec-lbl">Date d'affectation</td><td class="spec-val">@Equipement.DateAffectation.ToString("dd MMMM yyyy")</td></tr>
+                                        @if (!string.IsNullOrEmpty(Equipement.Observations))
+                                        {
+                                            <tr><td class="spec-lbl">Observations</td><td class="spec-val spec-obs">@Equipement.Observations</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            @* Historique des incidents *@
+                            <div class="incidents-section">
+                                <div class="incidents-section-header">
+                                    <div class="incidents-title-group">
+                                        <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 8v4l3 3"/></svg>
+                                        <h3>Historique des incidents</h3>
+                                    </div>
+                                    @if (Incidents.Count > 0)
+                                    { <span class="incidents-count-badge">@Incidents.Count</span> }
+                                </div>
+
+                                @if (IsLoadingIncidents)
+                                {
+                                    <div class="incidents-loading">
+                                        <div class="spinner-sm"></div>
+                                        <span>Chargement des incidents...</span>
+                                    </div>
+                                }
+                                else if (Incidents.Count == 0)
+                                {
+                                    <div class="incidents-empty">
+                                        <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                        <p>Aucun incident signalé pour cet équipement.</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="incidents-timeline">
+                                        @foreach (var incident in Incidents)
+                                        {
+                                            <div class="timeline-item">
+                                                <div class="timeline-dot dot-@GetIncidentDotClass(incident.Statut)">
+                                                    <svg viewBox="0 0 24 24">
+                                                        @if (incident.Statut == "Resolu" || incident.Statut == "Cloture")
+                                                        { <polyline points="20 6 9 17 4 12"/> }
+                                                        else if (incident.Statut == "EnCours")
+                                                        { <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/> }
+                                                        else
+                                                        { <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/> }
+                                                    </svg>
+                                                </div>
+                                                <div class="timeline-content">
+                                                    <div class="timeline-top-row">
+                                                        <div class="timeline-badges">
+                                                            <span class="incident-type-badge type-@incident.TypeIncident.ToLower()">@incident.TypeIncident</span>
+                                                            <span class="incident-statut-badge statut-badge-@incident.Statut.ToLower()">@incident.StatutLabel</span>
+                                                            <span class="incident-urgence-badge urgence-@GetUrgenceClass(incident.Urgence)">@incident.UrgenceLabel</span>
+                                                        </div>
+                                                        <div class="timeline-meta">
+                                                            <span class="timeline-numero">@incident.NumeroIncident</span>
+                                                            <span class="timeline-date">@incident.DateIncident.ToString("dd MMM yyyy")</span>
+                                                        </div>
+                                                    </div>
+                                                    <p class="timeline-description">@incident.Description</p>
+                                                    @if (incident.DateResolution.HasValue && !string.IsNullOrEmpty(incident.CommentairesResolution))
+                                                    {
+                                                        <div class="timeline-resolution">
+                                                            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                                            <span>@incident.CommentairesResolution</span>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+
+                        </section>
+
+                        @* ════ COLONNE DROITE (40%) ════ *@
+                        <aside class="col-right">
+
+                            @* QR Code *@
+                            <div class="qr-card">
+                                <div class="qr-frame">
+                                    <div class="qr-svg-wrap">@((MarkupString)QrSvg)</div>
+                                </div>
+                                <h4 class="qr-title">Code d'Identification</h4>
+                                <p class="qr-desc">Scannez depuis n'importe quel téléphone pour accéder à la fiche complète de cet équipement.</p>
+                                <div class="qr-url-row">
+                                    <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                                    <code>@FicheUrl</code>
+                                </div>
+                                <button class="qr-btn-print" @onclick="ImprimerQR">
+                                    <svg viewBox="0 0 24 24"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                    Imprimer / Télécharger QR
+                                </button>
+                            </div>
+
+                            @* Signaler un incident *@
+                            <div class="incident-card">
+                                <div class="incident-top">
+                                    <div class="incident-icon-box">
+                                        <svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                    </div>
+                                    <div>
+                                        <h4 class="incident-title">Signaler un problème</h4>
+                                        <p class="incident-desc">L'équipement présente un dysfonctionnement ou nécessite une réparation ?</p>
+                                    </div>
+                                </div>
+                                <button class="btn-incident" @onclick="NaviguerVersSignalement">
+                                    <svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/></svg>
+                                    Déclarer un incident
+                                </button>
+                            </div>
+
+                        </aside>
+
+                    </div>
+                }
+
+            </div>
+        </main>
+
+    </div>
+</RoleAuthGuard>

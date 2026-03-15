@@ -39,20 +39,20 @@ namespace AssetFlow.BlazorUI.Services
             var accessToken  = await _localStorage.GetItemAsync<string>("access_token");
             var expiresAtStr = await _localStorage.GetItemAsync<string>("token_expires_at");
 
-            // Si pas de token du tout → pas connecté
             if (string.IsNullOrEmpty(accessToken)) return null;
 
-            // Vérifier l'expiration (marge de 60 secondes)
-            if (DateTime.TryParse(expiresAtStr, out var expiresAt))
+            // ← Forcer la culture invariante pour le parsing ISO 8601
+            if (DateTime.TryParse(expiresAtStr,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.RoundtripKind,
+                    out var expiresAt))
             {
                 var isExpiringSoon = DateTime.UtcNow >= expiresAt.AddSeconds(-60);
                 if (isExpiringSoon)
                 {
                     var refreshed = await TryRefreshTokenAsync();
-                    if (refreshed != null)
-                        return refreshed;
+                    if (refreshed != null) return refreshed;
 
-                    // Refresh échoué → vider la session
                     await ClearSessionAsync();
                     return null;
                 }
@@ -64,6 +64,7 @@ namespace AssetFlow.BlazorUI.Services
         /// <summary>
         /// Appelle Keycloak avec le refresh_token pour obtenir un nouveau access_token.
         /// </summary>
+        // Remplacer TryRefreshTokenAsync entièrement :
         private async Task<string?> TryRefreshTokenAsync()
         {
             var refreshToken = await _localStorage.GetItemAsync<string>("refresh_token");
@@ -71,33 +72,32 @@ namespace AssetFlow.BlazorUI.Services
 
             try
             {
-                // Utiliser un client HTTP sans le handler (éviter boucle infinie)
-                var client = _httpClientFactory.CreateClient("RefreshClient");
+                // ← Créer un HttpClient RAW, sans passer par le handler
+                using var rawClient = new HttpClient();
 
                 var formData = new Dictionary<string, string>
                 {
-                    { "grant_type",    "refresh_token" },
-                    { "client_id",     "assetflow-client" },   // ← ton ClientId
-                    { "client_secret", "tU5jkiUUchoZMyr7V5nDYBAlD52PCOod" },  // ← ton ClientSecret
-                    { "refresh_token", refreshToken }
+                    { "grant_type",    "refresh_token"                      },
+                    { "client_id",     "assetflow-client"                   },
+                    { "client_secret", "tU5jkiUUchoZMyr7V5nDYBAlD52PCOod"  },
+                    { "refresh_token", refreshToken                         }
                 };
 
-                var response = await client.PostAsync(
+                var response = await rawClient.PostAsync(
                     "http://localhost:8080/realms/assetflow/protocol/openid-connect/token",
                     new FormUrlEncodedContent(formData)
                 );
 
                 if (!response.IsSuccessStatusCode) return null;
 
-                var json = await response.Content.ReadAsStringAsync();
+                var json   = await response.Content.ReadAsStringAsync();
                 var result = JsonSerializer.Deserialize<KeycloakTokenResponse>(json,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                 if (result == null) return null;
 
-                // Sauvegarder les nouveaux tokens
-                await _localStorage.SetItemAsync("access_token",  result.access_token);
-                await _localStorage.SetItemAsync("refresh_token", result.refresh_token);
+                await _localStorage.SetItemAsync("access_token",     result.access_token);
+                await _localStorage.SetItemAsync("refresh_token",    result.refresh_token);
                 await _localStorage.SetItemAsync("token_expires_at",
                     DateTime.UtcNow.AddSeconds(result.expires_in).ToString("o"));
 

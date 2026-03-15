@@ -21,10 +21,6 @@ builder.Services.AddHttpClient("ApiClient", client =>
 })
 .AddHttpMessageHandler<AuthTokenHandler>();
 
-builder.Services.AddHttpClient("RefreshClient", client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
 
 // Rendre ce client disponible comme HttpClient par défaut
 builder.Services.AddScoped(sp =>

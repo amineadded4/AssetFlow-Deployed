@@ -1370,3 +1370,22 @@ html.dark .aff-menu-drawer { background:#060d18; }
 .priorite-haute    { background: rgba(249,115,22,0.12); color: #F97316; }
 .priorite-moyenne  { background: rgba(59,130,246,0.12); color: #3B82F6; }
 .priorite-faible   { background: rgba(107,114,128,0.1); color: #9CA3AF; }
+
+.aff-role-filter {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+}
+.aff-role-btn {
+    padding: 0.3rem 0.75rem;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+}
+.aff-role-btn:hover { border-color: var(--primary); color: var(--primary); }
+.aff-role-btn.active { background: var(--primary); border-color: var(--primary); color: white; }

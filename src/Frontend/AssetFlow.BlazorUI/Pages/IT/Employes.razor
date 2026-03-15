@@ -118,6 +118,12 @@
                         <span class="emp-col-title">Employés</span>
                         <span class="emp-badge">@Employees.Count</span>
                     </div>
+                    <div class="emp-role-filter">
+                        <button class="emp-role-btn @(FiltreRoleEmp == "tous"        ? "active" : "")" @onclick='() => FiltreRoleEmp = "tous"'>Tous</button>
+                        <button class="emp-role-btn @(FiltreRoleEmp == "Employe"     ? "active" : "")" @onclick='() => FiltreRoleEmp = "Employe"'>Employés</button>
+                        <button class="emp-role-btn @(FiltreRoleEmp == "EquipeAchat" ? "active" : "")" @onclick='() => FiltreRoleEmp = "EquipeAchat"'>Achats</button>
+                        <button class="emp-role-btn @(FiltreRoleEmp == "IT"          ? "active" : "")" @onclick='() => FiltreRoleEmp = "IT"'>IT</button>
+                    </div>
                     @if (LoadingEmployes)
                     {
                         <div class="emp-loading"><div class="emp-spinner"></div><span>Chargement...</span></div>

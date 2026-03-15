@@ -242,6 +242,12 @@
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                             <input type="text" placeholder="Filtrer les employés..." value="@EmployeSearch" @oninput="OnEmployeSearchInput" />
                         </div>
+                        <div class="aff-role-filter">
+                            <button class="aff-role-btn @(FiltreRole == "tous"        ? "active" : "")" @onclick='() => FiltreRole = "tous"'>Tous</button>
+                            <button class="aff-role-btn @(FiltreRole == "Employe"     ? "active" : "")" @onclick='() => FiltreRole = "Employe"'>Employés</button>
+                            <button class="aff-role-btn @(FiltreRole == "EquipeAchat" ? "active" : "")" @onclick='() => FiltreRole = "EquipeAchat"'>Achats</button>
+                            <button class="aff-role-btn @(FiltreRole == "IT"          ? "active" : "")" @onclick='() => FiltreRole = "IT"'>IT</button>
+                        </div>
                         <div class="aff-emp-list">
                             @if (LoadingUtilisateurs)
                             {

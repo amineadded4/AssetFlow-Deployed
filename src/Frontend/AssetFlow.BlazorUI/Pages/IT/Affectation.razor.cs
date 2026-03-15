@@ -1,6 +1,5 @@
 // ============================================================
 // AssetFlow.BlazorUI / Pages / IT / Affectation.razor.cs
-// MISE À JOUR : mode projet avec sélection de projet
 // ============================================================
 
 using AssetFlow.BlazorUI.Services;
@@ -29,12 +28,35 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
         // ── Utilisateurs ──────────────────────────────────────
         private List<UtilisateurDisponibleDto> UtilisateursDisponibles { get; set; } = new();
-        private List<UtilisateurDisponibleDto> UtilisateursFiltres     { get; set; } = new();
         private UtilisateurDisponibleDto?      UtilisateurSelectionne  { get; set; } = null;
         private string                         EmployeSearch           { get; set; } = string.Empty;
         private bool                           LoadingUtilisateurs     { get; set; } = false;
+        private string                         FiltreRole              { get; set; } = "tous";
 
-        // ── Projets ← NOUVEAU ─────────────────────────────────
+        // ── Propriété calculée : filtre role + search ──────────
+        private List<UtilisateurDisponibleDto> UtilisateursFiltres
+        {
+            get
+            {
+                var q = UtilisateursDisponibles.AsEnumerable();
+
+                if (FiltreRole != "tous")
+                    q = q.Where(u => u.Role.Equals(FiltreRole, StringComparison.OrdinalIgnoreCase));
+
+                if (!string.IsNullOrWhiteSpace(EmployeSearch))
+                {
+                    var s = EmployeSearch.Trim().ToLower();
+                    q = q.Where(u =>
+                        u.FullName.ToLower().Contains(s) ||
+                        u.Role.ToLower().Contains(s) ||
+                        u.Email.ToLower().Contains(s));
+                }
+
+                return q.ToList();
+            }
+        }
+
+        // ── Projets ───────────────────────────────────────────
         private List<ProjetDisponibleDto> ProjetsDisponibles { get; set; } = new();
         private List<ProjetDisponibleDto> ProjetsFiltres     { get; set; } = new();
         private ProjetDisponibleDto?      ProjetSelectionne  { get; set; } = null;
@@ -75,8 +97,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         // ── Mode toggle ───────────────────────────────────────
         private void SetMode(bool projet)
         {
-            ModeProjet = projet;
-            // Reset bénéficiaire à chaque changement de mode
+            ModeProjet             = projet;
             UtilisateurSelectionne = null;
             ProjetSelectionne      = null;
             ErrorMessage           = string.Empty;
@@ -133,7 +154,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             LoadingUtilisateurs     = true;
             StateHasChanged();
             UtilisateursDisponibles = await AffectationService.GetUtilisateursAsync();
-            UtilisateursFiltres     = UtilisateursDisponibles;
             LoadingUtilisateurs     = false;
             StateHasChanged();
         }
@@ -141,23 +161,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private void OnEmployeSearchInput(ChangeEventArgs e)
         {
             EmployeSearch = e.Value?.ToString() ?? string.Empty;
-            FiltrerUtilisateurs();
-        }
-
-        private void FiltrerUtilisateurs()
-        {
-            if (string.IsNullOrWhiteSpace(EmployeSearch))
-            {
-                UtilisateursFiltres = UtilisateursDisponibles;
-                return;
-            }
-            var q = EmployeSearch.Trim().ToLower();
-            UtilisateursFiltres = UtilisateursDisponibles
-                .Where(u =>
-                    u.FullName.ToLower().Contains(q)   ||
-                    u.Role.ToLower().Contains(q) ||
-                    u.Email.ToLower().Contains(q))
-                .ToList();
         }
 
         private void SelectUtilisateur(UtilisateurDisponibleDto user)
@@ -166,7 +169,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
             ErrorMessage           = string.Empty;
         }
 
-        // ── Projets ← NOUVEAU ─────────────────────────────────
+        // ── Projets ───────────────────────────────────────────
         private async Task LoadProjetsAsync()
         {
             LoadingProjets     = true;

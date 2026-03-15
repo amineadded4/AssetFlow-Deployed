@@ -298,3 +298,27 @@ html.dark .emp-tab-toggle { background: #161f2e; border-color: #1e2d42; }
     stroke: var(--primary); fill: none;
     stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
 }
+
+.emp-role-filter {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+    padding: 0.625rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+html.dark .emp-role-filter { border-bottom-color: #1e2d42; }
+
+.emp-role-btn {
+    padding: 0.28rem 0.7rem;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.73rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+}
+.emp-role-btn:hover  { border-color: var(--primary); color: var(--primary); }
+.emp-role-btn.active { background: var(--primary); border-color: var(--primary); color: white; }

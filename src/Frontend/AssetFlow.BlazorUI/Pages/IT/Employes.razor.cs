@@ -13,9 +13,31 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private bool ModeProjet { get; set; } = false;
 
         // ── Employés ──
-        private List<EmployeListeDto>       Employees           { get; set; } = new();
+        private List<EmployeListeDto> _allEmployees = new();
+        private List<EmployeListeDto> Employees
+        {
+            get
+            {
+                var q = _allEmployees.AsEnumerable();
+
+                if (FiltreRoleEmp != "tous")
+                    q = q.Where(u => u.Role.Equals(FiltreRoleEmp, StringComparison.OrdinalIgnoreCase));
+
+                if (!string.IsNullOrWhiteSpace(Search))
+                {
+                    var s = Search.Trim().ToLower();
+                    q = q.Where(u =>
+                        u.FullName.ToLower().Contains(s) ||
+                        u.Email.ToLower().Contains(s)    ||
+                        u.Role.ToLower().Contains(s));
+                }
+
+                return q.ToList();
+            }
+        }
         private EmployeListeDto?            EmployeSelectionne  { get; set; }
         private List<AffectationEmployeDto> Affectations        { get; set; } = new();
+        private string FiltreRoleEmp { get; set; } = "tous";
 
         // ── Projets ──
         private List<ProjetAffectationListeDto> Projets           { get; set; } = new();
@@ -78,7 +100,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         {
             LoadingEmployes = true;
             StateHasChanged();
-            Employees       = await Svc.GetEmployesAsync(search);
+            _allEmployees       = await Svc.GetEmployesAsync(search);
             LoadingEmployes = false;
             StateHasChanged();
         }
@@ -86,15 +108,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private void OnSearchInput(ChangeEventArgs e)
         {
             Search = e.Value?.ToString() ?? string.Empty;
-            _debounce?.Stop();
-            _debounce = new System.Timers.Timer(350);
-            _debounce.Elapsed += async (_, _) =>
-            {
-                _debounce?.Stop();
-                await InvokeAsync(() => LoadEmployesAsync(Search));
-            };
-            _debounce.AutoReset = false;
-            _debounce.Start();
         }
 
         private async Task SelectEmploye(EmployeListeDto emp)

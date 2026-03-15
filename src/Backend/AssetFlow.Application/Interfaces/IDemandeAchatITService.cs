@@ -1,5 +1,6 @@
 // ============================================================
 // AssetFlow.Application / Interfaces / IDemandeAchatITService.cs
+// AJOUT : UpdateAsync + DeleteAsync
 // ============================================================
 
 using AssetFlow.Application.DTOs;
@@ -8,13 +9,14 @@ namespace AssetFlow.Application.Interfaces
 {
     public interface IDemandeAchatITService
     {
-        /// <summary>Retourne toutes les demandes d'achat visibles par l'IT.</summary>
         Task<IEnumerable<DemandeAchatITDto>> GetAllAsync();
-
-        /// <summary>Retourne une demande d'achat par son identifiant.</summary>
         Task<DemandeAchatITDto?> GetByIdAsync(int id);
+        Task<DemandeAchatITDto>  CreateAsync(CreateDemandeAchatDto dto);
 
-        /// <summary>Crée une nouvelle demande d'achat depuis l'interface IT.</summary>
-        Task<DemandeAchatITDto> CreateAsync(CreateDemandeAchatDto dto);
+        /// <summary>Modifie le titre, la description et les lignes d'une demande.</summary>
+        Task<DemandeAchatITDto?> UpdateAsync(int id, UpdateDemandeAchatDto dto);
+
+        /// <summary>Supprime la demande et toutes ses offres associées.</summary>
+        Task<bool> DeleteAsync(int id);
     }
 }

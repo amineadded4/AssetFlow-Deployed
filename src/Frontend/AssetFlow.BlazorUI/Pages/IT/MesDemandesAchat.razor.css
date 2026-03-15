@@ -869,3 +869,174 @@ html.dark .mda-menu-drawer { background: #060d18; }
     .mda-ligne-row-inputs { flex-direction: column; }
     .mda-field-qty  { width: 100%; }
 }
+
+/* ============================================================
+   MesDemandesAchat.razor.css — ADDITIONS
+   Ajouter à la fin du fichier existant
+   ============================================================ */
+
+/* ── Bouton Modifier ── */
+.mda-btn-edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: rgba(99,102,241,0.1);
+    border: 1px solid rgba(99,102,241,0.25);
+    border-radius: 0.375rem;
+    color: #6366f1;
+    cursor: pointer;
+    transition: all 0.18s;
+    flex-shrink: 0;
+}
+.mda-btn-edit svg {
+    width: 13px; height: 13px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+.mda-btn-edit:hover { background: #6366f1; color: white; border-color: #6366f1; }
+
+/* ── Bouton Supprimer ── */
+.mda-btn-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 0.375rem;
+    color: #ef4444;
+    cursor: pointer;
+    transition: all 0.18s;
+    flex-shrink: 0;
+}
+.mda-btn-delete svg {
+    width: 13px; height: 13px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+.mda-btn-delete:hover { background: #ef4444; color: white; border-color: #ef4444; }
+
+/* ── Ajuster la colonne actions pour 4 boutons ── */
+.mda-table-head,
+.mda-row-main {
+    grid-template-columns: minmax(200px, 2fr) 80px 150px 140px 210px;
+}
+
+/* ══════════════════════════════════════
+   MODAL CONFIRMATION SUPPRESSION
+══════════════════════════════════════ */
+.mda-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1.5rem;
+    animation: mdaSlideDown 0.2s ease;
+}
+
+.mda-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 2rem;
+    max-width: 440px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: mdaModalUp 0.22s cubic-bezier(0.16,1,0.3,1);
+}
+
+html.dark .mda-modal {
+    background: #141f2f;
+    border-color: #1e2d42;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+@keyframes mdaModalUp {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.mda-modal-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mda-modal-icon svg {
+    width: 26px; height: 26px;
+    stroke: #ef4444; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.mda-modal-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+}
+
+.mda-modal-body {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin: 0;
+}
+
+.mda-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.mda-modal-cancel {
+    flex: 1;
+    padding: 0.7rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 0.625rem;
+    color: var(--text);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: inherit;
+}
+.mda-modal-cancel:hover { border-color: var(--primary); color: var(--primary); }
+
+.mda-modal-confirm {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.7rem;
+    background: #ef4444;
+    border: none;
+    border-radius: 0.625rem;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: inherit;
+}
+.mda-modal-confirm:hover:not(:disabled) { background: #dc2626; }
+.mda-modal-confirm:disabled { opacity: 0.6; cursor: not-allowed; }

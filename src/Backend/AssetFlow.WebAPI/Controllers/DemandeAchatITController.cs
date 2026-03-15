@@ -1,6 +1,6 @@
 // ============================================================
 // AssetFlow.WebAPI / Controllers / DemandeAchatITController.cs
-// Route : api/it/demandesachat
+// AJOUT : PUT (modifier) + DELETE (supprimer avec offres)
 // ============================================================
 
 using AssetFlow.Application.DTOs;
@@ -22,7 +22,7 @@ namespace AssetFlow.WebAPI.Controllers
             _service = service;
         }
 
-        // ── GET api/it/demandesachat ──────────────────────────────
+        // GET api/it/demandesachat
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DemandeAchatITDto>>> GetAll()
         {
@@ -30,7 +30,7 @@ namespace AssetFlow.WebAPI.Controllers
             return Ok(demandes);
         }
 
-        // ── GET api/it/demandesachat/{id} ─────────────────────────
+        // GET api/it/demandesachat/{id}
         [HttpGet("{id:int}")]
         public async Task<ActionResult<DemandeAchatITDto>> GetById(int id)
         {
@@ -39,9 +39,7 @@ namespace AssetFlow.WebAPI.Controllers
             return Ok(demande);
         }
 
-        // ── POST api/it/demandesachat ─────────────────────────────
-        // Reçoit le formulaire de création depuis la page Blazor IT.
-        // Retourne 201 Created avec le DTO de la demande créée.
+        // POST api/it/demandesachat
         [HttpPost]
         public async Task<ActionResult<DemandeAchatITDto>> Create(
             [FromBody] CreateDemandeAchatDto dto)
@@ -49,16 +47,31 @@ namespace AssetFlow.WebAPI.Controllers
             if (string.IsNullOrWhiteSpace(dto.NomProduit))
                 return BadRequest("Le nom du produit est obligatoire.");
 
-            /*if (dto.Quantite < 1)
-                return BadRequest("La quantité doit être au moins 1.");*/
-
             var created = await _service.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.IdDemande }, created);
+        }
 
-            // Retourne 201 Created + l'URL de la nouvelle ressource
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = created.IdDemande },
-                created);
+        // ── PUT api/it/demandesachat/{id} ─────────────────────────
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult<DemandeAchatITDto>> Update(
+            int id, [FromBody] UpdateDemandeAchatDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.NomProduit))
+                return BadRequest("Le nom du produit est obligatoire.");
+
+            var updated = await _service.UpdateAsync(id, dto);
+            if (updated == null) return NotFound();
+            return Ok(updated);
+        }
+
+        // ── DELETE api/it/demandesachat/{id} ──────────────────────
+        // Supprime la demande ET toutes ses offres associées
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var success = await _service.DeleteAsync(id);
+            if (!success) return NotFound();
+            return NoContent();
         }
     }
 }

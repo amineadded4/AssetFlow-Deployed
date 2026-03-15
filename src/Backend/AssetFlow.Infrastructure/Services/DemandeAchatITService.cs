@@ -1,6 +1,6 @@
 // ============================================================
 // AssetFlow.Infrastructure / Services / DemandeAchatITService.cs
-// MODIF : Reference par ligne de matériel
+// AJOUT : UpdateAsync + DeleteAsync (avec offres)
 // ============================================================
 
 using AssetFlow.Application.DTOs;
@@ -42,7 +42,6 @@ namespace AssetFlow.Infrastructure.Services
             if (dto.Lignes == null || !dto.Lignes.Any())
                 throw new ArgumentException("Au moins une ligne de matériel est obligatoire.");
 
-            // Référence globale auto-générée pour la demande
             var referenceGlobale = $"SN-{DateTime.Now:yyyy}-{Guid.NewGuid().ToString()[..4].ToUpper()}";
 
             var demande = new DemandeAchat
@@ -67,10 +66,69 @@ namespace AssetFlow.Infrastructure.Services
 
             _context.DemandeAchat.Add(demande);
             await _context.SaveChangesAsync();
-
             return ToDto(demande);
         }
 
+        // ── UPDATE ───────────────────────────────────────────────
+        public async Task<DemandeAchatITDto?> UpdateAsync(int id, UpdateDemandeAchatDto dto)
+        {
+            var demande = await _context.DemandeAchat
+                .Include(d => d.Lignes)
+                .FirstOrDefaultAsync(d => d.IdDemande == id);
+
+            if (demande == null) return null;
+
+            // Mise à jour des champs globaux
+            demande.NomProduit  = dto.NomProduit.Trim();
+            demande.Description = dto.Description?.Trim();
+
+            // Remplacement complet des lignes
+            if (dto.Lignes != null && dto.Lignes.Any())
+            {
+                // Supprimer les anciennes lignes
+                _context.Set<LigneDemande>().RemoveRange(demande.Lignes);
+
+                // Ajouter les nouvelles
+                demande.Lignes = dto.Lignes.Select(l => new LigneDemande
+                {
+                    IdDemande   = id,
+                    Reference   = l.Reference?.Trim() ?? string.Empty,
+                    NomProduit  = l.NomProduit.Trim(),
+                    Quantite    = l.Quantite,
+                    Description = l.Description?.Trim()
+                }).ToList();
+
+                demande.Quantite = dto.Lignes.Sum(l => l.Quantite);
+            }
+
+            await _context.SaveChangesAsync();
+            return ToDto(demande);
+        }
+
+        // ── DELETE ───────────────────────────────────────────────
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var demande = await _context.DemandeAchat
+                .Include(d => d.Lignes)
+                .Include(d => d.Offres)
+                .FirstOrDefaultAsync(d => d.IdDemande == id);
+
+            if (demande == null) return false;
+
+            // Supprimer les offres associées (avec leur contenu PDF)
+            if (demande.Offres.Any())
+                _context.Set<OffreAchat>().RemoveRange(demande.Offres);
+
+            // Supprimer les lignes
+            if (demande.Lignes.Any())
+                _context.Set<LigneDemande>().RemoveRange(demande.Lignes);
+
+            _context.DemandeAchat.Remove(demande);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // ── Mapper ───────────────────────────────────────────────
         private static DemandeAchatITDto ToDto(DemandeAchat d) => new()
         {
             IdDemande    = d.IdDemande,

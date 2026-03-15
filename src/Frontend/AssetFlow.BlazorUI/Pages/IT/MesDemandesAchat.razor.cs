@@ -1,6 +1,6 @@
 // ============================================================
 // AssetFlow.BlazorUI / Pages / IT / MesDemandesAchat.razor.cs
-// MODIF : Reference par ligne (supprimée du niveau global)
+// AJOUT : Modifier + Supprimer une demande
 // ============================================================
 
 using AssetFlow.Application.DTOs;
@@ -37,10 +37,23 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private const int PageSize = 10;
         private int TotalPages => Math.Max(1, (int)Math.Ceiling(DemandesFiltrees.Count / (double)PageSize));
 
+        // ── Panneau création ─────────────────────────────────────
         private bool   _showCreatePanel = false;
         private bool   _isSaving        = false;
         private CreateDemandeForm _form  = new();
         private string _formError        = string.Empty;
+
+        // ── Panneau édition ──────────────────────────────────────
+        private bool              _showEditPanel    = false;
+        private bool              _isUpdating       = false;
+        private int               _editDemandeId    = 0;
+        private CreateDemandeForm _editForm         = new();
+        private string            _editFormError    = string.Empty;
+
+        // ── Modal suppression ────────────────────────────────────
+        private bool             _showDeleteModal  = false;
+        private bool             _isDeleting       = false;
+        private DemandeAchatITDto? _demandeASupprimer = null;
 
         // ── Init ─────────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
@@ -122,20 +135,22 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private void NavigateToOffres(int demandeId)
             => Navigation.NavigateTo($"/it/offres/{demandeId}");
 
-        // ── Panneau création ─────────────────────────────────────
+        // ════════════════════════════════════════
+        // PANNEAU CRÉATION
+        // ════════════════════════════════════════
         private void OpenCreatePanel()
         {
-            _form          = new CreateDemandeForm();
-            _formError     = string.Empty;
-            ErrorMessage   = string.Empty;
-            SuccessMessage = string.Empty;
+            _form            = new CreateDemandeForm();
+            _formError       = string.Empty;
+            ErrorMessage     = string.Empty;
+            SuccessMessage   = string.Empty;
             _showCreatePanel = true;
+            _showEditPanel   = false;
         }
 
         private void CloseCreatePanel() => _showCreatePanel = false;
 
-        private void AjouterLigne() => _form.Lignes.Add(new LigneForm());
-
+        private void AjouterLigne()     => _form.Lignes.Add(new LigneForm());
         private void SupprimerLigne(LigneForm ligne)
         {
             if (_form.Lignes.Count > 1)
@@ -161,8 +176,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
                     ligne.Erreur = "La quantité doit être au moins 1.";
             }
 
-            if (_form.Lignes.Any(l => !string.IsNullOrEmpty(l.Erreur)))
-                return;
+            if (_form.Lignes.Any(l => !string.IsNullOrEmpty(l.Erreur))) return;
 
             _isSaving = true;
             StateHasChanged();
@@ -198,10 +212,148 @@ namespace AssetFlow.BlazorUI.Pages.IT
             }
         }
 
+        // ════════════════════════════════════════
+        // PANNEAU ÉDITION
+        // ════════════════════════════════════════
+        private void OpenEditPanel(DemandeAchatITDto demande)
+        {
+            _editDemandeId = demande.IdDemande;
+            _editFormError = string.Empty;
+            ErrorMessage   = string.Empty;
+            SuccessMessage = string.Empty;
+
+            // Pré-remplir le formulaire avec les données existantes
+            _editForm = new CreateDemandeForm
+            {
+                NomDemande  = demande.NomProduit,
+                Description = demande.Description,
+                Lignes      = demande.Lignes.Any()
+                    ? demande.Lignes.Select(l => new LigneForm
+                    {
+                        Reference   = l.Reference ?? string.Empty,
+                        NomProduit  = l.NomProduit,
+                        Quantite    = l.Quantite,
+                        Description = l.Description
+                    }).ToList()
+                    : new List<LigneForm> { new LigneForm() }
+            };
+
+            _showEditPanel   = true;
+            _showCreatePanel = false;
+        }
+
+        private void CloseEditPanel() => _showEditPanel = false;
+
+        private void AjouterLigneEdit()     => _editForm.Lignes.Add(new LigneForm());
+        private void SupprimerLigneEdit(LigneForm ligne)
+        {
+            if (_editForm.Lignes.Count > 1)
+                _editForm.Lignes.Remove(ligne);
+        }
+
+        private async Task SubmitEdit()
+        {
+            _editFormError = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(_editForm.NomDemande))
+            {
+                _editFormError = "Le titre de la demande est obligatoire.";
+                return;
+            }
+
+            foreach (var ligne in _editForm.Lignes)
+            {
+                ligne.Erreur = string.Empty;
+                if (string.IsNullOrWhiteSpace(ligne.NomProduit))
+                    ligne.Erreur = "Le nom du produit est obligatoire.";
+                else if (ligne.Quantite < 1)
+                    ligne.Erreur = "La quantité doit être au moins 1.";
+            }
+
+            if (_editForm.Lignes.Any(l => !string.IsNullOrEmpty(l.Erreur))) return;
+
+            _isUpdating = true;
+            StateHasChanged();
+
+            try
+            {
+                await DemandeService.UpdateDemandeAsync(_editDemandeId, new UpdateDemandeAchatDto
+                {
+                    NomProduit  = _editForm.NomDemande.Trim(),
+                    Description = _editForm.Description?.Trim(),
+                    Lignes      = _editForm.Lignes.Select(l => new CreateLigneDemandeDto
+                    {
+                        Reference   = l.Reference?.Trim() ?? string.Empty,
+                        NomProduit  = l.NomProduit.Trim(),
+                        Quantite    = l.Quantite,
+                        Description = l.Description?.Trim()
+                    }).ToList()
+                });
+
+                SuccessMessage = "Demande modifiée avec succès !";
+                _showEditPanel = false;
+                await LoadDemandesAsync();
+            }
+            catch
+            {
+                ErrorMessage = "Erreur lors de la modification. Veuillez réessayer.";
+            }
+            finally
+            {
+                _isUpdating = false;
+                StateHasChanged();
+            }
+        }
+
+        // ════════════════════════════════════════
+        // MODAL SUPPRESSION
+        // ════════════════════════════════════════
+        private void OuvrirConfirmSuppression(DemandeAchatITDto demande)
+        {
+            _demandeASupprimer = demande;
+            _showDeleteModal   = true;
+            ErrorMessage       = string.Empty;
+            SuccessMessage     = string.Empty;
+        }
+
+        private void AnnulerSuppression()
+        {
+            _showDeleteModal   = false;
+            _demandeASupprimer = null;
+        }
+
+        private async Task ConfirmerSuppression()
+        {
+            if (_demandeASupprimer == null) return;
+
+            _isDeleting = true;
+            StateHasChanged();
+
+            try
+            {
+                await DemandeService.DeleteDemandeAsync(_demandeASupprimer.IdDemande);
+                SuccessMessage     = $"Demande \"{_demandeASupprimer.NomProduit}\" supprimée avec succès.";
+                _showDeleteModal   = false;
+                _demandeASupprimer = null;
+                await LoadDemandesAsync();
+            }
+            catch
+            {
+                ErrorMessage = "Erreur lors de la suppression. Veuillez réessayer.";
+            }
+            finally
+            {
+                _isDeleting = false;
+                StateHasChanged();
+            }
+        }
+
+        // ── Pagination ───────────────────────────────────────────
         private void PrevPage()         { if (CurrentPage > 1)         CurrentPage--; }
         private void NextPage()         { if (CurrentPage < TotalPages) CurrentPage++; }
         private void GoToPage(int page) => CurrentPage = page;
 
+        // ── Helpers ──────────────────────────────────────────────
         private string GetInitials()
         {
             var parts = UserName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -235,13 +387,12 @@ namespace AssetFlow.BlazorUI.Pages.IT
         {
             public string  NomDemande  { get; set; } = string.Empty;
             public string? Description { get; set; }
-            // ← plus de Reference globale
             public List<LigneForm> Lignes { get; set; } = new() { new LigneForm() };
         }
 
         private class LigneForm
         {
-            public string  Reference   { get; set; } = string.Empty;  // ← par ligne
+            public string  Reference   { get; set; } = string.Empty;
             public string  NomProduit  { get; set; } = string.Empty;
             public int     Quantite    { get; set; } = 1;
             public string? Description { get; set; }

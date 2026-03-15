@@ -5,72 +5,41 @@
 <RoleAuthGuard AllowedRoles="@(new[]{"IT"})">
 <div class="emp-layout">
 
-    @* ── SIDEBAR (identique à Affectation) ── *@
+    @* ══════ SIDEBAR ══════ *@
     <aside class="emp-sidebar">
         <div class="sidebar-logo-wrap">
             <img src="images/logo.png" alt="AssetFlow" class="emp-sidebar-logo" />
         </div>
         <nav class="emp-sidebar-nav">
-            <a href="/dashboard/it"  class="emp-nav-link"><svg class="emp-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
-            <a href="/it/employes"   class="emp-nav-link active"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Employés</span></a>
-            <a href="/it/affectation" class="emp-nav-link"><svg class="emp-nav-icon" viewBox="0 0 24 24">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
-                </svg><span>Affectations</span></a>
-            <a href="/it/incidents"  class="emp-nav-link"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg><span>Incidents</span></a>
-            <a href="/it/inventaire" class="emp-nav-link"><svg class="emp-nav-icon" viewBox="0 0 24 24">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                    <path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/>
-                </svg><span>Inventaire</span></a>
-            <a href="/it/demandes-achat" class="emp-nav-link">
-                <svg class="emp-nav-icon" viewBox="0 0 24 24">
-                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-                    <line x1="3" y1="6" x2="21" y2="6"/>
-                    <path d="M16 10a4 4 0 0 1-8 0"/>
-                </svg>
-                <span class="emp-nav-text">Mes achats</span>
-            </a>
-            <a href="/it/messagerie"  class="emp-nav-link"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messagerie</span></a>
+            <a href="/dashboard/it"      class="emp-nav-link"><svg class="emp-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
+            <a href="/it/employes"       class="emp-nav-link active"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Gestion d'affectations</span></a>
+            <a href="/it/affectation"    class="emp-nav-link"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg><span>Affectations</span></a>
+            <a href="/it/incidents"      class="emp-nav-link"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg><span>Incidents</span></a>
+            <a href="/it/inventaire"     class="emp-nav-link"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/></svg><span>Inventaire</span></a>
+            <a href="/it/demandes-achat" class="emp-nav-link"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Mes achats</span></a>
+            <a href="/it/messagerie"     class="emp-nav-link"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messagerie</span></a>
         </nav>
         <div class="emp-sidebar-profile">
             <div class="emp-profile-avatar">@GetInitials()</div>
-            <div>
-                <p class="emp-profile-name">@UserName</p>
-                <p class="emp-profile-role">IT</p>
-            </div>
+            <div><p class="emp-profile-name">@UserName</p><p class="emp-profile-role">IT</p></div>
         </div>
         <LogoutButton />
     </aside>
 
-    @* ── OVERLAY MENU MOBILE ── *@
+    @* ══════ OVERLAY MENU MOBILE ══════ *@
     @if (_menuOpen)
     {
         <div class="emp-menu-overlay" @onclick="() => _menuOpen = false">
             <div class="emp-menu-drawer" @onclick:stopPropagation="true">
-                <div class="emp-menu-drawer-logo">
-                    <img src="images/logo.png" alt="AssetFlow" class="emp-sidebar-logo" />
-                </div>
+                <div class="emp-menu-drawer-logo"><img src="images/logo.png" alt="AssetFlow" class="emp-sidebar-logo" /></div>
                 <nav class="emp-menu-drawer-nav">
-                    <a href="/dashboard/it"   class="emp-nav-link" @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
-                    <a href="/it/employes"    class="emp-nav-link active" @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Employés</span></a>
-                    <a href="/it/affectation" class="emp-nav-link" @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
-                </svg><span>Affectations</span></a>
-                    <a href="/it/incidents"   class="emp-nav-link" @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg><span>Incidents</span></a>
-                    <a href="/it/inventaire"  class="emp-nav-link" @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                    <path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/>
-                </svg><span>Inventaire</span></a>
-                <a href="/it/demandes-achat" class="emp-nav-link">
-                    <svg class="emp-nav-icon" viewBox="0 0 24 24">
-                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-                        <line x1="3" y1="6" x2="21" y2="6"/>
-                        <path d="M16 10a4 4 0 0 1-8 0"/>
-                    </svg>
-                    <span class="emp-nav-text">Mes achats</span>
-                </a>
-                <a href="/it/messagerie"  class="emp-nav-link"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messagerie</span></a>
+                    <a href="/dashboard/it"      class="emp-nav-link"        @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
+                    <a href="/it/employes"        class="emp-nav-link active" @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Gestion d'affectations</span></a>
+                    <a href="/it/affectation"     class="emp-nav-link"        @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><span>Affectations</span></a>
+                    <a href="/it/incidents"       class="emp-nav-link"        @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg><span>Incidents</span></a>
+                    <a href="/it/inventaire"      class="emp-nav-link"        @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>Inventaire</span></a>
+                    <a href="/it/demandes-achat"  class="emp-nav-link"        @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg><span>Mes achats</span></a>
+                    <a href="/it/messagerie"      class="emp-nav-link"        @onclick="() => _menuOpen = false"><svg class="emp-nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messagerie</span></a>
                 </nav>
                 <div class="emp-sidebar-profile">
                     <div class="emp-profile-avatar">@GetInitials()</div>
@@ -81,7 +50,7 @@
         </div>
     }
 
-    @* ── MAIN ── *@
+    @* ══════ MAIN ══════ *@
     <main class="emp-main">
 
         <header class="emp-header">
@@ -89,17 +58,39 @@
                 <span></span><span></span><span></span>
             </button>
             <div>
-                <h1 class="emp-page-title">Gestion des Employés</h1>
-                <p class="emp-page-sub">Consultez les employés et gérez leurs affectations</p>
+                <h1 class="emp-page-title">Gestion des Affectations</h1>
+                <p class="emp-page-sub">Consultez et révoquez les affectations par employé ou par projet</p>
             </div>
-            <div class="emp-header-search">
-                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                <input type="text" placeholder="Rechercher un employé..."
-                       value="@Search" @oninput="OnSearchInput" />
+
+            @* ── Toggle Employés / Projets ── *@
+            <div class="emp-tab-toggle">
+                <button class="emp-tab-btn @(!ModeProjet ? "active" : "")" @onclick='() => SetMode(false)'>
+                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Employés
+                </button>
+                <button class="emp-tab-btn @(ModeProjet ? "active" : "")" @onclick='() => SetMode(true)'>
+                    <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z"/><path d="M16 3v4M8 3v4M2 11h20"/></svg>
+                    Projets
+                </button>
             </div>
+
+            @if (!ModeProjet)
+            {
+                <div class="emp-header-search">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" placeholder="Rechercher un employé..." value="@Search" @oninput="OnSearchInput" />
+                </div>
+            }
+            else
+            {
+                <div class="emp-header-search">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" placeholder="Rechercher un projet..." value="@ProjetSearch" @oninput="OnProjetSearchInput" />
+                </div>
+            }
         </header>
 
-        @* Alerts *@
+        @* Alertes *@
         @if (!string.IsNullOrEmpty(SuccessMsg))
         {
             <div class="emp-alert emp-alert-success">
@@ -117,83 +108,156 @@
 
         <div class="emp-body">
 
-            @* ══ COLONNE GAUCHE : liste employés ══ *@
+            @* ════ COLONNE GAUCHE ════ *@
             <div class="emp-col-left">
-                <div class="emp-col-header">
-                    <span class="emp-col-title">Employés</span>
-                    <span class="emp-badge">@Employees.Count</span>
-                </div>
 
-                @if (LoadingEmployes)
+                @if (!ModeProjet)
                 {
-                    <div class="emp-loading"><div class="emp-spinner"></div><span>Chargement...</span></div>
-                }
-                else if (!Employees.Any())
-                {
-                    <div class="emp-empty">
-                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                        <p>Aucun employé trouvé</p>
+                    @* ── Liste Employés ── *@
+                    <div class="emp-col-header">
+                        <span class="emp-col-title">Employés</span>
+                        <span class="emp-badge">@Employees.Count</span>
                     </div>
+                    @if (LoadingEmployes)
+                    {
+                        <div class="emp-loading"><div class="emp-spinner"></div><span>Chargement...</span></div>
+                    }
+                    else if (!Employees.Any())
+                    {
+                        <div class="emp-empty">
+                            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                            <p>Aucun employé trouvé</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="emp-list">
+                            @foreach (var emp in Employees)
+                            {
+                                var isSelected = EmployeSelectionne?.Id == emp.Id;
+                                <div class="emp-card @(isSelected ? "selected" : "")" @onclick="() => SelectEmploye(emp)">
+                                    <div class="emp-card-avatar @(isSelected ? "sel" : "")">@emp.Initials</div>
+                                    <div class="emp-card-info">
+                                        <p class="emp-card-name">@emp.FullName</p>
+                                        <p class="emp-card-dept">@emp.Department</p>
+                                        <p class="emp-card-email">@emp.Email</p>
+                                    </div>
+                                    <div class="emp-card-right">
+                                        @if (emp.NbAffectationsActives > 0)
+                                        { <span class="emp-card-count">@emp.NbAffectationsActives actif(s)</span> }
+                                        else
+                                        { <span class="emp-card-none">Aucun</span> }
+                                        <svg class="emp-card-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
                 }
                 else
                 {
-                    <div class="emp-list">
-                        @foreach (var emp in Employees)
-                        {
-                            var isSelected = EmployeSelectionne?.Id == emp.Id;
-                            <div class="emp-card @(isSelected ? "selected" : "")"
-                                 @onclick="() => SelectEmploye(emp)">
-                                <div class="emp-card-avatar @(isSelected ? "sel" : "")">@emp.Initials</div>
-                                <div class="emp-card-info">
-                                    <p class="emp-card-name">@emp.FullName</p>
-                                    <p class="emp-card-dept">@emp.Department</p>
-                                    <p class="emp-card-email">@emp.Email</p>
-                                </div>
-                                <div class="emp-card-right">
-                                    @if (emp.NbAffectationsActives > 0)
-                                    {
-                                        <span class="emp-card-count">@emp.NbAffectationsActives actif(s)</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="emp-card-none">Aucun</span>
-                                    }
-                                    <svg class="emp-card-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                                </div>
-                            </div>
-                        }
+                    @* ── Liste Projets ── *@
+                    <div class="emp-col-header">
+                        <span class="emp-col-title">Projets</span>
+                        <span class="emp-badge">@Projets.Count</span>
                     </div>
+                    @if (LoadingProjets)
+                    {
+                        <div class="emp-loading"><div class="emp-spinner"></div><span>Chargement...</span></div>
+                    }
+                    else if (!Projets.Any())
+                    {
+                        <div class="emp-empty">
+                            <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z"/><path d="M16 3v4M8 3v4M2 11h20"/></svg>
+                            <p>Aucun projet avec affectations</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="emp-list">
+                            @foreach (var proj in Projets)
+                            {
+                                var isSelected = ProjetSelectionne?.Id == proj.Id;
+                                <div class="emp-card @(isSelected ? "selected" : "")" @onclick="() => SelectProjet(proj)">
+                                    <div class="emp-projet-icon @(isSelected ? "sel" : "")">
+                                        <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z"/><path d="M16 3v4M8 3v4M2 11h20"/></svg>
+                                    </div>
+                                    <div class="emp-card-info">
+                                        <p class="emp-card-name">@proj.Nom</p>
+                                        <div class="emp-proj-meta">
+                                            <span class="emp-proj-badge @GetStatutClass(proj.Statut)">@proj.Statut</span>
+                                            <span class="emp-proj-badge @GetPrioriteClass(proj.Priorite)">@proj.Priorite</span>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(proj.Responsable))
+                                        { <p class="emp-card-email">@proj.Responsable</p> }
+                                    </div>
+                                    <div class="emp-card-right">
+                                        @if (proj.NbAffectationsActives > 0)
+                                        { <span class="emp-card-count">@proj.NbAffectationsActives actif(s)</span> }
+                                        else
+                                        { <span class="emp-card-none">Aucun</span> }
+                                        <svg class="emp-card-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
                 }
             </div>
 
-            @* ══ COLONNE DROITE : affectations de l'employé ══ *@
+            @* ════ COLONNE DROITE ════ *@
             <div class="emp-col-right">
-                @if (EmployeSelectionne == null)
+
+                @if (!ModeProjet && EmployeSelectionne == null)
                 {
                     <div class="emp-placeholder">
                         <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         <p>Sélectionnez un employé<br/>pour voir ses affectations</p>
                     </div>
                 }
+                else if (ModeProjet && ProjetSelectionne == null)
+                {
+                    <div class="emp-placeholder">
+                        <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z"/><path d="M16 3v4M8 3v4M2 11h20"/></svg>
+                        <p>Sélectionnez un projet<br/>pour voir ses affectations</p>
+                    </div>
+                }
                 else
                 {
-                    @* ── En-tête employé sélectionné ── *@
+                    @* ── En-tête ── *@
                     <div class="emp-detail-header">
-                        <div class="emp-detail-avatar">@EmployeSelectionne.Initials</div>
-                        <div class="emp-detail-info">
-                            <h2 class="emp-detail-name">@EmployeSelectionne.FullName</h2>
-                            <p class="emp-detail-meta">@EmployeSelectionne.Department · @EmployeSelectionne.Email</p>
-                        </div>
-                        <span class="emp-detail-count">
-                            @(Affectations.Count(a => a.Etat == "Courante")) affectation(s) active(s)
-                        </span>
+                        @if (!ModeProjet)
+                        {
+                            <div class="emp-detail-avatar">@EmployeSelectionne!.Initials</div>
+                            <div class="emp-detail-info">
+                                <h2 class="emp-detail-name">@EmployeSelectionne.FullName</h2>
+                                <p class="emp-detail-meta">@EmployeSelectionne.Department · @EmployeSelectionne.Email</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="emp-detail-avatar emp-detail-avatar-proj">
+                                <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z"/><path d="M16 3v4M8 3v4M2 11h20"/></svg>
+                            </div>
+                            <div class="emp-detail-info">
+                                <h2 class="emp-detail-name">@ProjetSelectionne!.Nom</h2>
+                                <p class="emp-detail-meta">
+                                    <span class="emp-proj-badge @GetStatutClass(ProjetSelectionne.Statut)">@ProjetSelectionne.Statut</span>
+                                    &nbsp;·&nbsp;
+                                    <span class="emp-proj-badge @GetPrioriteClass(ProjetSelectionne.Priorite)">@ProjetSelectionne.Priorite</span>
+                                    @if (!string.IsNullOrEmpty(ProjetSelectionne.Responsable))
+                                    { <span>&nbsp;· @ProjetSelectionne.Responsable</span> }
+                                </p>
+                            </div>
+                        }
+                        <span class="emp-detail-count">@NbActives affectation(s) active(s)</span>
                     </div>
 
-                    @* ── Filtre Courante / Terminée ── *@
+                    @* ── Filtre tabs ── *@
                     <div class="emp-filter-tabs">
-                        <button class="emp-filter-tab @(FiltreEtat == "tous" ? "active" : "")"    @onclick='() => FiltreEtat = "tous"'>Toutes (@Affectations.Count)</button>
-                        <button class="emp-filter-tab @(FiltreEtat == "Courante" ? "active" : "")" @onclick='() => FiltreEtat = "Courante"'>Courantes (@Affectations.Count(a => a.Etat == "Courante"))</button>
-                        <button class="emp-filter-tab @(FiltreEtat == "Terminee" ? "active" : "")" @onclick='() => FiltreEtat = "Terminee"'>Terminées (@Affectations.Count(a => a.Etat == "Terminee"))</button>
+                        <button class="emp-filter-tab @(FiltreEtat == "tous"     ? "active" : "")" @onclick='() => FiltreEtat = "tous"'>Toutes (@AffectationsCourantes.Count)</button>
+                        <button class="emp-filter-tab @(FiltreEtat == "Courante" ? "active" : "")" @onclick='() => FiltreEtat = "Courante"'>Courantes (@AffectationsCourantes.Count(a => a.Etat == "Courante"))</button>
+                        <button class="emp-filter-tab @(FiltreEtat == "Terminee" ? "active" : "")" @onclick='() => FiltreEtat = "Terminee"'>Terminées (@AffectationsCourantes.Count(a => a.Etat == "Terminee"))</button>
                     </div>
 
                     @if (LoadingAffectations)
@@ -214,8 +278,6 @@
                             {
                                 var isCourante = aff.Etat == "Courante";
                                 <div class="emp-aff-card @(isCourante ? "" : "terminee")">
-
-                                    @* Image + infos *@
                                     <div class="emp-aff-top">
                                         <div class="emp-aff-img">
                                             @if (!string.IsNullOrEmpty(aff.ImageUrl))
@@ -227,8 +289,7 @@
                                             <div class="emp-aff-title-row">
                                                 <h4 class="emp-aff-name">@aff.Designation</h4>
                                                 <span class="emp-etat-badge @(isCourante ? "courante" : "terminee")">
-                                                    <span class="emp-etat-dot"></span>
-                                                    @aff.Etat
+                                                    <span class="emp-etat-dot"></span>@aff.Etat
                                                 </span>
                                             </div>
                                             <p class="emp-aff-ref">@aff.Reference · @aff.Categorie</p>
@@ -247,33 +308,19 @@
                                             </div>
                                         </div>
                                     </div>
-
-                                    @* Articles *@
                                     @if (aff.Articles.Any())
                                     {
                                         <div class="emp-aff-articles">
                                             @foreach (var art in aff.Articles)
-                                            {
-                                                <span class="emp-art-pill @(art.Etat == "Panne" ? "panne" : "bon")">
-                                                    @art.NumeroSerie
-                                                </span>
-                                            }
+                                            { <span class="emp-art-pill @(art.Etat == "Panne" ? "panne" : "bon")">@art.NumeroSerie</span> }
                                         </div>
                                     }
-
-                                    @* Observations *@
                                     @if (!string.IsNullOrEmpty(aff.Observations))
-                                    {
-                                        <p class="emp-aff-obs">💬 @aff.Observations</p>
-                                    }
-
-                                    @* Bouton retirer *@
+                                    { <p class="emp-aff-obs">💬 @aff.Observations</p> }
                                     @if (isCourante)
                                     {
                                         <div class="emp-aff-footer">
-                                            <button class="emp-btn-retirer"
-                                                    disabled="@IsRetiring"
-                                                    @onclick="() => DemanderConfirmation(aff)">
+                                            <button class="emp-btn-retirer" disabled="@IsRetiring" @onclick="() => DemanderConfirmation(aff)">
                                                 <svg viewBox="0 0 24 24"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
                                                 Retirer l'affectation
                                             </button>
@@ -301,16 +348,14 @@
             <h3 class="emp-modal-title">Retirer l'affectation ?</h3>
             <p class="emp-modal-body">
                 Vous allez retirer <strong>@AffectationARetirer.Designation</strong>
-                de <strong>@EmployeSelectionne?.FullName</strong>.<br/>
+                de <strong>@(ModeProjet ? ProjetSelectionne?.Nom : EmployeSelectionne?.FullName)</strong>.<br/>
                 Les @AffectationARetirer.Articles.Count article(s) seront remis en stock.
             </p>
             <div class="emp-modal-actions">
-                <button class="emp-modal-cancel" @onclick="AnnulerConfirmation">Annuler</button>
+                <button class="emp-modal-cancel"  @onclick="AnnulerConfirmation">Annuler</button>
                 <button class="emp-modal-confirm" disabled="@IsRetiring" @onclick="ConfirmerRetrait">
-                    @if (IsRetiring)
-                    { <div class="emp-btn-spinner"></div> <span>Traitement...</span> }
-                    else
-                    { <span>Confirmer le retrait</span> }
+                    @if (IsRetiring) { <div class="emp-btn-spinner"></div><span>Traitement...</span> }
+                    else             { <span>Confirmer le retrait</span> }
                 </button>
             </div>
         </div>

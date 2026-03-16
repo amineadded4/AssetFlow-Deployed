@@ -1,6 +1,6 @@
 // ============================================================
 // AssetFlow.BlazorUI / Pages / IT / MesDemandesAchat.razor.cs
-// AJOUT : Modifier + Supprimer une demande
+// FIX : "En cours de traitement" → "En cours" pour éviter débordement
 // ============================================================
 
 using AssetFlow.Application.DTOs;
@@ -44,15 +44,15 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private string _formError        = string.Empty;
 
         // ── Panneau édition ──────────────────────────────────────
-        private bool              _showEditPanel    = false;
-        private bool              _isUpdating       = false;
-        private int               _editDemandeId    = 0;
-        private CreateDemandeForm _editForm         = new();
-        private string            _editFormError    = string.Empty;
+        private bool              _showEditPanel = false;
+        private bool              _isUpdating    = false;
+        private int               _editDemandeId = 0;
+        private CreateDemandeForm _editForm      = new();
+        private string            _editFormError = string.Empty;
 
         // ── Modal suppression ────────────────────────────────────
-        private bool             _showDeleteModal  = false;
-        private bool             _isDeleting       = false;
+        private bool               _showDeleteModal   = false;
+        private bool               _isDeleting        = false;
         private DemandeAchatITDto? _demandeASupprimer = null;
 
         // ── Init ─────────────────────────────────────────────────
@@ -150,7 +150,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
         private void CloseCreatePanel() => _showCreatePanel = false;
 
-        private void AjouterLigne()     => _form.Lignes.Add(new LigneForm());
+        private void AjouterLigne() => _form.Lignes.Add(new LigneForm());
         private void SupprimerLigne(LigneForm ligne)
         {
             if (_form.Lignes.Count > 1)
@@ -222,7 +222,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             ErrorMessage   = string.Empty;
             SuccessMessage = string.Empty;
 
-            // Pré-remplir le formulaire avec les données existantes
             _editForm = new CreateDemandeForm
             {
                 NomDemande  = demande.NomProduit,
@@ -364,11 +363,13 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
         private static string GetStatutLabel(string statut) => statut switch
         {
-            "en_attente" => "En attente",
-            "traite"     => "Traité",
-            "approuve"   => "Approuvé",
-            "refuse"     => "Refusé",
-            _            => statut
+            "en_attente"          => "En attente",
+            "en_cours_traitement" => "En cours",      // ← raccourci pour éviter débordement
+            "commande"            => "Commandé",
+            "traite"              => "Traité",
+            "approuve"            => "Approuvé",
+            "refuse"              => "Refusé",
+            _                     => statut
         };
 
         private static string GetRelativeDate(DateTime date)

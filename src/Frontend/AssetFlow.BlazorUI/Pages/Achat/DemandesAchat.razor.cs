@@ -1,6 +1,6 @@
 // ============================================================
 // AssetFlow.BlazorUI / Pages / Achat / DemandesAchat.razor.cs
-// MODIF : ViewModel DemandeVm avec lignes de matériel
+// MODIF : ajout statut en_cours_traitement
 // ============================================================
 
 using Microsoft.AspNetCore.Components;
@@ -82,10 +82,11 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
                 q = _tabActive switch
                 {
-                    "en_attente" => q.Where(d => d.Statut == "en_attente"),
-                    "commande"   => q.Where(d => d.Statut == "commande"),
-                    "historique" => q.Where(d => d.Statut == "traite" || d.Statut == "refuse"),
-                    _            => q.Where(d => d.Statut != "traite" && d.Statut != "refuse")
+                    "en_attente"          => q.Where(d => d.Statut == "en_attente"),
+                    "en_cours_traitement" => q.Where(d => d.Statut == "en_cours_traitement"),
+                    "commande"            => q.Where(d => d.Statut == "commande"),
+                    "historique"          => q.Where(d => d.Statut == "traite" || d.Statut == "refuse"),
+                    _                     => q.Where(d => d.Statut != "traite" && d.Statut != "refuse")
                 };
 
                 if (!string.IsNullOrWhiteSpace(_recherche))
@@ -415,11 +416,12 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         private static string LibelleStatut(string s) => s switch
         {
-            "en_attente" => "EN ATTENTE",
-            "commande"   => "COMMANDÉE",
-            "traite"     => "TRAITÉE",
-            "refuse"     => "REFUSÉE",
-            _            => s.ToUpper()
+            "en_attente"          => "EN ATTENTE",
+            "en_cours_traitement" => "EN COURS",
+            "commande"            => "COMMANDÉE",
+            "traite"              => "TRAITÉE",
+            "refuse"              => "REFUSÉE",
+            _                     => s.ToUpper()
         };
 
         private static string FormatDateCarte(DateTime d)
@@ -506,8 +508,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     table{border-collapse:collapse;width:100%}th{background:#1e293b;color:#fff;padding:8px 10px;text-align:left;font-size:11px}
                     td{padding:6px 10px;border-bottom:1px solid #e2e8f0;font-size:11px}
                     tr:nth-child(even) td{background:#f8fafc}
-                    .en_attente{color:#f59e0b;font-weight:600}.commande{color:#3b82f6;font-weight:600}
-                    .traite{color:#10b981;font-weight:600}.refuse{color:#ef4444;font-weight:600}
+                    .en_attente{color:#f59e0b;font-weight:600}.en_cours_traitement{color:#0891b2;font-weight:600}
+                    .commande{color:#3b82f6;font-weight:600}.traite{color:#10b981;font-weight:600}.refuse{color:#ef4444;font-weight:600}
                     </style></head><body>");
                 sb.Append($"<h2>Liste des demandes d'achat</h2>");
                 sb.Append($"<p>Exporté le {DateTime.Now:dd/MM/yyyy à HH:mm} — {_demandes.Count} demande(s)</p>");

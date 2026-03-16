@@ -1,6 +1,6 @@
 // ============================================================
 // AssetFlow.Infrastructure / Services / DemandeAchatService.cs
-// MODIF : Include(d => d.Lignes) dans GetAll et GetById
+// MODIF : ajout statut "en_cours_traitement"
 // ============================================================
 
 using AssetFlow.Application.Interfaces;
@@ -19,28 +19,25 @@ namespace AssetFlow.Infrastructure.Services
             _context = context;
         }
 
-        // ── GET ALL ──────────────────────────────────────────────
         public async Task<List<DemandeAchat>> GetAllAsync()
         {
             return await _context.DemandeAchat
                 .Include(d => d.Offres)
-                .Include(d => d.Lignes)          // ← NOUVEAU
+                .Include(d => d.Lignes)
                 .OrderByDescending(d => d.DateCreation)
                 .AsNoTracking()
                 .ToListAsync();
         }
 
-        // ── GET BY ID ────────────────────────────────────────────
         public async Task<DemandeAchat?> GetByIdAsync(int id)
         {
             return await _context.DemandeAchat
                 .Include(d => d.Offres)
-                .Include(d => d.Lignes)          // ← NOUVEAU
+                .Include(d => d.Lignes)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(d => d.IdDemande == id);
         }
 
-        // ── CHANGER STATUT ───────────────────────────────────────
         public async Task ChangerStatutAsync(
             int idDemande, string statut, string? motifRefus = null)
         {
@@ -50,7 +47,15 @@ namespace AssetFlow.Infrastructure.Services
             if (demande == null)
                 throw new KeyNotFoundException($"Demande ID {idDemande} introuvable.");
 
-            var statutsValides = new[] { "en_attente", "commande", "traite", "refuse" };
+            var statutsValides = new[]
+            {
+                "en_attente",
+                "en_cours_traitement",
+                "commande",
+                "traite",
+                "refuse"
+            };
+
             if (!statutsValides.Contains(statut))
                 throw new ArgumentException($"Statut invalide : {statut}");
 
@@ -65,7 +70,6 @@ namespace AssetFlow.Infrastructure.Services
             await _context.SaveChangesAsync();
         }
 
-        // ── AJOUTER UNE OFFRE PDF ────────────────────────────────
         public async Task<OffreAchat> AjouterOffreAsync(int idDemande, OffreAchat offre)
         {
             var existe = await _context.DemandeAchat
@@ -83,7 +87,6 @@ namespace AssetFlow.Infrastructure.Services
             return offre;
         }
 
-        // ── SUPPRIMER UNE OFFRE ──────────────────────────────────
         public async Task SupprimerOffreAsync(Guid idOffre)
         {
             var offre = await _context.OffreAchat
@@ -96,7 +99,6 @@ namespace AssetFlow.Infrastructure.Services
             await _context.SaveChangesAsync();
         }
 
-        // ── GET CONTENU PDF ──────────────────────────────────────
         public async Task<byte[]?> GetContenuPdfAsync(Guid idOffre)
         {
             var offre = await _context.OffreAchat

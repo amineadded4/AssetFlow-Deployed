@@ -109,6 +109,15 @@ namespace AssetFlow.WebAPI.Hubs
 
             await Clients.Group($"user_{senderId}").SendAsync("MessagesRead", readerId, senderId);
         }
+        public async Task GetOnlineUsers()
+        {
+            List<int> onlineIds;
+            lock (_lock)
+            {
+                onlineIds = _connections.Keys.ToList();
+            }
+            await Clients.Caller.SendAsync("OnlineUsers", onlineIds);
+        }
     }
 
     public class ChatMessagePayload

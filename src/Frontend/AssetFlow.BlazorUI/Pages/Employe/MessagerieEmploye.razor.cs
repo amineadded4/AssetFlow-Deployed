@@ -60,8 +60,7 @@ namespace AssetFlow.BlazorUI.Pages.Employe
         {
             UserName      = await LocalStorage.GetItemAsync<string>("user_name") ?? "Employé";
             UserRole      = await LocalStorage.GetItemAsync<string>("user_role") ?? "Employé";
-            var idStr     = await LocalStorage.GetItemAsync<string>("user_id");
-            CurrentUserId = int.TryParse(idStr, out var id) ? id : 0;
+            CurrentUserId = await LocalStorage.GetItemAsync<int>("user_id");
 
             await LoadITUsersAsync();
             await ConnectHubAsync();
@@ -71,7 +70,7 @@ namespace AssetFlow.BlazorUI.Pages.Employe
         {
             try
             {
-                var token  = await LocalStorage.GetItemAsync<string>("auth_token") ?? "";
+                var token  = await LocalStorage.GetItemAsync<string>("access_token") ?? "";
                 var hubUrl = Http.BaseAddress!.ToString().TrimEnd('/') + "/chathub";
 
                 _hub = new HubConnectionBuilder()
@@ -128,6 +127,19 @@ namespace AssetFlow.BlazorUI.Pages.Employe
                     });
                 });
 
+                // ── NOUVEAU : recevoir la liste des IT connectés ──────────────
+                _hub.On<List<int>>("OnlineUsers", async (onlineUserIds) =>
+                {
+                    await InvokeAsync(() =>
+                    {
+                        foreach (var it in ITUsers)
+                            it.IsOnline = onlineUserIds.Contains(it.Id);
+                        if (SelectedIT != null)
+                            SelectedIT.IsOnline = onlineUserIds.Contains(SelectedIT.Id);
+                        StateHasChanged();
+                    });
+                });
+
                 _hub.Reconnected  += async _ => { _hubConnected = true;  await InvokeAsync(StateHasChanged); };
                 _hub.Reconnecting += async _ => { _hubConnected = false; await InvokeAsync(StateHasChanged); };
                 _hub.Closed       += async _ => { _hubConnected = false; await InvokeAsync(StateHasChanged); };
@@ -135,6 +147,10 @@ namespace AssetFlow.BlazorUI.Pages.Employe
                 await _hub.StartAsync();
                 _hubConnected = true;
                 await _hub.SendAsync("UserConnected", CurrentUserId);
+
+                // ── NOUVEAU : demander les statuts des IT connectés ───────────
+                await _hub.SendAsync("GetOnlineUsers");
+
                 StateHasChanged();
             }
             catch { _hubConnected = false; StateHasChanged(); }
@@ -147,7 +163,6 @@ namespace AssetFlow.BlazorUI.Pages.Employe
 
             try
             {
-                // Charger les utilisateurs IT depuis l'API
                 var itUsers = await Http.GetFromJsonAsync<List<ITUserSimpleDto>>("api/users/it") ?? new();
                 ITUsers = itUsers.Select(u => new ITUserConvDto
                 {
@@ -156,7 +171,6 @@ namespace AssetFlow.BlazorUI.Pages.Employe
                     Initials = u.Initials,
                 }).ToList();
 
-                // Charger les résumés de conversations
                 var summaries = await MsgSvc.GetConversationsAsync(CurrentUserId);
                 foreach (var s in summaries)
                 {

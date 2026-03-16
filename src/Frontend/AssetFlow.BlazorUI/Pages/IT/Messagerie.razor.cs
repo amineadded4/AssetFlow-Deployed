@@ -61,8 +61,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         protected override async Task OnInitializedAsync()
         {
             UserName = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT User";
-            var idStr = await LocalStorage.GetItemAsync<string>("user_id");
-            CurrentUserId = int.TryParse(idStr, out var id) ? id : 0;
+            CurrentUserId = await LocalStorage.GetItemAsync<int>("user_id");
 
             await LoadConversationsAsync();
             await ConnectHubAsync();
@@ -72,7 +71,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         {
             try
             {
-                var token  = await LocalStorage.GetItemAsync<string>("auth_token") ?? "";
+                var token  = await LocalStorage.GetItemAsync<string>("access_token") ?? "";
                 // Pointer vers le backend (Http.BaseAddress = http://localhost:5235/)
                 var hubUrl = Http.BaseAddress!.ToString().TrimEnd('/') + "/chathub";
 
@@ -147,10 +146,22 @@ namespace AssetFlow.BlazorUI.Pages.IT
                 _hub.Reconnecting += async _ => { _hubConnected = false; await InvokeAsync(StateHasChanged); };
                 _hub.Closed       += async _ => { _hubConnected = false; await InvokeAsync(StateHasChanged); };
 
+                _hub.On<List<int>>("OnlineUsers", async (onlineUserIds) =>
+                {
+                    await InvokeAsync(() =>
+                    {
+                        foreach (var conv in Conversations)
+                            conv.IsOnline = onlineUserIds.Contains(conv.EmployeId);
+                        if (SelectedConv != null)
+                            SelectedConv.IsOnline = onlineUserIds.Contains(SelectedConv.EmployeId);
+                        StateHasChanged();
+                    });
+                });
                 await _hub.StartAsync();
                 _hubConnected = true;
                 // Annoncer la présence avec l'userId explicite
                 await _hub.SendAsync("UserConnected", CurrentUserId);
+                await _hub.SendAsync("GetOnlineUsers");
                 StateHasChanged();
             }
             catch (Exception ex)

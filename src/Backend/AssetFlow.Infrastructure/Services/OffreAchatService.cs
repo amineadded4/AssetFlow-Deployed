@@ -29,7 +29,11 @@ namespace AssetFlow.Infrastructure.Services
                     IdDemande  = o.IdDemande,
                     NomFichier = o.NomFichier,
                     Taille     = o.Taille,
-                    EstChoisie = o.EstChoisie
+                    EstChoisie = o.EstChoisie,
+                    PrixTotal      = o.PrixTotal,
+                    FraisLivraison = o.FraisLivraison,
+                    DelaiLivraison = o.DelaiLivraison,
+                    Garantie       = o.Garantie
                 })
                 .ToListAsync();
         }
@@ -60,6 +64,18 @@ namespace AssetFlow.Infrastructure.Services
             choisie.EstChoisie = true;
             await _context.SaveChangesAsync();
             return true;
+        }
+        public async Task SauvegarderInfosOcrAsync(Guid offreId, string? prix, string? frais, string? delai, string? garantie)
+        {
+            var offre = await _context.OffreAchat.FindAsync(offreId);
+            if (offre == null) return;
+
+            offre.PrixTotal      = prix;
+            offre.FraisLivraison = frais;
+            offre.DelaiLivraison = delai;
+            offre.Garantie       = garantie;
+
+            await _context.SaveChangesAsync();
         }
     }
 }

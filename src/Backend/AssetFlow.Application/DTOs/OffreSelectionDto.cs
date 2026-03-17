@@ -11,6 +11,11 @@ namespace AssetFlow.Application.DTOs
         public int    IdDemande { get; set; }
         public string UserId    { get; set; } = string.Empty;
         // NomPdf et Contenu ne sont plus nécessaires
+        // Infos OCR à persister
+        public string? PrixTotal      { get; set; }
+        public string? FraisLivraison { get; set; }
+        public string? DelaiLivraison { get; set; }
+        public string? Garantie       { get; set; }
     }
 
     /// <summary>Contenu détaillé de l'offre (champs OCR + lignes).</summary>

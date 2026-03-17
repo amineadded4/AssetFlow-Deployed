@@ -34,19 +34,22 @@ namespace AssetFlow.WebAPI.Controllers
         [HttpPost("confirm")]
         public async Task<IActionResult> Confirm([FromBody] OffreSelectionDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.UserId))
-                return BadRequest("userId est requis.");
-            if (dto.OffreId == Guid.Empty)
-                return BadRequest("offreId est requis.");
-            if (dto.IdDemande == 0)
-                return BadRequest("idDemande est requis.");
+            if (dto.OffreId == Guid.Empty)  return BadRequest("offreId requis.");
+            if (dto.IdDemande == 0)         return BadRequest("idDemande requis.");
 
-            // 1. Mettre EstChoisie = true en SQL
+            // 1. Sauvegarder les infos OCR dans SQL
+            await _offres.SauvegarderInfosOcrAsync(
+                dto.OffreId,
+                dto.PrixTotal,
+                dto.FraisLivraison,
+                dto.DelaiLivraison,
+                dto.Garantie);
+
+            // 2. Marquer EstChoisie = true
             var success = await _offres.ChoisirOffreAsync(dto.OffreId, dto.IdDemande);
-            if (!success)
-                return NotFound("Offre introuvable.");
+            if (!success) return NotFound("Offre introuvable.");
 
-            // 2. Supprimer TOUS les caches OCR des offres de cette demande
+            // 3. Supprimer TOUS les caches OCR de la demande
             var toutesLesOffres = await _offres.GetByDemandeIdAsync(dto.IdDemande);
             foreach (var offre in toutesLesOffres)
                 await _redis.DeleteOffreSelectionAsync($"ocr_cache:{offre.IdOffre}");

@@ -48,6 +48,11 @@ namespace AssetFlow.Domain.Entities
         public long    Taille      { get; set; }
         public byte[]? ContenuPdf  { get; set; }
         public bool    EstChoisie  { get; set; } = false;
+          // ── Nouveaux champs OCR ──
+        public string? PrixTotal      { get; set; }
+        public string? FraisLivraison { get; set; }
+        public string? DelaiLivraison { get; set; }
+        public string? Garantie       { get; set; }
         public DemandeAchat? Demande { get; set; }
     }
 }

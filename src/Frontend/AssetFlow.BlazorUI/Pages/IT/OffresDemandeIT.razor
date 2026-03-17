@@ -358,13 +358,22 @@
                                                             </table>
                                                         </div>
 
-                                                        @* Totaux *@
-                                                        <div class="oda-totaux">
-                                                            <span class="oda-totaux-row"><span class="oda-totaux-lbl">Total HT</span><span class="oda-totaux-val">@fs.TotalHt</span></span>
-                                                            <span class="oda-totaux-row"><span class="oda-totaux-lbl">Total TVA</span><span class="oda-totaux-val">@fs.TotalTva</span></span>
-                                                            <span class="oda-totaux-row oda-totaux-ttc"><span class="oda-totaux-lbl">Total TTC</span><span class="oda-totaux-val oda-totaux-big">@fs.TotalTtc</span></span>
+                                                    @* Totaux éditables *@
+                                                    <div class="oda-totaux">
+                                                        <div class="oda-totaux-row">
+                                                            <span class="oda-totaux-lbl">Total HT</span>
+                                                            <input class="oda-totaux-input" type="text" @bind="fs.TotalHt" @bind:event="oninput" placeholder="0,00" />
                                                         </div>
-                                                    }
+                                                        <div class="oda-totaux-row">
+                                                            <span class="oda-totaux-lbl">Total TVA</span>
+                                                            <input class="oda-totaux-input" type="text" @bind="fs.TotalTva" @bind:event="oninput" placeholder="0,00" />
+                                                        </div>
+                                                        <div class="oda-totaux-row oda-totaux-ttc">
+                                                            <span class="oda-totaux-lbl">Total TTC</span>
+                                                            <input class="oda-totaux-input ttc" type="text" @bind="fs.TotalTtc" @bind:event="oninput" placeholder="0,00" />
+                                                        </div>
+                                                    </div>
+                                                                                                        }
 
                                                 </div>
 

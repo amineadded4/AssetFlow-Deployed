@@ -474,3 +474,38 @@ html.dark .oda-totaux { border-top-color: #1e2d42; background: rgba(255,255,255,
     .oda-pdf-modal { width: 100vw; height: 100vh; border-radius: 0; }
     .oda-pdf-modal-overlay { padding: 0; }
 }
+/* ══════════════════════════════════════
+   TOTAUX ÉDITABLES
+══════════════════════════════════════ */
+.oda-totaux-input {
+    background: transparent;
+    border: 1.5px solid transparent;
+    border-radius: 0.375rem;
+    padding: 0.3rem 0.4rem;
+    color: var(--text);
+    font-size: 0.75rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    min-width: 90px;
+    text-align: right;
+}
+
+.oda-totaux-input:hover {
+    border-color: var(--border);
+}
+
+.oda-totaux-input:focus {
+    border-color: var(--primary);
+    background: rgba(19,109,236,0.04);
+}
+
+.oda-totaux-ttc {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+.ttc{
+    font-weight: 800;
+    color: var(--primary);
+}

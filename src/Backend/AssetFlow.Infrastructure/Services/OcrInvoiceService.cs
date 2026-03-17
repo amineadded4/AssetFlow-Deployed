@@ -69,19 +69,12 @@ namespace AssetFlow.Infrastructure.Services
         {
             var groqKey = _config["GroqApiKey"] ?? "";
 
-            var prompt = $@"Tu es un expert en traitement de factures.
+            var prompt = $@"
+Tu es un expert en traitement de factures.
 Voici le contenu OCR d'une facture au format Markdown.
 
 Extrais TOUTES les informations et retourne UNIQUEMENT un JSON valide,
 sans texte autour, sans balises markdown, sans explication.
-
-IMPORTANT - RÈGLES DE FORMATAGE :
-1. Pour le champ Garantie : extrais uniquement le nombre (ex: ""12"" au lieu de ""12 mois"", ""1"" au lieu de ""1 an"")
-2. Pour le champ Frais de livraison : 
-   - Si le symbole € ou EUR apparaît, conserve uniquement le nombre (ex: ""25.50"" au lieu de ""25.50 EUR"")
-   - Si le symbole $ ou USD apparaît, conserve uniquement le nombre
-   - Si DT ou TND apparaît, conserve uniquement le nombre
-3. Pour le champ Délai de livraison : extrais uniquement le nombre (ex: ""5"" au lieu de ""5 jours"")
 
 Structure JSON attendue :
 {{
@@ -132,7 +125,8 @@ Structure JSON attendue :
 }}
 
 Facture (Markdown OCR) :
-{markdownText}";
+{markdownText}
+";
 
             var payload = new
             {

@@ -231,9 +231,14 @@
                                 {
                                     <div class="oda-metric">
                                         <span class="oda-metric-label">DÉLAI</span>
-                                        <span class="oda-metric-val @(IsDelaiRapide(offre.DelaiLivraison) ? "green" : "orange")">
-                                            @offre.DelaiLivraison jours
-                                        </span>
+                                        <span class="oda-metric-val @(IsDelaiRapide(offre.DelaiLivraison) ? "green" : "orange")">@offre.DelaiLivraison jours</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="oda-metric">
+                                        <span class="oda-metric-label">DÉLAI</span>
+                                        <span class="oda-metric-val oda-metric-na">Non renseigné</span>
                                     </div>
                                 }
                                 @if (!string.IsNullOrEmpty(offre.Garantie))
@@ -243,6 +248,13 @@
                                         <span class="oda-metric-val">@offre.Garantie</span>
                                     </div>
                                 }
+                                else
+                                {
+                                    <div class="oda-metric">
+                                        <span class="oda-metric-label">GARANTIE</span>
+                                        <span class="oda-metric-val oda-metric-na">Non renseigné</span>
+                                    </div>
+                                }
                                 @if (!string.IsNullOrEmpty(offre.FraisLivraison))
                                 {
                                     <div class="oda-metric">
@@ -250,13 +262,63 @@
                                         <span class="oda-metric-val">@offre.FraisLivraison</span>
                                     </div>
                                 }
+                                else
+                                {
+                                    <div class="oda-metric">
+                                        <span class="oda-metric-label">FRAIS LIVRAISON</span>
+                                        <span class="oda-metric-val oda-metric-na">Non renseigné</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else if (confirmed)
+                        {
+                            @* Confirmé mais aucune info OCR n'avait été extraite *@
+                            <div class="oda-metric-empty">
+                                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                Aucune information OCR disponible pour cette offre
                             </div>
                         }
                         else if (ocrSt == OcrStatus.Done && !string.IsNullOrEmpty(fs.TotalTtc))
                         {
-                            @* métriques OCR en mémoire (avant confirmation) — code existant *@
                             <div class="oda-sel-metrics">
-                                ...
+                                <div class="oda-metric">
+                                    <span class="oda-metric-label">PRIX TOTAL</span>
+                                    <span class="oda-metric-val primary">@fs.TotalTtc</span>
+                                </div>
+                                <div class="oda-metric">
+                                    <span class="oda-metric-label">DÉLAI</span>
+                                    @if (!string.IsNullOrEmpty(fs.DelaiLivraison))
+                                    {
+                                        <span class="oda-metric-val @(IsDelaiRapide(fs.DelaiLivraison) ? "green" : "orange")">@fs.DelaiLivraison jours</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="oda-metric-val oda-metric-na">Non renseigné</span>
+                                    }
+                                </div>
+                                <div class="oda-metric">
+                                    <span class="oda-metric-label">GARANTIE</span>
+                                    @if (!string.IsNullOrEmpty(fs.Garantie))
+                                    {
+                                        <span class="oda-metric-val">@fs.Garantie</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="oda-metric-val oda-metric-na">Non renseigné</span>
+                                    }
+                                </div>
+                                <div class="oda-metric">
+                                    <span class="oda-metric-label">FRAIS LIVRAISON</span>
+                                    @if (!string.IsNullOrEmpty(fs.FraisLivraison))
+                                    {
+                                        <span class="oda-metric-val">@fs.FraisLivraison</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="oda-metric-val oda-metric-na">Non renseigné</span>
+                                    }
+                                </div>
                             </div>
                         }
                         else if (ocrSt != OcrStatus.Done)

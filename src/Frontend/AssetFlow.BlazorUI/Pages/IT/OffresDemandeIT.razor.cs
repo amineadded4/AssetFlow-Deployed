@@ -197,7 +197,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         // ── Confirmer → Redis ────────────────────────────────────
         private async Task ConfirmForm(OffreAchatDto offre)
         {
-            _isSaving  = true;
+           _isSaving  = true;
             _saveError = null;
             StateHasChanged();
 
@@ -213,7 +213,21 @@ namespace AssetFlow.BlazorUI.Pages.IT
                     prixTotal      = fs.TotalTtc,
                     fraisLivraison = fs.FraisLivraison,
                     delaiLivraison = fs.DelaiLivraison,
-                    garantie       = fs.Garantie
+                    garantie       = fs.Garantie,
+                    // ← Infos OCR de toutes les autres offres analysées
+                    autresOffres   = _offres
+                        .Where(o => o.IdOffre != offre.IdOffre && GetOcrStatus(o.IdOffre) == OcrStatus.Done)
+                        .Select(o => {
+                            var s = GetOrCreate(o.IdOffre);
+                            return new
+                            {
+                                offreId        = o.IdOffre,
+                                prixTotal      = s.TotalTtc,
+                                fraisLivraison = s.FraisLivraison,
+                                delaiLivraison = s.DelaiLivraison,
+                                garantie       = s.Garantie
+                            };
+                        }).ToList()
                 };
 
                 var response = await Http.PostAsJsonAsync("api/offre-selection/confirm", payload);

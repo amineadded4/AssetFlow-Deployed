@@ -16,6 +16,15 @@ namespace AssetFlow.Application.DTOs
         public string? FraisLivraison { get; set; }
         public string? DelaiLivraison { get; set; }
         public string? Garantie       { get; set; }
+        public List<AutreOffreOcrDto> AutresOffres { get; set; } = new();
+    }
+    public class AutreOffreOcrDto
+    {
+        public Guid    OffreId        { get; set; }
+        public string? PrixTotal      { get; set; }
+        public string? FraisLivraison { get; set; }
+        public string? DelaiLivraison { get; set; }
+        public string? Garantie       { get; set; }
     }
 
     /// <summary>Contenu détaillé de l'offre (champs OCR + lignes).</summary>

@@ -44,6 +44,12 @@ namespace AssetFlow.WebAPI.Controllers
                 dto.FraisLivraison,
                 dto.DelaiLivraison,
                 dto.Garantie);
+            // Sauvegarder infos OCR des autres offres analysées
+            foreach (var autre in dto.AutresOffres)
+            {
+                await _offres.SauvegarderInfosOcrAsync(
+                    autre.OffreId, autre.PrixTotal, autre.FraisLivraison, autre.DelaiLivraison, autre.Garantie);
+            }
 
             // 2. Marquer EstChoisie = true
             var success = await _offres.ChoisirOffreAsync(dto.OffreId, dto.IdDemande);

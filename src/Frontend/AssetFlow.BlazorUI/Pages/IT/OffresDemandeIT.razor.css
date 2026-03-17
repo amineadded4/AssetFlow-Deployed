@@ -527,3 +527,26 @@ html.dark .oda-totaux { border-top-color: #1e2d42; background: rgba(255,255,255,
     .oda-pdf-modal-overlay { padding: 0; }
     .oda-confirm-modal { width: 95vw; padding: 1.5rem 1.25rem; }
 }
+
+.oda-metric-val.oda-metric-na {
+    color: var(--text-faint);
+    font-weight: 500;
+    font-style: italic;
+    font-size: 0.8rem;
+}
+
+.oda-metric-empty {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.78rem; color: var(--text-faint);
+    font-style: italic;
+    border-radius: 0.5rem;
+    background: rgba(0,0,0,0.02);
+    border: 1px solid var(--border);
+}
+.oda-metric-empty svg {
+    width: 14px; height: 14px;
+    stroke: var(--text-faint); fill: none;
+    stroke-width: 2; stroke-linecap: round; flex-shrink: 0;
+}
+html.dark .oda-metric-empty { background: rgba(255,255,255,0.02); }

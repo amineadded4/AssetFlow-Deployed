@@ -89,15 +89,10 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
                 var fs = GetOrCreate(offre.IdOffre);
 
-                // CORRECTION: Utiliser les méthodes de parsing appropriées
-                if (!string.IsNullOrWhiteSpace(invoice.InformationsAdditionnelles.Garantie))
-                    fs.Garantie = ParseIntFromString(invoice.InformationsAdditionnelles.Garantie);
-
-                if (!string.IsNullOrWhiteSpace(invoice.InformationsAdditionnelles.DelaiLivraison))
-                    fs.DelaiLivraison = ParseIntFromString(invoice.InformationsAdditionnelles.DelaiLivraison);
-
-                if (!string.IsNullOrWhiteSpace(invoice.InformationsAdditionnelles.FraisLivraison))
-                    fs.FraisLivraison = ParseDecimalFromString(invoice.InformationsAdditionnelles.FraisLivraison);
+                // Maintenant ces champs sont des strings - on assigne directement
+                fs.FraisLivraison = invoice.InformationsAdditionnelles.FraisLivraison ?? "";
+                fs.DelaiLivraison = invoice.InformationsAdditionnelles.DelaiLivraison ?? "";
+                fs.Garantie = invoice.InformationsAdditionnelles.Garantie ?? "";
 
                 fs.Lignes = invoice.Lignes.Select(l => new LigneFormState
                 {
@@ -203,50 +198,18 @@ namespace AssetFlow.BlazorUI.Pages.IT
             if (parts.Length == 1 && parts[0].Length >= 2) return parts[0][..2].ToUpper();
             return "IT";
         }
-
-        // Méthode pour parser les entiers (int?)
-        private static int? ParseIntFromString(string? s)
-        {
-            if (string.IsNullOrWhiteSpace(s)) return null;
-            
-            // Nettoie la chaîne pour ne garder que les chiffres
-            var cleaned = new string(s.Where(c => char.IsDigit(c)).ToArray());
-            
-            if (int.TryParse(cleaned, out var result))
-                return result;
-            
-            return null;
-        }
-
-        // Méthode pour parser les décimaux (decimal?)
-        private static decimal? ParseDecimalFromString(string? s)
-        {
-            if (string.IsNullOrWhiteSpace(s)) return null;
-            
-            // Nettoie la chaîne pour ne garder que les chiffres, points et virgules
-            var cleaned = new string(s.Where(c => char.IsDigit(c) || c == '.' || c == ',').ToArray())
-                            .Replace(',', '.');
-            
-            if (decimal.TryParse(cleaned, 
-                System.Globalization.NumberStyles.Any, 
-                System.Globalization.CultureInfo.InvariantCulture, 
-                out var result))
-                return result;
-            
-            return null;
-        }
     }
 
     public enum OcrStatus { Idle, Running, Done, Error }
 
     public class OffreFormState
     {
-        public decimal? FraisLivraison { get; set; }
-        public int?     DelaiLivraison { get; set; }
-        public int?     Garantie       { get; set; }
-        public string   TotalHt        { get; set; } = string.Empty;
-        public string   TotalTva       { get; set; } = string.Empty;
-        public string   TotalTtc       { get; set; } = string.Empty;
+        public string FraisLivraison { get; set; } = string.Empty;  // Changé en string
+        public string DelaiLivraison { get; set; } = string.Empty;  // Changé en string
+        public string Garantie       { get; set; } = string.Empty;  // Changé en string
+        public string TotalHt        { get; set; } = string.Empty;
+        public string TotalTva       { get; set; } = string.Empty;
+        public string TotalTtc       { get; set; } = string.Empty;
         public List<LigneFormState> Lignes { get; set; } = new();
     }
 

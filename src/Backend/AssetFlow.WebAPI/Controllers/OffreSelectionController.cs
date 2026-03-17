@@ -59,6 +59,9 @@ namespace AssetFlow.WebAPI.Controllers
             var toutesLesOffres = await _offres.GetByDemandeIdAsync(dto.IdDemande);
             foreach (var offre in toutesLesOffres)
                 await _redis.DeleteOffreSelectionAsync($"ocr_cache:{offre.IdOffre}");
+                
+            await _redis.DeleteOffreSelectionAsync($"chat_offre:{dto.UserId}:{dto.IdDemande}");
+
 
             return Ok(new { success = true });
         }

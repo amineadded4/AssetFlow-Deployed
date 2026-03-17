@@ -202,6 +202,10 @@
                                             {
                                                 <span class="oda-badge-selected">✓ SÉLECTIONNÉ</span>
                                             }
+                                            @if (_recommendedOffre == offre.NomFichier)
+                                            {
+                                                <span class="oda-badge-recommended-ai">🤖 RECOMMANDÉ</span>
+                                            }
                                             @if (ocrSt == OcrStatus.Done)
                                             {
                                                 <span class="oda-ocr-badge oda-ocr-done">
@@ -571,4 +575,95 @@
     </div>
 
 </div>
+@* ══ BOUTON CHATBOT FLOTTANT ══ *@
+<button class="oda-chat-fab @(_chatOpen ? "is-open" : "")"
+        @onclick="ToggleChat">
+    @if (_chatOpen)
+    {
+        <svg viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    }
+    else
+    {
+        <svg viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    }
+    @if (!_chatOpen && _unreadCount > 0)
+    {
+        <span class="oda-chat-badge">@_unreadCount</span>
+    }
+</button>
+
+@* ══ PANNEAU CHATBOT ══ *@
+@if (_chatOpen)
+{
+    <div class="oda-chat-panel">
+        <div class="oda-chat-panel-header">
+            <div class="oda-chat-panel-avatar">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/></svg>
+            </div>
+            <div>
+                <p class="oda-chat-panel-name">Assistant IA — DeepSeek</p>
+                <div class="oda-chat-panel-status">
+                    <span class="oda-status-dot"></span> EN LIGNE
+                </div>
+            </div>
+            <button class="oda-chat-panel-close" @onclick="ToggleChat">
+                <svg viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <div class="oda-chat-messages" id="chatMessages">
+            @if (!_chatMessages.Any())
+            {
+                <div class="oda-chat-welcome">
+                    <p>Bonjour ! Je suis votre assistant pour la demande <strong>#@DemandeId</strong>.</p>
+                    <p>Analysez les offres avec l'OCR puis posez-moi vos questions pour m'aider à choisir la meilleure.</p>
+                </div>
+            }
+            @foreach (var msg in _chatMessages)
+            {
+                <div class="oda-chat-msg @(msg.Role == "user" ? "oda-chat-msg-user" : "oda-chat-msg-bot")">
+                    @if (msg.Role == "assistant")
+                    {
+                        <div class="oda-chat-msg-avatar">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/></svg>
+                        </div>
+                    }
+                    <div class="oda-chat-msg-bubble">@msg.Content</div>
+                </div>
+            }
+            @if (_chatLoading)
+            {
+                <div class="oda-chat-msg oda-chat-msg-bot">
+                    <div class="oda-chat-msg-avatar">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/></svg>
+                    </div>
+                    <div class="oda-chat-msg-bubble oda-chat-typing">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="oda-chat-panel-footer">
+            <div class="oda-chat-input-wrap">
+                <input class="oda-chat-input"
+                       type="text"
+                       placeholder="Posez votre question..."
+                       @bind="_chatInput"
+                       @bind:event="oninput"
+                       @onkeydown="OnChatKeyDown"
+                       disabled="@(_chatLoading || _confirmedId.HasValue)" />
+                <button class="oda-chat-send"
+                        @onclick="SendChatMessage"
+                        disabled="@(_chatLoading || string.IsNullOrWhiteSpace(_chatInput) || _confirmedId.HasValue)">
+                    <svg viewBox="0 0 24 24" fill="none"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+            </div>
+            @if (_confirmedId.HasValue)
+            {
+                <p class="oda-chat-disabled-hint">Chat désactivé après confirmation de l'offre.</p>
+            }
+        </div>
+    </div>
+}
 </RoleAuthGuard>

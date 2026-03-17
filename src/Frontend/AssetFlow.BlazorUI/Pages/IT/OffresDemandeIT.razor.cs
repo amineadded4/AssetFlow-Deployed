@@ -6,6 +6,7 @@
 using AssetFlow.Application.DTOs;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using System.Net.Http.Json;
 
 namespace AssetFlow.BlazorUI.Pages.IT
@@ -37,6 +38,87 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private string?       _pdfModalUrl;
         private string        _pdfModalName = string.Empty;
         private OffreAchatDto? _confirmModalOffre;   // null = modal fermé
+
+        // ── Chat ─────────────────────────────────────────────────
+        private bool                 _chatOpen    = false;
+        private bool                 _chatLoading = false;
+        private string               _chatInput   = string.Empty;
+        private int                  _unreadCount = 0;
+        private string?              _recommendedOffre;
+        private List<ChatMessageDto> _chatMessages = new();
+
+        private void ToggleChat()
+        {
+            _chatOpen = !_chatOpen;
+            if (_chatOpen) _unreadCount = 0;
+            StateHasChanged();
+        }
+
+        private async Task OnChatKeyDown(KeyboardEventArgs e)
+        {
+            if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_chatInput) && !_chatLoading)
+                await SendChatMessage();
+        }
+
+        private async Task SendChatMessage()
+        {
+            if (string.IsNullOrWhiteSpace(_chatInput) || _chatLoading) return;
+
+            var userMsg = _chatInput.Trim();
+            _chatInput   = string.Empty;
+            _chatLoading = true;
+
+            _chatMessages.Add(new ChatMessageDto { Role = "user", Content = userMsg });
+            StateHasChanged();
+
+            try
+            {
+                // Construire contexte depuis les états OCR en mémoire ET depuis SQL
+                var offresCtx = _offres.Select(o =>
+                {
+                    var fs = GetOrCreate(o.IdOffre);
+                    return new
+                    {
+                        nomFichier     = o.NomFichier,
+                        prixTotal      = !string.IsNullOrEmpty(fs.TotalTtc)       ? fs.TotalTtc       : o.PrixTotal,
+                        delaiLivraison = !string.IsNullOrEmpty(fs.DelaiLivraison)  ? fs.DelaiLivraison : o.DelaiLivraison,
+                        garantie       = !string.IsNullOrEmpty(fs.Garantie)        ? fs.Garantie       : o.Garantie,
+                        fraisLivraison = !string.IsNullOrEmpty(fs.FraisLivraison)  ? fs.FraisLivraison : o.FraisLivraison
+                    };
+                }).ToList();
+
+                var payload = new
+                {
+                    userId    = _userId,
+                    idDemande = DemandeId,
+                    message   = userMsg,
+                    offres    = offresCtx
+                };
+
+                var response = await Http.PostAsJsonAsync("api/chat-offre/send", payload);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<ChatResponseDto>();
+                    if (result != null)
+                    {
+                        _chatMessages.Add(new ChatMessageDto { Role = "assistant", Content = result.Reply });
+
+                        if (!string.IsNullOrEmpty(result.RecommendedOffre))
+                            _recommendedOffre = result.RecommendedOffre;
+
+                        if (!_chatOpen) _unreadCount++;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _chatMessages.Add(new ChatMessageDto { Role = "assistant", Content = $"Erreur : {ex.Message}" });
+            }
+
+            _chatLoading = false;
+            StateHasChanged();
+        }
 
         protected override async Task OnInitializedAsync()
         {
@@ -87,6 +169,14 @@ namespace AssetFlow.BlazorUI.Pages.IT
                         }
                         catch { }
                     }
+                    // Charger historique chat
+                    try
+                    {
+                        var chatHistory = await Http.GetFromJsonAsync<List<ChatMessageDto>>(
+                            $"api/chat-offre/history/{_userId}/{DemandeId}");
+                        if (chatHistory != null) _chatMessages = chatHistory;
+                    }
+                    catch { }
                 }
             }
             catch (Exception ex)
@@ -359,5 +449,10 @@ namespace AssetFlow.BlazorUI.Pages.IT
         public string TvaPct         { get; set; } = string.Empty;
         public string TotalTva       { get; set; } = string.Empty;
         public string TotalTtc       { get; set; } = string.Empty;
+    }
+    public class ChatResponseDto
+    {
+        public string  Reply            { get; set; } = string.Empty;
+        public string? RecommendedOffre { get; set; }
     }
 }

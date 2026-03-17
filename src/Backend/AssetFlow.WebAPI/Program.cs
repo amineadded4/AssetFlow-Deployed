@@ -3,6 +3,7 @@
 // ============================================================
 
 using AssetFlow.Application.Interfaces;
+using AssetFlow.WebAPI.Controllers;
 using AssetFlow.Infrastructure.Data;
 using AssetFlow.Infrastructure.Services;
 using AssetFlow.WebAPI.Hubs;
@@ -94,6 +95,7 @@ builder.Services.AddScoped<IOffreAchatService,          OffreAchatService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddHttpClient<IOcrInvoiceService, OcrInvoiceService>();
 builder.Services.AddScoped<IRedisOffreService, RedisOffreService>();
+builder.Services.AddHttpClient<ChatOffreController>();
 
 // === SIGNALR ===
 builder.Services.AddSignalR();

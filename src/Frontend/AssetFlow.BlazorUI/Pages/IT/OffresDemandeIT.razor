@@ -219,33 +219,50 @@
                                         </div>
                                     </div>
 
-                                    @if (ocrSt == OcrStatus.Done && !string.IsNullOrEmpty(fs.TotalTtc))
-                                    {
-                                        <div class="oda-sel-metrics">
-                                            <div class="oda-metric">
-                                                <span class="oda-metric-label">PRIX TOTAL</span>
-                                                <span class="oda-metric-val primary">@fs.TotalTtc</span>
-                                            </div>
-                                            @if (!string.IsNullOrEmpty(fs.DelaiLivraison))
-                                            {
-                                                <div class="oda-metric">
-                                                    <span class="oda-metric-label">DÉLAI</span>
-                                                    <span class="oda-metric-val @(IsDelaiRapide(fs.DelaiLivraison) ? "green" : "orange")">@fs.DelaiLivraison jours</span>
-                                                </div>
-                                            }
-                                            @if (!string.IsNullOrEmpty(fs.Garantie))
-                                            {
-                                                <div class="oda-metric">
-                                                    <span class="oda-metric-label">GARANTIE</span>
-                                                    <span class="oda-metric-val">@fs.Garantie</span>
-                                                </div>
-                                            }
-                                        </div>
-                                    }
-                                    else if (ocrSt != OcrStatus.Done)
-                                    {
-                                        <p class="oda-sel-hint">Cliquez sur "Analyser" pour voir les détails</p>
-                                    }
+                       @* Métriques depuis OCR (en cours) OU depuis SQL (après confirmation) *@
+                        @if (confirmed && !string.IsNullOrEmpty(offre.PrixTotal))
+                        {
+                            <div class="oda-sel-metrics">
+                                <div class="oda-metric">
+                                    <span class="oda-metric-label">PRIX TOTAL</span>
+                                    <span class="oda-metric-val primary">@offre.PrixTotal</span>
+                                </div>
+                                @if (!string.IsNullOrEmpty(offre.DelaiLivraison))
+                                {
+                                    <div class="oda-metric">
+                                        <span class="oda-metric-label">DÉLAI</span>
+                                        <span class="oda-metric-val @(IsDelaiRapide(offre.DelaiLivraison) ? "green" : "orange")">
+                                            @offre.DelaiLivraison jours
+                                        </span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(offre.Garantie))
+                                {
+                                    <div class="oda-metric">
+                                        <span class="oda-metric-label">GARANTIE</span>
+                                        <span class="oda-metric-val">@offre.Garantie</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(offre.FraisLivraison))
+                                {
+                                    <div class="oda-metric">
+                                        <span class="oda-metric-label">FRAIS LIVRAISON</span>
+                                        <span class="oda-metric-val">@offre.FraisLivraison</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else if (ocrSt == OcrStatus.Done && !string.IsNullOrEmpty(fs.TotalTtc))
+                        {
+                            @* métriques OCR en mémoire (avant confirmation) — code existant *@
+                            <div class="oda-sel-metrics">
+                                ...
+                            </div>
+                        }
+                        else if (ocrSt != OcrStatus.Done)
+                        {
+                            <p class="oda-sel-hint">Cliquez sur "Analyser" pour voir les détails</p>
+                        }
                                 </div>
 
                                 <div class="oda-sel-expand-toggle"

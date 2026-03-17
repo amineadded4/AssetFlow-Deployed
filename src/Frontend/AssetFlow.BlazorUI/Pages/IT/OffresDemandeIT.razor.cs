@@ -58,17 +58,23 @@ namespace AssetFlow.BlazorUI.Pages.IT
                     _selectedId = _offres.First().IdOffre;
                     _expandedId = _offres.First().IdOffre;
 
+                    // ── RESTAURER l'offre déjà confirmée depuis SQL ──
+                    var dejaChoisie = _offres.FirstOrDefault(o => o.EstChoisie);
+                    if (dejaChoisie != null)
+                    {
+                        _confirmedId = dejaChoisie.IdOffre;
+                        _selectedId  = dejaChoisie.IdOffre;
+                        _expandedId  = dejaChoisie.IdOffre;
+                    }
+
                     // Récupérer silencieusement les caches OCR existants
                     foreach (var offre in _offres)
                     {
                         try
                         {
                             var response = await Http.GetAsync($"api/ocr/cache/{offre.IdOffre}");
-
-                            // 204 = pas de cache → on skip sans erreur
                             if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
                                 continue;
-
                             if (response.IsSuccessStatusCode)
                             {
                                 var invoice = await response.Content.ReadFromJsonAsync<InvoiceOcrDto>();
@@ -79,7 +85,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
                                 }
                             }
                         }
-                        catch { /* cache absent ou erreur réseau → on ignore */ }
+                        catch { }
                     }
                 }
             }
@@ -197,11 +203,17 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
             try
             {
+                var fs = GetOrCreate(offre.IdOffre);
+
                 var payload = new
                 {
-                    offreId   = offre.IdOffre,
-                    idDemande = DemandeId,
-                    userId    = _userId
+                    offreId        = offre.IdOffre,
+                    idDemande      = DemandeId,
+                    userId         = _userId,
+                    prixTotal      = fs.TotalTtc,
+                    fraisLivraison = fs.FraisLivraison,
+                    delaiLivraison = fs.DelaiLivraison,
+                    garantie       = fs.Garantie
                 };
 
                 var response = await Http.PostAsJsonAsync("api/offre-selection/confirm", payload);
@@ -217,9 +229,12 @@ namespace AssetFlow.BlazorUI.Pages.IT
                 _confirmedId = offre.IdOffre;
                 _selectedId  = offre.IdOffre;
 
-                // Vider aussi les états OCR locaux (plus besoin)
-                foreach (var o in _offres)
-                    _ocrStatus.Remove(o.IdOffre);
+                // Mettre à jour l'objet local pour affichage immédiat sans rechargement
+                offre.PrixTotal      = fs.TotalTtc;
+                offre.FraisLivraison = fs.FraisLivraison;
+                offre.DelaiLivraison = fs.DelaiLivraison;
+                offre.Garantie       = fs.Garantie;
+                offre.EstChoisie     = true;
             }
             catch (Exception ex)
             {

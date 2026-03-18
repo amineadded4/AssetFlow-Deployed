@@ -1,0 +1,221 @@
+@* ============================================================
+   AssetFlow.BlazorUI / Pages / Achat / MessagerieIT.razor
+   Messagerie Agent Achat ↔ IT — miroir de MessagerieEmploye
+   ============================================================ *@
+
+@page "/achat/messagerie"
+@using AssetFlow.BlazorUI.Services
+@using AssetFlow.BlazorUI.Components
+@using Microsoft.AspNetCore.SignalR.Client
+
+<RoleAuthGuard AllowedRoles="@(new[]{"EquipeAchat","Admin"})">
+<div class="mai-layout">
+
+    @* ══════ SIDEBAR ══════ *@
+    <aside class="mai-sidebar">
+        <div class="mai-sidebar-logo-wrap">
+            <img src="images/logo.png" alt="AssetFlow" class="mai-sidebar-logo" />
+        </div>
+        <nav class="mai-sidebar-nav">
+            <a href="/statistiques"      class="mai-nav-link"><svg class="mai-nav-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg><span>Statistiques</span></a>
+            <a href="/achat/equipements" class="mai-nav-link"><svg class="mai-nav-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span>Mes Équipements</span></a>
+            <a href="/achat/materiel"    class="mai-nav-link"><svg class="mai-nav-icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Matériel</span></a>
+            <a href="/achat/fournisseurs" class="mai-nav-link"><svg class="mai-nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Fournisseurs</span></a>
+            <a href="/demandes-achat"    class="mai-nav-link"><svg class="mai-nav-icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Demandes achat</span></a>
+            <a href="/achat/web-scraping" class="mai-nav-link"><svg class="mai-nav-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Scraping Marché</span></a>
+            <a href="/achat/messagerie"  class="mai-nav-link active"><svg class="mai-nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messagerie IT</span></a>
+        </nav>
+        <div class="mai-sidebar-profile">
+            <div class="mai-profile-avatar">@GetInitials()</div>
+            <div>
+                <p class="mai-profile-name">@UserName</p>
+                <p class="mai-profile-role">Agent Achat</p>
+            </div>
+        </div>
+        <LogoutButton />
+    </aside>
+
+    @* ══ MAIN ══ *@
+    <main class="mai-main">
+
+        <header class="mai-header">
+            <div>
+                <h1 class="mai-page-title">Messagerie — Service IT</h1>
+                <p class="mai-page-sub">Communication avec les agents IT</p>
+            </div>
+            <div class="mai-conn-status @(_hubConnected ? "connected" : "disconnected")">
+                <span class="mai-conn-dot"></span>
+                <span>@(_hubConnected ? "En ligne" : "Reconnexion...")</span>
+            </div>
+        </header>
+
+        <div class="mai-body">
+
+            @* ── COLONNE GAUCHE ── *@
+            <div class="mai-col-left @(_conversationOpen ? "mobile-hidden" : "")">
+                <div class="mai-col-header">
+                    <span class="mai-col-title">Service IT</span>
+                    @{ var totalUnread = ITUsers.Sum(u => u.UnreadCount); }
+                    @if (totalUnread > 0) { <span class="mai-badge">@totalUnread</span> }
+                </div>
+                <div class="mai-search-wrap">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" placeholder="Rechercher..." @bind="SearchIT" @bind:event="oninput" />
+                </div>
+
+                @if (LoadingUsers)
+                {
+                    <div class="mai-loading"><div class="mai-spinner"></div><span>Chargement...</span></div>
+                }
+                else if (!ITUsersFiltres.Any())
+                {
+                    <div class="mai-empty-conv">
+                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        <p>Aucun agent IT disponible</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="mai-conv-list">
+                        @foreach (var user in ITUsersFiltres)
+                        {
+                            var isSel = SelectedUser?.Id == user.Id;
+                            <div class="mai-conv-item @(isSel ? "selected" : "") @(user.UnreadCount > 0 ? "has-unread" : "")"
+                                 @onclick="() => SelectUser(user)">
+                                <div class="mai-conv-avatar @(isSel ? "sel" : "")">
+                                    @user.Initials
+                                    @if (user.IsOnline) { <span class="mai-online-dot"></span> }
+                                </div>
+                                <div class="mai-conv-info">
+                                    <div class="mai-conv-top">
+                                        <span class="mai-conv-name @(user.UnreadCount > 0 ? "bold" : "")">@user.FullName</span>
+                                        <span class="mai-conv-time">@FormatConvTime(user.LastMessageTime)</span>
+                                    </div>
+                                    <div class="mai-conv-bottom">
+                                        <span class="mai-conv-preview @(user.UnreadCount > 0 ? "bold" : "")">
+                                            @(user.LastMessage?.Length > 38 ? user.LastMessage[..38] + "…" : user.LastMessage ?? "Démarrer une conversation")
+                                        </span>
+                                        @if (user.UnreadCount > 0)
+                                        { <span class="mai-unread-badge">@(user.UnreadCount > 99 ? "99+" : user.UnreadCount.ToString())</span> }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            @* ── COLONNE DROITE ── *@
+            <div class="mai-col-right @(_conversationOpen ? "mobile-visible" : "")">
+
+                @if (SelectedUser == null)
+                {
+                    <div class="mai-placeholder">
+                        <div class="mai-placeholder-icon">
+                            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        </div>
+                        <p class="mai-placeholder-title">Sélectionnez un agent IT</p>
+                        <p class="mai-placeholder-sub">Choisissez un agent pour démarrer la conversation</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="mai-chat-header">
+                        <button class="mai-back-btn" @onclick="BackToList">
+                            <svg viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                        </button>
+                        <div class="mai-chat-avatar">@SelectedUser.Initials</div>
+                        <div class="mai-chat-info">
+                            <p class="mai-chat-name">@SelectedUser.FullName</p>
+                            <p class="mai-chat-status">
+                                @if (SelectedUser.IsTyping)
+                                {
+                                    <span class="mai-status-typing">est en train d'écrire<span class="mai-typing-dots"><span></span><span></span><span></span></span></span>
+                                }
+                                else if (SelectedUser.IsOnline)
+                                {
+                                    <span class="mai-status-online"><span class="mai-dot-green"></span>En ligne</span>
+                                }
+                                else
+                                {
+                                    <span class="mai-status-offline">Hors ligne</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mai-messages-zone" id="maiMessagesZone">
+                        @if (LoadingMessages)
+                        {
+                            <div class="mai-loading mai-loading-center"><div class="mai-spinner"></div><span>Chargement...</span></div>
+                        }
+                        else if (!Messages.Any())
+                        {
+                            <div class="mai-no-messages">
+                                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                <p>Aucun message. Démarrez la conversation !</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var group in GroupedMessages)
+                            {
+                                <div class="mai-date-sep"><span>@group.Key</span></div>
+                                @foreach (var msg in group.Value)
+                                {
+                                    var isMe = msg.SenderId == CurrentUserId;
+                                    <div class="mai-bubble-wrap @(isMe ? "me" : "them")">
+                                        @if (!isMe) { <div class="mai-bubble-avatar">@SelectedUser.Initials</div> }
+                                        <div class="mai-bubble @(isMe ? "bubble-me" : "bubble-them")">
+                                            <span class="mai-bubble-text">@msg.Content</span>
+                                            <div class="mai-bubble-meta">
+                                                <span class="mai-bubble-time">@msg.SentAt.ToString("HH:mm")</span>
+                                                @if (isMe)
+                                                {
+                                                    <span class="mai-read-status">
+                                                        @if (msg.IsRead)
+                                                        { <svg class="mai-check seen" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/><path d="M16 6 8 14" opacity="0.5"/></svg> }
+                                                        else
+                                                        { <svg class="mai-check sent" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> }
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            @if (SelectedUser.IsTyping)
+                            {
+                                <div class="mai-bubble-wrap them">
+                                    <div class="mai-bubble-avatar">@SelectedUser.Initials</div>
+                                    <div class="mai-bubble bubble-them mai-typing-bubble">
+                                        <span class="mai-typing-dots"><span></span><span></span><span></span></span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <div class="mai-input-zone">
+                        <div class="mai-input-wrap">
+                            <textarea class="mai-textarea"
+                                      placeholder="Écrire un message..."
+                                      @bind="NewMessage"
+                                      @bind:event="oninput"
+                                      @onkeydown="OnKeyDown"
+                                      rows="1"></textarea>
+                            <button class="mai-send-btn @(string.IsNullOrWhiteSpace(NewMessage) ? "" : "active")"
+                                    disabled="@(string.IsNullOrWhiteSpace(NewMessage) || !_hubConnected)"
+                                    @onclick="SendMessage">
+                                <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            </button>
+                        </div>
+                        <p class="mai-input-hint">Appuyez sur <kbd>Entrée</kbd> pour envoyer · <kbd>Maj+Entrée</kbd> pour une nouvelle ligne</p>
+                    </div>
+                }
+            </div>
+
+        </div>
+    </main>
+</div>
+</RoleAuthGuard>

@@ -1,0 +1,249 @@
+@* ============================================================
+   AssetFlow.BlazorUI / Pages / IT / MessagerieAchat.razor
+   Messagerie IT ↔ Agent Achat — même principe que IT ↔ Employé
+   ============================================================ *@
+
+@page "/it/messagerie-achat"
+@using AssetFlow.BlazorUI.Services
+@using AssetFlow.BlazorUI.Components
+@using Microsoft.AspNetCore.SignalR.Client
+
+<RoleAuthGuard AllowedRoles="@(new[]{"IT","Admin"})">
+<div class="mia-layout">
+
+    @* ══════ SIDEBAR ══════ *@
+    <aside class="mia-sidebar">
+        <div class="mia-sidebar-logo-wrap">
+            <img src="images/logo.png" alt="AssetFlow" class="mia-sidebar-logo" />
+        </div>
+        <nav class="mia-sidebar-nav">
+            <a href="/dashboard/it"          class="mia-nav-link"><svg class="mia-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
+            <a href="/it/equipements"         class="mia-nav-link"><svg class="mia-nav-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span>Mes Équipements</span></a>
+            <a href="/it/employes"            class="mia-nav-link"><svg class="mia-nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Matériels affectés</span></a>
+            <a href="/it/affectation"         class="mia-nav-link"><svg class="mia-nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg><span>Assigner matériels</span></a>
+            <a href="/it/incidents"           class="mia-nav-link"><svg class="mia-nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg><span>Incidents</span></a>
+            <a href="/it/inventaire"          class="mia-nav-link"><svg class="mia-nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/></svg><span>Inventaire</span></a>
+            <a href="/it/demandes-achat"      class="mia-nav-link"><svg class="mia-nav-icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Mes achats</span></a>
+            <a href="/it/messagerie"          class="mia-nav-link"><svg class="mia-nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messagerie</span></a>
+            <a href="/it/messagerie-achat"    class="mia-nav-link active"><svg class="mia-nav-icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Msg Achat</span></a>
+        </nav>
+        <div class="mia-sidebar-profile">
+            <div class="mia-profile-avatar">@GetInitials()</div>
+            <div>
+                <p class="mia-profile-name">@UserName</p>
+                <p class="mia-profile-role">IT</p>
+            </div>
+        </div>
+        <LogoutButton />
+    </aside>
+
+    @* ══ DRAWER MOBILE ══ *@
+    @if (_menuOpen)
+    {
+        <div class="mia-menu-overlay" @onclick="() => _menuOpen = false">
+            <div class="mia-menu-drawer" @onclick:stopPropagation="true">
+                <div class="mia-drawer-logo-wrap"><img src="images/logo.png" alt="AssetFlow" class="mia-sidebar-logo" /></div>
+                <nav class="mia-drawer-nav">
+                    <a href="/dashboard/it"       class="mia-nav-link" @onclick="() => _menuOpen=false"><svg class="mia-nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></a>
+                    <a href="/it/equipements"      class="mia-nav-link" @onclick="() => _menuOpen=false"><svg class="mia-nav-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span>Mes Équipements</span></a>
+                    <a href="/it/employes"         class="mia-nav-link" @onclick="() => _menuOpen=false"><svg class="mia-nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Matériels affectés</span></a>
+                    <a href="/it/incidents"        class="mia-nav-link" @onclick="() => _menuOpen=false"><svg class="mia-nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/></svg><span>Incidents</span></a>
+                    <a href="/it/inventaire"       class="mia-nav-link" @onclick="() => _menuOpen=false"><svg class="mia-nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>Inventaire</span></a>
+                    <a href="/it/demandes-achat"   class="mia-nav-link" @onclick="() => _menuOpen=false"><svg class="mia-nav-icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg><span>Mes achats</span></a>
+                    <a href="/it/messagerie"       class="mia-nav-link" @onclick="() => _menuOpen=false"><svg class="mia-nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messagerie</span></a>
+                    <a href="/it/messagerie-achat" class="mia-nav-link active" @onclick="() => _menuOpen=false"><svg class="mia-nav-icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg><span>Msg Achat</span></a>
+                </nav>
+                <div class="mia-sidebar-profile">
+                    <div class="mia-profile-avatar">@GetInitials()</div>
+                    <div><p class="mia-profile-name">@UserName</p><p class="mia-profile-role">IT</p></div>
+                </div>
+                <LogoutButton />
+            </div>
+        </div>
+    }
+
+    @* ══════ MAIN ══════ *@
+    <main class="mia-main">
+
+        <header class="mia-header">
+            <button class="mia-hamburger" @onclick="() => _menuOpen = !_menuOpen"><span></span><span></span><span></span></button>
+            <div>
+                <h1 class="mia-page-title">Messagerie — Service Achat</h1>
+                <p class="mia-page-sub">Communication avec les agents d'achat</p>
+            </div>
+            <div class="mia-conn-status @(_hubConnected ? "connected" : "disconnected")">
+                <span class="mia-conn-dot"></span>
+                <span>@(_hubConnected ? "En ligne" : "Reconnexion...")</span>
+            </div>
+        </header>
+
+        <div class="mia-body">
+
+            @* ── COLONNE GAUCHE ── *@
+            <div class="mia-col-left @(_conversationOpen ? "mobile-hidden" : "")">
+                <div class="mia-col-header">
+                    <span class="mia-col-title">Agents Achat</span>
+                    @{ var totalUnread = AchatUsers.Sum(u => u.UnreadCount); }
+                    @if (totalUnread > 0) { <span class="mia-badge">@totalUnread</span> }
+                </div>
+                <div class="mia-search-wrap">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" placeholder="Rechercher..." @bind="SearchAchat" @bind:event="oninput" />
+                </div>
+
+                @if (LoadingUsers)
+                {
+                    <div class="mia-loading"><div class="mia-spinner"></div><span>Chargement...</span></div>
+                }
+                else if (!AchatUsersFiltres.Any())
+                {
+                    <div class="mia-empty-conv">
+                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        <p>Aucun agent achat disponible</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="mia-conv-list">
+                        @foreach (var user in AchatUsersFiltres)
+                        {
+                            var isSel = SelectedUser?.Id == user.Id;
+                            <div class="mia-conv-item @(isSel ? "selected" : "") @(user.UnreadCount > 0 ? "has-unread" : "")"
+                                 @onclick="() => SelectUser(user)">
+                                <div class="mia-conv-avatar @(isSel ? "sel" : "")">
+                                    @user.Initials
+                                    @if (user.IsOnline) { <span class="mia-online-dot"></span> }
+                                </div>
+                                <div class="mia-conv-info">
+                                    <div class="mia-conv-top">
+                                        <span class="mia-conv-name @(user.UnreadCount > 0 ? "bold" : "")">@user.FullName</span>
+                                        <span class="mia-conv-time">@FormatConvTime(user.LastMessageTime)</span>
+                                    </div>
+                                    <div class="mia-conv-bottom">
+                                        <span class="mia-conv-preview @(user.UnreadCount > 0 ? "bold" : "")">
+                                            @(user.LastMessage?.Length > 38 ? user.LastMessage[..38] + "…" : user.LastMessage ?? "Démarrer une conversation")
+                                        </span>
+                                        @if (user.UnreadCount > 0)
+                                        { <span class="mia-unread-badge">@(user.UnreadCount > 99 ? "99+" : user.UnreadCount.ToString())</span> }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            @* ── COLONNE DROITE ── *@
+            <div class="mia-col-right @(_conversationOpen ? "mobile-visible" : "")">
+
+                @if (SelectedUser == null)
+                {
+                    <div class="mia-placeholder">
+                        <div class="mia-placeholder-icon">
+                            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        </div>
+                        <p class="mia-placeholder-title">Sélectionnez un agent achat</p>
+                        <p class="mia-placeholder-sub">Choisissez un agent pour démarrer la conversation</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="mia-chat-header">
+                        <button class="mia-back-btn" @onclick="BackToList">
+                            <svg viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                        </button>
+                        <div class="mia-chat-avatar">@SelectedUser.Initials</div>
+                        <div class="mia-chat-info">
+                            <p class="mia-chat-name">@SelectedUser.FullName</p>
+                            <p class="mia-chat-status">
+                                @if (SelectedUser.IsTyping)
+                                {
+                                    <span class="mia-status-typing">est en train d'écrire<span class="mia-typing-dots"><span></span><span></span><span></span></span></span>
+                                }
+                                else if (SelectedUser.IsOnline)
+                                {
+                                    <span class="mia-status-online"><span class="mia-dot-green"></span>En ligne</span>
+                                }
+                                else
+                                {
+                                    <span class="mia-status-offline">Hors ligne</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mia-messages-zone" id="miaMessagesZone">
+                        @if (LoadingMessages)
+                        {
+                            <div class="mia-loading mia-loading-center"><div class="mia-spinner"></div><span>Chargement...</span></div>
+                        }
+                        else if (!Messages.Any())
+                        {
+                            <div class="mia-no-messages">
+                                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                <p>Aucun message. Démarrez la conversation !</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var group in GroupedMessages)
+                            {
+                                <div class="mia-date-sep"><span>@group.Key</span></div>
+                                @foreach (var msg in group.Value)
+                                {
+                                    var isMe = msg.SenderId == CurrentUserId;
+                                    <div class="mia-bubble-wrap @(isMe ? "me" : "them")">
+                                        @if (!isMe) { <div class="mia-bubble-avatar">@SelectedUser.Initials</div> }
+                                        <div class="mia-bubble @(isMe ? "bubble-me" : "bubble-them")">
+                                            <span class="mia-bubble-text">@msg.Content</span>
+                                            <div class="mia-bubble-meta">
+                                                <span class="mia-bubble-time">@msg.SentAt.ToString("HH:mm")</span>
+                                                @if (isMe)
+                                                {
+                                                    <span class="mia-read-status">
+                                                        @if (msg.IsRead)
+                                                        { <svg class="mia-check seen" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/><path d="M16 6 8 14" opacity="0.5"/></svg> }
+                                                        else
+                                                        { <svg class="mia-check sent" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> }
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            @if (SelectedUser.IsTyping)
+                            {
+                                <div class="mia-bubble-wrap them">
+                                    <div class="mia-bubble-avatar">@SelectedUser.Initials</div>
+                                    <div class="mia-bubble bubble-them mia-typing-bubble">
+                                        <span class="mia-typing-dots"><span></span><span></span><span></span></span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <div class="mia-input-zone">
+                        <div class="mia-input-wrap">
+                            <textarea class="mia-textarea"
+                                      placeholder="Écrire un message..."
+                                      @bind="NewMessage"
+                                      @bind:event="oninput"
+                                      @onkeydown="OnKeyDown"
+                                      rows="1"></textarea>
+                            <button class="mia-send-btn @(string.IsNullOrWhiteSpace(NewMessage) ? "" : "active")"
+                                    disabled="@(string.IsNullOrWhiteSpace(NewMessage) || !_hubConnected)"
+                                    @onclick="SendMessage">
+                                <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            </button>
+                        </div>
+                        <p class="mia-input-hint">Appuyez sur <kbd>Entrée</kbd> pour envoyer · <kbd>Maj+Entrée</kbd> pour une nouvelle ligne</p>
+                    </div>
+                }
+            </div>
+
+        </div>
+    </main>
+</div>
+</RoleAuthGuard>

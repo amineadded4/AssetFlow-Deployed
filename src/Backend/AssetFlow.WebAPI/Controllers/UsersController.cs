@@ -1,6 +1,6 @@
 // ============================================================
 // AssetFlow.WebAPI / Controllers / UsersController.cs
-// Endpoint pour récupérer les utilisateurs IT
+// AJOUT : GET api/users/achat — agents du service achat
 // ============================================================
 
 using AssetFlow.Infrastructure.Data;
@@ -24,6 +24,25 @@ namespace AssetFlow.WebAPI.Controllers
         {
             var users = await _db.Users
                 .Where(u => u.Role == "IT")
+                .OrderBy(u => u.FirstName)
+                .Select(u => new
+                {
+                    Id       = u.Id,
+                    FullName = u.FirstName + " " + u.LastName,
+                    Initials = (u.FirstName.Length > 0 ? u.FirstName.Substring(0, 1) : "") +
+                               (u.LastName.Length  > 0 ? u.LastName.Substring(0, 1)  : "")
+                })
+                .ToListAsync();
+
+            return Ok(users);
+        }
+
+        // GET api/users/achat — liste des agents du service achat
+        [HttpGet("achat")]
+        public async Task<IActionResult> GetAchatUsers()
+        {
+            var users = await _db.Users
+                .Where(u => u.Role == "EquipeAchat")
                 .OrderBy(u => u.FirstName)
                 .Select(u => new
                 {

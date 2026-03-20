@@ -51,6 +51,7 @@ namespace AssetFlow.BlazorUI.Services
                         await _localStorage.SetItemAsync("token_expires_at", DateTime.UtcNow.AddSeconds(result.ExpiresIn).ToString("o"));
                         await _localStorage.SetItemAsync("user_role",        result.Role);
                         await _localStorage.SetItemAsync("user_name",        result.FullName);
+                        await _localStorage.SetItemAsync("user_email",        result.Email);
                         return (true, "Connexion réussie");
                     }
                 }

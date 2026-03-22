@@ -30,7 +30,7 @@ html.dark .mai-header { background:rgba(16,24,34,0.9); border-bottom-color:rgba(
 .mai-page-sub   { font-size:0.78rem; color:var(--text-muted); margin:0; }
 
 /* Connection status */
-.mai-conn-status { display:flex; align-items:center; gap:0.45rem; padding:0.35rem 0.75rem; border-radius:9999px; font-size:0.72rem; font-weight:600; border:1px solid; margin-left:auto; }
+.mai-conn-status { display:flex; align-items:center; gap:0.45rem; padding:0.35rem 0.75rem; border-radius:9999px; font-size:0.72rem; font-weight:600; border:1px solid; margin-left:auto;margin-right: 50px; }
 .mai-conn-status.connected    { background:rgba(16,185,129,0.1); color:#10b981; border-color:rgba(16,185,129,0.25); }
 .mai-conn-status.disconnected { background:rgba(239,68,68,0.08); color:#ef4444; border-color:rgba(239,68,68,0.2); }
 .mai-conn-dot { width:7px; height:7px; border-radius:50%; background:currentColor; }

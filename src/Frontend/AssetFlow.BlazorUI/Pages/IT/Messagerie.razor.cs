@@ -12,6 +12,8 @@ namespace AssetFlow.BlazorUI.Pages.IT
         public int       EmployeId        { get; set; }
         public string    FullName         { get; set; } = string.Empty;
         public string    Initials         { get; set; } = string.Empty;
+        public string    Role             { get; set; } = string.Empty;  // ← AJOUTER
+
         public string?   LastMessage      { get; set; }
         public DateTime? LastMessageTime  { get; set; }
         public int       UnreadCount      { get; set; }
@@ -46,12 +48,15 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private System.Timers.Timer? _typingTimer;
         private bool                 _isTyping = false;
 
+        private string RoleFilter { get; set; } = "Tous";
+
         private List<ConversationDto> ConversationsFiltrees =>
-            (string.IsNullOrWhiteSpace(SearchConv)
-                ? Conversations
-                : Conversations.Where(c => c.FullName.Contains(SearchConv, StringComparison.OrdinalIgnoreCase)))
-            .OrderByDescending(c => c.LastMessageTime ?? DateTime.MinValue)
-            .ToList();
+            Conversations
+                .Where(c => string.IsNullOrWhiteSpace(SearchConv)
+                        || c.FullName.Contains(SearchConv, StringComparison.OrdinalIgnoreCase))
+                .Where(c => RoleFilter == "Tous" || c.Role == RoleFilter)
+                .OrderByDescending(c => c.LastMessageTime ?? DateTime.MinValue)
+                .ToList();
 
         private Dictionary<string, List<ChatMessageDto>> GroupedMessages =>
             CurrentMessages
@@ -183,6 +188,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
                 EmployeId = e.Id,
                 FullName  = e.FullName,
                 Initials  = e.Initials,
+                Role      = e.Role ?? string.Empty,
             }).ToList();
 
             var summaries = await MsgSvc.GetConversationsAsync(CurrentUserId);

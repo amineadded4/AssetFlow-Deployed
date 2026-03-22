@@ -1,0 +1,495 @@
+/* ============================================================
+   AdminFaceSetup.razor.css
+   Utilise les variables CSS de app.css (var(--bg), var(--text)...)
+   Mode sombre automatique via html.dark (depuis localStorage)
+   ============================================================ */
+
+/* ── PAGE ── */
+.facesetup-page {
+    padding: 2rem 2.5rem;
+    min-height: 100vh;
+    background: var(--bg);
+    transition: background var(--transition);
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+/* ── EN-TÊTE ── */
+.facesetup-header {
+    margin-bottom: 2rem;
+    animation: slideUp 0.4s ease both;
+    margin-top: -15px;
+}
+
+.facesetup-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.4px;
+}
+
+.facesetup-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+}
+
+/* ── STEPS ── */
+.facesetup-steps {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+    animation: slideUp 0.4s ease 0.05s both;
+}
+
+.facesetup-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.step-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+}
+
+.step-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+    transition: color var(--transition);
+}
+
+.facesetup-step.active .step-circle {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    box-shadow: 0 0 0 4px var(--primary-shadow);
+}
+.facesetup-step.active .step-label { color: var(--primary); }
+
+.facesetup-step.done .step-circle {
+    background: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+.facesetup-step.done .step-label { color: #10b981; }
+
+.step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    margin: 0 0.75rem;
+    margin-bottom: 1.4rem;
+    transition: background var(--transition);
+}
+.step-line.done { background: #10b981; }
+
+/* ── CARTE PRINCIPALE ── */
+.facesetup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 2rem;
+    animation: slideUp 0.4s ease 0.1s both;
+    transition: background var(--transition), border-color var(--transition);
+}
+
+/* ── STEP 1 : Intro ── */
+.intro-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(19, 109, 236, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+}
+.intro-icon svg {
+    width: 32px;
+    height: 32px;
+    stroke: var(--primary);
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.intro-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.intro-desc {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.intro-tips {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1.75rem;
+    background: var(--surface-2);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+}
+
+.intro-tips li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.845rem;
+    color: var(--text-muted);
+}
+
+.intro-tips li svg {
+    width: 15px;
+    height: 15px;
+    stroke: #10b981;
+    fill: none;
+    flex-shrink: 0;
+}
+
+/* ── STEP 2 : Caméra ── */
+.facesetup-scan { }
+
+.camera-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    max-height: 360px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: #0a0a0a;
+    margin-bottom: 1.25rem;
+}
+
+.camera-canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.camera-oval.detected {
+    border-color: #00ff88;
+    border-style: solid;
+    box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.2);
+}
+
+/* Badge status */
+.camera-status {
+    position: absolute;
+    bottom: 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 99px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(4px);
+}
+
+.camera-status svg {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.5;
+}
+
+.camera-status.waiting {
+    background: rgba(0, 0, 0, 0.6);
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.camera-status.detected {
+    background: rgba(0, 255, 136, 0.18);
+    color: #00ff88;
+    border: 1px solid rgba(0, 255, 136, 0.35);
+}
+
+/* Dot pulsant */
+.camera-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.6);
+    animation: pulse-dot 1.4s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* Compteur captures */
+.capture-counter {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.capture-count {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--primary);
+    min-width: 2.5rem;
+}
+
+.capture-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    flex: 1;
+}
+
+.capture-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-top: 0.3rem;
+}
+
+.capture-bar-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 99px;
+    transition: width 0.3s ease;
+}
+
+/* ── STEP 3 : Confirmation ── */
+.facesetup-confirm {
+    text-align: center;
+}
+
+.confirm-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+}
+
+.confirm-icon svg {
+    width: 28px;
+    height: 28px;
+    fill: none;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.confirm-icon.success {
+    background: rgba(16, 185, 129, 0.1);
+}
+.confirm-icon.success svg { stroke: #10b981; }
+
+.confirm-icon.warning {
+    background: rgba(19, 109, 236, 0.1);
+}
+.confirm-icon.warning svg { stroke: var(--primary); }
+
+.confirm-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+}
+
+.confirm-desc {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 1.75rem;
+    max-width: 380px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ── ALERTE ── */
+.facesetup-alert {
+    padding: 0.65rem 0.875rem;
+    border-radius: var(--radius-lg);
+    font-size: 0.83rem;
+    margin-bottom: 1rem;
+    border: 1px solid;
+}
+
+.facesetup-alert.error {
+    background: var(--error-bg);
+    color: var(--error);
+    border-color: var(--error-border);
+}
+
+.facesetup-alert.success {
+    background: var(--success-bg);
+    color: var(--success);
+    border-color: var(--success-border);
+}
+
+/* ── BOUTONS ── */
+.facesetup-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.facesetup-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.4rem;
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+    border: none;
+    white-space: nowrap;
+}
+
+.facesetup-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+}
+
+.facesetup-btn.primary {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 14px var(--primary-shadow);
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.25rem;
+}
+.facesetup-btn.primary:hover:not(:disabled) { background: var(--primary-hover); }
+
+.facesetup-btn.secondary {
+    background: var(--surface-2);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+}
+.facesetup-btn.secondary:hover:not(:disabled) { background: var(--border); }
+
+.facesetup-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Spinner dans bouton */
+.btn-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+    .facesetup-page {
+        padding: 1.25rem 1rem;
+    }
+
+    .facesetup-card {
+        padding: 1.25rem;
+    }
+
+    .camera-wrapper {
+        aspect-ratio: 4/3;
+        max-height: 280px;
+    }
+
+    .camera-oval {
+        width: 55%;
+    }
+
+    .facesetup-steps {
+        margin-bottom: 1.25rem;
+    }
+
+    .step-label {
+        font-size: 0.65rem;
+    }
+
+    .step-circle {
+        width: 30px;
+        height: 30px;
+        font-size: 0.75rem;
+    }
+
+    .step-line {
+        margin: 0 0.4rem;
+        margin-bottom: 1.1rem;
+    }
+
+    .facesetup-actions {
+        flex-direction: column-reverse;
+    }
+
+    .facesetup-btn.secondary {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .capture-counter {
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .facesetup-page {
+        padding: 1rem 0.75rem;
+    }
+
+    .facesetup-title {
+        font-size: 1.3rem;
+    }
+
+    .camera-oval {
+        width: 65%;
+    }
+}

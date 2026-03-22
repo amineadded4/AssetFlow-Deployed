@@ -100,7 +100,28 @@
                         <span class="msg-badge">@totalUnread</span>
                     }
                 </div>
-
+                @* ── Filtres par rôle ── *@
+                <div class="msg-role-filters">
+                    @foreach (var (label, value) in new[] {
+                        ("Tous",       "Tous"),
+                        ("Employés",   "Employe"),
+                        ("Achat",      "EquipeAchat"),
+                        ("IT",         "IT")
+                    })
+                    {
+                        var count = value == "Tous"
+                            ? Conversations.Count
+                            : Conversations.Count(c => c.Role == value);
+                        <button class="msg-role-btn @(RoleFilter == value ? "active" : "")"
+                                @onclick="() => RoleFilter = value">
+                            @label
+                            @if (count > 0)
+                            {
+                                <span class="msg-role-count">@count</span>
+                            }
+                        </button>
+                    }
+                </div>
                 <div class="msg-search-wrap">
                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                     <input type="text" placeholder="Rechercher un employé..."

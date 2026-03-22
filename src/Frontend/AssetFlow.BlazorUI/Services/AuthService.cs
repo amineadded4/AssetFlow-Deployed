@@ -23,6 +23,7 @@ namespace AssetFlow.BlazorUI.Services
         public int    ExpiresIn    { get; set; }
         public string Role         { get; set; } = string.Empty;
         public string FullName     { get; set; } = string.Empty;
+        public string Email     { get; set; } = string.Empty;
     }
 
     public class RegisterRequest
@@ -76,6 +77,7 @@ namespace AssetFlow.BlazorUI.Services
                         await _localStorage.SetItemAsync("token_expires_at", DateTime.UtcNow.AddSeconds(result.ExpiresIn).ToString("o")); // ← date expiration
                         await _localStorage.SetItemAsync("user_role",        result.Role);
                         await _localStorage.SetItemAsync("user_name",        result.FullName);
+                        await _localStorage.SetItemAsync("user_email",        result.Email);
 
                         return (true, "Connexion réussie");
                     }
@@ -118,6 +120,7 @@ namespace AssetFlow.BlazorUI.Services
             await _localStorage.RemoveItemAsync("token_expires_at");
             await _localStorage.RemoveItemAsync("user_role");
             await _localStorage.RemoveItemAsync("user_name");
+            await _localStorage.RemoveItemAsync("user_email");
         }
 
         public async Task<bool> IsAuthenticatedAsync()

@@ -35,5 +35,13 @@ namespace AssetFlow.Domain.Entities
 
         /// <summary>Date de création du compte</summary>
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        
+        /// <summary>
+        /// Keypoints faciaux sérialisés en JSON (float[][])
+        /// Chaque keypoint = [x, y] normalisé entre 0 et 1
+        /// 478 points MediaPipe FaceLandmarker
+        /// null si l'utilisateur n'a pas enregistré son visage
+        /// </summary>
+        public string? FaceKeypoints { get; set; }
     }
 }

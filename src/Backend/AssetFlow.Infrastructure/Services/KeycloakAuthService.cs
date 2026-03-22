@@ -81,7 +81,8 @@ namespace AssetFlow.Infrastructure.Services
                 RefreshToken = keycloakResponse.refresh_token,
                 ExpiresIn = keycloakResponse.expires_in,
                 Role = request.Role,
-                FullName = $"{user.FirstName} {user.LastName}"
+                FullName = $"{user.FirstName} {user.LastName}",
+                Email = user.Email
             };
         }
 

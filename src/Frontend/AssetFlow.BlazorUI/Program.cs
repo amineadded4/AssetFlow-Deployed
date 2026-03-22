@@ -21,7 +21,6 @@ builder.Services.AddHttpClient("ApiClient", client =>
 })
 .AddHttpMessageHandler<AuthTokenHandler>();
 
-
 // Rendre ce client disponible comme HttpClient par défaut
 builder.Services.AddScoped(sp =>
     sp.GetRequiredService<IHttpClientFactory>().CreateClient("ApiClient"));
@@ -54,6 +53,7 @@ builder.Services.AddScoped<DemandeAchatITClientService>();
 builder.Services.AddScoped<MessagerieService>();
 builder.Services.AddScoped<ProjectClientService>();
 builder.Services.AddScoped<StatistiquesITService>();
+builder.Services.AddScoped<FaceAuthClientService>();
 
 
 await builder.Build().RunAsync();

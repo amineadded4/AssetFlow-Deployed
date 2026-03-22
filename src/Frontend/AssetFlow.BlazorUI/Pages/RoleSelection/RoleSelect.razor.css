@@ -439,3 +439,120 @@ html.dark .admin-modal {
     .admin-modal-icon svg    { width: 18px; height: 18px; }
     .admin-btn-login         { font-size: 0.875rem; padding: 0.75rem; }
 }
+
+/* ============================================================
+   Ajouts à RoleSelect.razor.css
+   Collez ces styles à la fin de votre fichier existant
+   ============================================================ */
+
+/* ── Onglets ── */
+.admin-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    background: var(--surface-2);
+    border-radius: var(--radius-lg);
+    padding: 0.3rem;
+}
+
+.admin-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.55rem 0.5rem;
+    border-radius: var(--radius);
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+.admin-tab svg {
+    width: 15px; height: 15px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.75; flex-shrink: 0;
+}
+.admin-tab:hover { color: var(--text); }
+.admin-tab.active {
+    background: var(--surface);
+    color: var(--primary);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.admin-tab.active svg { stroke: var(--primary); }
+
+/* ── Caméra ── */
+.face-camera-container {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: #000;
+    margin-bottom: 1rem;
+}
+
+.face-canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.face-camera-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: #555;
+}
+.face-camera-placeholder svg {
+    width: 36px; height: 36px;
+    stroke: #555; fill: none;
+    stroke-width: 1.5;
+}
+.face-camera-placeholder p { font-size: 0.8rem; }
+
+/* ── Status visage ── */
+.face-status {
+    position: absolute;
+    bottom: 0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+.face-status svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+.face-status.waiting {
+    background: rgba(0,0,0,0.6);
+    color: rgba(255,255,255,0.7);
+}
+.face-status.detected {
+    background: rgba(0, 255, 136, 0.2);
+    color: #00ff88;
+    border: 1px solid rgba(0, 255, 136, 0.4);
+}
+
+/* ── Bouton face (violet) ── */
+.admin-btn-face {
+    background: #7C3AED !important;
+    box-shadow: 0 4px 14px rgba(124,58,237,0.3) !important;
+}
+.admin-btn-face:hover:not(:disabled) {
+    background: #6d28d9 !important;
+    box-shadow: 0 6px 20px rgba(124,58,237,0.4) !important;
+}

@@ -235,3 +235,60 @@ html.dark .msg-menu-drawer { background:#060d18; }
     .msg-bubble { max-width:80%; }
     .msg-messages-zone { padding:1rem; }
 }
+
+/* ── Filtres par rôle ── */
+.msg-role-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.625rem 1rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+html.dark .msg-role-filters { border-bottom-color: #1e2d42; }
+
+.msg-role-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.28rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.73rem;
+    font-weight: 600;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    white-space: nowrap;
+}
+.msg-role-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(19, 109, 236, 0.05);
+}
+.msg-role-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(19, 109, 236, 0.25);
+}
+.msg-role-btn.active .msg-role-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+.msg-role-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 9999px;
+    background: rgba(19, 109, 236, 0.12);
+    color: var(--primary);
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1;
+}

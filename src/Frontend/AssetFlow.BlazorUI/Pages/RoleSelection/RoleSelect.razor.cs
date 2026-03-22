@@ -1,63 +1,63 @@
 // ============================================================
-// AssetFlow.BlazorUI / Pages / RoleSelection / RoleSelect.razor.cs
-// Logique : sélection de rôle + modal admin déclenché par frappe clavier
+// RoleSelect.razor.cs — MISE À JOUR : onglet Face login
 // ============================================================
 
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 
 namespace AssetFlow.BlazorUI.Pages.RoleSelection
 {
-    public partial class RoleSelect
+    public partial class RoleSelect : IAsyncDisposable
     {
-        [Inject] private NavigationManager Navigation { get; set; } = default!;
-        [Inject] private AuthService AuthService { get; set; } = default!;
+        [Inject] private NavigationManager    Navigation       { get; set; } = default!;
+        [Inject] private AuthService          AuthService      { get; set; } = default!;
+        [Inject] private FaceAuthClientService FaceAuthService { get; set; } = default!;
+        [Inject] private IJSRuntime           JS               { get; set; } = default!;
 
-        // ── Buffer clavier pour détecter "admin" ──
-        private string KeyBuffer { get; set; } = string.Empty;
+        // ── Buffer clavier ──
+        private string   KeyBuffer   { get; set; } = string.Empty;
         private DateTime LastKeyTime { get; set; } = DateTime.MinValue;
-        private const int KeyTimeoutMs = 1500; // reset buffer si pause > 1.5s
+        private const int KeyTimeoutMs = 1500;
 
-        // ── État modal ──
-        private bool ShowAdminModal { get; set; } = false;
+        // ── Modal ──
+        private bool ShowAdminModal   { get; set; } = false;
 
-        // ── Champs du formulaire admin ──
-        private string AdminEmail    { get; set; } = string.Empty;
-        private string AdminPassword { get; set; } = string.Empty;
+        // ── Onglet actif : "classic" ou "face" ──
+        private string ActiveTab { get; set; } = "classic";
+
+        // ── Champs classic ──
+        private string AdminEmail        { get; set; } = string.Empty;
+        private string AdminPassword     { get; set; } = string.Empty;
         private bool   ShowAdminPassword { get; set; } = false;
-
-        // ── États UI du modal ──
         private bool   AdminIsLoading    { get; set; } = false;
         private string AdminErrorMessage { get; set; } = string.Empty;
         private bool   AdminEmailError   { get; set; } = false;
 
-        // ────────────────────────────────────────────────────
-        // Gestion des touches clavier sur la page principale
-        // ────────────────────────────────────────────────────
+        // ── Champs face ──
+        private string FaceEmail        { get; set; } = string.Empty;
+        private bool   FaceIsLoading    { get; set; } = false;
+        private string FaceErrorMessage { get; set; } = string.Empty;
+        private bool   FaceDetected     { get; set; } = false;
+        private bool   MediaPipeReady   { get; set; } = false;
+        private bool   CameraStarted    { get; set; } = false;
+        private DotNetObjectReference<RoleSelect>? _dotnetRef;
+
+        // ── Keydown page principale ──
         private void HandleKeyDown(KeyboardEventArgs e)
         {
-            // Ne pas interférer si le modal est déjà ouvert
             if (ShowAdminModal) return;
-
-            // Ignorer les touches non-caractères
             if (e.Key.Length != 1) return;
 
             var now = DateTime.Now;
-
-            // Reset buffer si trop de temps s'est écoulé
             if ((now - LastKeyTime).TotalMilliseconds > KeyTimeoutMs)
                 KeyBuffer = string.Empty;
 
             LastKeyTime = now;
-            KeyBuffer += e.Key.ToLower();
-            Console.WriteLine($"KeyBuffer: {KeyBuffer}"); // Debug
+            KeyBuffer  += e.Key.ToLower();
+            if (KeyBuffer.Length > 5) KeyBuffer = KeyBuffer[^5..];
 
-            // Ne garder que les 5 derniers caractères
-            if (KeyBuffer.Length > 5)
-                KeyBuffer = KeyBuffer[^5..];
-
-            // Vérifier si "admin" a été tapé
             if (KeyBuffer.EndsWith("admin"))
             {
                 KeyBuffer = string.Empty;
@@ -65,57 +65,102 @@ namespace AssetFlow.BlazorUI.Pages.RoleSelection
             }
         }
 
-        // ────────────────────────────────────────────────────
-        // Touche Entrée dans les inputs du modal
-        // ────────────────────────────────────────────────────
         private async Task HandleModalKeyDown(KeyboardEventArgs e)
         {
-            if (e.Key == "Enter")
-                await HandleAdminLogin();
-            else if (e.Key == "Escape")
-                CloseModal();
+            if (e.Key == "Enter")  await HandleAdminLogin();
+            if (e.Key == "Escape") CloseModal();
         }
 
-        // ────────────────────────────────────────────────────
-        // Ouvrir / Fermer le modal
-        // ────────────────────────────────────────────────────
+        // ── Open / Close ──
         private void OpenAdminModal()
         {
-            AdminEmail        = string.Empty;
-            AdminPassword     = string.Empty;
-            AdminErrorMessage = string.Empty;
-            AdminEmailError   = false;
-            AdminIsLoading    = false;
+            AdminEmail = AdminPassword = FaceEmail = string.Empty;
+            AdminErrorMessage = FaceErrorMessage = string.Empty;
+            AdminEmailError = AdminIsLoading = FaceIsLoading = false;
             ShowAdminPassword = false;
-            ShowAdminModal    = true;
+            ActiveTab       = "classic";
+            FaceDetected    = false;
+            MediaPipeReady  = false;
+            CameraStarted   = false;
+            ShowAdminModal  = true;
         }
 
-        private void CloseModal()
+        private async Task CloseModal()
         {
+            if (CameraStarted)
+            {
+                await JS.InvokeVoidAsync("stopCamera", "face-video");
+                CameraStarted = false;
+            }
             ShowAdminModal    = false;
-            AdminErrorMessage = string.Empty;
+            AdminErrorMessage = FaceErrorMessage = string.Empty;
             AdminEmailError   = false;
+            _dotnetRef?.Dispose();
+            _dotnetRef = null;
         }
 
-        // ────────────────────────────────────────────────────
-        // Toggle visibilité mot de passe
-        // ────────────────────────────────────────────────────
+        // ── Switch tab ──
+        private async Task SwitchTab(string tab)
+        {
+            ActiveTab = tab;
+            FaceErrorMessage = string.Empty;
+            FaceDetected     = false;
+
+            if (tab == "face")
+                await InitFaceLoginAsync();
+            else
+            {
+                if (CameraStarted)
+                {
+                    await JS.InvokeVoidAsync("stopCamera", "face-video");
+                    CameraStarted = false;
+                }
+            }
+        }
+
+        // ── Initialiser MediaPipe + caméra ──
+        private async Task InitFaceLoginAsync()
+        {
+            if (!MediaPipeReady)
+            {
+                MediaPipeReady = await JS.InvokeAsync<bool>("initMediaPipe");
+                if (!MediaPipeReady)
+                {
+                    FaceErrorMessage = "Impossible de charger MediaPipe. Vérifiez votre connexion.";
+                    return;
+                }
+            }
+
+            if (!CameraStarted)
+            {
+                CameraStarted = await JS.InvokeAsync<bool>("startCamera", "face-video");
+                if (!CameraStarted) { FaceErrorMessage = "Caméra non disponible."; return; }
+            }
+
+            _dotnetRef ??= DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("startPreview", "face-video", "face-canvas", _dotnetRef);
+        }
+
+        // ── Callback JS → Blazor : visage détecté ──
+        [JSInvokable]
+        public void OnFaceDetected(bool detected)
+        {
+            if (FaceDetected != detected)
+            {
+                FaceDetected = detected;
+                InvokeAsync(StateHasChanged);
+            }
+        }
+
+        // ── Classic login ──
         private void ToggleAdminPassword() => ShowAdminPassword = !ShowAdminPassword;
 
-        // ────────────────────────────────────────────────────
-        // Connexion admin
-        // ────────────────────────────────────────────────────
         private async Task HandleAdminLogin()
         {
             AdminErrorMessage = string.Empty;
             AdminEmailError   = false;
 
-            if (!AdminEmail.Contains("@"))
-            {
-                AdminEmailError = true;
-                return;
-            }
-
+            if (!AdminEmail.Contains("@")) { AdminEmailError = true; return; }
             if (string.IsNullOrEmpty(AdminPassword))
             {
                 AdminErrorMessage = "Veuillez entrer votre mot de passe.";
@@ -123,35 +168,62 @@ namespace AssetFlow.BlazorUI.Pages.RoleSelection
             }
 
             AdminIsLoading = true;
-
-            var request = new LoginRequest
+            var (success, message) = await AuthService.LoginAsync(new LoginRequest
             {
                 Email    = AdminEmail,
                 Password = AdminPassword,
                 Role     = "Admin"
-            };
-
-            var (success, message) = await AuthService.LoginAsync(request);
-
+            });
             AdminIsLoading = false;
 
-            if (success)
-            {
-                ShowAdminModal = false;
-                Navigation.NavigateTo("/admin/projets");
-            }
-            else
-            {
-                AdminErrorMessage = message;
-            }
+            if (success) { await CloseModal(); Navigation.NavigateTo("/admin/projets"); }
+            else AdminErrorMessage = message;
         }
 
-        // ────────────────────────────────────────────────────
-        // Navigation vers login par rôle
-        // ────────────────────────────────────────────────────
-        private void SelectRole(string role)
+        // ── Face login ──
+        private async Task HandleFaceLogin()
         {
-            Navigation.NavigateTo($"/login?role={role}");
+            if (!FaceDetected) { FaceErrorMessage = "Aucun visage détecté. Regardez la caméra."; return; }
+            if (!FaceEmail.Contains("@")) { FaceErrorMessage = "Email invalide."; return; }
+
+            FaceIsLoading    = true;
+            FaceErrorMessage = string.Empty;
+
+            var keypointsJson = await JS.InvokeAsync<string?>("captureKeypoints", "face-video");
+
+            if (string.IsNullOrEmpty(keypointsJson))
+            {
+                FaceIsLoading    = false;
+                FaceErrorMessage = "Capture échouée. Restez face à la caméra.";
+                return;
+            }
+
+            float[][]? keypoints;
+            try { keypoints = System.Text.Json.JsonSerializer.Deserialize<float[][]>(keypointsJson); }
+            catch { FaceIsLoading = false; FaceErrorMessage = "Erreur de lecture des keypoints."; return; }
+
+            if (keypoints == null) { FaceIsLoading = false; FaceErrorMessage = "Keypoints invalides."; return; }
+
+            var (success, message) = await FaceAuthService.FaceLoginAsync(new FaceLoginRequest
+            {
+                Email      = FaceEmail,
+                Keypoints  = keypoints
+            });
+
+            FaceIsLoading = false;
+
+            if (success) { await CloseModal(); Navigation.NavigateTo("/admin/projets"); }
+            else FaceErrorMessage = message;
+        }
+
+        // ── Navigation rôles ──
+        private void SelectRole(string role) => Navigation.NavigateTo($"/login?role={role}");
+
+        public async ValueTask DisposeAsync()
+        {
+            if (CameraStarted)
+                await JS.InvokeVoidAsync("stopCamera", "face-video");
+            _dotnetRef?.Dispose();
         }
     }
 }

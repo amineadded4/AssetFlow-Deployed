@@ -493,3 +493,164 @@
         width: 65%;
     }
 }
+
+/* ============================================================
+   AJOUT dans AdminFaceSetup.razor.css
+   Coller à la fin du fichier existant
+   ============================================================ */
+
+/* ── GUIDE DE POSITION ── */
+.position-guide {
+    margin-bottom: 1.25rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+}
+
+.position-guide-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.9rem;
+}
+
+.position-step-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: var(--primary);
+    color: white;
+    padding: 0.2rem 0.55rem;
+    border-radius: 99px;
+    flex-shrink: 0;
+}
+
+.position-instruction {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* ── Les 5 miniatures de visage ── */
+.position-faces {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.position-face-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.6rem 0.3rem;
+    border-radius: var(--radius-lg);
+    border: 1.5px solid var(--border);
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: default;
+}
+
+/* État : en attente */
+.position-face-item.pending {
+    opacity: 0.35;
+}
+
+.position-face-item.pending svg {
+    color: var(--text-muted);
+}
+
+/* État : actif (capture courante) */
+.position-face-item.active {
+    border-color: var(--primary);
+    background: rgba(19, 109, 236, 0.06);
+    opacity: 1;
+    box-shadow: 0 0 0 3px rgba(19, 109, 236, 0.12);
+    animation: pulse-active 2s ease-in-out infinite;
+}
+
+.position-face-item.active svg {
+    color: var(--primary);
+}
+
+@keyframes pulse-active {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(19, 109, 236, 0.12); }
+    50%       { box-shadow: 0 0 0 5px rgba(19, 109, 236, 0.22); }
+}
+
+/* État : fait */
+.position-face-item.done {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.06);
+    opacity: 1;
+}
+
+.position-face-item.done svg {
+    color: #10b981;
+    opacity: 0.6;
+}
+
+/* Coche verte sur les items terminés */
+.position-face-item.done::after {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -6px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #10b981;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 16px;
+    text-align: center;
+}
+
+.position-face-item svg {
+    width: 48px;
+    height: 58px;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: color 0.3s ease;
+}
+
+.position-face-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.position-face-item.active .position-face-label {
+    color: var(--primary);
+}
+
+.position-face-item.done .position-face-label {
+    color: #10b981;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 480px) {
+    .position-guide {
+        padding: 0.75rem;
+    }
+
+    .position-face-item svg {
+        width: 36px;
+        height: 44px;
+    }
+
+    .position-face-label {
+        font-size: 0.6rem;
+    }
+
+    .position-instruction {
+        font-size: 0.78rem;
+    }
+}

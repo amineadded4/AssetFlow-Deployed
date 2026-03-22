@@ -34,6 +34,79 @@ namespace AssetFlow.BlazorUI.Pages.Admin
         // ── Sauvegarde ──
         private bool IsSaving    { get; set; } = false;
         private bool SaveSuccess { get; set; } = false;
+        // ── Modèle position ──
+        private record FacePosition(string Label, string Instruction, string SvgContent);
+        
+        // ── Les 5 positions ──
+        private FacePosition[] Positions => new[]
+        {
+            new FacePosition(
+                Label: "Face",
+                Instruction: "Regardez droit vers la caméra",
+                SvgContent: @"
+                    <ellipse cx='30' cy='34' rx='18' ry='22' stroke='currentColor' stroke-width='1.5'/>
+                    <ellipse cx='22' cy='27' rx='4' ry='2.5' stroke='currentColor' stroke-width='1.2'/>
+                    <ellipse cx='38' cy='27' rx='4' ry='2.5' stroke='currentColor' stroke-width='1.2'/>
+                    <path d='M30 33 L27 41 Q30 43 33 41 Z' stroke='currentColor' stroke-width='1'/>
+                    <path d='M23 47 Q30 52 37 47' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/>
+                "
+            ),
+            new FacePosition(
+                Label: "Gauche",
+                Instruction: "Tournez légèrement la tête vers la gauche",
+                SvgContent: @"
+                    <ellipse cx='27' cy='34' rx='16' ry='22' stroke='currentColor' stroke-width='1.5'/>
+                    <ellipse cx='20' cy='27' rx='3.5' ry='2.5' stroke='currentColor' stroke-width='1.2'/>
+                    <ellipse cx='33' cy='26' rx='4.5' ry='2.5' stroke='currentColor' stroke-width='1.2'/>
+                    <path d='M27 33 L24 41 Q27 43 30 41 Z' stroke='currentColor' stroke-width='1'/>
+                    <path d='M20 47 Q27 51 34 47' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/>
+                    <path d='M44 34 L50 34' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' marker-end='url(#ag)'/>
+                    <defs><marker id='ag' viewBox='0 0 6 6' refX='5' refY='3' markerWidth='4' markerHeight='4' orient='auto'><path d='M1 1L5 3L1 5' fill='none' stroke='currentColor' stroke-width='1.2'/></marker></defs>
+                "
+            ),
+            new FacePosition(
+                Label: "Droite",
+                Instruction: "Tournez légèrement la tête vers la droite",
+                SvgContent: @"
+                    <ellipse cx='33' cy='34' rx='16' ry='22' stroke='currentColor' stroke-width='1.5'/>
+                    <ellipse cx='27' cy='26' rx='4.5' ry='2.5' stroke='currentColor' stroke-width='1.2'/>
+                    <ellipse cx='40' cy='27' rx='3.5' ry='2.5' stroke='currentColor' stroke-width='1.2'/>
+                    <path d='M33 33 L30 41 Q33 43 36 41 Z' stroke='currentColor' stroke-width='1'/>
+                    <path d='M26 47 Q33 51 40 47' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/>
+                    <path d='M16 34 L10 34' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' marker-end='url(#ad)'/>
+                    <defs><marker id='ad' viewBox='0 0 6 6' refX='5' refY='3' markerWidth='4' markerHeight='4' orient='auto'><path d='M5 1L1 3L5 5' fill='none' stroke='currentColor' stroke-width='1.2'/></marker></defs>
+                "
+            ),
+            new FacePosition(
+                Label: "Haut",
+                Instruction: "Levez légèrement le menton vers le haut",
+                SvgContent: @"
+                    <ellipse cx='30' cy='30' rx='18' ry='20' stroke='currentColor' stroke-width='1.5'/>
+                    <ellipse cx='22' cy='24' rx='4' ry='2' stroke='currentColor' stroke-width='1.2'/>
+                    <ellipse cx='38' cy='24' rx='4' ry='2' stroke='currentColor' stroke-width='1.2'/>
+                    <path d='M30 29 L27 37 Q30 39 33 37 Z' stroke='currentColor' stroke-width='1'/>
+                    <path d='M23 43 Q30 48 37 43' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/>
+                    <path d='M30 56 L30 62' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' marker-end='url(#au)'/>
+                    <defs><marker id='au' viewBox='0 0 6 6' refX='3' refY='5' markerWidth='4' markerHeight='4' orient='auto'><path d='M1 5L3 1L5 5' fill='none' stroke='currentColor' stroke-width='1.2'/></marker></defs>
+                "
+            ),
+            new FacePosition(
+                Label: "Bas",
+                Instruction: "Baissez légèrement le menton vers le bas",
+                SvgContent: @"
+                    <ellipse cx='30' cy='38' rx='18' ry='20' stroke='currentColor' stroke-width='1.5'/>
+                    <ellipse cx='22' cy='32' rx='4' ry='2' stroke='currentColor' stroke-width='1.2'/>
+                    <ellipse cx='38' cy='32' rx='4' ry='2' stroke='currentColor' stroke-width='1.2'/>
+                    <path d='M30 37 L27 45 Q30 47 33 45 Z' stroke='currentColor' stroke-width='1'/>
+                    <path d='M23 51 Q30 56 37 51' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/>
+                    <path d='M30 10 L30 16' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' marker-end='url(#ab)'/>
+                    <defs><marker id='ab' viewBox='0 0 6 6' refX='3' refY='1' markerWidth='4' markerHeight='4' orient='auto'><path d='M1 1L3 5L5 1' fill='none' stroke='currentColor' stroke-width='1.2'/></marker></defs>
+                "
+            ),
+        };
+        
+        // ── Position courante ──
+        private FacePosition CurrentPosition => Positions[Math.Min(CaptureCount, MaxCaptures - 1)];
 
         // ────────────────────────────────────────────────────
         // STEP 1 → 2 : démarrer caméra

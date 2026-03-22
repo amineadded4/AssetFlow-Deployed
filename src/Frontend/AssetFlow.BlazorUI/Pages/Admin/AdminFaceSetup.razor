@@ -80,6 +80,28 @@
                 <div class="facesetup-alert error">@ErrorMessage</div>
             }
 
+            @* ── GUIDE DE POSITION (nouveau bloc) ── *@
+            <div class="position-guide">
+                <div class="position-guide-label">
+                    <span class="position-step-badge">@(CaptureCount + 1) / @MaxCaptures</span>
+                    <span class="position-instruction">@CurrentPosition.Instruction</span>
+                </div>
+
+                <div class="position-faces">
+                    @for (int i = 0; i < Positions.Length; i++)
+                    {
+                        var pos   = Positions[i];
+                        var index = i;
+                        <div class="position-face-item @(index < CaptureCount ? "done" : index == CaptureCount ? "active" : "pending")">
+                            <svg viewBox="0 0 60 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                @((MarkupString)pos.SvgContent)
+                            </svg>
+                            <span class="position-face-label">@pos.Label</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
             <div class="camera-wrapper">
                 <video id="fs-video" autoplay muted playsinline style="display:none;"></video>
                 <canvas id="fs-canvas" class="camera-canvas"></canvas>

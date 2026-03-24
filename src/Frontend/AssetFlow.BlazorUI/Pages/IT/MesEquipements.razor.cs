@@ -1,5 +1,6 @@
 // ============================================================
 // AssetFlow.BlazorUI / Pages / IT / MesEquipements.razor.cs
+// FICHIER COMPLET — ajout modal commentaire matériel
 // ============================================================
 
 using AssetFlow.BlazorUI.Services;
@@ -14,26 +15,36 @@ namespace AssetFlow.BlazorUI.Pages.IT
         [Inject] private NavigationManager    Navigation     { get; set; } = default!;
         [Inject] private ILocalStorageService LocalStorage   { get; set; } = default!;
 
-        // ── Données ──────────────────────────────────────────
+        // ── Données ──────────────────────────────────────────────
         private List<MaterielAffecteGroupeDto> MaterielsGroupes        { get; set; } = new();
         private List<MaterielAffecteGroupeDto> MaterielsGroupesFiltres { get; set; } = new();
 
         private bool   IsLoading    { get; set; } = true;
         private string ErrorMessage { get; set; } = string.Empty;
 
-        // ── Recherche ────────────────────────────────────────
+        // ── Recherche ────────────────────────────────────────────
         private string SearchQuery { get; set; } = string.Empty;
 
-        // ── Modal ────────────────────────────────────────────
+        // ── Modal articles (existant) ─────────────────────────────
         private bool                      ModalOuvert         { get; set; } = false;
         private MaterielAffecteGroupeDto? MaterielSelectionne { get; set; } = null;
         private string                    ModalSearchQuery    { get; set; } = string.Empty;
 
-        // ── User info ────────────────────────────────────────
+        // ── Modal commentaire (NOUVEAU) ───────────────────────────
+        private bool                      ModalCommentaireOuvert { get; set; } = false;
+        private MaterielAffecteGroupeDto? MaterielCommentaire    { get; set; } = null;
+        private string                    CommentaireContenu     { get; set; } = string.Empty;
+        private string                    CommentaireFeedback    { get; set; } = string.Empty;
+        private bool                      CommentaireSucces      { get; set; } = false;
+        private bool                      CommentaireEnvoi       { get; set; } = false;
+        private bool                      CommentaireChargement  { get; set; } = false;
+        private List<CommentaireDto>      CommentairesExistants  { get; set; } = new();
+
+        // ── User info ─────────────────────────────────────────────
         private string UserName  { get; set; } = "Utilisateur";
         private bool   _menuOpen = false;
 
-        // ── Init ─────────────────────────────────────────────
+        // ── Init ──────────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
             UserName = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
@@ -62,7 +73,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
             }
         }
 
-        // ── Recherche ────────────────────────────────────────
+        // ── Recherche ─────────────────────────────────────────────
         private void OnSearchInput(ChangeEventArgs e)
         {
             SearchQuery = e.Value?.ToString() ?? string.Empty;
@@ -85,7 +96,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
                 .ToList();
         }
 
-        // ── Modal ────────────────────────────────────────────
+        // ── Modal articles (existant) ─────────────────────────────
         private void OuvrirModal(MaterielAffecteGroupeDto materiel)
         {
             MaterielSelectionne = materiel;
@@ -106,13 +117,77 @@ namespace AssetFlow.BlazorUI.Pages.IT
             StateHasChanged();
         }
 
-        // ── Navigation ───────────────────────────────────────
+        // ── Modal commentaire (NOUVEAU) ───────────────────────────
+
+        private async Task OuvrirModalCommentaire(MaterielAffecteGroupeDto materiel)
+        {
+            MaterielCommentaire    = materiel;
+            CommentaireContenu     = string.Empty;
+            CommentaireFeedback    = string.Empty;
+            CommentaireSucces      = false;
+            CommentaireEnvoi       = false;
+            CommentaireChargement  = true;
+            ModalCommentaireOuvert = true;
+            StateHasChanged();
+
+            // Charger les commentaires existants sur ce matériel
+            CommentairesExistants = await EmployeService.GetCommentairesMaterielAsync(materiel.MaterielId);
+            CommentaireChargement = false;
+            StateHasChanged();
+        }
+
+        private void FermerModalCommentaire()
+        {
+            ModalCommentaireOuvert = false;
+            MaterielCommentaire    = null;
+            CommentaireContenu     = string.Empty;
+            CommentaireFeedback    = string.Empty;
+            CommentairesExistants  = new();
+        }
+
+        private async Task EnvoyerCommentaire()
+        {
+            if (MaterielCommentaire == null || string.IsNullOrWhiteSpace(CommentaireContenu))
+                return;
+
+            CommentaireEnvoi    = true;
+            CommentaireFeedback = string.Empty;
+            StateHasChanged();
+
+            var result = await EmployeService.AjouterCommentaireAsync(
+                MaterielCommentaire.MaterielId, CommentaireContenu);
+
+            CommentaireEnvoi  = false;
+            CommentaireSucces = result.Succes;
+
+            if (result.Succes)
+            {
+                CommentaireFeedback = "Votre commentaire a bien été enregistré !";
+                CommentaireContenu  = string.Empty;
+
+                // Mettre à jour le compteur sur la carte sans recharger
+                MaterielCommentaire.NombreCommentaires++;
+
+
+                // Rafraîchir la liste des commentaires dans le modal
+                CommentairesExistants = await EmployeService.GetCommentairesMaterielAsync(
+                    MaterielCommentaire.MaterielId);
+            }
+            else
+            {
+                CommentaireFeedback = result.Message;
+            }
+
+            StateHasChanged();
+        }
+
+        // ── Navigation ────────────────────────────────────────────
         private void NaviguerVersDetail(int affectationId, int articleId)
         {
             Navigation.NavigateTo($"/it/equipement/{affectationId}/article/{articleId}");
         }
 
-        // ── Helpers ──────────────────────────────────────────
+        // ── Helpers ───────────────────────────────────────────────
         private string GetInitials()
         {
             var parts = UserName.Split(' ', StringSplitOptions.RemoveEmptyEntries);

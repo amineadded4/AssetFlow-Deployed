@@ -25,9 +25,9 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
     return ConnectionMultiplexer.Connect(connStr);
 });
 
-// === AUTHENTIFICATION JWT ===
+// === AUTHENTIFICATION JWT — accepte Keycloak ET FaceAuth ===
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    .AddJwtBearer("Keycloak", options =>
     {
         options.Authority = builder.Configuration["Keycloak:Authority"];
         options.RequireHttpsMetadata = false;
@@ -41,7 +41,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
         options.Events = new JwtBearerEvents
         {
-            // ── AJOUT : SignalR envoie le token en query string ──
             OnMessageReceived = ctx =>
             {
                 var accessToken = ctx.Request.Query["access_token"];
@@ -66,18 +65,59 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 return Task.CompletedTask;
             }
         };
+    })
+    .AddJwtBearer("FaceAuth", options =>
+    {
+        var secret = builder.Configuration["FaceAuth:JwtSecret"]!;
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer           = true,
+            ValidIssuer              = builder.Configuration["Keycloak:Authority"],
+            ValidateAudience         = false,
+            ValidateLifetime         = true,
+            ClockSkew                = TimeSpan.Zero,
+            RoleClaimType            = System.Security.Claims.ClaimTypes.Role,
+            IssuerSigningKey         = new SymmetricSecurityKey(
+                System.Text.Encoding.UTF8.GetBytes(secret))
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = ctx =>
+            {
+                var identity = ctx.Principal?.Identity as System.Security.Claims.ClaimsIdentity;
+                if (identity == null) return Task.CompletedTask;
+                var realmAccess = ctx.Principal?.FindFirst("realm_access");
+                if (realmAccess != null)
+                {
+                    var doc = System.Text.Json.JsonDocument.Parse(realmAccess.Value);
+                    if (doc.RootElement.TryGetProperty("roles", out var roles))
+                        foreach (var role in roles.EnumerateArray())
+                            identity.AddClaim(new System.Security.Claims.Claim(
+                                System.Security.Claims.ClaimTypes.Role, role.GetString()!));
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
 
+// Accepter les 2 schemes
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly",      p => p.RequireRole("Admin"));
-    options.AddPolicy("ITOnly",         p => p.RequireRole("IT"));
-    options.AddPolicy("EquipeAchatOnly",p => p.RequireRole("EquipeAchat"));
-    options.AddPolicy("EmployeOnly",    p => p.RequireRole("Employe"));
-    options.AddPolicy("ITOrAdmin",      p => p.RequireRole("IT", "Admin"));
-    options.AddPolicy("AchatOrAdmin",   p => p.RequireRole("EquipeAchat", "Admin"));
-    options.AddPolicy("ITOrAchat",      p => p.RequireRole("IT", "EquipeAchat"));
+    var multiScheme = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder(
+        "Keycloak", "FaceAuth")
+        .RequireAuthenticatedUser()
+        .Build();
+
+    options.DefaultPolicy = multiScheme;
+    options.AddPolicy("AdminOnly",      p => p.AddAuthenticationSchemes("Keycloak","FaceAuth").RequireRole("Admin"));
+    options.AddPolicy("ITOnly",         p => p.AddAuthenticationSchemes("Keycloak","FaceAuth").RequireRole("IT"));
+    options.AddPolicy("EquipeAchatOnly",p => p.AddAuthenticationSchemes("Keycloak","FaceAuth").RequireRole("EquipeAchat"));
+    options.AddPolicy("EmployeOnly",    p => p.AddAuthenticationSchemes("Keycloak","FaceAuth").RequireRole("Employe"));
+    options.AddPolicy("ITOrAdmin",      p => p.AddAuthenticationSchemes("Keycloak","FaceAuth").RequireRole("IT","Admin"));
+    options.AddPolicy("AchatOrAdmin",   p => p.AddAuthenticationSchemes("Keycloak","FaceAuth").RequireRole("EquipeAchat","Admin"));
+    options.AddPolicy("ITOrAchat",      p => p.AddAuthenticationSchemes("Keycloak","FaceAuth").RequireRole("IT","EquipeAchat"));
 });
 
 // === INJECTION DES SERVICES ===

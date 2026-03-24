@@ -9,7 +9,7 @@ namespace AssetFlow.Application.DTOs
     /// DTO représentant un article individuel affecté à un employé
     /// (ligne dans le modal)
     /// </summary>
-    public class ArticleAffecteDto
+    /*public class ArticleAffecteDto
     {
         /// <summary>ID de l'affectation</summary>
         public int AffectationId { get; set; }
@@ -33,13 +33,13 @@ namespace AssetFlow.Application.DTOs
 
         /// <summary>Observations sur cet article</summary>
         public string? Observations { get; set; }
-    }
+    }*/
 
     /// <summary>
     /// DTO représentant un matériel groupé avec tous ses articles affectés
     /// à l'employé (pour la grille principale)
     /// </summary>
-    public class MaterielAffecteGroupeDto
+    /*public class MaterielAffecteGroupeDto
     {
         /// <summary>ID du matériel</summary>
         public int MaterielId { get; set; }
@@ -70,5 +70,5 @@ namespace AssetFlow.Application.DTOs
 
         /// <summary>Liste des articles individuels affectés</summary>
         public List<ArticleAffecteDto> Articles { get; set; } = new();
-    }
+    }*/
 }

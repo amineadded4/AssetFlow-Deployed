@@ -1,6 +1,5 @@
 // ============================================================
 // AssetFlow.Domain / Entities / CommentaireMateriel.cs
-// Entité représentant un commentaire employé sur un matériel
 // ============================================================
 
 namespace AssetFlow.Domain.Entities
@@ -14,7 +13,7 @@ namespace AssetFlow.Domain.Entities
         public DateTime DateCreation  { get; set; } = DateTime.UtcNow;
 
         // Navigation
-        public Materiel Materiel      { get; set; } = null!;
-        public User     Utilisateur   { get; set; } = null!;
+        public Materiel Materiel    { get; set; } = null!;
+        public User     Utilisateur { get; set; } = null!;
     }
 }

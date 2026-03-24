@@ -23,7 +23,7 @@ namespace AssetFlow.WebAPI.Controllers
 
         /// <summary>
         /// POST api/commentaire
-        /// Ajoute un commentaire employé sur un matériel
+        /// Enregistre un commentaire employé sur un matériel
         /// </summary>
         [HttpPost]
         public async Task<IActionResult> AjouterCommentaire([FromBody] CreerCommentaireDto dto)

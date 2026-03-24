@@ -40,7 +40,12 @@ namespace AssetFlow.Infrastructure.Services
                 _context.CommentairesMateriel.Add(commentaire);
                 await _context.SaveChangesAsync();
 
-                return new CommentaireResultDto { Succes = true, Message = "Commentaire enregistré.", Id = commentaire.Id };
+                return new CommentaireResultDto
+                {
+                    Succes  = true,
+                    Message = "Commentaire enregistré avec succès.",
+                    Id      = commentaire.Id
+                };
             }
             catch (Exception ex)
             {
@@ -58,11 +63,11 @@ namespace AssetFlow.Infrastructure.Services
 
             return commentaires.Select(c => new CommentaireDto
             {
-                Id              = c.Id,
+                Id = c.Id,
                 MaterielId      = c.MaterielId,
                 UtilisateurId   = c.UtilisateurId,
                 AuteurNom       = $"{c.Utilisateur.FirstName} {c.Utilisateur.LastName}",
-                AuteurInitiales = $"{(c.Utilisateur.FirstName.Length > 0 ? c.Utilisateur.FirstName[0] : ' ')}{(c.Utilisateur.LastName.Length > 0 ? c.Utilisateur.LastName[0] : ' ')}".ToUpper(),
+                AuteurInitiales = $"{(c.Utilisateur.FirstName.Length > 0 ? c.Utilisateur.FirstName[0] : ' ')}{(c.Utilisateur.LastName.Length > 0 ? c.Utilisateur.LastName[0] : ' ')}".ToUpper().Trim(),
                 Contenu         = c.Contenu,
                 DateCreation    = c.DateCreation
             }).ToList();

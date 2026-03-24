@@ -273,21 +273,26 @@ namespace AssetFlow.Infrastructure.Data
               .HasForeignKey(l => l.IdDemande)
               .OnDelete(DeleteBehavior.Cascade);
     });
-                  // Dans OnModelCreating, ajouter :
-                  modelBuilder.Entity<CommentaireMateriel>(e =>
-                  {
-                  e.ToTable("CommentairesMateriel");
-                  e.HasKey(c => c.Id);
-                  e.Property(c => c.Contenu).HasMaxLength(1000).IsRequired();
-                  e.HasOne(c => c.Materiel)
-                  .WithMany()
-                  .HasForeignKey(c => c.MaterielId)
-                  .OnDelete(DeleteBehavior.Cascade);
-                  e.HasOne(c => c.Utilisateur)
-                  .WithMany()
-                  .HasForeignKey(c => c.UtilisateurId)
-                  .OnDelete(DeleteBehavior.Restrict);
-                  });
+// ── BLOC 2 : Ajouter dans OnModelCreating ───────────────────
+modelBuilder.Entity<CommentaireMateriel>(e =>
+{
+    e.ToTable("CommentairesMateriel");
+    e.HasKey(c => c.Id);
+ 
+    e.Property(c => c.Contenu)
+     .HasMaxLength(1000)
+     .IsRequired();
+ 
+    e.HasOne(c => c.Materiel)
+     .WithMany()
+     .HasForeignKey(c => c.MaterielId)
+     .OnDelete(DeleteBehavior.Cascade);
+ 
+    e.HasOne(c => c.Utilisateur)
+     .WithMany()
+     .HasForeignKey(c => c.UtilisateurId)
+     .OnDelete(DeleteBehavior.Restrict);
+});
 
             }
       }

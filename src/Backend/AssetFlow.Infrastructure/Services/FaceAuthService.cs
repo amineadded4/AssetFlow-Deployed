@@ -1,31 +1,26 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / FaceAuthService.cs
-// Comparaison par distance euclidienne normalisée
-// (même algorithme que FaceComparisonService de la version séparée)
-// ============================================================
-
 using System.Text.Json;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AssetFlow.Infrastructure.Services
 {
     public class FaceAuthService : IFaceAuthService
     {
-        private readonly AppDbContext   _dbContext;
-        private readonly IConfiguration _config;
-        private readonly HttpClient     _httpClient;
+        private readonly AppDbContext    _dbContext;
+        private readonly IConfiguration  _config;
+        private readonly HttpClient      _httpClient;
 
-        // Même seuil que la version séparée qui fonctionne
         private const double SimilarityThreshold = 0.035;
 
         private string KeycloakUrl  => _config["Keycloak:Authority"]!;
-        private string ClientId     => _config["Keycloak:ClientId"]!;
-        private string ClientSecret => _config["Keycloak:ClientSecret"]!;
-        private string AdminPassword=> _config["Keycloak:AdminPassword"] ?? "Moez2004";
+        private string JwtSecret    => _config["FaceAuth:JwtSecret"]!;
 
         public FaceAuthService(AppDbContext dbContext, IConfiguration config, HttpClient httpClient)
         {
@@ -36,11 +31,14 @@ namespace AssetFlow.Infrastructure.Services
 
         public async Task<LoginResponseDto?> FaceLoginAsync(FaceLoginRequestDto request)
         {
+            if (request == null || string.IsNullOrEmpty(request.Email))
+                return null;
+
             // 1. Trouver l'utilisateur
             var user = await _dbContext.Users
                 .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsApproved);
 
-            Console.WriteLine($"[FACE] Email: '{request.Email}', User: {user != null}, Keypoints: {!string.IsNullOrEmpty(user?.FaceKeypoints)}");
+            Console.WriteLine($"[FACE] Email: '{request.Email}', User: {user != null}");
 
             if (user == null || string.IsNullOrEmpty(user.FaceKeypoints))
                 return null;
@@ -52,7 +50,7 @@ namespace AssetFlow.Infrastructure.Services
 
             if (stored == null || stored.Count == 0) return null;
 
-            // 3. Convertir les keypoints reçus (float[][]) en List<double[]>
+            // 3. Convertir les keypoints reçus
             var input = request.Keypoints
                 .Select(p => new double[] { p[0], p[1] })
                 .ToList();
@@ -73,44 +71,72 @@ namespace AssetFlow.Infrastructure.Services
                 return null;
             }
 
-            // 5. Obtenir token Keycloak
-            var tokenUrl = $"{KeycloakUrl}/protocol/openid-connect/token";
-            var formData = new Dictionary<string, string>
-            {
-                { "grant_type",    "password"   },
-                { "client_id",     ClientId     },
-                { "client_secret", ClientSecret },
-                { "username",      user.Email   },
-                { "password",      AdminPassword},
-                { "scope",         "openid profile email roles" }
-            };
-            Console.WriteLine(tokenUrl);
-            using var freshClient = new HttpClient();
-            var response = await freshClient.PostAsync(
-                tokenUrl, new FormUrlEncodedContent(formData));
-
-            Console.WriteLine($"[FACE] Keycloak: {response.StatusCode}");
-
-            if (!response.IsSuccessStatusCode) return null;
-
-            var json   = await response.Content.ReadAsStringAsync();
-            var result = JsonSerializer.Deserialize<KeycloakTokenResponse>(json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            if (result == null) return null;
+            // 5. ✅ Générer un JWT custom identique à Keycloak
+            var (accessToken, refreshToken, expiresIn) = GenerateFaceAuthTokens(user);
 
             Console.WriteLine($"[FACE] ✅ Login réussi pour {user.Email}");
 
             return new LoginResponseDto
             {
                 UserId       = user.Id,
-                AccessToken  = result.access_token,
-                RefreshToken = result.refresh_token,
-                ExpiresIn    = result.expires_in,
+                AccessToken  = accessToken,
+                RefreshToken = refreshToken,
+                ExpiresIn    = expiresIn,
                 Role         = user.Role,
                 FullName     = $"{user.FirstName} {user.LastName}",
                 Email        = user.Email
             };
+        }
+
+        // ────────────────────────────────────────────────────
+        // Génère un JWT custom avec les mêmes claims que Keycloak
+        // ────────────────────────────────────────────────────
+        private (string accessToken, string refreshToken, int expiresIn) GenerateFaceAuthTokens(
+            AssetFlow.Domain.Entities.User user)
+        {
+            var secret      = JwtSecret;
+            var key         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var expiresIn  = 3600; // 1 heure comme Keycloak
+            var now        = DateTime.UtcNow;
+            var expiry     = now.AddSeconds(expiresIn);
+
+            // Claims identiques à ce que Keycloak retourne
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub,   user.Email),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti,   Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Iat,   DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
+                new Claim("preferred_username",          user.Email),
+                new Claim("given_name",                  user.FirstName),
+                new Claim("family_name",                 user.LastName),
+                new Claim("name",                        $"{user.FirstName} {user.LastName}"),
+                // ✅ realm_access claim — identique à Keycloak
+                new Claim("realm_access",
+                    JsonSerializer.Serialize(new { roles = new[] { user.Role } })),
+                new Claim(ClaimTypes.Role, user.Role),
+                new Claim("iss", KeycloakUrl), // même issuer que Keycloak
+                new Claim("azp", "assetflow-client"),
+            };
+
+            var accessToken = new JwtSecurityToken(
+                issuer:             KeycloakUrl,
+                audience:           "assetflow-client",
+                claims:             claims,
+                notBefore:          now,
+                expires:            expiry,
+                signingCredentials: credentials
+            );
+
+            var accessTokenString = new JwtSecurityTokenHandler().WriteToken(accessToken);
+
+            // Refresh token — simple token opaque (pas JWT)
+            var refreshTokenString = Convert.ToBase64String(
+                Encoding.UTF8.GetBytes($"{user.Email}:{Guid.NewGuid()}:{now.AddDays(1):o}"));
+
+            return (accessTokenString, refreshTokenString, expiresIn);
         }
 
         public async Task<bool> RegisterFaceAsync(RegisterFaceRequestDto request)
@@ -120,7 +146,6 @@ namespace AssetFlow.Infrastructure.Services
 
             if (user == null || request.Keypoints.Length == 0) return false;
 
-            // Stocker en List<double[]> pour cohérence avec la comparaison
             var keypoints = request.Keypoints
                 .Select(p => new double[] { p[0], p[1] })
                 .ToList();
@@ -132,10 +157,6 @@ namespace AssetFlow.Infrastructure.Services
             return true;
         }
 
-        // ────────────────────────────────────────────────────
-        // Distance euclidienne normalisée
-        // Identique à FaceComparisonService de la version séparée
-        // ────────────────────────────────────────────────────
         private static double CompareFaces(List<double[]> stored, List<double[]> input)
         {
             var normStored = NormalizeKeypoints(stored);
@@ -153,29 +174,19 @@ namespace AssetFlow.Infrastructure.Services
 
         private static List<double[]> NormalizeKeypoints(List<double[]> keypoints)
         {
-            // Centroïde
             double cx = keypoints.Average(p => p[0]);
             double cy = keypoints.Average(p => p[1]);
 
-            // Centrer
             var centered = keypoints
                 .Select(p => new double[] { p[0] - cx, p[1] - cy })
                 .ToList();
 
-            // Échelle (distance max depuis le centroïde)
             double scale = centered.Max(p => Math.Sqrt(p[0] * p[0] + p[1] * p[1]));
             if (scale == 0) scale = 1;
 
             return centered
                 .Select(p => new double[] { p[0] / scale, p[1] / scale })
                 .ToList();
-        }
-
-        private class KeycloakTokenResponse
-        {
-            public string access_token  { get; set; } = string.Empty;
-            public string refresh_token { get; set; } = string.Empty;
-            public int    expires_in    { get; set; }
         }
     }
 }

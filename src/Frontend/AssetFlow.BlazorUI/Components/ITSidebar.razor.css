@@ -1,0 +1,122 @@
+/* ══════════════════════════
+   SIDEBAR
+══════════════════════════ */
+.aff-sidebar {
+    width: 210px;
+    height: 100%;
+    background: #0F1E3C;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+    z-index: 20;
+}
+
+html.dark .aff-sidebar {
+    background: #060d18;
+    border-right-color: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-logo-wrap {
+    padding: 1.5rem 1rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.aff-sidebar-logo {
+    width: 130px;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 0 12px rgba(19, 109, 236, 0.45));
+}
+
+/* ── Nav links ── */
+.aff-sidebar-nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.5rem 0.625rem;
+    overflow-y: auto;
+}
+
+.aff-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.65rem 0.875rem;
+    border-radius: 0.5rem;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: all 0.18s ease;
+    border-left: 3px solid transparent;
+}
+
+.aff-nav-link:hover {
+    color: #e2e8f0;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.aff-nav-link.active {
+    color: #ffffff;
+    background: rgba(19, 109, 236, 0.18);
+    border-left-color: #136dec;
+    font-weight: 600;
+}
+
+.aff-nav-icon {
+    width: 17px;
+    height: 17px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+}
+
+.aff-nav-text { flex: 1; }
+
+/* ── Profile ── */
+.aff-sidebar-profile {
+    padding: 0.875rem 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.aff-profile-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.aff-profile-info { flex: 1; overflow: hidden; }
+
+.aff-profile-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.aff-profile-role {
+    font-size: 0.68rem;
+    color: #64748b;
+    margin: 0.1rem 0 0;
+}

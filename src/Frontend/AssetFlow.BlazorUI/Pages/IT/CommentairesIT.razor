@@ -202,11 +202,15 @@
                     .GroupBy(c => c.MaterielId)
                     .OrderByDescending(g => g.Max(c => c.DateCreation)))
                 {
-                    var premierC = groupe.First();
-                    <div class="itc-materiel-group">
+                    var premierC   = groupe.First();
+                    var materielId = groupe.Key;
+                    var estOuvert  = _groupesOuverts.Contains(materielId);
 
-                        @* ── En-tête groupe ── *@
-                        <div class="itc-group-header">
+                    <div class="itc-materiel-group @(estOuvert ? "is-open" : "")">
+
+                        @* ── En-tête accordéon (cliquable) ── *@
+                        <div class="itc-group-header itc-group-toggle"
+                             @onclick="() => ToggleGroupe(materielId)">
                             <div class="itc-group-header-left">
                                 <div class="itc-group-icon">
                                     <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
@@ -219,65 +223,74 @@
                                     </div>
                                 </div>
                             </div>
-                            <span class="itc-group-count">@groupe.Count() avis</span>
+                            <div class="itc-group-header-right">
+                                <span class="itc-group-count">@groupe.Count() avis</span>
+                                @* Flèche accordéon *@
+                                <span class="itc-chevron @(estOuvert ? "open" : "")">
+                                    <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                                </span>
+                            </div>
                         </div>
 
-                        @* ── Lignes commentaires ── *@
-                        <div class="itc-comments-list">
-                            @foreach (var c in groupe.OrderByDescending(x => x.DateCreation))
-                            {
-                                <div class="itc-comment-row" @onclick="() => OuvrirModal(c)">
+                        @* ── Lignes commentaires (affichées uniquement si ouvert) ── *@
+                        @if (estOuvert)
+                        {
+                            <div class="itc-comments-list">
+                                @foreach (var c in groupe.OrderByDescending(x => x.DateCreation))
+                                {
+                                    <div class="itc-comment-row" @onclick="() => OuvrirModal(c)">
 
-                                    @* Auteur *@
-                                    <div class="itc-comment-author">
-                                        <div class="itc-avatar itc-avatar-@GetRoleClass(c.AuteurRole)">
-                                            @c.AuteurInitiales
+                                        @* Auteur *@
+                                        <div class="itc-comment-author">
+                                            <div class="itc-avatar itc-avatar-@GetRoleClass(c.AuteurRole)">
+                                                @c.AuteurInitiales
+                                            </div>
+                                            <div class="itc-author-info">
+                                                <span class="itc-author-name">@c.AuteurNom</span>
+                                                <span class="itc-role-pill itc-role-@GetRoleClass(c.AuteurRole)">
+                                                    @GetRoleLabel(c.AuteurRole)
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div class="itc-author-info">
-                                            <span class="itc-author-name">@c.AuteurNom</span>
-                                            <span class="itc-role-pill itc-role-@GetRoleClass(c.AuteurRole)">
-                                                @GetRoleLabel(c.AuteurRole)
-                                            </span>
+
+                                        @* Texte (tronqué) *@
+                                        <div class="itc-comment-body">
+                                            <p class="itc-comment-text">@c.Contenu</p>
                                         </div>
-                                    </div>
 
-                                    @* Texte (tronqué) *@
-                                    <div class="itc-comment-body">
-                                        <p class="itc-comment-text">@c.Contenu</p>
-                                    </div>
-
-                                    @* Date + actions *@
-                                    <div class="itc-comment-actions">
-                                        <div class="itc-comment-date">
-                                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                                            @c.DateCreation.ToString("dd MMM yyyy")
-                                            <span class="itc-date-time">@c.DateCreation.ToString("HH:mm")</span>
+                                        @* Date + actions *@
+                                        <div class="itc-comment-actions">
+                                            <div class="itc-comment-date">
+                                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                                @c.DateCreation.ToString("dd MMM yyyy")
+                                                <span class="itc-date-time">@c.DateCreation.ToString("HH:mm")</span>
+                                            </div>
+                                            @* Bouton supprimer *@
+                                            <button class="itc-btn-delete @(SupprimerEnCours == c.Id ? "loading" : "")"
+                                                    disabled="@(SupprimerEnCours == c.Id)"
+                                                    title="Supprimer ce commentaire"
+                                                    @onclick:stopPropagation="true"
+                                                    @onclick="() => SupprimerCommentaire(c.Id)">
+                                                @if (SupprimerEnCours == c.Id)
+                                                {
+                                                    <span class="itc-spinner-xs"></span>
+                                                }
+                                                else
+                                                {
+                                                    <svg viewBox="0 0 24 24">
+                                                        <polyline points="3 6 5 6 21 6"/>
+                                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                                        <path d="M10 11v6M14 11v6"/>
+                                                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                                                    </svg>
+                                                }
+                                            </button>
                                         </div>
-                                        @* Bouton supprimer (IT peut tout supprimer) *@
-                                        <button class="itc-btn-delete @(SupprimerEnCours == c.Id ? "loading" : "")"
-                                                disabled="@(SupprimerEnCours == c.Id)"
-                                                title="Supprimer ce commentaire"
-                                                @onclick:stopPropagation="true"
-                                                @onclick="() => SupprimerCommentaire(c.Id)">
-                                            @if (SupprimerEnCours == c.Id)
-                                            {
-                                                <span class="itc-spinner-xs"></span>
-                                            }
-                                            else
-                                            {
-                                                <svg viewBox="0 0 24 24">
-                                                    <polyline points="3 6 5 6 21 6"/>
-                                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                                                    <path d="M10 11v6M14 11v6"/>
-                                                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                                                </svg>
-                                            }
-                                        </button>
-                                    </div>
 
-                                </div>
-                            }
-                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
                     </div>
                 }
             }

@@ -41,6 +41,9 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private string _nomUtilisateur = "Agent IT";
         private string _initiales      = "IT";
 
+        // ── Accordéon groupes matériel ────────────────────────────
+        private HashSet<int> _groupesOuverts = new();
+
         // ── Init ──────────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
@@ -98,6 +101,16 @@ namespace AssetFlow.BlazorUI.Pages.IT
             if (!string.IsNullOrEmpty(_roleFiltre))
                 liste = liste.Where(c => c.AuteurRole == _roleFiltre);
             CommentairesFiltres = liste.ToList();
+        }
+
+        // ── Accordéon ────────────────────────────────────────────
+        private void ToggleGroupe(int materielId)
+        {
+            if (_groupesOuverts.Contains(materielId))
+                _groupesOuverts.Remove(materielId);
+            else
+                _groupesOuverts.Add(materielId);
+            StateHasChanged();
         }
 
         private void OnSearchInput(ChangeEventArgs e)

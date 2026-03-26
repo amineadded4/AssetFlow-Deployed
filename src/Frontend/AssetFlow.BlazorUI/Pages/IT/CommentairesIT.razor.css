@@ -71,10 +71,10 @@ html.dark .aff-menu-drawer { background: #060d18; }
 .itc-main {
     flex: 1;
     min-width: 0;
+    min-height: 0;       /* ← remplace height:100vh qui pouvait forcer un dépassement */
     display: flex;
     flex-direction: column;
-    overflow: hidden;   /* ← essentiel : empêche le main de grossir */
-    height: 100vh;      /* ← force la hauteur = tout tient dans l'écran */
+    overflow: hidden;
 }
 
 /* ══════════════════════════
@@ -156,7 +156,7 @@ html.dark .itc-chip-count { background: rgba(255,255,255,0.08); }
 ══════════════════════════ */
 .itc-content {
     flex: 1;
-    min-height: 0;        /* ← permet au flex child de réduire sous sa taille naturelle */
+    min-height: 0;        /* ← indispensable : permet au flex child de réduire sous sa taille naturelle */
     overflow-y: auto;     /* ← scroll vertical uniquement ici */
     overflow-x: hidden;
     padding: 1.5rem;
@@ -180,13 +180,58 @@ html.dark .itc-chip-count { background: rgba(255,255,255,0.08); }
 /* ══════════════════════════
    GROUPES MATÉRIEL
 ══════════════════════════ */
-.itc-materiel-group { background: var(--surface); border: 1px solid var(--border); border-radius: 0.875rem; overflow: hidden; animation: itcFadeUp 0.3s ease both; }
+.itc-materiel-group { background: var(--surface); border: 1px solid var(--border); border-radius: 0.875rem; overflow: visible; animation: itcFadeUp 0.3s ease both; }
 html.dark .itc-materiel-group { background: #1a2332; border-color: rgba(255,255,255,0.08); }
 @keyframes itcFadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
-.itc-group-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; background: var(--surface-2); border-bottom: 1px solid var(--border); gap: 1rem; }
+.itc-group-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; background: var(--surface-2); border-bottom: 1px solid var(--border); gap: 1rem; border-radius: 0.875rem 0.875rem 0 0; }
 html.dark .itc-group-header { background: rgba(255,255,255,0.03); border-bottom-color: rgba(255,255,255,0.07); }
-.itc-group-header-left { display: flex; align-items: center; gap: 0.875rem; min-width: 0; }
+
+/* Header cliquable (accordéon) */
+.itc-group-toggle {
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.18s ease;
+}
+.itc-group-toggle:hover { background: rgba(19,109,236,0.05); }
+html.dark .itc-group-toggle:hover { background: rgba(19,109,236,0.08); }
+
+/* Quand fermé : border-radius complet sur le groupe */
+.itc-materiel-group:not(.is-open) .itc-group-header {
+    border-radius: 0.875rem;
+    border-bottom: none;
+}
+
+/* Côté droit du header : count + chevron */
+.itc-group-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    flex-shrink: 0;
+}
+
+/* Flèche accordéon */
+.itc-chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: transform 0.22s cubic-bezier(0.16,1,0.3,1), background 0.18s ease;
+    flex-shrink: 0;
+}
+.itc-chevron.open {
+    transform: rotate(180deg);
+    background: rgba(19,109,236,0.12);
+}
+.itc-chevron svg {
+    width: 14px; height: 14px;
+    stroke: var(--text-muted); fill: none;
+    stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+}
+.itc-chevron.open svg { stroke: #136dec; }
+.itc-group-header-left { display: flex; align-items: center; gap: 0.875rem; min-width: 0; flex: 1; }
 .itc-group-icon { width: 42px; height: 42px; background: rgba(19,109,236,0.1); border: 1px solid rgba(19,109,236,0.2); border-radius: 0.625rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .itc-group-icon svg { width: 20px; height: 20px; stroke: #136dec; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
 .itc-group-title { font-size: 0.975rem; font-weight: 800; color: var(--text); margin: 0 0 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -196,7 +241,7 @@ html.dark .itc-group-header { background: rgba(255,255,255,0.03); border-bottom-
 .itc-group-count { flex-shrink: 0; padding: 0.25rem 0.625rem; background: rgba(19,109,236,0.08); border: 1px solid rgba(19,109,236,0.15); border-radius: 9999px; font-size: 0.72rem; font-weight: 700; color: #136dec; white-space: nowrap; }
 
 /* ── Lignes commentaires ── */
-.itc-comments-list { display: flex; flex-direction: column; }
+.itc-comments-list { display: flex; flex-direction: column; border-radius: 0 0 0.875rem 0.875rem; overflow: hidden; }
 
 .itc-comment-row {
     display: grid;

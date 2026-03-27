@@ -12,7 +12,14 @@
 <div class="itc-layout">
 
     @* ══════ SIDEBAR ══════ *@
-    <ITSidebar ActivePage="commentaires" ForceOpen="_menuOpen"/>
+    @if (_estAdmin)
+        {
+            <AdminSidebar ForceOpen="_menuOpen" />
+        }
+        else
+        {
+            <ITSidebar ActivePage="commentaire" ForceOpen="_menuOpen" />
+        }
 
     @* ══════ OVERLAY MENU MOBILE ══════ *@
     @if (_menuOpen)

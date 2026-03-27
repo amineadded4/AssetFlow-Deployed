@@ -6,7 +6,14 @@
 <div class="stk-layout">
 
     @* ── SIDEBAR (même structure que Incidents) ── *@
-    <ITSidebar ActivePage="inventaire" ForceOpen="_menuOpen"/>
+    @if (_estAdmin)
+        {
+            <AdminSidebar ForceOpen="_menuOpen" />
+        }
+        else
+        {
+            <ITSidebar ActivePage="inventaire" ForceOpen="_menuOpen" />
+        }
 
     @* ── OVERLAY MENU MOBILE ── *@
     @if (_menuOpen)

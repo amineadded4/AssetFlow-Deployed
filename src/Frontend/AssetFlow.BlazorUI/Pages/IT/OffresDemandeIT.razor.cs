@@ -46,6 +46,9 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private int                  _unreadCount = 0;
         private string?              _recommendedOffre;
         private List<ChatMessageDto> _chatMessages = new();
+        private string      _roleUtilisateur = "Service IT";
+        private bool _estAdmin;
+        private bool _roleCharge = false;
 
         private void ToggleChat()
         {
@@ -154,6 +157,10 @@ namespace AssetFlow.BlazorUI.Pages.IT
         {
             _userName = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
             _userId   = await LocalStorage.GetItemAsync<string>("user_id")   ?? "unknown";
+            _roleUtilisateur = await LocalStorage.GetItemAsync<string>("user_role") ?? "IT";
+             _estAdmin = _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+              _roleCharge      = true;
+
             await LoadOffres();
         }
 

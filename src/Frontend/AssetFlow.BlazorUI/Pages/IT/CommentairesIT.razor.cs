@@ -40,6 +40,8 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private bool   _menuOpen       = false;
         private string _nomUtilisateur = "Agent IT";
         private string _initiales      = "IT";
+        private string      _roleUtilisateur = "Service IT";
+        private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
         // ── Accordéon groupes matériel ────────────────────────────
         private HashSet<int> _groupesOuverts = new();
@@ -57,6 +59,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
             {
                 var nom = await JS.InvokeAsync<string?>("eval",
                     "localStorage.getItem('user_name') || localStorage.getItem('userFullName')");
+                _roleUtilisateur = await LocalStorage.GetItemAsync<string>("user_role") ?? "IT";
                 if (!string.IsNullOrWhiteSpace(nom))
                 {
                     _nomUtilisateur = Nettoyer(nom);
@@ -65,6 +68,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
                         ? $"{parts[0][0]}{parts[1][0]}".ToUpper()
                         : _nomUtilisateur[..Math.Min(2, _nomUtilisateur.Length)].ToUpper();
                 }
+                
             }
             catch { }
         }

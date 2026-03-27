@@ -10,7 +10,17 @@
 <RoleAuthGuard AllowedRoles="@(new[]{"IT","Admin"})">
 <div class="oda-layout">
 
-    <ITSidebar ActivePage="achats" ForceOpen="_menuOpen"/>
+   @if (_roleCharge)
+    {
+        @if (_estAdmin)
+        {
+            <AdminSidebar ForceOpen="_menuOpen" />
+        }
+        else
+        {
+            <ITSidebar ActivePage="achats" ForceOpen="_menuOpen" />
+        }
+    }
 
     @if (_menuOpen)
     { <div  @onclick="() => _menuOpen = !_menuOpen"></div> } 

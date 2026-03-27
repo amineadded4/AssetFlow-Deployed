@@ -6,7 +6,15 @@
 <div class="emp-layout">
 
     @* ══════ SIDEBAR ══════ *@
-    <ITSidebar ActivePage="employes" ForceOpen="_menuOpen"/>
+    @if (_estAdmin)
+        {
+            <AdminSidebar ForceOpen="_menuOpen" />
+        }
+        else
+        {
+            <ITSidebar ActivePage="employes" ForceOpen="_menuOpen" />
+        }
+
 
     @* ══════ OVERLAY MENU MOBILE ══════ *@
     @if (_menuOpen)

@@ -15,7 +15,14 @@
     { <div  @onclick="ToggleSidebar"></div> } 
 
     @* ══════ SIDEBAR ══════ *@
-    <ITSidebar ActivePage="dashboard" ForceOpen="_sidebarOpen" />
+    @if (_estAdmin)
+        {
+            <AdminSidebar ForceOpen="_sidebarOpen" />
+        }
+        else
+        {
+            <ITSidebar ActivePage="dashboard" ForceOpen="_sidebarOpen" />
+        }
 
     @* ══════ ZONE PRINCIPALE ══════ *@
     <main class="it-main">

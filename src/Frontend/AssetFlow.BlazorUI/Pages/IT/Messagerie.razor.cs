@@ -49,6 +49,8 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private bool                 _isTyping = false;
 
         private string RoleFilter { get; set; } = "Tous";
+        private string      _roleUtilisateur = "Service IT";
+        private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
         private List<ConversationDto> ConversationsFiltrees =>
             Conversations
@@ -67,6 +69,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         {
             UserName = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT User";
             CurrentUserId = await LocalStorage.GetItemAsync<int>("user_id");
+            _roleUtilisateur = await LocalStorage.GetItemAsync<string>("user_role") ?? "IT";
 
             await LoadConversationsAsync();
             await ConnectHubAsync();

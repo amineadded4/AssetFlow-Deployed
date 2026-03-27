@@ -56,8 +56,9 @@
                             <a class="nav-leaf-link @(IsActive("/it/affectation") ? "active" : "")"    href="/it/affectation">Assigner matériels</a>
                             <a class="nav-leaf-link @(IsActive("/it/incidents") ? "active" : "")"      href="/it/incidents">Incidents</a>
                             <a class="nav-leaf-link @(IsActive("/it/inventaire") ? "active" : "")"     href="/it/inventaire">Inventaire</a>
-                            <a class="nav-leaf-link @(IsActive("/it/demandes-achat") ? "active" : "")" href="/it/demandes-achat">Mes achats</a>
+                            <a class="nav-leaf-link @(IsActive("/it/demandes-IT") ? "active" : "")" href="/it/demandes-IT">Mes achats</a>
                             <a class="nav-leaf-link @(IsActive("/it/messagerie") ? "active" : "")"     href="/it/messagerie">Messagerie</a>
+                            <a class="nav-leaf-link @(IsActive("/it/commentaires") ? "active" : "")"     href="/it/commentaires">Commentaire</a>
                         </div>
                     }
 
@@ -150,6 +151,10 @@
                 || Navigation.Uri.Contains("/achat/") 
                 || Navigation.Uri.Contains("/statistiques"))
             { _espaceOpen = true; _achatOpen = true; }
+            else if (Navigation.Uri.Contains("/it") 
+                || Navigation.Uri.Contains("/dashboard/it") 
+                || Navigation.Uri.Contains("/statistiques"))
+            { _espaceOpen = true; _itOpen = true; }
         }
         catch { }
     }

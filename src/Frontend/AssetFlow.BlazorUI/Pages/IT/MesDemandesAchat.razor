@@ -4,7 +4,7 @@
            + nouveau statut en_cours_traitement
    ============================================================ *@
 
-@page "/it/demandes-achat"
+@page "/it/demandes-IT"
 @using AssetFlow.BlazorUI.Services
 @using AssetFlow.BlazorUI.Components
 
@@ -12,7 +12,14 @@
 <div class="mda-layout">
 
     @* ══════ SIDEBAR ══════ *@
-    <ITSidebar ActivePage="achats" ForceOpen="_menuOpen"/>
+    @if (_estAdmin)
+        {
+            <AdminSidebar ForceOpen="_menuOpen" />
+        }
+        else
+        {
+            <ITSidebar ActivePage="achats" ForceOpen="_menuOpen" />
+        }
 
     @* ── DRAWER MOBILE ── *@
     @if (_menuOpen)

@@ -7,7 +7,14 @@
 <div class="msg-layout">
 
     @* ── SIDEBAR ── *@
-    <ITSidebar ActivePage="messagerie" ForceOpen="_menuOpen"/>
+    @if (_estAdmin)
+        {
+            <AdminSidebar ForceOpen="_menuOpen" />
+        }
+        else
+        {
+            <ITSidebar ActivePage="messagerie" ForceOpen="_menuOpen" />
+        }
 
     @* ── OVERLAY MOBILE ── *@
     @if (_menuOpen)

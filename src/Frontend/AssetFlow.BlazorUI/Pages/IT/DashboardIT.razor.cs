@@ -20,6 +20,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private bool   _sidebarOpen     = false;
         private string _nomUtilisateur  = "Agent IT";
         private string _roleUtilisateur = "IT";
+        private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
         private string _initiales       = "IT";
         private bool   _chargement      = true;
         private string _lastUpdate      = "--:--";

@@ -11,7 +11,17 @@
 <div class="aff-layout">
 
     @* ══════ SIDEBAR ══════ *@
-    <ITSidebar ActivePage="equipements" ForceOpen="_menuOpen"/>
+    
+        @if (_estAdmin)
+        {
+            <AdminSidebar ForceOpen="_menuOpen" />
+        }
+        else
+        {
+            <ITSidebar ActivePage="equipements" ForceOpen="_menuOpen" />
+        }
+    
+     
 
     @* ══════ OVERLAY MENU MOBILE ══════ *@
      @if (_menuOpen)

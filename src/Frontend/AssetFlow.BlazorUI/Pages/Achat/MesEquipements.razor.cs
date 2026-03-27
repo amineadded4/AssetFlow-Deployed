@@ -5,6 +5,7 @@
 
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
+using Blazored.LocalStorage;
 
 namespace AssetFlow.BlazorUI.Pages.Achat
 {
@@ -12,6 +13,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
     {
         [Inject] private EmployeService    EmployeService { get; set; } = default!;
         [Inject] private NavigationManager Navigation     { get; set; } = default!;
+        [Inject] private ILocalStorageService LocalStorage   { get; set; } = default!;
 
         // ── Données ────────────────────────────────────────────
         private List<MaterielAffecteGroupeDto> MaterielsGroupes        { get; set; } = new();
@@ -50,7 +52,10 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         // ── Init ───────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
-            await LoadUserInfoAsync();
+            // await LoadUserInfoAsync();
+             UserName    = await LocalStorage.GetItemAsync<string>("user_name") ?? "Utilisateur";
+            UserRole    = await LocalStorage.GetItemAsync<string>("user_role") ?? "Achat";
+            _roleCharge = true;
             await LoadMaterielsGroupesAsync();
         }
 

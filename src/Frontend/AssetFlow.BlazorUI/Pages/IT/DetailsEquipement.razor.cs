@@ -35,6 +35,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         // ── Infos utilisateur ──────────────────────────────────
         private string UserName { get; set; } = "Utilisateur";
         private string UserRole { get; set; } = "Employé";
+        private bool _estAdmin => UserRole.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
         // ── QR Code ────────────────────────────────────────────
         private string FicheUrl => $"{Navigation.BaseUri}fiche/{AffectationId}/article/{ArticleId}";

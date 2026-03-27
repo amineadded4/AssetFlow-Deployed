@@ -29,11 +29,14 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private bool   IsSubmitting   { get; set; } = false;
         private string ErrorMessage   { get; set; } = string.Empty;
         private string UserName       { get; set; } = "Utilisateur";
+        private string      _roleUtilisateur = "Service IT";
+        private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
         private bool   _menuOpen      = false;
 
         protected override async Task OnInitializedAsync()
         {
             UserName = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
+            _roleUtilisateur = await LocalStorage.GetItemAsync<string>("user_role") ?? "IT";
 
             Groupes  = await EmployeService.GetMaterielsGroupesAsync();
             Articles = Groupes.SelectMany(g => g.Articles).ToList();

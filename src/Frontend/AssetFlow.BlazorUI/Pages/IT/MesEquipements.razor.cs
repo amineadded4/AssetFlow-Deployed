@@ -44,11 +44,14 @@ namespace AssetFlow.BlazorUI.Pages.IT
         // ── User info ─────────────────────────────────────────────
         private string UserName  { get; set; } = "Utilisateur";
         private bool   _menuOpen = false;
+        private string      _roleUtilisateur = "Service IT";
+        private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
         // ── Init ──────────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
             UserName = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
+            _roleUtilisateur = await LocalStorage.GetItemAsync<string>("user_role") ?? "IT";
             await LoadMaterielsGroupesAsync();
         }
 

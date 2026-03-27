@@ -41,7 +41,14 @@
                 </div>
             </div>
         }
-        <AchatSidebar ActivePage="scraping" ForceOpen="_sidebarOpen" />
+        @if (_estAdmin)
+        {
+            <AdminSidebar ForceOpen="_sidebarOpen" />
+        }
+        else
+        {
+            <AchatSidebar ActivePage="demandes" ForceOpen="_sidebarOpen" />
+        }
 
         @* ══════ ZONE PRINCIPALE ══════ *@
         <main class="ws-main">

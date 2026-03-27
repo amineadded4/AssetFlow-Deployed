@@ -19,8 +19,14 @@
     @if (_sidebarOpen)
     { <div class="sk-overlay" @onclick="ToggleSidebar"></div> }
 
-    @* ══════ SIDEBAR ══════ *@
-    <AchatSidebar ActivePage="materiel" ForceOpen="_sidebarOpen" />
+    @if (_estAdmin)
+        {
+            <AdminSidebar ForceOpen="_sidebarOpen" />
+        }
+        else
+        {
+            <AchatSidebar ActivePage="demandes" ForceOpen="_sidebarOpen" />
+        }
 
     @* ══ MAIN ══ *@
     <div class="sk-main-wrap">

@@ -133,6 +133,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private string _currentUserName = "Utilisateur";
         private string _currentUserRole = "Équipe Achat";
         private string TabClass(bool condition) => condition ? "sk-ref-tab active" : "sk-ref-tab";
+        // private string      _roleUtilisateur = "Service Achat";
+        private bool _estAdmin => _currentUserRole.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
         private string CurrentUserInitials
         {

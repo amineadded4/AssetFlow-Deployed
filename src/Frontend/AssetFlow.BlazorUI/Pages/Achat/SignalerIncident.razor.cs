@@ -46,11 +46,16 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private bool        _sidebarOpen     = false;
 
         private void ToggleSidebar() => _sidebarOpen  = !_sidebarOpen;
+        private string      _roleUtilisateur = "Service Achat";
+        private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+        private bool _roleCharge = false; 
 
         // ── Initialisation ─────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
             UserName = await EmployeService.GetCurrentUserNameAsync();
+            _roleUtilisateur = await EmployeService.GetCurrentUserRoleAsync(); // ← lire le bon champ !
+            _roleCharge = true;
 
             Groupes = await EmployeService.GetMaterielsGroupesAsync();
             Articles = Groupes.SelectMany(g => g.Articles).ToList();

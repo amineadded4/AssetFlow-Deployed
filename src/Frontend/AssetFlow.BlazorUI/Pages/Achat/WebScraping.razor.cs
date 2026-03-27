@@ -70,7 +70,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private string _theme = "dark";
         private bool _sidebarOpen = false;
         private string _nomUtilisateur = "Adem Added";
-        private string _roleUtilisateur = "EquipeAchat";
         private string _initiales = "AA";
 
         private string _recherche = string.Empty;
@@ -91,6 +90,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         // Toast
         private string _toastMsg = string.Empty;
         private string _toastType = "ws-toast-success";
+        private string      _roleUtilisateur = "Service Achat";
+        private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
         // ── Lifecycle ───────────────────────────────────────────
 

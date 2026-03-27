@@ -7,19 +7,19 @@ using AssetFlow.Application.DTOs;
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-
+using Blazored.LocalStorage;
 namespace AssetFlow.BlazorUI.Pages.Achat
 {
     public partial class Statistiques : ComponentBase, IAsyncDisposable
     {
         [Inject] private IJSRuntime          JS      { get; set; } = default!;
         [Inject] private StatistiquesService StatSvc { get; set; } = default!;
+        [Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
 
         // ─── UI ──────────────────────────────────────────────────
         private string _theme           = "dark";
         private bool   _sidebarOpen     = false;
         private string _nomUtilisateur  = "Agent Achat";
-        private string _roleUtilisateur = "Service Achat";
         private string _initiales       = "AA";
         private bool   _chargement      = true;
 
@@ -58,6 +58,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         // ─── Filtre : Demandes par mois ───────────────────────────
         private int _moisDemandes  = DateTime.Now.Month;
         private int _anneeDemandes = DateTime.Now.Year;
+        private string      _roleUtilisateur = "Service Achat";
+        private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
         // ─── Lifecycle ───────────────────────────────────────────
 
@@ -132,10 +134,9 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         {
             try
             {
-                var nom = await JS.InvokeAsync<string?>("eval",
+                var nom  = await JS.InvokeAsync<string?>("eval",
                     "localStorage.getItem('user_name') || localStorage.getItem('userFullName') || localStorage.getItem('currentUserName')");
-                var role = await JS.InvokeAsync<string?>("eval",
-                    "localStorage.getItem('user_role') || localStorage.getItem('currentUserRole')");
+                var role = await LocalStorage.GetItemAsync<string>("user_role");
 
                 if (!string.IsNullOrWhiteSpace(nom))
                 {
@@ -146,7 +147,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                         : _nomUtilisateur[..Math.Min(2, _nomUtilisateur.Length)].ToUpper();
                 }
                 if (!string.IsNullOrWhiteSpace(role))
-                    _roleUtilisateur = Nettoyer(role);
+                    _roleUtilisateur = Nettoyer(role);  // ✅ champ de classe, sans "var"
             }
             catch { }
         }

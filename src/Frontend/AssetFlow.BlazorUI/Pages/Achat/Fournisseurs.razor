@@ -14,8 +14,14 @@
             <div class="sidebar-overlay" @onclick="ToggleSidebar"></div>
         }
 
-        @* ── AchatSidebar ── *@
-        <AchatSidebar ActivePage="fournisseurs" ForceOpen="_sidebarOpen" />
+        @if (_estAdmin)
+        {
+            <AdminSidebar ForceOpen="_sidebarOpen" />
+        }
+        else
+        {
+            <AchatSidebar ActivePage="demandes" ForceOpen="_sidebarOpen" />
+        }
 
         <main class="main-zone">
 

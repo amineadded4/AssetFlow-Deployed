@@ -40,13 +40,17 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private string QrSvg    { get; set; } = string.Empty;
         private bool        _sidebarOpen     = false;
 
+        private bool _estAdmin => UserRole.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+
         private void ToggleSidebar() => _sidebarOpen  = !_sidebarOpen;
+        private bool _roleCharge = false;
 
         // ── Init ───────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
             UserName = await EmployeService.GetCurrentUserNameAsync();
             UserRole = await EmployeService.GetCurrentUserRoleAsync();
+            _roleCharge = true; 
 
             // Charger équipement et incidents en parallèle
             await Task.WhenAll(

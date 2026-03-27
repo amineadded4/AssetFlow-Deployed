@@ -60,6 +60,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private bool        _sidebarOpen     = false;
         private string      _nomUtilisateur  = "Agent Achat";
         private string      _roleUtilisateur = "Service Achat";
+        private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
         private string      _initiales       = "AA";
         private bool        _chargement      = true;
 

@@ -1,0 +1,164 @@
+@* Components/AdminSidebar.razor *@
+@using AssetFlow.BlazorUI.Components
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+@if (_drawerOpen)
+{
+    <div class="admin-drawer-overlay" @onclick="() => _drawerOpen = false"></div>
+}
+
+<aside class="admin-sidebar @(_drawerOpen ? "drawer-open" : "")">
+
+    <div class="sidebar-header">
+        <img src="images/logo.png" alt="AssetFlow" class="sidebar-logo" />
+    </div>
+
+    <nav class="sidebar-nav">
+
+        @* ── Espace Achat/IT ── *@
+        <div class="nav-group">
+            <button class="nav-link nav-group-btn @(_espaceOpen ? "active-parent" : "")"
+                    @onclick='() => _espaceOpen = !_espaceOpen'>
+                <svg class="nav-icon" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                </svg>
+                <span class="nav-text">Espace Achat/IT</span>
+                <svg class="nav-chevron @(_espaceOpen ? "rotated" : "")" viewBox="0 0 24 24">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </button>
+
+            @if (_espaceOpen)
+            {
+                <div class="nav-sub">
+
+                    <button class="nav-sub-link @(_itOpen ? "active-parent" : "")"
+                            @onclick='() => _itOpen = !_itOpen'>
+                        <svg class="nav-sub-icon" viewBox="0 0 24 24">
+                            <rect x="2" y="3" width="20" height="14" rx="2"/>
+                            <path d="M8 21h8M12 17v4"/>
+                        </svg>
+                        <span>Espace IT</span>
+                        <svg class="nav-chevron @(_itOpen ? "rotated" : "")" viewBox="0 0 24 24">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    @if (_itOpen)
+                    {
+                        <div class="nav-leaf">
+                            <a class="nav-leaf-link @(IsActive("/dashboard/it") ? "active" : "")"      href="/dashboard/it">Dashboard</a>
+                            <a class="nav-leaf-link @(IsActive("/it/equipements") ? "active" : "")"    href="/it/equipements">Mes Équipements</a>
+                            <a class="nav-leaf-link @(IsActive("/it/employes") ? "active" : "")"       href="/it/employes">Matériels affectés</a>
+                            <a class="nav-leaf-link @(IsActive("/it/affectation") ? "active" : "")"    href="/it/affectation">Assigner matériels</a>
+                            <a class="nav-leaf-link @(IsActive("/it/incidents") ? "active" : "")"      href="/it/incidents">Incidents</a>
+                            <a class="nav-leaf-link @(IsActive("/it/inventaire") ? "active" : "")"     href="/it/inventaire">Inventaire</a>
+                            <a class="nav-leaf-link @(IsActive("/it/demandes-achat") ? "active" : "")" href="/it/demandes-achat">Mes achats</a>
+                            <a class="nav-leaf-link @(IsActive("/it/messagerie") ? "active" : "")"     href="/it/messagerie">Messagerie</a>
+                        </div>
+                    }
+
+                    <button class="nav-sub-link @(_achatOpen ? "active-parent" : "")"
+                            @onclick='() => _achatOpen = !_achatOpen'>
+                        <svg class="nav-sub-icon" viewBox="0 0 24 24">
+                            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <path d="M16 10a4 4 0 0 1-8 0"/>
+                        </svg>
+                        <span>Espace Achat</span>
+                        <svg class="nav-chevron @(_achatOpen ? "rotated" : "")" viewBox="0 0 24 24">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    @if (_achatOpen)
+                    {
+                        <div class="nav-leaf">
+                            <a class="nav-leaf-link @(IsActive("/statistiques") ? "active" : "")"       href="/statistiques">Statistiques</a>
+                            <a class="nav-leaf-link @(IsActive("/achat/equipements") ? "active" : "")"  href="/achat/equipements">Mes Équipements</a>
+                            <a class="nav-leaf-link @(IsActive("/achat/materiel") ? "active" : "")"     href="/achat/materiel">Matériel</a>
+                            <a class="nav-leaf-link @(IsActive("/achat/fournisseurs") ? "active" : "")" href="/achat/fournisseurs">Fournisseurs</a>
+                            <a class="nav-leaf-link @(IsActive("/demandes-achat") ? "active" : "")"     href="/demandes-achat">Demandes d'achat</a>
+                            <a class="nav-leaf-link @(IsActive("/achat/web-scraping") ? "active" : "")" href="/achat/web-scraping">Scraping Marché</a>
+                            <a class="nav-leaf-link @(IsActive("/achat/messagerie") ? "active" : "")"   href="/achat/messagerie">Messagerie IT</a>
+                        </div>
+                    }
+
+                </div>
+            }
+        </div>
+
+        <a class="nav-link @(IsActive("/admin/projets") ? "active" : "")" href="/admin/projets">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+                <path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z"/>
+                <path d="M16 3v4M8 3v4M2 11h20"/>
+            </svg>
+            <span class="nav-text">Projets</span>
+        </a>
+
+        <a class="nav-link @(IsActive("/admin/face-setup") ? "active" : "")" href="/admin/face-setup">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+                <path d="M9 10h.01M15 10h.01"/>
+                <path d="M12 2a8 8 0 0 0-8 8v1a8 8 0 0 0 16 0v-1a8 8 0 0 0-8-8z"/>
+                <path d="M9 14s.5 1 3 1 3-1 3-1"/>
+            </svg>
+            <span class="nav-text">Mon visage</span>
+        </a>
+
+    </nav>
+
+    <div class="sidebar-profile">
+        <div class="profile-avatar">@_initiales</div>
+        <div class="profile-info">
+            <p class="profile-name">@_nom</p>
+            <p class="profile-role">@_role</p>
+        </div>
+    </div>
+
+    <LogoutButton />
+
+</aside>
+
+@code {
+    [Parameter] public bool ForceOpen { get; set; } = false;
+
+    private bool _drawerOpen  = false;
+    private bool _espaceOpen  = false;
+    private bool _itOpen      = false;
+    private bool _achatOpen   = false;
+    private string _nom       = "Admin";
+    private string _role      = "Administrateur";
+    private string _initiales = "AD";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var nom  = await JS.InvokeAsync<string?>("eval", "localStorage.getItem('user_name')");
+            var role = await JS.InvokeAsync<string?>("eval", "localStorage.getItem('user_role')");
+            if (!string.IsNullOrWhiteSpace(nom))  { _nom  = nom.Trim().Trim('"', '\''); }
+            if (!string.IsNullOrWhiteSpace(role)) { _role = role.Trim().Trim('"', '\''); }
+            var parts = _nom.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            _initiales = parts.Length >= 2
+                ? $"{parts[0][0]}{parts[1][0]}".ToUpper()
+                : _nom[..Math.Min(2, _nom.Length)].ToUpper();
+
+            // Ouvre automatiquement le sous-menu Achat si on est sur une page Achat
+            if (Navigation.Uri.Contains("/demandes-achat") 
+                || Navigation.Uri.Contains("/achat/") 
+                || Navigation.Uri.Contains("/statistiques"))
+            { _espaceOpen = true; _achatOpen = true; }
+        }
+        catch { }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (ForceOpen) _drawerOpen = true;
+    }
+
+    private bool IsActive(string href)
+        => Navigation.Uri.Contains(href, StringComparison.OrdinalIgnoreCase);
+}

@@ -43,8 +43,10 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private string UserName { get; set; } = "Utilisateur";
         private string UserRole { get; set; } = "Achat";
         private bool        _sidebarOpen     = false;
+        private bool _estAdmin => UserRole.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
         private void ToggleSidebar() => _sidebarOpen  = !_sidebarOpen;
+        private bool _roleCharge = false;
         // ── Init ───────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
@@ -56,6 +58,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         {
             UserName = await EmployeService.GetCurrentUserNameAsync();
             UserRole = await EmployeService.GetCurrentUserRoleAsync();
+            _roleCharge = true;
         }
 
         private async Task LoadMaterielsGroupesAsync()

@@ -11,6 +11,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         [Inject]
         private IJSRuntime JS { get; set; } = default!;
+        private bool _estAdmin => _currentUserRole.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
         private class FournisseurVm
         {

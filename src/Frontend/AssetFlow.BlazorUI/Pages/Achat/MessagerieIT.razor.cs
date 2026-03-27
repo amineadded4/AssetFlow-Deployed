@@ -52,6 +52,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private bool                 _isTyping = false;
         private bool _sidebarOpen = false;
         private void ToggleSidebar() => _sidebarOpen = !_sidebarOpen;
+        private string      _roleUtilisateur = "Service Achat";
+        private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
         private List<ITUserForAchatDto> ITUsersFiltres =>
             (string.IsNullOrWhiteSpace(SearchIT)
@@ -68,6 +70,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         {
             UserName      = await LocalStorage.GetItemAsync<string>("user_name") ?? "Agent Achat";
             CurrentUserId = await LocalStorage.GetItemAsync<int>("user_id");
+            _roleUtilisateur = await LocalStorage.GetItemAsync<string>("user_role");
 
             await LoadITUsersAsync();
             await ConnectHubAsync();

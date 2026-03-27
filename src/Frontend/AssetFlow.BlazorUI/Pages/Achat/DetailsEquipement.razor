@@ -15,8 +15,17 @@
         @if (_sidebarOpen)
         { <div class="sidebar-overlay" @onclick="ToggleSidebar"></div> }
 
-        @* ── AchatSidebar ── *@
-        <AchatSidebar ActivePage="equipements" ForceOpen="_sidebarOpen" />
+        @if (_roleCharge)
+        {
+            @if (_estAdmin)
+            {
+                <AdminSidebar ForceOpen="_sidebarOpen" />
+            }
+            else
+            {
+                <AchatSidebar ActivePage="demandes" ForceOpen="_sidebarOpen" />
+            }
+        }
 
         @* ══════════════════════════════════════════════════════
         CONTENU PRINCIPAL

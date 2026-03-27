@@ -142,7 +142,7 @@ html.dark .sk-shell {
 .cat-default { background: var(--surface-2); color: var(--text-muted); }
 
 /* Actions */
-.sk-row-acts { display: flex; justify-content: flex-end; gap: 4px; }
+.sk-row-acts { display: flex; justify-content: flex-start; gap: 4px; }
 .sk-act-btn { width: 32px; height: 32px; border-radius: var(--r); display: flex; align-items: center; justify-content: center; color: var(--text-faint); transition: all var(--t); }
 .sk-act-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .sk-act-edit:hover  { background: var(--primary-10); color: var(--primary); }
@@ -450,7 +450,7 @@ html.dark .sk-shell {
         gap: 0.5rem;
     }
     .sk-btn-add {
-        margin-left: 0;
+        margin-left: 100px;
         flex: 1;
         white-space: nowrap;
         font-size: 0.75rem;

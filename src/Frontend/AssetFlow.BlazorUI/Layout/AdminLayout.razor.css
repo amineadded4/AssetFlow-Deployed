@@ -118,3 +118,100 @@ html.dark .admin-sidebar { background: #060d18; }
     .sidebar-profile { display: none; }
     .admin-main     { overflow-y: auto; }
 }
+
+/* ── Accordéon nav ── */
+.nav-group { display: flex; flex-direction: column; }
+
+.nav-group-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    color: #94a3b8;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-left: 4px solid transparent;
+    transition: all 0.2s ease;
+}
+.nav-group-btn:hover { color: white; background: rgba(255,255,255,0.05); }
+.nav-group-btn.active-parent {
+    color: white;
+    background: rgba(19,109,236,0.12);
+    border-left-color: #136dec;
+}
+
+.nav-chevron {
+    width: 14px; height: 14px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2.5; stroke-linecap: round;
+    margin-left: auto;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+.nav-chevron.rotated { transform: rotate(180deg); }
+
+/* Niveau 2 — Espace IT / Espace Achat */
+.nav-sub {
+    display: flex;
+    flex-direction: column;
+    background: rgba(0,0,0,0.15);
+    border-left: 2px solid rgba(19,109,236,0.25);
+    margin-left: 1.5rem;
+    border-radius: 0 0 0.375rem 0;
+}
+
+.nav-sub-link {
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1rem;
+    color: #94a3b8;
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: all 0.18s ease;
+    border-left: 3px solid transparent;
+}
+.nav-sub-link:hover { color: white; background: rgba(255,255,255,0.05); }
+.nav-sub-link.active-parent { color: #93c5fd; }
+
+.nav-sub-icon {
+    width: 15px; height: 15px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+}
+
+/* Niveau 3 — liens feuilles */
+.nav-leaf {
+    display: flex;
+    flex-direction: column;
+    background: rgba(0,0,0,0.1);
+    border-left: 2px solid rgba(99,179,237,0.15);
+    margin-left: 1.25rem;
+}
+
+.nav-leaf-link {
+    display: block;
+    padding: 0.45rem 1rem;
+    color: #64748b;
+    font-size: 0.8rem;
+    font-weight: 400;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    border-left: 2px solid transparent;
+}
+.nav-leaf-link:hover { color: #e2e8f0; background: rgba(255,255,255,0.04); }
+.nav-leaf-link.active {
+    color: #93c5fd;
+    border-left-color: #136dec;
+    font-weight: 600;
+}

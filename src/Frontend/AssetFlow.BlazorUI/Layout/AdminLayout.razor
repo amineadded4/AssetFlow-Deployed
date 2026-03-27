@@ -14,16 +14,85 @@
         </div>
 
         <nav class="sidebar-nav">
-            <a class="nav-link @(IsActive("/dashboard/admin") ? "active" : "")"
-               href="/dashboard/admin">
-                <svg class="nav-icon" viewBox="0 0 24 24">
-                    <rect x="3" y="3" width="7" height="7" rx="1"/>
-                    <rect x="14" y="3" width="7" height="7" rx="1"/>
-                    <rect x="3" y="14" width="7" height="7" rx="1"/>
-                    <rect x="14" y="14" width="7" height="7" rx="1"/>
-                </svg>
-                <span class="nav-text">Dashboard</span>
-            </a>
+            @* APRÈS - ajouter ceci à la place : *@
+
+            @* ── Espace Achat / IT ── *@
+            <div class="nav-group">
+                <button class="nav-link nav-group-btn @(_espaceOpen ? "active-parent" : "")"
+                        @onclick='() => _espaceOpen = !_espaceOpen'>
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                    <span class="nav-text">Espace Achat / IT</span>
+                    <svg class="nav-chevron @(_espaceOpen ? "rotated" : "")" viewBox="0 0 24 24">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </button>
+
+                @if (_espaceOpen)
+                {
+                    <div class="nav-sub">
+
+                        @* ── Sous-menu Espace IT ── *@
+                        <button class="nav-sub-link @(_itOpen ? "active-parent" : "")"
+                                @onclick='() => _itOpen = !_itOpen'>
+                            <svg class="nav-sub-icon" viewBox="0 0 24 24">
+                                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                                <path d="M8 21h8M12 17v4"/>
+                            </svg>
+                            <span>Espace IT</span>
+                            <svg class="nav-chevron @(_itOpen ? "rotated" : "")" viewBox="0 0 24 24">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+
+                        @if (_itOpen)
+                        {
+                            <div class="nav-leaf">
+                                <a class="nav-leaf-link @(IsActive("/dashboard/it") ? "active" : "")"       href="/dashboard/it">Dashboard</a>
+                                <a class="nav-leaf-link @(IsActive("/it/equipements") ? "active" : "")"      href="/it/equipements">Mes Équipements</a>
+                                <a class="nav-leaf-link @(IsActive("/it/employes") ? "active" : "")"         href="/it/employes">Matériels affectés</a>
+                                <a class="nav-leaf-link @(IsActive("/it/affectation") ? "active" : "")"      href="/it/affectation">Assigner matériels</a>
+                                <a class="nav-leaf-link @(IsActive("/it/incidents") ? "active" : "")"        href="/it/incidents">Incidents</a>
+                                <a class="nav-leaf-link @(IsActive("/it/inventaire") ? "active" : "")"       href="/it/inventaire">Inventaire</a>
+                                <a class="nav-leaf-link @(IsActive("/it/demandes-achat") ? "active" : "")"   href="/it/demandes-achat">Mes achats</a>
+                                <a class="nav-leaf-link @(IsActive("/it/messagerie") ? "active" : "")"       href="/it/messagerie">Messagerie</a>
+                            </div>
+                        }
+
+                        @* ── Sous-menu Espace Achat ── *@
+                        <button class="nav-sub-link @(_achatOpen ? "active-parent" : "")"
+                                @onclick='() => _achatOpen = !_achatOpen'>
+                            <svg class="nav-sub-icon" viewBox="0 0 24 24">
+                                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                                <line x1="3" y1="6" x2="21" y2="6"/>
+                                <path d="M16 10a4 4 0 0 1-8 0"/>
+                            </svg>
+                            <span>Espace Achat</span>
+                            <svg class="nav-chevron @(_achatOpen ? "rotated" : "")" viewBox="0 0 24 24">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+
+                        @if (_achatOpen)
+                        {
+                            <div class="nav-leaf">
+                                <a class="nav-leaf-link @(IsActive("/statistiques") ? "active" : "")"        href="/statistiques">Statistiques</a>
+                                <a class="nav-leaf-link @(IsActive("/achat/equipements") ? "active" : "")"   href="/achat/equipements">Mes Équipements</a>
+                                <a class="nav-leaf-link @(IsActive("/achat/materiel") ? "active" : "")"      href="/achat/materiel">Matériel</a>
+                                <a class="nav-leaf-link @(IsActive("/achat/fournisseurs") ? "active" : "")"  href="/achat/fournisseurs">Fournisseurs</a>
+                                <a class="nav-leaf-link @(IsActive("/demandes-achat") ? "active" : "")"      href="/demandes-achat">Demandes d'achat</a>
+                                <a class="nav-leaf-link @(IsActive("/achat/web-scraping") ? "active" : "")"  href="/achat/web-scraping">Scraping Marché</a>
+                                <a class="nav-leaf-link @(IsActive("/achat/messagerie") ? "active" : "")"    href="/achat/messagerie">Messagerie IT</a>
+                            </div>
+                        }
+
+                    </div>
+                }
+            </div>
 
             <a class="nav-link @(IsActive("/admin/projets") ? "active" : "")"
                href="/admin/projets">
@@ -67,6 +136,9 @@
 @code {
     private string UserName { get; set; } = "Admin";
     private string UserRole { get; set; } = "Administrateur";
+    private bool _espaceOpen = false;
+    private bool _itOpen     = false;
+    private bool _achatOpen  = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

@@ -450,7 +450,7 @@ html.dark .sk-shell {
         gap: 0.5rem;
     }
     .sk-btn-add {
-        margin-left: 100px;
+        margin-left: 0px;
         flex: 1;
         white-space: nowrap;
         font-size: 0.75rem;

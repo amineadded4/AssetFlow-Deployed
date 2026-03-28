@@ -1,6 +1,27 @@
 /* ============================================================
    AdminProjects.razor.css — Page gestion projets
+   Inclut les styles admin-shell + admin-main (ex AdminLayout)
    ============================================================ */
+
+/* ── SHELL (ex-AdminLayout) ── */
+.admin-shell {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--bg);
+}
+
+.admin-main {
+    flex: 1;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+/* ── RESPONSIVE SHELL ── */
+@@media (max-width: 768px) {
+    .admin-shell   { flex-direction: column; }
+    .admin-main    { overflow-y: auto; }
+}
 
 /* ── PAGE ── */
 .proj-page {
@@ -121,7 +142,7 @@ html.dark .proj-stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
     display: inline-block;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── VIDE ── */
 .proj-empty {
@@ -240,6 +261,140 @@ html.dark .proj-stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
 .proj-delete:hover { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); }
 .proj-delete:hover svg { stroke: #EF4444; }
 
+/* ── Bouton expand ── */
+.proj-expand svg {
+    transition: transform 0.25s ease;
+}
+.proj-expand.expanded svg {
+    transform: rotate(180deg);
+}
+.proj-expand:hover {
+    background: rgba(19,109,236,0.1);
+    border-color: rgba(19,109,236,0.3);
+}
+.proj-expand:hover svg { stroke: var(--primary); }
+
+/* ── Ligne dropdown ── */
+.proj-dropdown-row { background: var(--surface-2); }
+html.dark .proj-dropdown-row { background: rgba(255,255,255,0.02); }
+
+.proj-dropdown-cell {
+    padding: 0 !important;
+    border-bottom: 2px solid var(--primary) !important;
+}
+
+.proj-dropdown-body {
+    padding: 1rem 1.25rem;
+    animation: slideDown 0.2s ease;
+}
+
+@@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Loading / Empty dropdown ── */
+.proj-dropdown-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    padding: 0.5rem 0;
+}
+.proj-dropdown-empty {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-faint);
+    font-size: 0.82rem;
+    padding: 0.25rem 0;
+}
+.proj-dropdown-empty svg {
+    width: 18px; height: 18px;
+    stroke: currentColor; fill: none;
+    flex-shrink: 0;
+}
+
+/* ── En-tête colonnes dropdown ── */
+.proj-dropdown-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-faint);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.4rem;
+}
+
+/* ── Liste scrollable ── */
+.proj-dropdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    max-height: 220px;
+    overflow-y: auto;
+}
+.proj-dropdown-list::-webkit-scrollbar { width: 4px; }
+.proj-dropdown-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+/* ── Ligne affectation ── */
+.proj-dropdown-item {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.5rem 0.5rem;
+    border-radius: var(--radius);
+    transition: background var(--transition);
+}
+.proj-dropdown-item:hover { background: var(--surface); }
+
+.proj-dropdown-materiel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.proj-dropdown-materiel svg {
+    width: 16px; height: 16px;
+    stroke: var(--primary); fill: none;
+    stroke-width: 1.75; flex-shrink: 0;
+}
+.proj-dropdown-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+}
+.proj-dropdown-ref {
+    font-size: 0.68rem;
+    font-family: 'Courier New', monospace;
+    color: var(--text-faint);
+    margin: 0;
+}
+
+.proj-dropdown-qty {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+.proj-dropdown-qty strong {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.proj-dropdown-date {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+.proj-date-overdue {
+    color: #EF4444;
+    font-weight: 600;
+}
+
 /* ============================================================
    SIDEBAR FORMULAIRE
    ============================================================ */
@@ -253,7 +408,7 @@ html.dark .proj-stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
     animation: fadeIn 0.2s ease;
 }
 
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .proj-sidebar {
     position: fixed;
@@ -268,10 +423,9 @@ html.dark .proj-stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
     box-shadow: -8px 0 40px rgba(0,0,0,0.15);
     animation: slideInRight 0.3s cubic-bezier(0.34,1.1,0.64,1);
 }
-
 html.dark .proj-sidebar { box-shadow: -8px 0 40px rgba(0,0,0,0.5); }
 
-@keyframes slideInRight {
+@@keyframes slideInRight {
     from { transform: translateX(100%); opacity: 0.5; }
     to   { transform: translateX(0);    opacity: 1;   }
 }
@@ -325,7 +479,6 @@ html.dark .proj-sidebar { box-shadow: -8px 0 40px rgba(0,0,0,0.5); }
 .proj-sidebar-close svg { width: 13px; height: 13px; stroke: var(--text-muted); fill: none; }
 .proj-sidebar-close:hover { background: var(--border); }
 
-/* Corps du formulaire */
 .proj-sidebar-body {
     flex: 1;
     overflow-y: auto;
@@ -375,7 +528,6 @@ html.dark .proj-sidebar { box-shadow: -8px 0 40px rgba(0,0,0,0.5); }
 .proj-textarea { resize: vertical; min-height: 80px; }
 .proj-select   { cursor: pointer; }
 
-/* Pied de sidebar */
 .proj-sidebar-footer {
     padding: 1.25rem 1.5rem;
     border-top: 1px solid var(--border);
@@ -430,7 +582,7 @@ html.dark .proj-sidebar { box-shadow: -8px 0 40px rgba(0,0,0,0.5); }
 }
 html.dark .proj-delete-modal { box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
 
-@keyframes modalPop {
+@@keyframes modalPop {
     from { opacity: 0; transform: translate(-50%, -50%) scale(0.88); }
     to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
@@ -466,19 +618,20 @@ html.dark .proj-delete-modal { box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
 .proj-btn-delete-confirm:disabled { opacity: 0.55; cursor: not-allowed; }
 
 /* ── RESPONSIVE ── */
-@media (max-width: 1024px) {
+@@media (max-width: 1024px) {
     .proj-stats { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (max-width: 768px) {
+@@media (max-width: 768px) {
     .proj-page    { padding: 1.25rem 1rem; }
-    .proj-sidebar { width: 100%; height: auto; max-height: 92vh; top: auto; bottom: 0;
-                    border-left: none; border-top: 1px solid var(--border);
-                    border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
-    .proj-btn-add{
-        margin-right: 0;
+    .proj-sidebar {
+        width: 100%; height: auto; max-height: 92vh;
+        top: auto; bottom: 0;
+        border-left: none; border-top: 1px solid var(--border);
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     }
-    @keyframes slideInRight {
+    .proj-btn-add { margin-right: 0; }
+    @@keyframes slideInRight {
         from { transform: translateY(100%); }
         to   { transform: translateY(0); }
     }
@@ -489,153 +642,6 @@ html.dark .proj-delete-modal { box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
     .proj-table td:nth-child(5) { display: none; }
     .proj-field-row { flex-direction: column; }
     .proj-delete-modal { width: calc(100% - 2rem); }
-}
-
-@media (max-width: 480px) {
-    .proj-stats { grid-template-columns: repeat(2, 1fr); }
-    .proj-table th:nth-child(3),
-    .proj-table td:nth-child(3) { display: none; }
-}
-
-/* ── Bouton expand ── */
-.proj-expand svg {
-    transition: transform 0.25s ease;
-}
-.proj-expand.expanded svg {
-    transform: rotate(180deg);
-}
-.proj-expand:hover {
-    background: rgba(19,109,236,0.1);
-    border-color: rgba(19,109,236,0.3);
-}
-.proj-expand:hover svg { stroke: var(--primary); }
- 
-/* ── Ligne dropdown ── */
-.proj-dropdown-row { background: var(--surface-2); }
-html.dark .proj-dropdown-row { background: rgba(255,255,255,0.02); }
- 
-.proj-dropdown-cell {
-    padding: 0 !important;
-    border-bottom: 2px solid var(--primary) !important;
-}
- 
-.proj-dropdown-body {
-    padding: 1rem 1.25rem;
-    animation: slideDown 0.2s ease;
-}
- 
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
- 
-/* ── Loading / Empty ── */
-.proj-dropdown-loading {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    color: var(--text-muted);
-    font-size: 0.82rem;
-    padding: 0.5rem 0;
-}
-.proj-dropdown-empty {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--text-faint);
-    font-size: 0.82rem;
-    padding: 0.25rem 0;
-}
-.proj-dropdown-empty svg {
-    width: 18px; height: 18px;
-    stroke: currentColor; fill: none;
-    flex-shrink: 0;
-}
- 
-/* ── En-tête colonnes ── */
-.proj-dropdown-header {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-    gap: 0.5rem;
-    padding: 0.4rem 0.5rem;
-    font-size: 0.68rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-faint);
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 0.4rem;
-}
- 
-/* ── Liste scrollable ── */
-.proj-dropdown-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    max-height: 220px;
-    overflow-y: auto;
-}
-.proj-dropdown-list::-webkit-scrollbar { width: 4px; }
-.proj-dropdown-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
- 
-/* ── Ligne affectation ── */
-.proj-dropdown-item {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-    gap: 0.5rem;
-    align-items: center;
-    padding: 0.5rem 0.5rem;
-    border-radius: var(--radius);
-    transition: background var(--transition);
-}
-.proj-dropdown-item:hover { background: var(--surface); }
- 
-/* Matériel */
-.proj-dropdown-materiel {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.proj-dropdown-materiel svg {
-    width: 16px; height: 16px;
-    stroke: var(--primary); fill: none;
-    stroke-width: 1.75; flex-shrink: 0;
-}
-.proj-dropdown-name {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--text);
-    margin: 0;
-}
-.proj-dropdown-ref {
-    font-size: 0.68rem;
-    font-family: 'Courier New', monospace;
-    color: var(--text-faint);
-    margin: 0;
-}
- 
-/* Quantité */
-.proj-dropdown-qty {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-}
-.proj-dropdown-qty strong {
-    color: var(--primary);
-    font-weight: 700;
-}
- 
-/* Dates */
-.proj-dropdown-date {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-}
-.proj-date-overdue {
-    color: #EF4444;
-    font-weight: 600;
-}
- 
-/* ── Responsive ── */
-@media (max-width: 768px) {
     .proj-dropdown-header,
     .proj-dropdown-item {
         grid-template-columns: 2fr 1fr 1fr;
@@ -644,4 +650,10 @@ html.dark .proj-dropdown-row { background: rgba(255,255,255,0.02); }
     .proj-dropdown-header span:nth-child(5),
     .proj-dropdown-item  span:nth-child(4),
     .proj-dropdown-item  span:nth-child(5) { display: none; }
+}
+
+@@media (max-width: 480px) {
+    .proj-stats { grid-template-columns: repeat(2, 1fr); }
+    .proj-table th:nth-child(3),
+    .proj-table td:nth-child(3) { display: none; }
 }

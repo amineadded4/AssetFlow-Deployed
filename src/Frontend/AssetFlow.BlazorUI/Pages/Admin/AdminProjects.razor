@@ -4,329 +4,334 @@
    ============================================================ *@
 
 @page "/admin/projets"
-@layout AssetFlow.BlazorUI.Layout.AdminLayout
+@using AssetFlow.BlazorUI.Components
 @using AssetFlow.BlazorUI.Services
 
-<RoleAuthGuard AllowedRoles="@(new[]{"Admin"})">
-    <div class="proj-page">
+<div class="admin-shell">
 
-        @* ── EN-TÊTE ── *@
-        <div class="proj-header">
-            <div>
-                <h1 class="proj-title">Gestion des Projets</h1>
-                <p class="proj-subtitle">Créez, suivez et gérez tous vos projets.</p>
-            </div>
-            <button class="proj-btn-add" @onclick="OpenCreateSidebar">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Ajouter un projet
-            </button>
-        </div>
+    <AdminSidebar />
 
-        @* ── STATS RAPIDES ── *@
-        <div class="proj-stats">
-            <div class="proj-stat-card">
-                <span class="proj-stat-num">@Projects.Count</span>
-                <span class="proj-stat-label">Total</span>
-            </div>
-            <div class="proj-stat-card" style="--accent:#10B981;">
-                <span class="proj-stat-num">@Projects.Count(p => p.Statut == "EnCours")</span>
-                <span class="proj-stat-label">En cours</span>
-            </div>
-            <div class="proj-stat-card" style="--accent:#F59E0B;">
-                <span class="proj-stat-num">@Projects.Count(p => p.Statut == "Planifie")</span>
-                <span class="proj-stat-label">Planifiés</span>
-            </div>
-            <div class="proj-stat-card" style="--accent:#6B7280;">
-                <span class="proj-stat-num">@Projects.Count(p => p.Statut == "Termine")</span>
-                <span class="proj-stat-label">Terminés</span>
-            </div>
-        </div>
+    <main class="admin-main">
+        <RoleAuthGuard AllowedRoles="@(new[]{"Admin"})">
+            <div class="proj-page">
 
-        @* ── ÉTAT CHARGEMENT / ERREUR ── *@
-        @if (IsLoading)
-        {
-            <div class="proj-loading">
-                <div class="proj-spinner"></div>
-                <span>Chargement des projets...</span>
-            </div>
-        }
-        else if (!string.IsNullOrEmpty(ErrorMessage))
-        {
-            <div class="proj-alert-error">@ErrorMessage</div>
-        }
-        else if (!Projects.Any())
-        {
-            <div class="proj-empty">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z"/>
-                    <path d="M16 3v4M8 3v4M2 11h20"/>
-                </svg>
-                <p>Aucun projet pour le moment.</p>
-                <p class="proj-empty-hint">Cliquez sur «&nbsp;Ajouter un projet&nbsp;» pour commencer.</p>
-            </div>
-        }
-        else
-        {
-            @* ── TABLEAU ── *@
-            <div class="proj-table-wrap">
-                <table class="proj-table">
-                    <thead>
-                        <tr>
-                            <th>Nom</th>
-                            <th>Statut</th>
-                            <th>Priorité</th>
-                            <th>Responsable</th>
-                            <th>Budget</th>
-                            <th>Date fin</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var p in Projects)
-                        {
-                            <tr class="proj-row" @onclick="() => OpenEditSidebar(p)">
-                                <td>
-                                    <div class="proj-nom">@p.Nom</div>
-                                    @if (!string.IsNullOrEmpty(p.Description))
-                                    {
-                                        <div class="proj-desc-preview">@(p.Description.Length > 50 ? p.Description[..50] + "…" : p.Description)</div>
-                                    }
-                                </td>
-                                <td><span class="proj-badge proj-badge-statut @GetStatutClass(p.Statut)">@GetStatutLabel(p.Statut)</span></td>
-                                <td><span class="proj-badge proj-badge-priorite @GetPrioriteClass(p.Priorite)">@p.Priorite</span></td>
-                                <td>@(p.Responsable ?? "—")</td>
-                                <td>@(p.Budget.HasValue ? p.Budget.Value.ToString("N0") + " DT" : "—")</td>
-                                <td>@(p.DateFin.HasValue ? p.DateFin.Value.ToString("dd/MM/yyyy") : "—")</td>
-                                <td @onclick:stopPropagation="true">
-                                    <div class="proj-actions">
-                                        <button class="proj-action-btn proj-edit" @onclick="() => OpenEditSidebar(p)" title="Modifier">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                            </svg>
-                                        </button>
-                                        <button class="proj-action-btn proj-delete" @onclick="() => ConfirmDelete(p)" title="Supprimer">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                                                <polyline points="3 6 5 6 21 6"/>
-                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                                                <path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                                            </svg>
-                                        </button>
-                                        @* ← NOUVEAU : bouton dropdown affectations *@
-                                        <button class="proj-action-btn proj-expand @(ExpandedProjectId == p.Id ? "expanded" : "")"
-                                                @onclick="() => ToggleAffectations(p.Id)"
-                                                title="Voir les affectations">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="m6 9 6 6 6-6"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
+                @* ── EN-TÊTE ── *@
+                <div class="proj-header">
+                    <div>
+                        <h1 class="proj-title">Gestion des Projets</h1>
+                        <p class="proj-subtitle">Créez, suivez et gérez tous vos projets.</p>
+                    </div>
+                    <button class="proj-btn-add" @onclick="OpenCreateSidebar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Ajouter un projet
+                    </button>
+                </div>
 
-                            @* ← NOUVEAU : ligne dropdown affectations *@
-                            @if (ExpandedProjectId == p.Id)
-                            {
-                                <tr class="proj-dropdown-row">
-                                    <td colspan="7" class="proj-dropdown-cell">
-                                        <div class="proj-dropdown-body">
+                @* ── STATS RAPIDES ── *@
+                <div class="proj-stats">
+                    <div class="proj-stat-card">
+                        <span class="proj-stat-num">@Projects.Count</span>
+                        <span class="proj-stat-label">Total</span>
+                    </div>
+                    <div class="proj-stat-card" style="--accent:#10B981;">
+                        <span class="proj-stat-num">@Projects.Count(p => p.Statut == "EnCours")</span>
+                        <span class="proj-stat-label">En cours</span>
+                    </div>
+                    <div class="proj-stat-card" style="--accent:#F59E0B;">
+                        <span class="proj-stat-num">@Projects.Count(p => p.Statut == "Planifie")</span>
+                        <span class="proj-stat-label">Planifiés</span>
+                    </div>
+                    <div class="proj-stat-card" style="--accent:#6B7280;">
+                        <span class="proj-stat-num">@Projects.Count(p => p.Statut == "Termine")</span>
+                        <span class="proj-stat-label">Terminés</span>
+                    </div>
+                </div>
 
-                                            @if (LoadingAffectations)
-                                            {
-                                                <div class="proj-dropdown-loading">
-                                                    <div class="proj-spinner-sm" style="border-top-color:var(--primary);border-color:var(--border);"></div>
-                                                    <span>Chargement des affectations...</span>
-                                                </div>
-                                            }
-                                            else if (!AffectationsOuvertes.Any())
-                                            {
-                                                <div class="proj-dropdown-empty">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                                        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
-                                                    </svg>
-                                                    <span>Aucun matériel affecté à ce projet.</span>
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                <div class="proj-dropdown-header">
-                                                    <span>Matériel</span>
-                                                    <span>Articles affectés</span>
-                                                    <span>Date affectation</span>
-                                                    <span>Date de retour</span>
-                                                    <span>État</span>
-                                                </div>
-                                                <div class="proj-dropdown-list">
-                                                    @foreach (var aff in AffectationsOuvertes)
-                                                    {
-                                                        <div class="proj-dropdown-item">
-                                                            <div class="proj-dropdown-materiel">
-                                                                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                                                                    <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
-                                                                </svg>
-                                                                <div>
-                                                                    <p class="proj-dropdown-name">@aff.Designation</p>
-                                                                    <p class="proj-dropdown-ref">@aff.Reference</p>
-                                                                </div>
-                                                            </div>
-                                                            <span class="proj-dropdown-qty">
-                                                                <strong>@aff.QuantiteAffectee</strong> article@(aff.QuantiteAffectee > 1 ? "s" : "")
-                                                            </span>
-                                                            <span class="proj-dropdown-date">@aff.DateAffectation.ToString("dd/MM/yyyy")</span>
-                                                            <span class="proj-dropdown-date @(aff.DateRetourPrevue.HasValue && aff.DateRetourPrevue < DateTime.Now && aff.Etat == "Courante" ? "proj-date-overdue" : "")">
-                                                                @(aff.DateRetourPrevue.HasValue ? aff.DateRetourPrevue.Value.ToString("dd/MM/yyyy") : "—")
-                                                            </span>
-                                                            <span class="proj-badge @(aff.Etat == "Courante" ? "statut-encours" : "statut-termine")" style="font-size:0.68rem;">
-                                                                @aff.Etat
-                                                            </span>
-                                                        </div>
-                                                    }
-                                                </div>
-                                            }
-
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        }
-
-                    </tbody>
-                </table>
-            </div>
-        }
-
-    </div>
-
-    @* ============================================================
-    SIDEBAR FORMULAIRE (droite)
-    ============================================================ *@
-    @if (ShowSidebar)
-    {
-        <div class="proj-sidebar-overlay" @onclick="CloseSidebar"></div>
-        <div class="proj-sidebar">
-
-            <div class="proj-sidebar-header">
-                <div class="proj-sidebar-title-block">
-                    <div class="proj-sidebar-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                @* ── ÉTAT CHARGEMENT / ERREUR ── *@
+                @if (IsLoading)
+                {
+                    <div class="proj-loading">
+                        <div class="proj-spinner"></div>
+                        <span>Chargement des projets...</span>
+                    </div>
+                }
+                else if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="proj-alert-error">@ErrorMessage</div>
+                }
+                else if (!Projects.Any())
+                {
+                    <div class="proj-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z"/>
                             <path d="M16 3v4M8 3v4M2 11h20"/>
                         </svg>
+                        <p>Aucun projet pour le moment.</p>
+                        <p class="proj-empty-hint">Cliquez sur «&nbsp;Ajouter un projet&nbsp;» pour commencer.</p>
                     </div>
-                    <div>
-                        <h2 class="proj-sidebar-title">@(IsEditing ? "Modifier le projet" : "Nouveau projet")</h2>
-                        <p class="proj-sidebar-subtitle">@(IsEditing ? "Mettre à jour les informations" : "Remplissez les champs ci-dessous")</p>
+                }
+                else
+                {
+                    @* ── TABLEAU ── *@
+                    <div class="proj-table-wrap">
+                        <table class="proj-table">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Statut</th>
+                                    <th>Priorité</th>
+                                    <th>Responsable</th>
+                                    <th>Budget</th>
+                                    <th>Date fin</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in Projects)
+                                {
+                                    <tr class="proj-row" @onclick="() => OpenEditSidebar(p)">
+                                        <td>
+                                            <div class="proj-nom">@p.Nom</div>
+                                            @if (!string.IsNullOrEmpty(p.Description))
+                                            {
+                                                <div class="proj-desc-preview">@(p.Description.Length > 50 ? p.Description[..50] + "…" : p.Description)</div>
+                                            }
+                                        </td>
+                                        <td><span class="proj-badge proj-badge-statut @GetStatutClass(p.Statut)">@GetStatutLabel(p.Statut)</span></td>
+                                        <td><span class="proj-badge proj-badge-priorite @GetPrioriteClass(p.Priorite)">@p.Priorite</span></td>
+                                        <td>@(p.Responsable ?? "—")</td>
+                                        <td>@(p.Budget.HasValue ? p.Budget.Value.ToString("N0") + " DT" : "—")</td>
+                                        <td>@(p.DateFin.HasValue ? p.DateFin.Value.ToString("dd/MM/yyyy") : "—")</td>
+                                        <td @onclick:stopPropagation="true">
+                                            <div class="proj-actions">
+                                                <button class="proj-action-btn proj-edit" @onclick="() => OpenEditSidebar(p)" title="Modifier">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                                    </svg>
+                                                </button>
+                                                <button class="proj-action-btn proj-delete" @onclick="() => ConfirmDelete(p)" title="Supprimer">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="3 6 5 6 21 6"/>
+                                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                                        <path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                                                    </svg>
+                                                </button>
+                                                <button class="proj-action-btn proj-expand @(ExpandedProjectId == p.Id ? "expanded" : "")"
+                                                        @onclick="() => ToggleAffectations(p.Id)"
+                                                        title="Voir les affectations">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="m6 9 6 6 6-6"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    @if (ExpandedProjectId == p.Id)
+                                    {
+                                        <tr class="proj-dropdown-row">
+                                            <td colspan="7" class="proj-dropdown-cell">
+                                                <div class="proj-dropdown-body">
+
+                                                    @if (LoadingAffectations)
+                                                    {
+                                                        <div class="proj-dropdown-loading">
+                                                            <div class="proj-spinner-sm" style="border-top-color:var(--primary);border-color:var(--border);"></div>
+                                                            <span>Chargement des affectations...</span>
+                                                        </div>
+                                                    }
+                                                    else if (!AffectationsOuvertes.Any())
+                                                    {
+                                                        <div class="proj-dropdown-empty">
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                                                            </svg>
+                                                            <span>Aucun matériel affecté à ce projet.</span>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="proj-dropdown-header">
+                                                            <span>Matériel</span>
+                                                            <span>Articles affectés</span>
+                                                            <span>Date affectation</span>
+                                                            <span>Date de retour</span>
+                                                            <span>État</span>
+                                                        </div>
+                                                        <div class="proj-dropdown-list">
+                                                            @foreach (var aff in AffectationsOuvertes)
+                                                            {
+                                                                <div class="proj-dropdown-item">
+                                                                    <div class="proj-dropdown-materiel">
+                                                                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                                                            <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                                                                        </svg>
+                                                                        <div>
+                                                                            <p class="proj-dropdown-name">@aff.Designation</p>
+                                                                            <p class="proj-dropdown-ref">@aff.Reference</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <span class="proj-dropdown-qty">
+                                                                        <strong>@aff.QuantiteAffectee</strong> article@(aff.QuantiteAffectee > 1 ? "s" : "")
+                                                                    </span>
+                                                                    <span class="proj-dropdown-date">@aff.DateAffectation.ToString("dd/MM/yyyy")</span>
+                                                                    <span class="proj-dropdown-date @(aff.DateRetourPrevue.HasValue && aff.DateRetourPrevue < DateTime.Now && aff.Etat == "Courante" ? "proj-date-overdue" : "")">
+                                                                        @(aff.DateRetourPrevue.HasValue ? aff.DateRetourPrevue.Value.ToString("dd/MM/yyyy") : "—")
+                                                                    </span>
+                                                                    <span class="proj-badge @(aff.Etat == "Courante" ? "statut-encours" : "statut-termine")" style="font-size:0.68rem;">
+                                                                        @aff.Etat
+                                                                    </span>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
+
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
                     </div>
-                </div>
-                <button class="proj-sidebar-close" @onclick="CloseSidebar">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 6 6 18M6 6l12 12"/>
-                    </svg>
-                </button>
+                }
+
             </div>
 
-            @if (!string.IsNullOrEmpty(FormError))
+            @* ============================================================
+            SIDEBAR FORMULAIRE (droite)
+            ============================================================ *@
+            @if (ShowSidebar)
             {
-                <div class="proj-alert-error" style="margin:0 1.5rem 1rem;">@FormError</div>
+                <div class="proj-sidebar-overlay" @onclick="CloseSidebar"></div>
+                <div class="proj-sidebar">
+
+                    <div class="proj-sidebar-header">
+                        <div class="proj-sidebar-title-block">
+                            <div class="proj-sidebar-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z"/>
+                                    <path d="M16 3v4M8 3v4M2 11h20"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="proj-sidebar-title">@(IsEditing ? "Modifier le projet" : "Nouveau projet")</h2>
+                                <p class="proj-sidebar-subtitle">@(IsEditing ? "Mettre à jour les informations" : "Remplissez les champs ci-dessous")</p>
+                            </div>
+                        </div>
+                        <button class="proj-sidebar-close" @onclick="CloseSidebar">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 6 6 18M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(FormError))
+                    {
+                        <div class="proj-alert-error" style="margin:0 1.5rem 1rem;">@FormError</div>
+                    }
+
+                    <div class="proj-sidebar-body">
+
+                        <div class="proj-field">
+                            <label class="proj-label">Nom du projet <span class="proj-required">*</span></label>
+                            <input class="proj-input" type="text" placeholder="Ex: Refonte infrastructure réseau"
+                                @bind="Form.Nom" @bind:event="oninput" />
+                        </div>
+
+                        <div class="proj-field">
+                            <label class="proj-label">Description</label>
+                            <textarea class="proj-input proj-textarea" placeholder="Décrivez les objectifs du projet..."
+                                    @bind="Form.Description" @bind:event="oninput" rows="3"></textarea>
+                        </div>
+
+                        <div class="proj-field-row">
+                            <div class="proj-field">
+                                <label class="proj-label">Statut</label>
+                                <select class="proj-input proj-select" @bind="Form.Statut">
+                                    <option value="Planifie">Planifié</option>
+                                    <option value="EnCours">En cours</option>
+                                    <option value="Suspendu">Suspendu</option>
+                                    <option value="Termine">Terminé</option>
+                                </select>
+                            </div>
+                            <div class="proj-field">
+                                <label class="proj-label">Priorité</label>
+                                <select class="proj-input proj-select" @bind="Form.Priorite">
+                                    <option value="Faible">Faible</option>
+                                    <option value="Moyenne">Moyenne</option>
+                                    <option value="Haute">Haute</option>
+                                    <option value="Critique">Critique</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="proj-field">
+                            <label class="proj-label">Responsable</label>
+                            <input class="proj-input" type="text" placeholder="Nom du responsable"
+                                @bind="Form.Responsable" @bind:event="oninput" />
+                        </div>
+
+                        <div class="proj-field">
+                            <label class="proj-label">Budget (DT)</label>
+                            <input class="proj-input" type="number" placeholder="0.00" min="0" step="100"
+                                @bind="Form.Budget" @bind:event="oninput" />
+                        </div>
+
+                        <div class="proj-field-row">
+                            <div class="proj-field">
+                                <label class="proj-label">Date de début</label>
+                                <input class="proj-input" type="date" @bind="Form.DateDebut" />
+                            </div>
+                            <div class="proj-field">
+                                <label class="proj-label">Date de fin</label>
+                                <input class="proj-input" type="date" @bind="Form.DateFin" />
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="proj-sidebar-footer">
+                        <button class="proj-btn-cancel" @onclick="CloseSidebar">Annuler</button>
+                        <button class="proj-btn-save" @onclick="HandleSubmit" disabled="@FormLoading">
+                            @if (FormLoading)
+                            {
+                                <span class="proj-spinner-sm"></span>
+                            }
+                            @(IsEditing ? "Enregistrer" : "Créer le projet")
+                        </button>
+                    </div>
+
+                </div>
             }
 
-            <div class="proj-sidebar-body">
-
-                <div class="proj-field">
-                    <label class="proj-label">Nom du projet <span class="proj-required">*</span></label>
-                    <input class="proj-input" type="text" placeholder="Ex: Refonte infrastructure réseau"
-                        @bind="Form.Nom" @bind:event="oninput" />
-                </div>
-
-                <div class="proj-field">
-                    <label class="proj-label">Description</label>
-                    <textarea class="proj-input proj-textarea" placeholder="Décrivez les objectifs du projet..."
-                            @bind="Form.Description" @bind:event="oninput" rows="3"></textarea>
-                </div>
-
-                <div class="proj-field-row">
-                    <div class="proj-field">
-                        <label class="proj-label">Statut</label>
-                        <select class="proj-input proj-select" @bind="Form.Statut">
-                            <option value="Planifie">Planifié</option>
-                            <option value="EnCours">En cours</option>
-                            <option value="Suspendu">Suspendu</option>
-                            <option value="Termine">Terminé</option>
-                        </select>
+            @* ── MODAL CONFIRMATION SUPPRESSION ── *@
+            @if (ShowDeleteConfirm && ProjectToDelete != null)
+            {
+                <div class="proj-sidebar-overlay" @onclick="CancelDelete"></div>
+                <div class="proj-delete-modal">
+                    <div class="proj-delete-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                        </svg>
                     </div>
-                    <div class="proj-field">
-                        <label class="proj-label">Priorité</label>
-                        <select class="proj-input proj-select" @bind="Form.Priorite">
-                            <option value="Faible">Faible</option>
-                            <option value="Moyenne">Moyenne</option>
-                            <option value="Haute">Haute</option>
-                            <option value="Critique">Critique</option>
-                        </select>
+                    <h3>Supprimer le projet ?</h3>
+                    <p>«&nbsp;<strong>@ProjectToDelete.Nom</strong>&nbsp;» sera supprimé définitivement.</p>
+                    <div class="proj-delete-actions">
+                        <button class="proj-btn-cancel" @onclick="CancelDelete">Annuler</button>
+                        <button class="proj-btn-delete-confirm" @onclick="ExecuteDelete" disabled="@FormLoading">
+                            @if (FormLoading) { <span class="proj-spinner-sm"></span> }
+                            Supprimer
+                        </button>
                     </div>
                 </div>
+            }
+        </RoleAuthGuard>
+    </main>
 
-                <div class="proj-field">
-                    <label class="proj-label">Responsable</label>
-                    <input class="proj-input" type="text" placeholder="Nom du responsable"
-                        @bind="Form.Responsable" @bind:event="oninput" />
-                </div>
-
-                <div class="proj-field">
-                    <label class="proj-label">Budget (DT)</label>
-                    <input class="proj-input" type="number" placeholder="0.00" min="0" step="100"
-                        @bind="Form.Budget" @bind:event="oninput" />
-                </div>
-
-                <div class="proj-field-row">
-                    <div class="proj-field">
-                        <label class="proj-label">Date de début</label>
-                        <input class="proj-input" type="date" @bind="Form.DateDebut" />
-                    </div>
-                    <div class="proj-field">
-                        <label class="proj-label">Date de fin</label>
-                        <input class="proj-input" type="date" @bind="Form.DateFin" />
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="proj-sidebar-footer">
-                <button class="proj-btn-cancel" @onclick="CloseSidebar">Annuler</button>
-                <button class="proj-btn-save" @onclick="HandleSubmit" disabled="@FormLoading">
-                    @if (FormLoading)
-                    {
-                        <span class="proj-spinner-sm"></span>
-                    }
-                    @(IsEditing ? "Enregistrer" : "Créer le projet")
-                </button>
-            </div>
-
-        </div>
-    }
-
-    @* ── MODAL CONFIRMATION SUPPRESSION ── *@
-    @if (ShowDeleteConfirm && ProjectToDelete != null)
-    {
-        <div class="proj-sidebar-overlay" @onclick="CancelDelete"></div>
-        <div class="proj-delete-modal">
-            <div class="proj-delete-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                </svg>
-            </div>
-            <h3>Supprimer le projet ?</h3>
-            <p>«&nbsp;<strong>@ProjectToDelete.Nom</strong>&nbsp;» sera supprimé définitivement.</p>
-            <div class="proj-delete-actions">
-                <button class="proj-btn-cancel" @onclick="CancelDelete">Annuler</button>
-                <button class="proj-btn-delete-confirm" @onclick="ExecuteDelete" disabled="@FormLoading">
-                    @if (FormLoading) { <span class="proj-spinner-sm"></span> }
-                    Supprimer
-                </button>
-            </div>
-        </div>
-    }
-</RoleAuthGuard>
+</div>

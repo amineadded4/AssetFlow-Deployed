@@ -1,8 +1,28 @@
 /* ============================================================
    AdminFaceSetup.razor.css
-   Utilise les variables CSS de app.css (var(--bg), var(--text)...)
+   Inclut les styles admin-shell + admin-main (ex AdminLayout)
    Mode sombre automatique via html.dark (depuis localStorage)
    ============================================================ */
+
+/* ── SHELL (ex-AdminLayout) ── */
+.admin-shell {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--bg);
+}
+
+.admin-main {
+    flex: 1;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+/* ── RESPONSIVE SHELL ── */
+@@media (max-width: 768px) {
+    .admin-shell { flex-direction: column; }
+    .admin-main  { overflow-y: auto; }
+}
 
 /* ── PAGE ── */
 .facesetup-page {
@@ -172,8 +192,6 @@
 }
 
 /* ── STEP 2 : Caméra ── */
-.facesetup-scan { }
-
 .camera-wrapper {
     position: relative;
     width: 100%;
@@ -245,7 +263,7 @@
     flex-shrink: 0;
 }
 
-@keyframes pulse-dot {
+@@keyframes pulse-dot {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.4; transform: scale(0.8); }
 }
@@ -426,78 +444,7 @@
     animation: spin 0.7s linear infinite;
     flex-shrink: 0;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── RESPONSIVE ── */
-@media (max-width: 768px) {
-    .facesetup-page {
-        padding: 1.25rem 1rem;
-    }
-
-    .facesetup-card {
-        padding: 1.25rem;
-    }
-
-    .camera-wrapper {
-        aspect-ratio: 4/3;
-        max-height: 280px;
-    }
-
-    .camera-oval {
-        width: 55%;
-    }
-
-    .facesetup-steps {
-        margin-bottom: 1.25rem;
-    }
-
-    .step-label {
-        font-size: 0.65rem;
-    }
-
-    .step-circle {
-        width: 30px;
-        height: 30px;
-        font-size: 0.75rem;
-    }
-
-    .step-line {
-        margin: 0 0.4rem;
-        margin-bottom: 1.1rem;
-    }
-
-    .facesetup-actions {
-        flex-direction: column-reverse;
-    }
-
-    .facesetup-btn.secondary {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .capture-counter {
-        gap: 0.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .facesetup-page {
-        padding: 1rem 0.75rem;
-    }
-
-    .facesetup-title {
-        font-size: 1.3rem;
-    }
-
-    .camera-oval {
-        width: 65%;
-    }
-}
-
-/* ============================================================
-   AJOUT dans AdminFaceSetup.razor.css
-   Coller à la fin du fichier existant
-   ============================================================ */
+@@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── GUIDE DE POSITION ── */
 .position-guide {
@@ -552,16 +499,13 @@
     cursor: default;
 }
 
-/* État : en attente */
 .position-face-item.pending {
     opacity: 0.35;
 }
-
 .position-face-item.pending svg {
     color: var(--text-muted);
 }
 
-/* État : actif (capture courante) */
 .position-face-item.active {
     border-color: var(--primary);
     background: rgba(19, 109, 236, 0.06);
@@ -569,29 +513,25 @@
     box-shadow: 0 0 0 3px rgba(19, 109, 236, 0.12);
     animation: pulse-active 2s ease-in-out infinite;
 }
-
 .position-face-item.active svg {
     color: var(--primary);
 }
 
-@keyframes pulse-active {
+@@keyframes pulse-active {
     0%, 100% { box-shadow: 0 0 0 3px rgba(19, 109, 236, 0.12); }
     50%       { box-shadow: 0 0 0 5px rgba(19, 109, 236, 0.22); }
 }
 
-/* État : fait */
 .position-face-item.done {
     border-color: #10b981;
     background: rgba(16, 185, 129, 0.06);
     opacity: 1;
 }
-
 .position-face-item.done svg {
     color: #10b981;
     opacity: 0.6;
 }
 
-/* Coche verte sur les items terminés */
 .position-face-item.done::after {
     content: '✓';
     position: absolute;
@@ -626,31 +566,30 @@
     color: var(--text-muted);
     text-align: center;
 }
-
-.position-face-item.active .position-face-label {
-    color: var(--primary);
-}
-
-.position-face-item.done .position-face-label {
-    color: #10b981;
-}
+.position-face-item.active .position-face-label { color: var(--primary); }
+.position-face-item.done  .position-face-label  { color: #10b981; }
 
 /* ── RESPONSIVE ── */
-@media (max-width: 480px) {
-    .position-guide {
-        padding: 0.75rem;
-    }
+@@media (max-width: 768px) {
+    .facesetup-page  { padding: 1.25rem 1rem; }
+    .facesetup-card  { padding: 1.25rem; }
+    .camera-wrapper  { aspect-ratio: 4/3; max-height: 280px; }
+    .camera-oval     { width: 55%; }
+    .facesetup-steps { margin-bottom: 1.25rem; }
+    .step-label      { font-size: 0.65rem; }
+    .step-circle     { width: 30px; height: 30px; font-size: 0.75rem; }
+    .step-line       { margin: 0 0.4rem; margin-bottom: 1.1rem; }
+    .facesetup-actions  { flex-direction: column-reverse; }
+    .facesetup-btn.secondary { width: 100%; justify-content: center; }
+    .capture-counter { gap: 0.5rem; }
+    .position-guide  { padding: 0.75rem; }
+    .position-face-item svg { width: 36px; height: 44px; }
+    .position-face-label    { font-size: 0.6rem; }
+    .position-instruction   { font-size: 0.78rem; }
+}
 
-    .position-face-item svg {
-        width: 36px;
-        height: 44px;
-    }
-
-    .position-face-label {
-        font-size: 0.6rem;
-    }
-
-    .position-instruction {
-        font-size: 0.78rem;
-    }
+@@media (max-width: 480px) {
+    .facesetup-page  { padding: 1rem 0.75rem; }
+    .facesetup-title { font-size: 1.3rem; }
+    .camera-oval     { width: 65%; }
 }

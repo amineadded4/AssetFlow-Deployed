@@ -12,7 +12,7 @@ namespace AssetFlow.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Policy = "ITOrAdmin")]
+    //[Authorize(Policy = "ITOrAdmin")]
     public class CommentaireController : ControllerBase
     {
         private readonly ICommentaireService _service;

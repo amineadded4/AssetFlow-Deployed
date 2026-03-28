@@ -1,6 +1,6 @@
 @* ============================================================
    AssetFlow.BlazorUI / Pages / IT / CommentairesIT.razor
-   MISE À JOUR : scroll corrigé + modal détail + suppression IT
+   MISE À JOUR : analyse de sentiment AI + donut chart par matériel
    ============================================================ *@
 
 @page "/it/commentaires"
@@ -13,17 +13,16 @@
 
     @* ══════ SIDEBAR ══════ *@
     @if (_estAdmin)
-        {
-            <AdminSidebar ForceOpen="_menuOpen" />
-        }
-        else
-        {
-            <ITSidebar ActivePage="commentaire" ForceOpen="_menuOpen" />
-        }
+    {
+        <AdminSidebar ForceOpen="_menuOpen" />
+    }
+    else
+    {
+        <ITSidebar ActivePage="commentaire" ForceOpen="_menuOpen" />
+    }
 
-    @* ══════ OVERLAY MENU MOBILE ══════ *@
     @if (_menuOpen)
-    { <div  @onclick="() => _menuOpen = !_menuOpen"></div> } 
+    { <div @onclick="() => _menuOpen = false"></div> }
 
     @* ══════ MAIN ══════ *@
     <main class="itc-main">
@@ -39,11 +38,29 @@
                 </div>
                 <div>
                     <h1>Commentaires Équipements</h1>
-                    <span class="itc-topbar-sub">Vue globale IT · tous les avis</span>
+                    <span class="itc-topbar-sub">Vue globale IT · analyse de sentiment IA</span>
                 </div>
             </div>
-            <div class="itc-topbar-badge-wrap">
+            <div class="itc-topbar-right">
                 <span class="itc-count-badge">@CommentairesFiltres.Count commentaire@(CommentairesFiltres.Count > 1 ? "s" : "")</span>
+                @* Bouton analyse globale *@
+                @if (CommentairesFiltres.Any())
+                {
+                    <button class="itc-btn-analyse-all"
+                            disabled="@SentimentEnCours.Any()"
+                            @onclick="AnalyserTousSentiments">
+                        @if (SentimentEnCours.Any())
+                        {
+                            <span class="itc-spinner-xs itc-spinner-white"></span>
+                            <span>Analyse en cours…</span>
+                        }
+                        else
+                        {
+                            <svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>
+                            <span>Analyser tout</span>
+                        }
+                    </button>
+                }
             </div>
         </header>
 
@@ -81,14 +98,14 @@
                     <svg viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
                     Achat <span class="itc-chip-count">@Commentaires.Count(c => c.AuteurRole == "EquipeAchat")</span>
                 </button>
-                <button class="itc-btn-refresh" @onclick="ChargerCommentaires" title="Actualiser">
+                <button class="itc-btn-refresh" @onclick="ChargerCommentaires">
                     <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
                     Actualiser
                 </button>
             </div>
         </div>
 
-        @* ── Contenu scrollable ── *@
+        @* ── Contenu ── *@
         <div class="itc-content">
             @if (IsLoading)
             {
@@ -130,10 +147,13 @@
                     var premierC   = groupe.First();
                     var materielId = groupe.Key;
                     var estOuvert  = _groupesOuverts.Contains(materielId);
+                    var hasSent    = SentimentDisponible.Contains(materielId);
+                    var sentLoading= SentimentEnCours.Contains(materielId);
+                    var sent       = hasSent && Sentiments.TryGetValue(materielId, out var s) ? s : null;
 
                     <div class="itc-materiel-group @(estOuvert ? "is-open" : "")">
 
-                        @* ── En-tête accordéon (cliquable) ── *@
+                        @* ── En-tête accordéon ── *@
                         <div class="itc-group-header itc-group-toggle"
                              @onclick="() => ToggleGroupe(materielId)">
                             <div class="itc-group-header-left">
@@ -145,61 +165,142 @@
                                     <div class="itc-group-meta">
                                         <span class="itc-ref-badge">@premierC.MaterielRef</span>
                                         <span class="itc-cat-badge">@premierC.MaterielCategorie</span>
+                                        @* Badge sentiment si disponible *@
+                                        @if (sent != null)
+                                        {
+                                            <span class="itc-sent-badge itc-sent-@sent.SentimentDominant.ToLower().Replace("é","e").Replace("î","i")">
+                                                <svg viewBox="0 0 24 24"><path d="@GetSentimentIcon(sent.SentimentDominant)"/></svg>
+                                                @sent.SentimentDominant
+                                            </span>
+                                        }
                                     </div>
                                 </div>
                             </div>
                             <div class="itc-group-header-right">
                                 <span class="itc-group-count">@groupe.Count() avis</span>
-                                @* Flèche accordéon *@
                                 <span class="itc-chevron @(estOuvert ? "open" : "")">
                                     <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
                                 </span>
                             </div>
                         </div>
 
-                        @* ── Lignes commentaires (affichées uniquement si ouvert) ── *@
+                        @* ── Panel sentiment IA ── *@
+                        <div class="itc-sentiment-panel">
+
+                            @if (sentLoading)
+                            {
+                                @* Loading state *@
+                                <div class="itc-sent-loading">
+                                    <div class="itc-spinner itc-spinner-sm"></div>
+                                    <span>Analyse IA en cours…</span>
+                                </div>
+                            }
+                            else if (sent != null)
+                            {
+                                @* Résultat de l'analyse — ApexCharts donut *@
+                                <div class="itc-sent-result">
+
+                                    @* Donut ApexCharts *@
+                                    <div class="itc-apex-wrap">
+                                        <div id="apex-sent-@materielId" class="itc-apex-chart"></div>
+                                        @* Score sous le chart *@
+                                        <div class="itc-apex-score">
+                                            <span class="itc-apex-score-val">@sent.ScoreGlobal.ToString("F1")</span>
+                                            <span class="itc-apex-score-max">/ 5</span>
+                                        </div>
+                                    </div>
+
+                                    @* Légende + barres *@
+                                    <div class="itc-sent-stats">
+                                        <div class="itc-sent-stat">
+                                            <span class="itc-sent-dot" style="background:#10b981"></span>
+                                            <span class="itc-sent-label">Positifs</span>
+                                            <span class="itc-sent-pct">@sent.PourcentagePositif.ToString("F0")%</span>
+                                            <span class="itc-sent-count">(@sent.Positifs)</span>
+                                        </div>
+                                        <div class="itc-bar-track"><div class="itc-bar-fill" style="width:@sent.PourcentagePositif.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)%;background:#10b981"></div></div>
+
+                                        <div class="itc-sent-stat">
+                                            <span class="itc-sent-dot" style="background:#ef4444"></span>
+                                            <span class="itc-sent-label">Négatifs</span>
+                                            <span class="itc-sent-pct">@sent.PourcentageNegatif.ToString("F0")%</span>
+                                            <span class="itc-sent-count">(@sent.Negatifs)</span>
+                                        </div>
+                                        <div class="itc-bar-track"><div class="itc-bar-fill" style="width:@sent.PourcentageNegatif.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)%;background:#ef4444"></div></div>
+
+                                        <div class="itc-sent-stat">
+                                            <span class="itc-sent-dot" style="background:#94a3b8"></span>
+                                            <span class="itc-sent-label">Neutres</span>
+                                            <span class="itc-sent-pct">@sent.PourcentageNeutre.ToString("F0")%</span>
+                                            <span class="itc-sent-count">(@sent.Neutres)</span>
+                                        </div>
+                                        <div class="itc-bar-track"><div class="itc-bar-fill" style="width:@sent.PourcentageNeutre.ToString("F0", System.Globalization.CultureInfo.InvariantCulture)%;background:#94a3b8"></div></div>
+                                    </div>
+
+                                    @* Résumé IA *@
+                                    <div class="itc-sent-resume">
+                                        <div class="itc-sent-resume-header">
+                                            <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                            Synthèse IA
+                                        </div>
+                                        <p class="itc-sent-resume-text">@sent.Resume</p>
+                                        <button class="itc-btn-reanalyse"
+                                                @onclick="() => AnalyserSentiment(materielId)"
+                                                @onclick:stopPropagation="true"
+                                                title="Relancer l'analyse">
+                                            <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                @* Bouton pour lancer l'analyse *@
+                                <div class="itc-sent-cta">
+                                    <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                    <div>
+                                        <p class="itc-sent-cta-title">Analyse de sentiment IA</p>
+                                        <p class="itc-sent-cta-sub">@groupe.Count() commentaire@(groupe.Count() > 1 ? "s" : "") à analyser</p>
+                                    </div>
+                                    <button class="itc-btn-analyser"
+                                            @onclick="() => AnalyserSentiment(materielId)"
+                                            @onclick:stopPropagation="true">
+                                        <svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                        Analyser
+                                    </button>
+                                </div>
+                            }
+                        </div>
+
+                        @* ── Lignes commentaires (accordéon) ── *@
                         @if (estOuvert)
                         {
                             <div class="itc-comments-list">
                                 @foreach (var c in groupe.OrderByDescending(x => x.DateCreation))
                                 {
                                     <div class="itc-comment-row" @onclick="() => OuvrirModal(c)">
-
-                                        @* Auteur *@
                                         <div class="itc-comment-author">
-                                            <div class="itc-avatar itc-avatar-@GetRoleClass(c.AuteurRole)">
-                                                @c.AuteurInitiales
-                                            </div>
+                                            <div class="itc-avatar itc-avatar-@GetRoleClass(c.AuteurRole)">@c.AuteurInitiales</div>
                                             <div class="itc-author-info">
                                                 <span class="itc-author-name">@c.AuteurNom</span>
-                                                <span class="itc-role-pill itc-role-@GetRoleClass(c.AuteurRole)">
-                                                    @GetRoleLabel(c.AuteurRole)
-                                                </span>
+                                                <span class="itc-role-pill itc-role-@GetRoleClass(c.AuteurRole)">@GetRoleLabel(c.AuteurRole)</span>
                                             </div>
                                         </div>
-
-                                        @* Texte (tronqué) *@
                                         <div class="itc-comment-body">
                                             <p class="itc-comment-text">@c.Contenu</p>
                                         </div>
-
-                                        @* Date + actions *@
                                         <div class="itc-comment-actions">
                                             <div class="itc-comment-date">
                                                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                                                 @c.DateCreation.ToString("dd MMM yyyy")
                                                 <span class="itc-date-time">@c.DateCreation.ToString("HH:mm")</span>
                                             </div>
-                                            @* Bouton supprimer *@
-                                            <button class="itc-btn-delete @(SupprimerEnCours == c.Id ? "loading" : "")"
+                                            <button class="itc-btn-delete"
                                                     disabled="@(SupprimerEnCours == c.Id)"
-                                                    title="Supprimer ce commentaire"
                                                     @onclick:stopPropagation="true"
                                                     @onclick="() => SupprimerCommentaire(c.Id)">
                                                 @if (SupprimerEnCours == c.Id)
-                                                {
-                                                    <span class="itc-spinner-xs"></span>
-                                                }
+                                                { <span class="itc-spinner-xs"></span> }
                                                 else
                                                 {
                                                     <svg viewBox="0 0 24 24">
@@ -211,7 +312,6 @@
                                                 }
                                             </button>
                                         </div>
-
                                     </div>
                                 }
                             </div>
@@ -220,19 +320,14 @@
                 }
             }
         </div>
-
     </main>
 </div>
 
-@* ══════════════════════════════════════════════════════
-   MODAL DÉTAIL COMMENTAIRE
-══════════════════════════════════════════════════════ *@
+@* ══════ MODAL DÉTAIL ══════ *@
 @if (ModalOuvert && CommentaireSelectionne != null)
 {
     <div class="itc-modal-backdrop" @onclick="FermerModal">
         <div class="itc-modal" @onclick:stopPropagation="true">
-
-            @* Header *@
             <div class="itc-modal-header">
                 <div class="itc-modal-header-left">
                     <div class="itc-modal-avatar itc-avatar-@GetRoleClass(CommentaireSelectionne.AuteurRole)">
@@ -241,9 +336,7 @@
                     <div>
                         <h2 class="itc-modal-auteur">@CommentaireSelectionne.AuteurNom</h2>
                         <div class="itc-modal-meta">
-                            <span class="itc-role-pill itc-role-@GetRoleClass(CommentaireSelectionne.AuteurRole)">
-                                @GetRoleLabel(CommentaireSelectionne.AuteurRole)
-                            </span>
+                            <span class="itc-role-pill itc-role-@GetRoleClass(CommentaireSelectionne.AuteurRole)">@GetRoleLabel(CommentaireSelectionne.AuteurRole)</span>
                             <span class="itc-modal-date">
                                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                                 @CommentaireSelectionne.DateCreation.ToString("dd MMM yyyy · HH:mm")
@@ -255,8 +348,6 @@
                     <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
             </div>
-
-            @* Matériel concerné *@
             <div class="itc-modal-materiel">
                 <div class="itc-modal-mat-icon">
                     <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
@@ -269,52 +360,34 @@
                     </div>
                 </div>
             </div>
-
-            @* Corps du commentaire *@
             <div class="itc-modal-body">
                 <p class="itc-modal-contenu">@CommentaireSelectionne.Contenu</p>
             </div>
-
-            @* Feedback suppression *@
             @if (!string.IsNullOrEmpty(ModalFeedback))
             {
                 <div class="itc-modal-feedback @(ModalFeedbackSucces ? "feedback-success" : "feedback-error")">
                     <svg viewBox="0 0 24 24">
-                        @if (ModalFeedbackSucces)
-                        { <path d="M20 6L9 17l-5-5"/> }
-                        else
-                        { <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/> }
+                        @if (ModalFeedbackSucces) { <path d="M20 6L9 17l-5-5"/> }
+                        else { <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/> }
                     </svg>
                     @ModalFeedback
                 </div>
             }
-
-            @* Footer *@
             <div class="itc-modal-footer">
                 <button class="itc-modal-btn-fermer" @onclick="FermerModal">Fermer</button>
                 <button class="itc-modal-btn-supprimer"
                         disabled="@(SupprimerEnCours == CommentaireSelectionne.Id)"
                         @onclick="() => SupprimerCommentaire(CommentaireSelectionne.Id)">
                     @if (SupprimerEnCours == CommentaireSelectionne.Id)
-                    {
-                        <span class="itc-spinner-xs itc-spinner-white"></span>
-                        <span>Suppression…</span>
-                    }
+                    { <span class="itc-spinner-xs itc-spinner-white"></span><span>Suppression…</span> }
                     else
                     {
-                        <svg viewBox="0 0 24 24">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                            <path d="M10 11v6M14 11v6"/>
-                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                        </svg>
+                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                         <span>Supprimer</span>
                     }
                 </button>
             </div>
-
         </div>
     </div>
 }
-
 </RoleAuthGuard>

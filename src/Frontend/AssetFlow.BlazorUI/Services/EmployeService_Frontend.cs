@@ -103,6 +103,23 @@ namespace AssetFlow.BlazorUI.Services
             public string   Contenu           { get; set; } = string.Empty;
             public DateTime DateCreation      { get; set; }
         }
+        // ── DTO à ajouter avec les autres DTOs du frontend ───────────
+        public class SentimentMaterielDto
+        {
+            public int    MaterielId          { get; set; }
+            public string MaterielRef         { get; set; } = string.Empty;
+            public string MaterielNom         { get; set; } = string.Empty;
+            public int    TotalCommentaires   { get; set; }
+            public int    Positifs            { get; set; }
+            public int    Negatifs            { get; set; }
+            public int    Neutres             { get; set; }
+            public double PourcentagePositif  { get; set; }
+            public double PourcentageNegatif  { get; set; }
+            public double PourcentageNeutre   { get; set; }
+            public string Resume              { get; set; } = string.Empty;
+            public double ScoreGlobal         { get; set; }
+            public string SentimentDominant   { get; set; } = string.Empty;
+        }
 
     // ═══════════════════════════════════════════════
     // SERVICE
@@ -216,6 +233,32 @@ namespace AssetFlow.BlazorUI.Services
             }
         }
 
+                // ── Méthodes à ajouter dans la classe EmployeService ─────────
+                
+                /// <summary>Analyse sentiment d'un matériel via l'IA</summary>
+                // ── Méthodes à ajouter dans la classe EmployeService ─────────
+        
+        /// <summary>Analyse sentiment d'un matériel via l'IA (HuggingFace gratuit)</summary>
+        public async Task<SentimentMaterielDto?> GetSentimentMaterielAsync(int materielId)
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<SentimentMaterielDto>(
+                    $"api/sentiment/materiel/{materielId}");
+            }
+            catch { return null; }
+        }
+        
+        /// <summary>Analyse sentiment de tous les matériels commentés</summary>
+        public async Task<List<SentimentMaterielDto>> GetSentimentTousAsync()
+        {
+            try
+            {
+                var result = await _http.GetFromJsonAsync<List<SentimentMaterielDto>>("api/sentiment/tous");
+                return result ?? new();
+            }
+            catch { return new(); }
+        }
         // ── Helpers localStorage ──────────────────────────────
         public async Task<int> GetCurrentUserIdAsync()
         {

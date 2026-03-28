@@ -140,6 +140,8 @@ builder.Services.AddHttpClient<ChatOffreController>();
 builder.Services.AddScoped<IStatistiquesITService, StatistiquesITService>();
 builder.Services.AddHttpClient<IFaceAuthService, FaceAuthService>();
 builder.Services.AddScoped<ICommentaireService, CommentaireService>();
+// ── PATCH 2 : Enregistrement du service ──
+builder.Services.AddScoped<ISentimentService, SentimentService>();
 
 // === SIGNALR ===
 builder.Services.AddSignalR();
@@ -159,9 +161,19 @@ builder.Services.AddCors(options =>
             .AllowCredentials()); // ← requis par SignalR
 });
 
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+// ── Remplacer l'ancien AddHttpClient("OpenRouterClient"...) par : ──
+ 
+builder.Services.AddHttpClient("MistralClient", client =>
+{
+    client.BaseAddress = new Uri("https://api.mistral.ai");
+    client.Timeout     = TimeSpan.FromSeconds(30);
+    // Pas besoin d'ajouter Authorization ici,
+    // elle est ajoutée dynamiquement dans SentimentService
+});
 
 var app = builder.Build();
 

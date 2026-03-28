@@ -19,7 +19,7 @@
 }
 
 /* ── RESPONSIVE SHELL ── */
-@@media (max-width: 768px) {
+@media (max-width: 768px) {
     .admin-shell { flex-direction: column; }
     .admin-main  { overflow-y: auto; }
 }
@@ -263,7 +263,7 @@
     flex-shrink: 0;
 }
 
-@@keyframes pulse-dot {
+@keyframes pulse-dot {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.4; transform: scale(0.8); }
 }
@@ -444,7 +444,7 @@
     animation: spin 0.7s linear infinite;
     flex-shrink: 0;
 }
-@@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── GUIDE DE POSITION ── */
 .position-guide {
@@ -517,7 +517,7 @@
     color: var(--primary);
 }
 
-@@keyframes pulse-active {
+@keyframes pulse-active {
     0%, 100% { box-shadow: 0 0 0 3px rgba(19, 109, 236, 0.12); }
     50%       { box-shadow: 0 0 0 5px rgba(19, 109, 236, 0.22); }
 }
@@ -570,7 +570,7 @@
 .position-face-item.done  .position-face-label  { color: #10b981; }
 
 /* ── RESPONSIVE ── */
-@@media (max-width: 768px) {
+@media (max-width: 768px) {
     .facesetup-page  { padding: 1.25rem 1rem; }
     .facesetup-card  { padding: 1.25rem; }
     .camera-wrapper  { aspect-ratio: 4/3; max-height: 280px; }
@@ -588,7 +588,7 @@
     .position-instruction   { font-size: 0.78rem; }
 }
 
-@@media (max-width: 480px) {
+@media (max-width: 480px) {
     .facesetup-page  { padding: 1rem 0.75rem; }
     .facesetup-title { font-size: 1.3rem; }
     .camera-oval     { width: 65%; }

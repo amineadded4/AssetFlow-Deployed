@@ -9,7 +9,7 @@
 
 <div class="admin-shell">
 
-    <AdminSidebar />
+    <AdminSidebar ForceOpen="_sidebarOpen" />
 
     <main class="admin-main">
         <RoleAuthGuard AllowedRoles="@(new[]{"Admin"})">
@@ -17,9 +17,19 @@
 
                 @* ── EN-TÊTE ── *@
                 <div class="proj-header">
-                    <div>
-                        <h1 class="proj-title">Gestion des Projets</h1>
-                        <p class="proj-subtitle">Créez, suivez et gérez tous vos projets.</p>
+                    <div class="proj-header-left">
+                        @* Bouton hamburger — visible uniquement en mobile *@
+                        <button class="proj-hamburger" @onclick="() => _sidebarOpen = !_sidebarOpen">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                <line x1="3" y1="6"  x2="21" y2="6"/>
+                                <line x1="3" y1="12" x2="21" y2="12"/>
+                                <line x1="3" y1="18" x2="21" y2="18"/>
+                            </svg>
+                        </button>
+                        <div>
+                            <h1 class="proj-title">Gestion des Projets</h1>
+                            <p class="proj-subtitle">Créez, suivez et gérez tous vos projets.</p>
+                        </div>
                     </div>
                     <button class="proj-btn-add" @onclick="OpenCreateSidebar">
                         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -74,7 +84,6 @@
                 }
                 else
                 {
-                    @* ── TABLEAU ── *@
                     <div class="proj-table-wrap">
                         <table class="proj-table">
                             <thead>
@@ -135,7 +144,6 @@
                                         <tr class="proj-dropdown-row">
                                             <td colspan="7" class="proj-dropdown-cell">
                                                 <div class="proj-dropdown-body">
-
                                                     @if (LoadingAffectations)
                                                     {
                                                         <div class="proj-dropdown-loading">
@@ -155,11 +163,8 @@
                                                     else
                                                     {
                                                         <div class="proj-dropdown-header">
-                                                            <span>Matériel</span>
-                                                            <span>Articles affectés</span>
-                                                            <span>Date affectation</span>
-                                                            <span>Date de retour</span>
-                                                            <span>État</span>
+                                                            <span>Matériel</span><span>Articles affectés</span>
+                                                            <span>Date affectation</span><span>Date de retour</span><span>État</span>
                                                         </div>
                                                         <div class="proj-dropdown-list">
                                                             @foreach (var aff in AffectationsOuvertes)
@@ -174,21 +179,16 @@
                                                                             <p class="proj-dropdown-ref">@aff.Reference</p>
                                                                         </div>
                                                                     </div>
-                                                                    <span class="proj-dropdown-qty">
-                                                                        <strong>@aff.QuantiteAffectee</strong> article@(aff.QuantiteAffectee > 1 ? "s" : "")
-                                                                    </span>
+                                                                    <span class="proj-dropdown-qty"><strong>@aff.QuantiteAffectee</strong> article@(aff.QuantiteAffectee > 1 ? "s" : "")</span>
                                                                     <span class="proj-dropdown-date">@aff.DateAffectation.ToString("dd/MM/yyyy")</span>
                                                                     <span class="proj-dropdown-date @(aff.DateRetourPrevue.HasValue && aff.DateRetourPrevue < DateTime.Now && aff.Etat == "Courante" ? "proj-date-overdue" : "")">
                                                                         @(aff.DateRetourPrevue.HasValue ? aff.DateRetourPrevue.Value.ToString("dd/MM/yyyy") : "—")
                                                                     </span>
-                                                                    <span class="proj-badge @(aff.Etat == "Courante" ? "statut-encours" : "statut-termine")" style="font-size:0.68rem;">
-                                                                        @aff.Etat
-                                                                    </span>
+                                                                    <span class="proj-badge @(aff.Etat == "Courante" ? "statut-encours" : "statut-termine")" style="font-size:0.68rem;">@aff.Etat</span>
                                                                 </div>
                                                             }
                                                         </div>
                                                     }
-
                                                 </div>
                                             </td>
                                         </tr>
@@ -201,14 +201,11 @@
 
             </div>
 
-            @* ============================================================
-            SIDEBAR FORMULAIRE (droite)
-            ============================================================ *@
+            @* ── SIDEBAR FORMULAIRE ── *@
             @if (ShowSidebar)
             {
                 <div class="proj-sidebar-overlay" @onclick="CloseSidebar"></div>
                 <div class="proj-sidebar">
-
                     <div class="proj-sidebar-header">
                         <div class="proj-sidebar-title-block">
                             <div class="proj-sidebar-icon">
@@ -228,26 +225,19 @@
                             </svg>
                         </button>
                     </div>
-
                     @if (!string.IsNullOrEmpty(FormError))
                     {
                         <div class="proj-alert-error" style="margin:0 1.5rem 1rem;">@FormError</div>
                     }
-
                     <div class="proj-sidebar-body">
-
                         <div class="proj-field">
                             <label class="proj-label">Nom du projet <span class="proj-required">*</span></label>
-                            <input class="proj-input" type="text" placeholder="Ex: Refonte infrastructure réseau"
-                                @bind="Form.Nom" @bind:event="oninput" />
+                            <input class="proj-input" type="text" placeholder="Ex: Refonte infrastructure réseau" @bind="Form.Nom" @bind:event="oninput" />
                         </div>
-
                         <div class="proj-field">
                             <label class="proj-label">Description</label>
-                            <textarea class="proj-input proj-textarea" placeholder="Décrivez les objectifs du projet..."
-                                    @bind="Form.Description" @bind:event="oninput" rows="3"></textarea>
+                            <textarea class="proj-input proj-textarea" placeholder="Décrivez les objectifs du projet..." @bind="Form.Description" @bind:event="oninput" rows="3"></textarea>
                         </div>
-
                         <div class="proj-field-row">
                             <div class="proj-field">
                                 <label class="proj-label">Statut</label>
@@ -268,19 +258,14 @@
                                 </select>
                             </div>
                         </div>
-
                         <div class="proj-field">
                             <label class="proj-label">Responsable</label>
-                            <input class="proj-input" type="text" placeholder="Nom du responsable"
-                                @bind="Form.Responsable" @bind:event="oninput" />
+                            <input class="proj-input" type="text" placeholder="Nom du responsable" @bind="Form.Responsable" @bind:event="oninput" />
                         </div>
-
                         <div class="proj-field">
                             <label class="proj-label">Budget (DT)</label>
-                            <input class="proj-input" type="number" placeholder="0.00" min="0" step="100"
-                                @bind="Form.Budget" @bind:event="oninput" />
+                            <input class="proj-input" type="number" placeholder="0.00" min="0" step="100" @bind="Form.Budget" @bind:event="oninput" />
                         </div>
-
                         <div class="proj-field-row">
                             <div class="proj-field">
                                 <label class="proj-label">Date de début</label>
@@ -291,24 +276,18 @@
                                 <input class="proj-input" type="date" @bind="Form.DateFin" />
                             </div>
                         </div>
-
                     </div>
-
                     <div class="proj-sidebar-footer">
                         <button class="proj-btn-cancel" @onclick="CloseSidebar">Annuler</button>
                         <button class="proj-btn-save" @onclick="HandleSubmit" disabled="@FormLoading">
-                            @if (FormLoading)
-                            {
-                                <span class="proj-spinner-sm"></span>
-                            }
+                            @if (FormLoading) { <span class="proj-spinner-sm"></span> }
                             @(IsEditing ? "Enregistrer" : "Créer le projet")
                         </button>
                     </div>
-
                 </div>
             }
 
-            @* ── MODAL CONFIRMATION SUPPRESSION ── *@
+            @* ── MODAL SUPPRESSION ── *@
             @if (ShowDeleteConfirm && ProjectToDelete != null)
             {
                 <div class="proj-sidebar-overlay" @onclick="CancelDelete"></div>
@@ -335,3 +314,7 @@
     </main>
 
 </div>
+
+@code {
+    private bool _sidebarOpen = false;
+}

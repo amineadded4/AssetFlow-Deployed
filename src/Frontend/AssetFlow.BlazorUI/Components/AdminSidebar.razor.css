@@ -215,3 +215,40 @@ html.dark .admin-sidebar { background: #060d18; }
     border-left-color: #136dec;
     font-weight: 600;
 }
+
+/* ============================================================
+   AdminSidebar.razor.css — patch mobile drawer
+   À AJOUTER à la fin du fichier AdminSidebar.razor.css existant
+   ============================================================ */
+
+/* ── Overlay (caché par défaut, affiché en mobile) ── */
+.admin-drawer-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 199;
+    backdrop-filter: blur(2px);
+}
+
+@media (max-width: 768px) {
+    /* Sidebar en drawer glissant */
+    .admin-sidebar {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        height: 100% !important;
+        width: 220px !important;
+        transform: translateX(-100%);
+        transition: transform 0.28s ease;
+        z-index: 200;
+        flex-direction: column !important;
+    }
+    .admin-sidebar.drawer-open {
+        transform: translateX(0) !important;
+    }
+    /* Overlay visible uniquement quand drawer est ouvert */
+    .admin-drawer-overlay {
+        display: block;
+    }
+}

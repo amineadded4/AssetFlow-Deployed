@@ -8,7 +8,7 @@
 
 <div class="admin-shell">
 
-    <AdminSidebar />
+    <AdminSidebar ForceOpen="_sidebarOpen" />
 
     <main class="admin-main">
         <RoleAuthGuard AllowedRoles="@(new[]{"Admin"})">
@@ -16,9 +16,19 @@
 
             @* ── EN-TÊTE ── *@
             <div class="facesetup-header">
-                <div>
-                    <h1 class="facesetup-title">Reconnaissance faciale</h1>
-                    <p class="facesetup-subtitle">Enregistrez votre visage pour vous connecter sans mot de passe.</p>
+                <div class="facesetup-header-left">
+                    @* Bouton hamburger — visible uniquement en mobile *@
+                    <button class="facesetup-hamburger" @onclick="() => _sidebarOpen = !_sidebarOpen">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <line x1="3" y1="6"  x2="21" y2="6"/>
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 class="facesetup-title">Reconnaissance faciale</h1>
+                        <p class="facesetup-subtitle">Enregistrez votre visage pour vous connecter sans mot de passe.</p>
+                    </div>
                 </div>
             </div>
 
@@ -53,19 +63,16 @@
                     </div>
                     <h2 class="intro-title">Prêt à configurer ?</h2>
                     <p class="intro-desc">Assurez-vous d'être dans un endroit bien éclairé et de regarder directement la caméra.</p>
-
                     <ul class="intro-tips">
                         <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Bonne luminosité, évitez le contre-jour</li>
                         <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Visage bien centré dans la caméra</li>
                         <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Restez immobile pendant la capture</li>
                         <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Retirez les lunettes de soleil si possible</li>
                     </ul>
-
                     @if (!string.IsNullOrEmpty(ErrorMessage))
                     {
                         <div class="facesetup-alert error">@ErrorMessage</div>
                     }
-
                     <button class="facesetup-btn primary" @onclick="GoToScan">
                         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>
@@ -79,19 +86,15 @@
             @if (Step == 2)
             {
                 <div class="facesetup-card facesetup-scan">
-
                     @if (!string.IsNullOrEmpty(ErrorMessage))
                     {
                         <div class="facesetup-alert error">@ErrorMessage</div>
                     }
-
-                    @* ── GUIDE DE POSITION ── *@
                     <div class="position-guide">
                         <div class="position-guide-label">
                             <span class="position-step-badge">@(CaptureCount + 1) / @MaxCaptures</span>
                             <span class="position-instruction">@CurrentPosition.Instruction</span>
                         </div>
-
                         <div class="position-faces">
                             @for (int i = 0; i < Positions.Length; i++)
                             {
@@ -106,11 +109,9 @@
                             }
                         </div>
                     </div>
-
                     <div class="camera-wrapper">
                         <video id="fs-video" autoplay muted playsinline style="display:none;"></video>
                         <canvas id="fs-canvas" class="camera-canvas"></canvas>
-
                         <div class="camera-status @(FaceDetected ? "detected" : "waiting")">
                             @if (FaceDetected)
                             {
@@ -124,7 +125,6 @@
                             }
                         </div>
                     </div>
-
                     <div class="capture-counter">
                         <span class="capture-count">@CaptureCount / @MaxCaptures</span>
                         <span class="capture-label">captures effectuées</span>
@@ -132,13 +132,9 @@
                             <div class="capture-bar-fill" style="width: @(CaptureCount * 100 / MaxCaptures)%"></div>
                         </div>
                     </div>
-
                     <div class="facesetup-actions">
-                        <button class="facesetup-btn secondary" @onclick="GoBack" disabled="@IsCapturing">
-                            Retour
-                        </button>
-                        <button class="facesetup-btn primary" @onclick="CaptureFrame"
-                                disabled="@(!FaceDetected || IsCapturing)">
+                        <button class="facesetup-btn secondary" @onclick="GoBack" disabled="@IsCapturing">Retour</button>
+                        <button class="facesetup-btn primary" @onclick="CaptureFrame" disabled="@(!FaceDetected || IsCapturing)">
                             @if (IsCapturing)
                             {
                                 <span class="btn-spinner"></span>
@@ -154,7 +150,6 @@
                             }
                         </button>
                     </div>
-
                 </div>
             }
 
@@ -171,9 +166,7 @@
                         </div>
                         <h2 class="confirm-title">Visage enregistré !</h2>
                         <p class="confirm-desc">Vous pouvez maintenant vous connecter via l'onglet "Reconnaissance faciale" du modal admin.</p>
-                        <button class="facesetup-btn primary" @onclick="Reset">
-                            Recommencer l'enregistrement
-                        </button>
+                        <button class="facesetup-btn primary" @onclick="Reset">Recommencer l'enregistrement</button>
                     }
                     else
                     {
@@ -185,16 +178,12 @@
                         </div>
                         <h2 class="confirm-title">Prêt à enregistrer</h2>
                         <p class="confirm-desc">@CaptureCount captures effectuées. Cliquez sur Enregistrer pour sauvegarder votre profil facial.</p>
-
                         @if (!string.IsNullOrEmpty(ErrorMessage))
                         {
                             <div class="facesetup-alert error">@ErrorMessage</div>
                         }
-
                         <div class="facesetup-actions">
-                            <button class="facesetup-btn secondary" @onclick="GoBack" disabled="@IsSaving">
-                                Retour
-                            </button>
+                            <button class="facesetup-btn secondary" @onclick="GoBack" disabled="@IsSaving">Retour</button>
                             <button class="facesetup-btn primary" @onclick="SaveFace" disabled="@IsSaving">
                                 @if (IsSaving)
                                 {
@@ -220,3 +209,7 @@
     </main>
 
 </div>
+
+@code {
+    private bool _sidebarOpen = false;
+}

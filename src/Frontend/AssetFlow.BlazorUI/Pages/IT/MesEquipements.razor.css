@@ -143,8 +143,9 @@ html.dark .iteq-header { background: rgba(16,24,34,0.9); border-bottom-color: rg
 }
 
 .iteq-header-search {
-    flex: 1; max-width: 400px; position: relative;
+    max-width: 400px; position: relative;
     display: flex; align-items: center;
+    margin-left: auto;
 }
 .iteq-header-search svg {
     position: absolute; left: 0.875rem;
@@ -592,6 +593,9 @@ html.dark .existant-content { border-color: rgba(255,255,255,0.07); }
     .article-date, .article-action { display: none; }
     .modal-backdrop { padding: 0.75rem; }
     .modal-commentaire { max-height: 95vh; }
+    .iteq-header-search { display: none; }
+    .iteq-header{justify-content: flex-start;}
+    .iteq-header-left{flex: 1;}
 }
 /* ── Bouton supprimer dans la liste des commentaires ── */
 .btn-supprimer-commentaire {

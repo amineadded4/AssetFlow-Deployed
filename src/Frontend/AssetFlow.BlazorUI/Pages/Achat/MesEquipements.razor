@@ -13,16 +13,13 @@
         @if (_sidebarOpen)
         { <div class="sidebar-overlay" @onclick="ToggleSidebar"></div> }
 
-        @if (_roleCharge)
+        @if (_estAdmin)
         {
-            @if (_estAdmin)
-            {
-                <AdminSidebar ForceOpen="_sidebarOpen" />
-            }
-            else
-            {
-                <AchatSidebar ActivePage="equipements" ForceOpen="_sidebarOpen" />
-            }
+            <AdminSidebar ForceOpen="_sidebarOpen" />
+        }
+        else
+        {
+            <AchatSidebar ActivePage="equipements" ForceOpen="_sidebarOpen" />
         }
 
         @* === MAIN CONTENT === *@

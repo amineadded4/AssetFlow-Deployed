@@ -44,26 +44,22 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         // ── Info utilisateur ───────────────────────────────────
         private string UserName { get; set; } = "Utilisateur";
         private string UserRole { get; set; } = "Achat";
-        private bool        _sidebarOpen     = false;
+        private bool   _sidebarOpen = false;
         private bool _estAdmin => UserRole.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
-        private void ToggleSidebar() => _sidebarOpen  = !_sidebarOpen;
-        private bool _roleCharge = false;
+        private void ToggleSidebar() => _sidebarOpen = !_sidebarOpen;
+
         // ── Init ───────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
-            // await LoadUserInfoAsync();
-             UserName    = await LocalStorage.GetItemAsync<string>("user_name") ?? "Utilisateur";
-            UserRole    = await LocalStorage.GetItemAsync<string>("user_role") ?? "Achat";
-            _roleCharge = true;
-            await LoadMaterielsGroupesAsync();
-        }
+            // Lecture du rôle AVANT le premier rendu pour éviter le flash
+            // de sidebar (passage AchatSidebar → AdminSidebar ou absence de sidebar).
+            // LocalStorage.GetItemAsync est async mais se résout avant le rendu
+            // car OnInitializedAsync est attendu avant le premier paint Blazor.
+            UserName = await LocalStorage.GetItemAsync<string>("user_name") ?? "Utilisateur";
+            UserRole = await LocalStorage.GetItemAsync<string>("user_role") ?? "Achat";
 
-        private async Task LoadUserInfoAsync()
-        {
-            UserName = await EmployeService.GetCurrentUserNameAsync();
-            UserRole = await EmployeService.GetCurrentUserRoleAsync();
-            _roleCharge = true;
+            await LoadMaterielsGroupesAsync();
         }
 
         private async Task LoadMaterielsGroupesAsync()

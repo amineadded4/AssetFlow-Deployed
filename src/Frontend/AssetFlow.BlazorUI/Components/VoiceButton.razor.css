@@ -1,0 +1,80 @@
+/* VoiceButton.razor.css */
+
+.vb-btn {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 500;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #136dec;
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(19, 109, 236, 0.4);
+    transition: all 0.2s ease;
+}
+.vb-btn:hover { background: #0f5ec4; transform: scale(1.05); }
+.vb-btn-active { background: #e63946 !important; box-shadow: 0 4px 16px rgba(230,57,70,0.4) !important; }
+
+/* Ondes animées */
+.vb-pulse {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid rgba(230, 57, 70, 0.5);
+    animation: vb-ripple 1.4s ease-out infinite;
+    pointer-events: none;
+}
+.vb-pulse-2 { animation-delay: 0.7s; }
+
+@keyframes vb-ripple {
+    0%   { transform: scale(1);   opacity: 0.8; }
+    100% { transform: scale(1.8); opacity: 0;   }
+}
+
+/* Toast feedback */
+.vb-toast {
+    position: fixed;
+    bottom: 5.5rem;
+    right: 1.5rem;
+    z-index: 501;
+    background: #1e293b;
+    color: white;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    max-width: 260px;
+    animation: vb-fadein 0.2s ease;
+    border-left: 3px solid #136dec;
+}
+.vb-toast-error { border-left-color: #e63946; }
+
+/* Transcript en direct */
+.vb-transcript {
+    position: fixed;
+    bottom: 7.5rem;
+    right: 1.5rem;
+    z-index: 501;
+    background: rgba(15, 30, 60, 0.92);
+    color: rgba(255,255,255,0.85);
+    padding: 0.5rem 0.875rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    max-width: 280px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    backdrop-filter: blur(4px);
+    animation: vb-fadein 0.2s ease;
+}
+.vb-transcript-icon { color: #e63946; flex-shrink: 0; }
+
+@keyframes vb-fadein {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,45 @@
+@* Components/VoiceButton.razor *@
+@using AssetFlow.BlazorUI.Services
+@implements IAsyncDisposable
+
+@* Feedback toast *@
+@if (!string.IsNullOrEmpty(_feedback))
+{
+    <div class="vb-toast @(_isError ? "vb-toast-error" : "")">
+        <span class="vb-toast-text">@_feedback</span>
+    </div>
+}
+
+@* Transcript en cours *@
+@if (!string.IsNullOrEmpty(_transcript))
+{
+    <div class="vb-transcript">
+        <span class="vb-transcript-icon">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="22"/>
+            </svg>
+        </span>
+        @_transcript
+    </div>
+}
+
+@* Bouton micro *@
+<button class="vb-btn @(_listening ? "vb-btn-active" : "")" 
+        @onclick="ToggleListen" 
+        title="@(_listening ? "Arrêter l'écoute" : "Assistant vocal")">
+    @if (_listening)
+    {
+        @* Onde animée *@
+        <span class="vb-pulse"></span>
+        <span class="vb-pulse vb-pulse-2"></span>
+    }
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+        <line x1="8" y1="22" x2="16" y2="22"/>
+    </svg>
+</button>

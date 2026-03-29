@@ -11,6 +11,7 @@ using AssetFlow.Application.DTOs;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
+using AssetFlow.BlazorUI.Services;
 
 namespace AssetFlow.BlazorUI.Pages.Achat
 {
@@ -21,6 +22,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         [Inject] private AssetFlow.BlazorUI.Services.FournisseurService FournisseurSvc { get; set; } = default!;
         [Inject] private AssetFlow.BlazorUI.Services.ArticleService     ArticleSvc     { get; set; } = default!;
         [Inject] private IJSRuntime JS { get; set; } = default!;
+        [Inject] private AssetFlow.BlazorUI.Services.VoiceCommandService VoiceSvc { get; set; } = default!;
 
         // ── VM formulaire matériel ─────────────────────────────────
         private class FormulaireVm
@@ -157,8 +159,75 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         // ── Cycle de vie ───────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
+            VoiceSvc.OnCommand += HandleVoiceCommand;
             await ChargerInfosUtilisateur();
             await Task.WhenAll(ChargerDonnees(), ChargerFournisseurs());
+        }
+        private async Task HandleVoiceCommand(VoiceCommand cmd)
+        {
+            await InvokeAsync(async () =>
+            {
+                switch (cmd.Type)
+                {
+                    case VoiceCommandType.AjouterMateriel:
+                        OuvrirFormulaire(null);
+                        break;
+
+                    case VoiceCommandType.ExporterExcel:
+                        await ExporterExcel();
+                        break;
+
+                    case VoiceCommandType.ExporterPdf:
+                        await ExporterPdf();
+                        break;
+
+                    case VoiceCommandType.ModifierMateriel when cmd.Reference != null:
+                    {
+                        var lg = _toutesLignes.FirstOrDefault(l =>
+                            l.Reference.Equals(cmd.Reference, StringComparison.OrdinalIgnoreCase));
+                        if (lg != null) OuvrirFormulaire(lg);
+                        else AfficherToast($"Matériel {cmd.Reference} introuvable.", "toast-error");
+                        break;
+                    }
+
+                    case VoiceCommandType.SupprimerMateriel when cmd.Reference != null:
+                    {
+                        var lg = _toutesLignes.FirstOrDefault(l =>
+                            l.Reference.Equals(cmd.Reference, StringComparison.OrdinalIgnoreCase));
+                        if (lg != null) DemanderSuppressionMateriel(lg);
+                        else AfficherToast($"Matériel {cmd.Reference} introuvable.", "toast-error");
+                        break;
+                    }
+
+                    case VoiceCommandType.VoirCommandes when cmd.Reference != null:
+                    {
+                        var lg = _toutesLignes.FirstOrDefault(l =>
+                            l.Reference.Equals(cmd.Reference, StringComparison.OrdinalIgnoreCase));
+                        if (lg != null) ToggleCommandesMateriel(lg.MaterielId);
+                        else AfficherToast($"Matériel {cmd.Reference} introuvable.", "toast-error");
+                        break;
+                    }
+
+                    case VoiceCommandType.VoirArticles when cmd.Reference != null:
+                    {
+                        var lg = _toutesLignes.FirstOrDefault(l =>
+                            l.Reference.Equals(cmd.Reference, StringComparison.OrdinalIgnoreCase));
+                        if (lg != null) await OuvrirArticlesMateriel(lg);
+                        else AfficherToast($"Matériel {cmd.Reference} introuvable.", "toast-error");
+                        break;
+                    }
+
+                    case VoiceCommandType.ConfigurerSeuil when cmd.Reference != null:
+                    {
+                        var lg = _toutesLignes.FirstOrDefault(l =>
+                            l.Reference.Equals(cmd.Reference, StringComparison.OrdinalIgnoreCase));
+                        if (lg != null) OuvrirSeuil(lg);
+                        else AfficherToast($"Matériel {cmd.Reference} introuvable.", "toast-error");
+                        break;
+                    }
+                }
+                StateHasChanged();
+            });
         }
         private async Task OuvrirSelecteurImage()
         {
@@ -822,6 +891,14 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             var total = Math.Max(1, to);
             return Math.Min(100, Math.Max(0, (int)((double)(to - from) / total * 100)));
         }
+        public ValueTask DisposeAsync()
+        {
+            VoiceSvc.OnCommand -= HandleVoiceCommand;
+            return ValueTask.CompletedTask;
+        }
+
+
+
     }
 
 }

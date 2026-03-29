@@ -15,6 +15,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         [Inject] private IJSRuntime          JS      { get; set; } = default!;
         [Inject] private StatistiquesService StatSvc { get; set; } = default!;
         [Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
+        [Inject] private VoiceCommandService VoiceSvc { get; set; } = default!;
 
         // ─── UI ──────────────────────────────────────────────────
         private string _theme           = "dark";
@@ -65,6 +66,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         protected override async Task OnInitializedAsync()
         {
+            VoiceSvc.OnCommand += HandleVoiceCommand;
             try
             {
                 var savedTheme = await JS.InvokeAsync<string?>("eval",
@@ -75,6 +77,15 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
             await ChargerInfosUtilisateur();
             await ChargerDonnees();
+        }
+        private async Task HandleVoiceCommand(VoiceCommand cmd)
+        {
+            if (cmd.Type == VoiceCommandType.Navigation)
+            {
+                // Géré globalement, pas ici
+            }
+            // D'autres commandes spécifiques à cette page peuvent être ajoutées ici
+            await InvokeAsync(StateHasChanged);
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -301,6 +312,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         public async ValueTask DisposeAsync()
         {
+            VoiceSvc.OnCommand -= HandleVoiceCommand;
             try { await JS.InvokeVoidAsync("ApexInterop.destroyAll"); }
             catch { }
         }

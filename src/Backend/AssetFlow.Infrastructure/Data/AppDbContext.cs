@@ -193,6 +193,10 @@ namespace AssetFlow.Infrastructure.Data
 
                         entity.Property(d => d.MotifRefus)
                               .HasColumnType("nvarchar(500)");
+                        entity.Property(d => d.UserId)
+                              .IsRequired(false)
+                              .HasDefaultValue(0);
+                        
 
                   // Relation 1→N vers OffreAchat (CASCADE DELETE)
                   entity.HasMany(d => d.Offres)
@@ -203,6 +207,12 @@ namespace AssetFlow.Infrastructure.Data
                         .WithOne(l => l.Demande)
                         .HasForeignKey(l => l.IdDemande)
                         .OnDelete(DeleteBehavior.Cascade);
+
+                  entity.HasOne(d => d.User)
+                        .WithMany()
+                        .HasForeignKey(d => d.UserId)
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired(false);
                   });
 
                   modelBuilder.Entity<OffreAchat>(entity =>

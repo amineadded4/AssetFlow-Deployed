@@ -19,7 +19,9 @@ namespace AssetFlow.Domain.Entities
         public DateTime DateCreation { get; set; } = DateTime.UtcNow;
         public string   DemandeurNom { get; set; } = string.Empty;
         public string?  MotifRefus   { get; set; }
-
+        
+        public int?  UserId { get; set; }
+        public User? User  { get; set; }
         public List<OffreAchat>   Offres { get; set; } = new();
         public List<LigneDemande> Lignes { get; set; } = new();
     }

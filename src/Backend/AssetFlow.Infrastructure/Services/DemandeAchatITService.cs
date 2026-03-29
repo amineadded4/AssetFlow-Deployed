@@ -20,10 +20,16 @@ namespace AssetFlow.Infrastructure.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<DemandeAchatITDto>> GetAllAsync()
+        public async Task<IEnumerable<DemandeAchatITDto>> GetAllAsync(int? userId)
         {
-            return await _context.DemandeAchat
+            var query = _context.DemandeAchat
                 .Include(d => d.Lignes)
+                .AsQueryable();
+
+            if (userId.HasValue)
+                query = query.Where(d => d.UserId == userId.Value);
+
+            return await query
                 .OrderByDescending(d => d.DateCreation)
                 .Select(d => ToDto(d))
                 .ToListAsync();
@@ -46,6 +52,7 @@ namespace AssetFlow.Infrastructure.Services
 
             var demande = new DemandeAchat
             {
+                UserId = dto.UserId,
                 Reference    = referenceGlobale,
                 NomProduit   = string.IsNullOrWhiteSpace(dto.NomProduit)
                                 ? dto.Lignes.First().NomProduit.Trim()

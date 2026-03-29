@@ -1,6 +1,6 @@
 // ============================================================
 // AssetFlow.BlazorUI / Pages / IT / MesDemandesAchat.razor.cs
-// FIX : "En cours de traitement" → "En cours" pour éviter débordement
+// MODIF : UserId lu depuis localStorage et envoyé au service
 // ============================================================
 
 using AssetFlow.Application.DTOs;
@@ -21,6 +21,9 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private string UserName       { get; set; } = "IT";
         private string ErrorMessage   { get; set; } = string.Empty;
         private string SuccessMessage { get; set; } = string.Empty;
+
+        // ── UserId stocké en localStorage sous la clé "user_id" ─
+        private int? _userId = null;
 
         private List<DemandeAchatITDto> Demandes         { get; set; } = new();
         private List<DemandeAchatITDto> DemandesFiltrees { get; set; } = new();
@@ -60,8 +63,13 @@ namespace AssetFlow.BlazorUI.Pages.IT
         // ── Init ─────────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
-            UserName = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
+            UserName         = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
             _roleUtilisateur = await LocalStorage.GetItemAsync<string>("user_role") ?? "IT";
+
+            // Lecture du user_id depuis le localStorage
+            var userIdRaw = await LocalStorage.GetItemAsync<string>("user_id");
+            _userId = int.TryParse(userIdRaw, out var parsedId) ? parsedId : null;
+
             await LoadDemandesAsync();
         }
 
@@ -71,7 +79,8 @@ namespace AssetFlow.BlazorUI.Pages.IT
             StateHasChanged();
             try
             {
-                Demandes = await DemandeService.GetDemandesAsync();
+                // On passe le userId au service — l'API filtre en base
+                Demandes = await DemandeService.GetDemandesAsync(_userId);
                 AppliquerFiltres();
             }
             catch
@@ -188,6 +197,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
             {
                 await DemandeService.CreateDemandeAsync(new CreateDemandeAchatDto
                 {
+                    UserId       = _userId,          // ← envoyé depuis le localStorage
                     NomProduit   = _form.NomDemande.Trim(),
                     Description  = _form.Description?.Trim(),
                     DemandeurNom = UserName,
@@ -367,7 +377,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private static string GetStatutLabel(string statut) => statut switch
         {
             "en_attente"          => "En attente",
-            "en_cours_traitement" => "En cours",      // ← raccourci pour éviter débordement
+            "en_cours_traitement" => "En cours",
             "commande"            => "Commandé",
             "traite"              => "Traité",
             "approuve"            => "Approuvé",

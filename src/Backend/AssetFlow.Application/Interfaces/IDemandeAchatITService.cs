@@ -9,7 +9,7 @@ namespace AssetFlow.Application.Interfaces
 {
     public interface IDemandeAchatITService
     {
-        Task<IEnumerable<DemandeAchatITDto>> GetAllAsync();
+        Task<IEnumerable<DemandeAchatITDto>> GetAllAsync(int? userId);
         Task<DemandeAchatITDto?> GetByIdAsync(int id);
         Task<DemandeAchatITDto>  CreateAsync(CreateDemandeAchatDto dto);
 

@@ -1,6 +1,6 @@
 // ============================================================
 // AssetFlow.BlazorUI / Services / DemandeAchatITClientService.cs
-// AJOUT : UpdateDemandeAsync + DeleteDemandeAsync
+// AJOUT : UserId envoyé depuis le localStorage pour filtrer les demandes
 // ============================================================
 
 using System.Net.Http.Json;
@@ -15,9 +15,11 @@ namespace AssetFlow.BlazorUI.Services
 
         public DemandeAchatITClientService(HttpClient http) => _http = http;
 
-        public async Task<List<DemandeAchatITDto>> GetDemandesAsync()
+        // ── userId passé en query param pour filtrer côté API ────
+        public async Task<List<DemandeAchatITDto>> GetDemandesAsync(int? userId = null)
         {
-            var result = await _http.GetFromJsonAsync<List<DemandeAchatITDto>>(Base);
+            var url = userId.HasValue ? $"{Base}?userId={userId.Value}" : Base;
+            var result = await _http.GetFromJsonAsync<List<DemandeAchatITDto>>(url);
             return result ?? new();
         }
 

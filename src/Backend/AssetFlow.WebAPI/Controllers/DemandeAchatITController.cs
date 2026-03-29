@@ -1,6 +1,6 @@
 // ============================================================
 // AssetFlow.WebAPI / Controllers / DemandeAchatITController.cs
-// AJOUT : PUT (modifier) + DELETE (supprimer avec offres)
+// MODIF : GET accepte userId en query param (nullable) pour filtrer
 // ============================================================
 
 using AssetFlow.Application.DTOs;
@@ -22,11 +22,13 @@ namespace AssetFlow.WebAPI.Controllers
             _service = service;
         }
 
-        // GET api/it/demandesachat
+        // GET api/it/demandesachat?userId=5
+        // userId est nullable : si absent → toutes les demandes (utile pour Admin)
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<DemandeAchatITDto>>> GetAll()
+        public async Task<ActionResult<IEnumerable<DemandeAchatITDto>>> GetAll(
+            [FromQuery] int? userId = null)
         {
-            var demandes = await _service.GetAllAsync();
+            var demandes = await _service.GetAllAsync(userId);
             return Ok(demandes);
         }
 
@@ -51,7 +53,7 @@ namespace AssetFlow.WebAPI.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.IdDemande }, created);
         }
 
-        // ── PUT api/it/demandesachat/{id} ─────────────────────────
+        // PUT api/it/demandesachat/{id}
         [HttpPut("{id:int}")]
         public async Task<ActionResult<DemandeAchatITDto>> Update(
             int id, [FromBody] UpdateDemandeAchatDto dto)
@@ -64,8 +66,7 @@ namespace AssetFlow.WebAPI.Controllers
             return Ok(updated);
         }
 
-        // ── DELETE api/it/demandesachat/{id} ──────────────────────
-        // Supprime la demande ET toutes ses offres associées
+        // DELETE api/it/demandesachat/{id}
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {

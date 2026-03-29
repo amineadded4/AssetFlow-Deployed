@@ -1399,3 +1399,19 @@ html.dark .aff-menu-drawer { background:#060d18; }
 }
 .aff-role-btn:hover { border-color: var(--primary); color: var(--primary); }
 .aff-role-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+
+/* Ancien style — à garder mais override pour le nouveau contexte */
+.aff-section .aff-tab-toggle {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 0.625rem;
+    padding: 0.25rem;
+    display: inline-flex;
+    gap: 0.25rem;
+}
+
+.aff-section .aff-tab {
+    flex: 1;
+    justify-content: center;
+}

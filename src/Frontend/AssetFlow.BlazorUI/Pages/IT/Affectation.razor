@@ -18,11 +18,10 @@
         {
             <ITSidebar ActivePage="affectation" ForceOpen="_menuOpen" />
         }
-    
 
     @* ══════ OVERLAY MENU MOBILE ══════ *@
     @if (_menuOpen)
-    { <div  @onclick="() => _menuOpen = !_menuOpen"></div> } 
+    { <div @onclick="() => _menuOpen = !_menuOpen"></div> }
 
     @* ══════ MAIN ══════ *@
     <main class="aff-main">
@@ -35,16 +34,6 @@
             <div class="aff-header-left">
                 <h1 class="aff-page-title">Affectation de Matériel</h1>
                 <p class="aff-page-sub">Attribuez un équipement à un employé ou un projet</p>
-            </div>
-            <div class="aff-tab-toggle">
-                <button class="aff-tab @(ModeProjet == false ? "active" : "")" @onclick="() => SetMode(false)">
-                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    Affecter à un utilisateur
-                </button>
-                <button class="aff-tab @(ModeProjet == true ? "active" : "")" @onclick="() => SetMode(true)">
-                    <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                    Affecter à un projet
-                </button>
             </div>
         </header>
 
@@ -172,16 +161,44 @@
                 }
 
                 @* ════ SECTION BÉNÉFICIAIRE / PROJET ════ *@
-                @if (!ModeProjet)
-                {
-                    <section class="aff-section">
-                        <div class="aff-beneficiaire-header">
-                            <h3 class="aff-section-title">
+                <section class="aff-section">
+
+                    @* ── Header titre + compteur ── *@
+                    <div class="aff-beneficiaire-header">
+                        <h3 class="aff-section-title">
+                            @if (!ModeProjet)
+                            {
                                 <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                                Sélectionner le bénéficiaire
-                            </h3>
-                            <span class="aff-emp-count">@UtilisateursDisponibles.Count employé(s)</span>
-                        </div>
+                                <span>Sélectionner le bénéficiaire</span>
+                            }
+                            else
+                            {
+                                <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z"/><path d="M16 3v4M8 3v4M2 11h20"/></svg>
+                                <span>Sélectionner le projet</span>
+                            }
+                        </h3>
+                        <span class="aff-emp-count">
+                            @(ModeProjet
+                                ? $"{ProjetsDisponibles.Count} projet(s)"
+                                : $"{UtilisateursDisponibles.Count} employé(s)")
+                        </span>
+                    </div>
+
+                    @* ── Toggle TOUJOURS visible ── *@
+                    <div class="aff-tab-toggle">
+                        <button class="aff-tab @(ModeProjet == false ? "active" : "")" @onclick="() => SetMode(false)">
+                            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            Affecter à un utilisateur
+                        </button>
+                        <button class="aff-tab @(ModeProjet == true ? "active" : "")" @onclick="() => SetMode(true)">
+                            <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                            Affecter à un projet
+                        </button>
+                    </div>
+
+                    @* ── Contenu conditionnel ── *@
+                    @if (!ModeProjet)
+                    {
                         <div class="aff-emp-search">
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                             <input type="text" placeholder="Filtrer les employés..." value="@EmployeSearch" @oninput="OnEmployeSearchInput" />
@@ -223,18 +240,9 @@
                                 }
                             }
                         </div>
-                    </section>
-                }
-                else
-                {
-                    <section class="aff-section">
-                        <div class="aff-beneficiaire-header">
-                            <h3 class="aff-section-title">
-                                <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z"/><path d="M16 3v4M8 3v4M2 11h20"/></svg>
-                                Sélectionner le projet
-                            </h3>
-                            <span class="aff-emp-count">@ProjetsDisponibles.Count projet(s)</span>
-                        </div>
+                    }
+                    else
+                    {
                         <div class="aff-emp-search">
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                             <input type="text" placeholder="Filtrer les projets..." value="@ProjetSearch" @oninput="OnProjetSearchInput" />
@@ -277,8 +285,9 @@
                                 }
                             }
                         </div>
-                    </section>
-                }
+                    }
+
+                </section>
 
             </div>
             @* FIN COLONNE GAUCHE *@
@@ -377,7 +386,6 @@
                                 <div class="aff-check-box">@if (ArticlesSelectionnes.Any()){<svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg>}</div>
                                 <span>Article(s) sélectionné(s)</span>
                             </div>
-                            @* ← ICI : BeneficiaireOk remplace UtilisateurSelectionne != null *@
                             <div class="aff-check-item @(BeneficiaireOk ? "done" : "")">
                                 <div class="aff-check-box">@if (BeneficiaireOk){<svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg>}</div>
                                 <span>@(ModeProjet ? "Projet sélectionné" : "Bénéficiaire sélectionné")</span>

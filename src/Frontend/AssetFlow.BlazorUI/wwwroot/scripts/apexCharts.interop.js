@@ -96,15 +96,40 @@ window.ApexInterop = (function () {
         _render(containerId, { ...base, series: [{ name: 'En attente', data: data.map(d => d.enAttente) }, { name: 'Commandée', data: data.map(d => d.commande) }, { name: 'Traitée', data: data.map(d => d.traite) }], chart: { ...base.chart, type: 'area', stacked: true }, colors: [C.amber, C.indigo, C.emerald], fill: { type: 'gradient', gradient: { opacityFrom: 0.55, opacityTo: 0.05 } }, stroke: { curve: 'smooth', width: 2 }, xaxis: { categories: data.map(d => d.semaine), labels: { style: { colors: p.label, fontSize: '11px' } }, axisBorder: { color: p.grid }, axisTicks: { color: p.grid } }, yaxis: { labels: { style: { colors: p.label } }, min: 0 }, legend: { position: 'top', labels: { colors: p.label }, fontSize: '11px' }, tooltip: { theme: dark ? 'dark' : 'light', shared: true, intersect: false } });
     }
 
-    function renderAffectationMateriel(containerId, data, dark, filtre) {
-        if (!data || !data.length) return;
-        const p = _p(dark); const base = _base(containerId, dark, Math.max(data.length * 38 + 60, 200));
-        const f = filtre || 'all'; let series = [];
-        if (f === 'all' || f === 'disponible') series.push({ name: 'Disponibles', data: data.map(d => d.disponibles) });
-        if (f === 'all' || f === 'affecte') series.push({ name: 'Affectés', data: data.map(d => d.affectes) });
-        if (f === 'all') { series.push({ name: 'Hors service', data: data.map(d => d.horsService) }); series.push({ name: 'En réparation', data: data.map(d => d.enReparation) }); }
-        const colorMap = { 'Disponibles': C.emerald, 'Affectés': C.blue, 'Hors service': C.rose, 'En réparation': C.orange };
-        _render(containerId, { ...base, series, chart: { ...base.chart, type: 'bar', stacked: true }, colors: series.map(s => colorMap[s.name]), plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '60%', borderRadiusWhenStacked: 'last' } }, xaxis: { categories: data.map(d => d.designation), labels: { style: { colors: p.label, fontSize: '10px' }, maxWidth: 140, formatter: v => v && v.length > 18 ? v.slice(0,17)+'…' : v }, axisBorder: { color: p.grid }, axisTicks: { color: p.grid } }, yaxis: { labels: { style: { colors: p.label, fontSize: '10px' } } }, legend: { position: 'top', labels: { colors: p.label }, fontSize: '11px' }, fill: { opacity: 1 } });
+    // function renderAffectationMateriel(containerId, data, dark, filtre) {
+    //     if (!data || !data.length) return;
+    //     const p = _p(dark); const base = _base(containerId, dark, Math.max(data.length * 38 + 60, 200));
+    //     const f = filtre || 'all'; let series = [];
+    //     if (f === 'all' || f === 'disponible') series.push({ name: 'Disponibles', data: data.map(d => d.disponibles) });
+    //     if (f === 'all' || f === 'affecte') series.push({ name: 'Affectés', data: data.map(d => d.affectes) });
+    //     if (f === 'all') { series.push({ name: 'Hors service', data: data.map(d => d.horsService) }); series.push({ name: 'En réparation', data: data.map(d => d.enReparation) }); }
+    //     const colorMap = { 'Disponibles': C.emerald, 'Affectés': C.blue, 'Hors service': C.rose, 'En réparation': C.orange };
+    //     _render(containerId, { ...base, series, chart: { ...base.chart, type: 'bar', stacked: true }, colors: series.map(s => colorMap[s.name]), plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '60%', borderRadiusWhenStacked: 'last' } }, xaxis: { categories: data.map(d => d.designation), labels: { style: { colors: p.label, fontSize: '10px' }, maxWidth: 140, formatter: v => v && v.length > 18 ? v.slice(0,17)+'…' : v }, axisBorder: { color: p.grid }, axisTicks: { color: p.grid } }, yaxis: { labels: { style: { colors: p.label, fontSize: '10px' } } }, legend: { position: 'top', labels: { colors: p.label }, fontSize: '11px' }, fill: { opacity: 1 } });
+    // }
+    function renderAffectationMateriel(containerId, data, dark) {
+        if (!data) return;
+        const p    = _p(dark);
+        const base = _base(containerId, dark, 260);
+
+        _render(containerId, {
+            ...base,
+            series: [data.affecte, data.nonAffecte],
+            chart:  { ...base.chart, type: 'pie' },
+            colors: [C.blue, C.cyan],
+            labels: ['Affecté', 'Non affecté'],
+            plotOptions: { pie: { expandOnClick: true } },
+            legend:     { position: 'bottom', labels: { colors: p.label }, fontSize: '11px' },
+            stroke:     { width: 2, colors: [p.bg] },
+            dataLabels: {
+                enabled:   true,
+                formatter: (val, opts) => {
+                    const n = opts.w.globals.series[opts.seriesIndex];
+                    return `${n} (${Math.round(val)}%)`;
+                },
+                style:      { fontSize: '11px', colors: ['#fff'] },
+                dropShadow: { enabled: false },
+            },
+        });
     }
 
     function renderArticlesParMateriel(containerId, data, dark, filtre) {

@@ -41,9 +41,9 @@ namespace AssetFlow.BlazorUI.Pages.IT
         {
             try
             {
-                var isDark = await JS.InvokeAsync<bool>("eval",
-                    "document.documentElement.classList.contains('dark')");
-                _theme = isDark ? "dark" : "light";
+                var savedTheme = await JS.InvokeAsync<string?>("eval",
+                    "localStorage.getItem('theme')");
+                _theme = savedTheme == "light" ? "light" : "dark";
             }
             catch { }
 

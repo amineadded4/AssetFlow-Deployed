@@ -1,11 +1,9 @@
 // ============================================================
 // AssetFlow.WebAPI / Controllers / ArticlesController.cs
-// Gestion des articles individuels (update numéro de série)
 // ============================================================
 
-using AssetFlow.Infrastructure.Data;
+using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 
 namespace AssetFlow.WebAPI.Controllers
@@ -15,35 +13,24 @@ namespace AssetFlow.WebAPI.Controllers
     [Authorize(Policy = "AchatOrAdmin")]
     public class ArticlesController : ControllerBase
     {
-        private readonly AppDbContext _db;
-        public ArticlesController(AppDbContext db) => _db = db;
+        private readonly IArticleService _articleService;
+        public ArticlesController(IArticleService articleService) => _articleService = articleService;
 
         // PATCH api/articles/{id}/numero-serie
         [HttpPatch("{id:int}/numero-serie")]
         public async Task<IActionResult> UpdateNumeroSerie(int id, [FromBody] UpdateNumeroSerieDto dto)
         {
-            var article = await _db.ArticlesIndividuels.FindAsync(id);
-            if (article is null)
-                return NotFound(new { Message = "Article introuvable." });
+            var (success, message, numeroSerie) = await _articleService.UpdateNumeroSerieAsync(id, dto.NumeroSerie);
 
-            // Vérifier unicité du numéro de série (si non null)
-            if (!string.IsNullOrWhiteSpace(dto.NumeroSerie))
+            if (!success)
             {
-                var ns = dto.NumeroSerie.Trim();
-                var existe = await _db.ArticlesIndividuels
-                    .AnyAsync(a => a.NumeroSerie == ns && a.Id != id);
-                if (existe)
-                    return BadRequest(new { Message = "Ce numéro de série est déjà utilisé." });
-
-                article.NumeroSerie = ns;
-            }
-            else
-            {
-                article.NumeroSerie = null;
+                // 404 si article introuvable, 400 sinon
+                return message.Contains("introuvable")
+                    ? NotFound(new { Message = message })
+                    : BadRequest(new { Message = message });
             }
 
-            await _db.SaveChangesAsync();
-            return Ok(new { Message = "Numéro de série mis à jour.", NumeroSerie = article.NumeroSerie });
+            return Ok(new { Message = message, NumeroSerie = numeroSerie });
         }
     }
 

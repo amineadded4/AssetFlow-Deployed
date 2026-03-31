@@ -144,6 +144,7 @@ builder.Services.AddScoped<ICommentaireService, CommentaireService>();
 builder.Services.AddScoped<ISentimentService, SentimentService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddSingleton<IConnectionTracker, ConnectionTracker>(); // Singleton obligatoire !
+builder.Services.AddScoped<IChatOffreService, ChatOffreService>();
 
 // === SIGNALR ===
 builder.Services.AddSignalR();

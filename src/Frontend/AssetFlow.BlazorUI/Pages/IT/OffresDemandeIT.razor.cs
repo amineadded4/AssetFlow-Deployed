@@ -4,10 +4,10 @@
 // ============================================================
 
 using AssetFlow.Application.DTOs;
+using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using System.Net.Http.Json;
 
 namespace AssetFlow.BlazorUI.Pages.IT
 {
@@ -15,41 +15,41 @@ namespace AssetFlow.BlazorUI.Pages.IT
     {
         [Parameter] public int DemandeId { get; set; }
 
-        [Inject] private HttpClient           Http         { get; set; } = default!;
+        [Inject] private OffreDemandeService  OffreService { get; set; } = default!;
         [Inject] private NavigationManager    Navigation   { get; set; } = default!;
         [Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
 
-        private bool   _isLoading = true;
-        private bool   _menuOpen  = false;
-        private bool   _isSaving  = false;
-        private string _userName  = "IT";
-        private string _userId    = string.Empty;
+        private bool    _isLoading = true;
+        private bool    _menuOpen  = false;
+        private bool    _isSaving  = false;
+        private string  _userName  = "IT";
+        private string  _userId    = string.Empty;
         private string? _saveError;
 
         private List<OffreAchatDto>              _offres    = new();
         private Guid?                            _expandedId;
-        private Guid?                            _selectedId;          // offre sélectionnée (radio)
-        private Guid?                            _confirmedId;         // UNE SEULE offre confirmée
+        private Guid?                            _selectedId;
+        private Guid?                            _confirmedId;
         private Dictionary<Guid, string>         _pdfUrls   = new();
         private Dictionary<Guid, OffreFormState> _states    = new();
         private Dictionary<Guid, OcrStatus>      _ocrStatus = new();
         private Dictionary<Guid, string>         _ocrError  = new();
 
-        private string?       _pdfModalUrl;
-        private string        _pdfModalName = string.Empty;
-        private OffreAchatDto? _confirmModalOffre;   // null = modal fermé
+        private string?        _pdfModalUrl;
+        private string         _pdfModalName = string.Empty;
+        private OffreAchatDto? _confirmModalOffre;
 
         // ── Chat ─────────────────────────────────────────────────
-        private bool                 _chatOpen    = false;
-        private bool                 _chatLoading = false;
-        private string               _chatInput   = string.Empty;
-        private int                  _unreadCount = 0;
-        private string?              _recommendedOffre;
-        private List<ChatMessageDto> _chatMessages = new();
-        private string      _roleUtilisateur = "Service IT";
+        private bool                    _chatOpen        = false;
+        private bool                    _chatLoading     = false;
+        private string                  _chatInput       = string.Empty;
+        private int                     _unreadCount     = 0;
+        private string?                 _recommendedOffre;
+        private List<ChatbotMessageDto> _chatMessages    = new();
+        private string                  _roleUtilisateur = "Service IT";
         private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
-
+        // ── Chat UI ──────────────────────────────────────────────
         private void ToggleChat()
         {
             _chatOpen = !_chatOpen;
@@ -67,16 +67,15 @@ namespace AssetFlow.BlazorUI.Pages.IT
         {
             if (string.IsNullOrWhiteSpace(_chatInput) || _chatLoading) return;
 
-            var userMsg = _chatInput.Trim();
+            var userMsg  = _chatInput.Trim();
             _chatInput   = string.Empty;
             _chatLoading = true;
 
-            _chatMessages.Add(new ChatMessageDto { Role = "user", Content = userMsg });
+            _chatMessages.Add(new ChatbotMessageDto { Role = "user", Content = userMsg });
             StateHasChanged();
 
             try
             {
-                // Construire contexte depuis les états OCR en mémoire ET depuis SQL
                 var offresCtx = _offres.Select(o =>
                 {
                     var fs = GetOrCreate(o.IdOffre);
@@ -84,9 +83,9 @@ namespace AssetFlow.BlazorUI.Pages.IT
                     {
                         nomFichier     = o.NomFichier,
                         prixTotal      = !string.IsNullOrEmpty(fs.TotalTtc)       ? fs.TotalTtc       : o.PrixTotal,
-                        delaiLivraison = !string.IsNullOrEmpty(fs.DelaiLivraison)  ? fs.DelaiLivraison : o.DelaiLivraison,
-                        garantie       = !string.IsNullOrEmpty(fs.Garantie)        ? fs.Garantie       : o.Garantie,
-                        fraisLivraison = !string.IsNullOrEmpty(fs.FraisLivraison)  ? fs.FraisLivraison : o.FraisLivraison
+                        delaiLivraison = !string.IsNullOrEmpty(fs.DelaiLivraison) ? fs.DelaiLivraison : o.DelaiLivraison,
+                        garantie       = !string.IsNullOrEmpty(fs.Garantie)       ? fs.Garantie       : o.Garantie,
+                        fraisLivraison = !string.IsNullOrEmpty(fs.FraisLivraison) ? fs.FraisLivraison : o.FraisLivraison
                     };
                 }).ToList();
 
@@ -98,61 +97,54 @@ namespace AssetFlow.BlazorUI.Pages.IT
                     offres    = offresCtx
                 };
 
-                var response = await Http.PostAsJsonAsync("api/chat-offre/send", payload);
-
-                if (response.IsSuccessStatusCode)
+                var result = await OffreService.SendChatMessageAsync(payload);
+                if (result != null)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<ChatResponseDto>();
-                    if (result != null)
-                    {
-                        _chatMessages.Add(new ChatMessageDto { Role = "assistant", Content = result.Reply });
+                    _chatMessages.Add(new ChatbotMessageDto { Role = "assistant", Content = result.Reply });
 
-                        if (!string.IsNullOrEmpty(result.RecommendedOffre))
-                            _recommendedOffre = result.RecommendedOffre;
+                    if (!string.IsNullOrEmpty(result.RecommendedOffre))
+                        _recommendedOffre = result.RecommendedOffre;
 
-                        if (!_chatOpen) _unreadCount++;
-                    }
+                    if (!_chatOpen) _unreadCount++;
                 }
             }
             catch (Exception ex)
             {
-                _chatMessages.Add(new ChatMessageDto { Role = "assistant", Content = $"Erreur : {ex.Message}" });
+                _chatMessages.Add(new ChatbotMessageDto { Role = "assistant", Content = $"Erreur : {ex.Message}" });
             }
 
             _chatLoading = false;
             StateHasChanged();
         }
+
         private static string FormatChatMessage(string content)
         {
             if (string.IsNullOrEmpty(content)) return content;
 
-            // Mettre les noms PDF en gras et colorés (entre guillemets doubles)
             content = System.Text.RegularExpressions.Regex.Replace(
                 content,
                 @"""([^""]+\.pdf)""",
                 "<strong class=\"oda-chat-pdf-name\">\"$1\"</strong>",
                 System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-            // Formatter les [[nom.pdf]] cachés (ne pas les afficher mais les utiliser)
             content = System.Text.RegularExpressions.Regex.Replace(
                 content,
                 @"\[\[([^\]]+)\]\]",
                 "<strong class=\"oda-chat-pdf-name\">$1</strong>",
                 System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-            // Convertir les tirets de liste en vrais éléments visuels
             content = System.Text.RegularExpressions.Regex.Replace(
                 content,
                 @"^- (.+)$",
                 "<span class=\"oda-chat-list-item\">• $1</span>",
                 System.Text.RegularExpressions.RegexOptions.Multiline);
 
-            // Convertir les sauts de ligne en <br>
             content = content.Replace("\n", "<br/>");
 
             return content;
         }
 
+        // ── Lifecycle ────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
             _userName = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
@@ -166,8 +158,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
             _isLoading = true;
             try
             {
-                _offres = await Http.GetFromJsonAsync<List<OffreAchatDto>>(
-                    $"api/offreachat/demande/{DemandeId}") ?? new();
+                _offres = await OffreService.GetOffresByDemandeAsync(DemandeId);
 
                 if (_offres.Any())
                 {
@@ -188,34 +179,28 @@ namespace AssetFlow.BlazorUI.Pages.IT
                     {
                         try
                         {
-                            var response = await Http.GetAsync($"api/ocr/cache/{offre.IdOffre}");
-                            if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
-                                continue;
-                            if (response.IsSuccessStatusCode)
+                            var invoice = await OffreService.GetOcrCacheAsync(offre.IdOffre);
+                            if (invoice != null)
                             {
-                                var invoice = await response.Content.ReadFromJsonAsync<InvoiceOcrDto>();
-                                if (invoice != null)
-                                {
-                                    ApplyInvoiceToState(offre.IdOffre, invoice);
-                                    _ocrStatus[offre.IdOffre] = OcrStatus.Done;
-                                }
+                                ApplyInvoiceToState(offre.IdOffre, invoice);
+                                _ocrStatus[offre.IdOffre] = OcrStatus.Done;
                             }
                         }
                         catch { }
                     }
+
                     // Charger historique chat
                     try
                     {
-                        var chatHistory = await Http.GetFromJsonAsync<List<ChatMessageDto>>(
-                            $"api/chat-offre/history/{_userId}/{DemandeId}");
-                        if (chatHistory != null) _chatMessages = chatHistory;
+                        var chatHistory = await OffreService.GetChatHistoryAsync(_userId, DemandeId);
+                        if (chatHistory.Any()) _chatMessages = chatHistory;
                     }
                     catch { }
+
                     // Charger recommandation persistée
                     try
                     {
-                        var rec = await Http.GetFromJsonAsync<ChatRecommendationDto>(
-                            $"api/chat-offre/recommendation/{_userId}/{DemandeId}");
+                        var rec = await OffreService.GetRecommendationAsync(_userId, DemandeId);
                         if (rec != null && !string.IsNullOrEmpty(rec.RecommendedOffre))
                             _recommendedOffre = rec.RecommendedOffre;
                     }
@@ -232,7 +217,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
             }
         }
 
-        // Méthode utilitaire pour éviter la duplication dans RunOcr et LoadOffres
+        // ── OCR helpers ──────────────────────────────────────────
         private void ApplyInvoiceToState(Guid offreId, InvoiceOcrDto invoice)
         {
             var fs = GetOrCreate(offreId);
@@ -257,7 +242,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
         // ── Sélection radio ──────────────────────────────────────
         private void SelectOffre(Guid offreId)
         {
-            // Bloqué si modal ouvert ou déjà une confirmée
             if (_confirmModalOffre != null || _confirmedId.HasValue) return;
             _selectedId = offreId;
             StateHasChanged();
@@ -266,7 +250,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         // ── Modal de confirmation ────────────────────────────────
         private void OpenConfirmModal(OffreAchatDto offre)
         {
-            if (_confirmedId.HasValue) return;   // déjà une confirmée → bloquer
+            if (_confirmedId.HasValue) return;
             _confirmModalOffre = offre;
             StateHasChanged();
         }
@@ -296,17 +280,16 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
             try
             {
-                var response = await Http.PostAsync($"api/ocr/analyze/{offre.IdOffre}", null);
+                var (invoice, error) = await OffreService.AnalyzeOcrAsync(offre.IdOffre);
 
-                if (!response.IsSuccessStatusCode)
+                if (error != null)
                 {
-                    _ocrError[offre.IdOffre]  = await response.Content.ReadAsStringAsync();
+                    _ocrError[offre.IdOffre]  = error;
                     _ocrStatus[offre.IdOffre] = OcrStatus.Error;
                     StateHasChanged();
                     return;
                 }
 
-                var invoice = await response.Content.ReadFromJsonAsync<InvoiceOcrDto>();
                 if (invoice == null)
                 {
                     _ocrError[offre.IdOffre]  = "Aucune donnée extraite.";
@@ -330,7 +313,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         // ── Confirmer → Redis ────────────────────────────────────
         private async Task ConfirmForm(OffreAchatDto offre)
         {
-           _isSaving  = true;
+            _isSaving  = true;
             _saveError = null;
             StateHasChanged();
 
@@ -347,10 +330,10 @@ namespace AssetFlow.BlazorUI.Pages.IT
                     fraisLivraison = fs.FraisLivraison,
                     delaiLivraison = fs.DelaiLivraison,
                     garantie       = fs.Garantie,
-                    // ← Infos OCR de toutes les autres offres analysées
                     autresOffres   = _offres
                         .Where(o => o.IdOffre != offre.IdOffre && GetOcrStatus(o.IdOffre) == OcrStatus.Done)
-                        .Select(o => {
+                        .Select(o =>
+                        {
                             var s = GetOrCreate(o.IdOffre);
                             return new
                             {
@@ -363,11 +346,11 @@ namespace AssetFlow.BlazorUI.Pages.IT
                         }).ToList()
                 };
 
-                var response = await Http.PostAsJsonAsync("api/offre-selection/confirm", payload);
+                var (success, error) = await OffreService.ConfirmOffreAsync(payload);
 
-                if (!response.IsSuccessStatusCode)
+                if (!success)
                 {
-                    _saveError = $"Erreur : {response.StatusCode}";
+                    _saveError = error;
                     _isSaving  = false;
                     StateHasChanged();
                     return;
@@ -376,7 +359,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
                 _confirmedId = offre.IdOffre;
                 _selectedId  = offre.IdOffre;
 
-                // Mettre à jour l'objet local pour affichage immédiat sans rechargement
                 offre.PrixTotal      = fs.TotalTtc;
                 offre.FraisLivraison = fs.FraisLivraison;
                 offre.DelaiLivraison = fs.DelaiLivraison;
@@ -399,7 +381,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
             {
                 try
                 {
-                    var bytes = await Http.GetByteArrayAsync($"api/offreachat/{offre.IdOffre}/pdf");
+                    var bytes = await OffreService.GetPdfBytesAsync(offre.IdOffre);
                     if (bytes.Length > 0)
                         _pdfUrls[offre.IdOffre] = $"data:application/pdf;base64,{Convert.ToBase64String(bytes)}";
                 }
@@ -470,16 +452,18 @@ namespace AssetFlow.BlazorUI.Pages.IT
         }
     }
 
+    // ── Classes frontend uniquement ──────────────────────────────────────────
+
     public enum OcrStatus { Idle, Running, Done, Error }
 
     public class OffreFormState
     {
-        public string FraisLivraison { get; set; } = string.Empty;
-        public string DelaiLivraison { get; set; } = string.Empty;
-        public string Garantie       { get; set; } = string.Empty;
-        public string TotalHt        { get; set; } = string.Empty;
-        public string TotalTva       { get; set; } = string.Empty;
-        public string TotalTtc       { get; set; } = string.Empty;
+        public string FraisLivraison       { get; set; } = string.Empty;
+        public string DelaiLivraison       { get; set; } = string.Empty;
+        public string Garantie             { get; set; } = string.Empty;
+        public string TotalHt              { get; set; } = string.Empty;
+        public string TotalTva             { get; set; } = string.Empty;
+        public string TotalTtc             { get; set; } = string.Empty;
         public List<LigneFormState> Lignes { get; set; } = new();
     }
 
@@ -492,14 +476,5 @@ namespace AssetFlow.BlazorUI.Pages.IT
         public string TvaPct         { get; set; } = string.Empty;
         public string TotalTva       { get; set; } = string.Empty;
         public string TotalTtc       { get; set; } = string.Empty;
-    }
-    public class ChatResponseDto
-    {
-        public string  Reply            { get; set; } = string.Empty;
-        public string? RecommendedOffre { get; set; }
-    }
-    public class ChatRecommendationDto
-    {
-        public string? RecommendedOffre { get; set; }
     }
 }

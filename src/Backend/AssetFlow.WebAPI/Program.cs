@@ -142,6 +142,8 @@ builder.Services.AddHttpClient<IFaceAuthService, FaceAuthService>();
 builder.Services.AddScoped<ICommentaireService, CommentaireService>();
 // ── PATCH 2 : Enregistrement du service ──
 builder.Services.AddScoped<ISentimentService, SentimentService>();
+builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddSingleton<IConnectionTracker, ConnectionTracker>(); // Singleton obligatoire !
 
 // === SIGNALR ===
 builder.Services.AddSignalR();

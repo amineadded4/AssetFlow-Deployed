@@ -21,7 +21,6 @@ namespace AssetFlow.BlazorUI.Pages.Auth
         // Champs du formulaire liés au HTML
         private string Email { get; set; } = string.Empty;
         private string Password { get; set; } = string.Empty;
-        private bool RememberMe { get; set; } = false;
 
         // États de l'UI
         private bool IsLoading { get; set; } = false;

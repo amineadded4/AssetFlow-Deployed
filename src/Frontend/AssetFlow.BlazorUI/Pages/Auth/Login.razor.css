@@ -162,17 +162,8 @@ html.dark .left-panel { background: #060d18; }
     justify-content: space-between;
     align-items: center;
     margin: 0.6rem 0;
+    float: right;
 }
-
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.83rem;
-    color: var(--text-muted);
-    cursor: pointer;
-}
-.checkbox-label input[type="checkbox"] { accent-color: var(--primary); }
 
 .divider {
     display: flex; align-items: center;

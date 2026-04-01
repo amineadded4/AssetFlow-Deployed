@@ -73,6 +73,23 @@ namespace AssetFlow.Infrastructure.Services
             await _db.SaveChangesAsync();
             return true;
         }
+        public async Task<List<AffectationProjetDto>> GetAffectationsAsync(int projetId)
+            => await _db.Affectations
+                .AsNoTracking()
+                .Include(a => a.Materiel)
+                .Where(a => a.ProjetId == projetId)
+                .OrderByDescending(a => a.DateAffectation)
+                .Select(a => new AffectationProjetDto
+                {
+                    AffectationId    = a.Id,
+                    Designation      = a.Materiel.Designation,
+                    Reference        = a.Materiel.Reference,
+                    QuantiteAffectee = a.QuantiteAffectee,
+                    DateAffectation  = a.DateAffectation,
+                    DateRetourPrevue = a.DateRetour,
+                    Etat             = a.Etat.ToString()
+                })
+                .ToListAsync();
 
         private static ProjectDto ToDto(Project p) => new()
         {

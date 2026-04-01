@@ -13,5 +13,6 @@ namespace AssetFlow.Application.Interfaces
         Task<ProjectDto> CreateAsync(CreateProjectDto dto);
         Task<ProjectDto?> UpdateAsync(int id, UpdateProjectDto dto);
         Task<bool> DeleteAsync(int id);
+        Task<List<AffectationProjetDto>>  GetAffectationsAsync(int projetId);
     }
 }

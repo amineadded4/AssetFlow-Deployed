@@ -2,6 +2,7 @@ using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using AssetFlow.BlazorUI.DTOs;
 
 namespace AssetFlow.BlazorUI.Pages.RoleSelection
 {

@@ -1,19 +1,9 @@
 using System.Net.Http.Json;
 using Blazored.LocalStorage;
+using AssetFlow.BlazorUI.DTOs;
 
 namespace AssetFlow.BlazorUI.Services
 {
-    public class FaceLoginRequest
-    {
-        public string Email      { get; set; } = string.Empty;
-        public float[][] Keypoints { get; set; } = Array.Empty<float[]>();
-    }
-
-    public class RegisterFaceRequest
-    {
-        public string Email      { get; set; } = string.Empty;
-        public float[][] Keypoints { get; set; } = Array.Empty<float[]>();
-    }
 
     public class FaceAuthClientService
     {

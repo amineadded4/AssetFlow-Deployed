@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / OcrController.cs
-// POST api/ocr/analyze/{offreId}  — analyze ONE offre PDF
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -25,7 +20,7 @@ namespace AssetFlow.WebAPI.Controllers
         }
 
         // POST api/ocr/analyze/{offreId}
-        // Fetches the stored PDF from DB for the given offre, runs OCR + Gemini,
+        // Fetches the stored PDF from DB for the given offre, runs OCR + Llama 4,
         // and returns the structured InvoiceOcrDto.
         [HttpPost("analyze/{offreId:guid}")]
         public async Task<IActionResult> Analyze(Guid offreId)

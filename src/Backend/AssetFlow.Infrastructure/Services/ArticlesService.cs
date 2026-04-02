@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.Application / Services / ArticleService.cs
-// ============================================================
-
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

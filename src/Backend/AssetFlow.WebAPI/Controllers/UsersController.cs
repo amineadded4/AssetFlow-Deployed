@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / UsersController.cs
-// AJOUT : GET api/users/achat — agents du service achat
-// ============================================================
-
 using AssetFlow.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

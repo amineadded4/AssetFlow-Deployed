@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Application / DTOs / EmployeDtos.cs  (FICHIER COMPLET)
-// Ajouter NombreCommentaires dans MaterielAffecteGroupeDto
-// ============================================================
-
 namespace AssetFlow.Application.DTOs
 {
     public class EquipementAffecteDto

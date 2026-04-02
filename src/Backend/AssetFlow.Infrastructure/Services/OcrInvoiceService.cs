@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / OcrInvoiceService.cs
-// Single-PDF OCR via Mistral + structured extraction via Groq (Llama 4)
-// ============================================================
-
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;

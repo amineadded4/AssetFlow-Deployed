@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / IncidentService.cs
-// MISE À JOUR : Ajout GetIncidentsByAffectationAsync
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Domain.Entities;
@@ -19,10 +14,6 @@ namespace AssetFlow.Infrastructure.Services
         {
             _context = context;
         }
-
-        /// <summary>
-        /// Signale un nouvel incident
-        /// </summary>
         public async Task<SignalerIncidentResponseDto> SignalerIncidentAsync(SignalerIncidentRequestDto request)
         {
             try
@@ -79,9 +70,7 @@ namespace AssetFlow.Infrastructure.Services
             }
         }
 
-        /// <summary>
-        /// NOUVEAU : Récupère tous les incidents liés à une affectation
-        /// </summary>
+        // Récupère tous les incidents liés à une affectation
         public async Task<List<IncidentDto>> GetIncidentsByAffectationAsync(int affectationId)
         {
             var incidents = await _context.Incidents
@@ -94,9 +83,7 @@ namespace AssetFlow.Infrastructure.Services
             return incidents.Select(MapToDto).ToList();
         }
 
-        /// <summary>
-        /// Récupère le détail d'un incident
-        /// </summary>
+        // Récupère le détail d'un incident
         public async Task<IncidentDto?> GetIncidentDetailAsync(int incidentId)
         {
             var incident = await _context.Incidents

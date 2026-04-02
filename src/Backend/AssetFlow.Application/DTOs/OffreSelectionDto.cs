@@ -1,16 +1,10 @@
-// ============================================================
-// AssetFlow.Application / DTOs / OffreSelectionDto.cs
-// ============================================================
-
 namespace AssetFlow.Application.DTOs
 {
-    /// <summary>Payload envoyé par le frontend lors du Confirmer.</summary>
     public class OffreSelectionDto
     {
         public Guid   OffreId   { get; set; }
         public int    IdDemande { get; set; }
         public string UserId    { get; set; } = string.Empty;
-        // NomPdf et Contenu ne sont plus nécessaires
         // Infos OCR à persister
         public string? PrixTotal      { get; set; }
         public string? FraisLivraison { get; set; }

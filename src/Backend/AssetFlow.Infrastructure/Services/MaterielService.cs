@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / MaterielService.cs — v2
-// Suppression cascade : commandes + articles + affectations + incidents
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Domain.Entities;
@@ -122,15 +117,12 @@ namespace AssetFlow.Infrastructure.Services
         public async Task<MaterielResultDto> SupprimerAsync(int id)
             => await SupprimerAvecCascadeAsync(id);
 
-        /// <summary>
-        /// Suppression complète en cascade :
-        ///   1. Incidents liés aux articles de toutes les commandes
-        ///   2. Articles individuels de toutes les commandes
-        ///   3. Commandes du matériel
-        ///   4. Incidents liés aux affectations (via AffectationId)
-        ///   5. Affectations du matériel
-        ///   6. Le matériel lui-même
-        /// </summary>
+        //   1. Incidents liés aux articles de toutes les commandes
+        //   2. Articles individuels de toutes les commandes
+        //   3. Commandes du matériel
+        //   4. Incidents liés aux affectations (via AffectationId)
+        //   5. Affectations du matériel
+        //   6. Le matériel lui-même
         public async Task<MaterielResultDto> SupprimerAvecCascadeAsync(int id)
         {
             var materiel = await _db.Materiels.FindAsync(id);

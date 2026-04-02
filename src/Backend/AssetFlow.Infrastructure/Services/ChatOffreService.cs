@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.Application / Services / ChatOffreService.cs
-// ============================================================
-
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -53,7 +49,7 @@ RÈGLES DE FORMATAGE OBLIGATOIRES :
 
 Réponds en français.";
 
-            // 3. Construire messages pour Groq
+            // 3. Construire messages pour Llama4
             var messages = new List<object>
             {
                 new { role = "system", content = systemPrompt }
@@ -62,7 +58,7 @@ Réponds en français.";
                 messages.Add(new { role = h.Role, content = h.Content });
             messages.Add(new { role = "user", content = dto.Message });
 
-            // 4. Appel Groq
+            // 4. Appel Llama4
             var payload = new
             {
                 model       = "meta-llama/Llama-4-Scout-17B-16E-Instruct",

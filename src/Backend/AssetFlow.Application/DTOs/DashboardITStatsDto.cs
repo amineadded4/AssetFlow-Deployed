@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Application / DTOs / DashboardITStatsDto.cs
-// DTO global retourné par l'API pour le tableau de bord IT
-// ============================================================
-
 namespace AssetFlow.Application.DTOs
 {
     // ── KPIs ─────────────────────────────────────────────────
@@ -42,7 +37,6 @@ namespace AssetFlow.Application.DTOs
         public int    Affectes  { get; set; }
     }
 
-    /// <summary>Évolution des incidents par semaine</summary>
     public class IncidentSemaineDto
     {
         public string Label    { get; set; } = string.Empty;
@@ -51,14 +45,12 @@ namespace AssetFlow.Application.DTOs
         public int    Resolu   { get; set; }
     }
 
-    /// <summary>Durée moyenne de résolution des incidents (en heures) par semaine</summary>
     public class ResolutionTempsDto
     {
         public string Label        { get; set; } = string.Empty;
         public double MoyenneHeures { get; set; }
     }
 
-    /// <summary>Point brut d'un incident pour filtrage client</summary>
     public class IncidentRawDto
     {
         public DateTime DateIncident    { get; set; }
@@ -68,7 +60,6 @@ namespace AssetFlow.Application.DTOs
         public int      Urgence         { get; set; }
     }
 
-    // ── DTO global ────────────────────────────────────────────
 
     public class DashboardITStatsDto
     {
@@ -88,12 +79,8 @@ namespace AssetFlow.Application.DTOs
         public List<CategorieEquipementDto>    EquipementsParCategorie{ get; set; } = new();
         public List<ResolutionTempsDto>        TendanceResolution     { get; set; } = new();
 
-        /// <summary>Incidents bruts pour filtrage côté client</summary>
         public List<IncidentRawDto> IncidentsRaw { get; set; } = new();
 
-        // ── Méthodes filtrage client ─────────────────────────
-
-        /// <summary>Incidents par semaine sur une plage de dates</summary>
         public List<IncidentSemaineDto> GetIncidentsParSemaine(DateTime debut, DateTime fin, int nbSemaines = 8)
         {
             var realDebut = fin.AddDays(-(nbSemaines * 7 - 1));
@@ -125,7 +112,6 @@ namespace AssetFlow.Application.DTOs
             return result;
         }
 
-        /// <summary>Urgence moyenne par type d'incident (0-100)</summary>
         public Dictionary<string, double> GetUrgenceMoyenneParType()
         {
             return IncidentsRaw

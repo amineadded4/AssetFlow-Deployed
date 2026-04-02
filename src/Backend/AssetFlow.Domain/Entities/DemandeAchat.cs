@@ -1,11 +1,3 @@
-// ============================================================
-// AssetFlow.Domain / Entities / DemandeAchat.cs
-// MODIF : Reference ajoutée dans LigneDemande
-//
-// MIGRATION SQL à exécuter dans SSMS :
-//   ALTER TABLE LigneDemande ADD Reference VARCHAR(100) NULL;
-// ============================================================
-
 namespace AssetFlow.Domain.Entities
 {
     public class DemandeAchat
@@ -26,8 +18,6 @@ namespace AssetFlow.Domain.Entities
         public List<LigneDemande> Lignes { get; set; } = new();
     }
 
-    // ─────────────────────────────────────────────────────────
-
     public class LigneDemande
     {
         public int     IdLigne     { get; set; }
@@ -39,8 +29,6 @@ namespace AssetFlow.Domain.Entities
 
         public DemandeAchat? Demande { get; set; }
     }
-
-    // ─────────────────────────────────────────────────────────
 
     public class OffreAchat
     {

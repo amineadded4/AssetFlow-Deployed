@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / ProjectsController.cs
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;

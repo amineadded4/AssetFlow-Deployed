@@ -1,9 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / AuthController.cs
-// Contrôleur API pour Login et Register
-// Endpoints appelés par le frontend Blazor
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AssetFlow.WebAPI.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")] // Route: api/auth
+    [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -22,10 +16,7 @@ namespace AssetFlow.WebAPI.Controllers
             _authService = authService;
         }
 
-        /// <summary>
-        /// POST api/auth/login
-        /// Connecte un utilisateur et retourne le token JWT
-        /// </summary>
+        // POST api/auth/login
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
         {
@@ -43,10 +34,7 @@ namespace AssetFlow.WebAPI.Controllers
             return Ok(result);
         }
 
-        /// <summary>
-        /// POST api/auth/register
-        /// Inscrit un nouvel utilisateur (dans Keycloak + SQL Server)
-        /// </summary>
+        // POST api/auth/register
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
         {

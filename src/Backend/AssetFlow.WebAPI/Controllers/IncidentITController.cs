@@ -1,4 +1,3 @@
-// ── Routes IT (ajouter un second controller ou changer policy) ──
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;

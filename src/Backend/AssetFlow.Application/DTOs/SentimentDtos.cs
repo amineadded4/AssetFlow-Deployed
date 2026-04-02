@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.Application / DTOs / SentimentDtos.cs
-// ============================================================
-
 namespace AssetFlow.Application.DTOs
 {
     /// <summary>Résultat de l'analyse de sentiment pour un matériel</summary>

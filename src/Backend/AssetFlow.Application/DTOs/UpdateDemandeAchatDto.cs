@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Application / DTOs / UpdateDemandeAchatDto.cs
-// DTO pour la modification d'une demande d'achat
-// ============================================================
-
 namespace AssetFlow.Application.DTOs
 {
     public class UpdateDemandeAchatDto

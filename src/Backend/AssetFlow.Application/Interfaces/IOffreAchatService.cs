@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.Application / Interfaces / IOffreAchatService.cs
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 
 namespace AssetFlow.Application.Interfaces

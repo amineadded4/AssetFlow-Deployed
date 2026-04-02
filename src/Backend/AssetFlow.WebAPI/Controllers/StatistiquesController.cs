@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / StatistiquesController.cs
-// GET /api/statistiques?annee=2025&moisDebut=1&moisFin=12
-// ============================================================
-
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

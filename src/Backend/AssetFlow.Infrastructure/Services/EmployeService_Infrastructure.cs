@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / EmployeService.cs  (FICHIER COMPLET)
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Domain.Entities;

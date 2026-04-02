@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / AffectationService.cs
-// MISE À JOUR : GetProjetsDisponiblesAsync + ProjetId dans création
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Domain.Entities;
@@ -91,7 +86,7 @@ namespace AssetFlow.Infrastructure.Services
             return result;
         }
 
-        // ── Projets ← NOUVEAU ────────────────────────────────
+        // ── Projets ────────────────────────────────
         public async Task<List<ProjetDisponibleDto>> GetProjetsDisponiblesAsync(string? search = null)
         {
             var query = _db.Projects.AsNoTracking()
@@ -164,7 +159,7 @@ namespace AssetFlow.Infrastructure.Services
             {
                 MaterielId       = dto.MaterielId,
                 UtilisateurId    = dto.UtilisateurId,
-                ProjetId         = dto.ProjetId,      // ← NOUVEAU
+                ProjetId         = dto.ProjetId,
                 DateAffectation  = DateTime.UtcNow,
                 QuantiteAffectee = articles.Count,
                 Observations     = dto.Observations?.Trim(),

@@ -1,11 +1,3 @@
-// ============================================================
-// COUCHE  : WebApi  (projet API séparé)
-// FICHIER : Controllers/FournisseursController.cs
-// RÔLE    : Endpoints REST CRUD pour les fournisseurs.
-//           Reçoit les requêtes HTTP, délègue au service,
-//           retourne des réponses avec les DTOs appropriés.
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Domain.Entities;
@@ -14,10 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace WebApi.Controllers
 {
-    /// <summary>
-    /// Controller REST — Fournisseurs
-    /// Base URL : /api/fournisseurs
-    /// </summary>
+    // Base URL : /api/fournisseurs
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Policy = "AchatOrAdmin")]
@@ -32,15 +21,7 @@ namespace WebApi.Controllers
             _service = service;
         }
 
-        // ────────────────────────────────────────────────────────
         // GET /api/fournisseurs
-        // Retourne tous les fournisseurs
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Retourne la liste complète des fournisseurs.
-        /// Réponse 200 OK + List&lt;FournisseurDto&gt;
-        /// </summary>
         [HttpGet]
         public async Task<ActionResult<List<FournisseurDto>>> GetAll()
         {
@@ -52,15 +33,7 @@ namespace WebApi.Controllers
             return Ok(dtos);
         }
 
-        // ────────────────────────────────────────────────────────
         // GET /api/fournisseurs/{id}
-        // Retourne un fournisseur par IdFournisseur
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Retourne un fournisseur par son identifiant.
-        /// Réponse 200 OK ou 404 Not Found.
-        /// </summary>
         [HttpGet("{id:int}")]
         public async Task<ActionResult<FournisseurDto>> GetById(int id)
         {
@@ -71,16 +44,7 @@ namespace WebApi.Controllers
 
             return Ok(MapToDto(fournisseur));
         }
-
-        // ────────────────────────────────────────────────────────
         // GET /api/fournisseurs/recherche?terme=xxx
-        // Recherche par Nom / Telephone / Adresse / Mail
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Recherche des fournisseurs contenant le terme dans leurs champs.
-        /// Réponse 200 OK + liste (peut être vide).
-        /// </summary>
         [HttpGet("recherche")]
         public async Task<ActionResult<List<FournisseurDto>>> Rechercher(
             [FromQuery] string terme)
@@ -92,15 +56,7 @@ namespace WebApi.Controllers
             return Ok(liste.Select(MapToDto).ToList());
         }
 
-        // ────────────────────────────────────────────────────────
         // POST /api/fournisseurs
-        // Crée un nouveau fournisseur
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Crée un nouveau fournisseur à partir du DTO reçu.
-        /// Réponse 201 Created + FournisseurReponseDto avec l'ID généré.
-        /// </summary>
         [HttpPost]
 public async Task<ActionResult<FournisseurReponseDto>> Ajouter(CreerFournisseurDto dto)
 {
@@ -127,15 +83,7 @@ public async Task<ActionResult<FournisseurReponseDto>> Ajouter(CreerFournisseurD
     });
 }
 
-        // ────────────────────────────────────────────────────────
         // PUT /api/fournisseurs/{id}
-        // Met à jour un fournisseur existant
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Modifie un fournisseur existant.
-        /// Réponse 200 OK ou 404 Not Found.
-        /// </summary>
 [HttpPut("{id:int}")]
 public async Task<ActionResult<FournisseurReponseDto>> Modifier(ModifierFournisseurDto dto)
 {
@@ -162,15 +110,7 @@ public async Task<ActionResult<FournisseurReponseDto>> Modifier(ModifierFourniss
     });
 }
 
-        // ────────────────────────────────────────────────────────
         // DELETE /api/fournisseurs/{id}
-        // Supprime un fournisseur
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Supprime définitivement un fournisseur par son ID.
-        /// Réponse 200 OK ou 404 Not Found.
-        /// </summary>
         [HttpDelete("{id:int}")]
         public async Task<ActionResult<FournisseurReponseDto>> Supprimer(int id)
         {
@@ -193,15 +133,6 @@ public async Task<ActionResult<FournisseurReponseDto>> Modifier(ModifierFourniss
                 });
             }
         }
-
-        // ────────────────────────────────────────────────────────
-        // MÉTHODE PRIVÉE — Mapper Entité → DTO
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Convertit une entité Domain en DTO de lecture.
-        /// Centralise la logique de mapping dans le controller.
-        /// </summary>
 private static FournisseurDto MapToDto(Fournisseur f) => new()
 {
     IdFournisseur = f.IdFournisseur,

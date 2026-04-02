@@ -1,9 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / FaceAuthController.cs
-// POST /api/face-auth/login
-// POST /api/face-auth/register
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -23,10 +17,7 @@ namespace AssetFlow.WebAPI.Controllers
             _faceAuthService = faceAuthService;
         }
 
-        /// <summary>
-        /// POST api/face-auth/login
-        /// Authentifie par reconnaissance faciale
-        /// </summary>
+        // POST api/face-auth/login
         [HttpPost("login")]
         public async Task<IActionResult> FaceLogin([FromBody] FaceLoginRequestDto request)
         {
@@ -40,10 +31,7 @@ namespace AssetFlow.WebAPI.Controllers
             return Ok(result);
         }
 
-        /// <summary>
-        /// POST api/face-auth/register
-        /// Enregistre le visage d'un utilisateur existant
-        /// </summary>
+        // POST api/face-auth/register
         [HttpPost("register")]
         public async Task<IActionResult> RegisterFace([FromBody] RegisterFaceRequestDto request)
         {

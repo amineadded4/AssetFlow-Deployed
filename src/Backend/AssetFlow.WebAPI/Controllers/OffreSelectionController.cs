@@ -1,8 +1,5 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / OffreSelectionController.cs
 // POST api/offre-selection/confirm   → sauvegarde dans Redis
 // GET  api/offre-selection/{userId}  → récupère les sélections
-// ============================================================
 
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;

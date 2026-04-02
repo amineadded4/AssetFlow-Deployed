@@ -1,9 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / CommandeService.cs — v5
-// Ajout : ModifierAsync, GetLignesMaterielsAsync
-// Suppression matériel : cascade articles + affectations + incidents
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Domain.Entities;
@@ -16,8 +10,6 @@ namespace AssetFlow.Infrastructure.Services
     {
         private readonly AppDbContext _db;
         public CommandeService(AppDbContext db) => _db = db;
-
-        // ── Helpers ───────────────────────────────────────────────
         private static ArticleDto ToArticleDto(ArticleIndividuel a) => new()
         {
             Id             = a.Id,
@@ -49,8 +41,6 @@ namespace AssetFlow.Infrastructure.Services
                 NumeroCommande = c.NumeroCommande
             }).ToList()
         };
-
-        // ── Lecture basique ───────────────────────────────────────
         public async Task<IEnumerable<CommandeDto>> GetAllAsync()
         {
             var list = await _db.Commandes
@@ -145,8 +135,6 @@ namespace AssetFlow.Infrastructure.Services
 
             return result;
         }
-
-        // ── Compatibilité (une ligne par commande) ─────────────────
         public async Task<IEnumerable<LigneCommandeMaterielDto>> GetLignesCommandesAsync()
         {
             var commandes = await _db.Commandes
@@ -217,8 +205,6 @@ namespace AssetFlow.Infrastructure.Services
 
             return result.OrderBy(r => r.Designation).ThenByDescending(r => r.DateAchat);
         }
-
-        // ── Création ───────────────────────────────────────────────
         public async Task<CommandeReponseDto> CreerAsync(CreerCommandeDto dto)
         {
             var materiel = await _db.Materiels.FindAsync(dto.MaterielId);
@@ -306,8 +292,6 @@ namespace AssetFlow.Infrastructure.Services
                 return new CommandeReponseDto { Succes = false, Message = msg };
             }
         }
-
-        // ── Modification (sans changer la quantité) ───────────────
         public async Task<CommandeReponseDto> ModifierAsync(ModifierCommandeDto dto)
         {
             var commande = await _db.Commandes.FindAsync(dto.Id);
@@ -353,8 +337,6 @@ namespace AssetFlow.Infrastructure.Services
                 IdCommande = commande.Id
             };
         }
-
-        // ── Suppression commande ──────────────────────────────────
         public async Task<CommandeReponseDto> SupprimerAsync(int id)
         {
             var commande = await _db.Commandes

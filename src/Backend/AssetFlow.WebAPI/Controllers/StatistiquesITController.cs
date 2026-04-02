@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / StatistiquesITController.cs
-// GET /api/statistiques-it
-// ============================================================
-
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

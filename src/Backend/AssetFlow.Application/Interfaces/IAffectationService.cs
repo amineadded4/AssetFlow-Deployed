@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Application / Interfaces / IAffectationService.cs
-// MISE À JOUR : ajout GetProjetsDisponiblesAsync
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 
 namespace AssetFlow.Application.Interfaces

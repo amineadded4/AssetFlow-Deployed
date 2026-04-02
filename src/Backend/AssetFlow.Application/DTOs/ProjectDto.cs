@@ -1,9 +1,3 @@
-// ============================================================
-// AssetFlow.Application / DTOs / ProjectDto.cs
-// ============================================================
-
-using AssetFlow.Domain.Entities;
-
 namespace AssetFlow.Application.DTOs
 {
     public class ProjectDto

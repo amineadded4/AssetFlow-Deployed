@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / AffectationController.cs
-// MISE À JOUR : ajout endpoint GET projets
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -28,7 +23,7 @@ namespace AssetFlow.WebAPI.Controllers
         public async Task<IActionResult> GetMateriels([FromQuery] string? search = null)
             => Ok(await _svc.GetMaterielsDisponiblesAsync(search));
 
-        // GET api/affectation/projets?search=...  ← NOUVEAU
+        // GET api/affectation/projets?search=...  
         [HttpGet("projets")]
         public async Task<IActionResult> GetProjets([FromQuery] string? search = null)
             => Ok(await _svc.GetProjetsDisponiblesAsync(search));

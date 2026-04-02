@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / MessagesController.cs
-// REST endpoints pour l'historique de messages
-// ============================================================
 using AssetFlow.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

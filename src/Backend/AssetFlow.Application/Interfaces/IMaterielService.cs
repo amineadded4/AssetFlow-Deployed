@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Application / Interfaces / IMaterielService.cs
-// MISE À JOUR : ajout SupprimerAvecCascadeAsync
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 
 namespace AssetFlow.Application.Interfaces

@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Domain / Entities / ArticleIndividuel.cs
-// Un article physique individuel issu d'une commande
-// ============================================================
-
 namespace AssetFlow.Domain.Entities
 {
     public class ArticleIndividuel
@@ -11,8 +6,6 @@ namespace AssetFlow.Domain.Entities
 
         /// <summary>Numéro de série (optionnel, unique si renseigné)</summary>
         public string? NumeroSerie { get; set; }
-
-        /// <summary>Statut de l'article</summary>
         public StatutArticle Statut { get; set; } = StatutArticle.Disponible;
 
         /// <summary>FK → Materiel</summary>
@@ -23,7 +16,6 @@ namespace AssetFlow.Domain.Entities
         public int CommandeId { get; set; }
         public Commande Commande { get; set; } = null!;
         public EtatArticle Etat { get; set; } = EtatArticle.Bon;  // ← AJOUTER
-        // ← NOUVEAU
         public int? AffectationId { get; set; }
         public Affectation? Affectation { get; set; }
 
@@ -36,7 +28,7 @@ namespace AssetFlow.Domain.Entities
         HorsService,
         EnReparation
     }
-    public enum EtatArticle  // ← AJOUTER
+    public enum EtatArticle
     {
         Bon = 0,
         Panne = 1

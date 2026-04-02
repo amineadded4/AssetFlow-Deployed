@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / ArticlesController.cs
-// ============================================================
-
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;

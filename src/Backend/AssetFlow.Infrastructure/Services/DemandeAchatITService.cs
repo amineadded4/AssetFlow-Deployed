@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / DemandeAchatITService.cs
-// AJOUT : UpdateAsync + DeleteAsync (avec offres)
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Domain.Entities;
@@ -75,8 +70,6 @@ namespace AssetFlow.Infrastructure.Services
             await _context.SaveChangesAsync();
             return ToDto(demande);
         }
-
-        // ── UPDATE ───────────────────────────────────────────────
         public async Task<DemandeAchatITDto?> UpdateAsync(int id, UpdateDemandeAchatDto dto)
         {
             var demande = await _context.DemandeAchat
@@ -111,8 +104,6 @@ namespace AssetFlow.Infrastructure.Services
             await _context.SaveChangesAsync();
             return ToDto(demande);
         }
-
-        // ── DELETE ───────────────────────────────────────────────
         public async Task<bool> DeleteAsync(int id)
         {
             var demande = await _context.DemandeAchat
@@ -134,8 +125,6 @@ namespace AssetFlow.Infrastructure.Services
             await _context.SaveChangesAsync();
             return true;
         }
-
-        // ── Mapper ───────────────────────────────────────────────
         private static DemandeAchatITDto ToDto(DemandeAchat d) => new()
         {
             IdDemande    = d.IdDemande,

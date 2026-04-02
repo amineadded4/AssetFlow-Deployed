@@ -71,10 +71,10 @@ namespace AssetFlow.Infrastructure.Services
                 return null;
             }
 
-            // 5. ✅ Générer un JWT custom identique à Keycloak
+            // 5. Générer un JWT custom identique à Keycloak
             var (accessToken, refreshToken, expiresIn) = GenerateFaceAuthTokens(user);
 
-            Console.WriteLine($"[FACE] ✅ Login réussi pour {user.Email}");
+            Console.WriteLine($"[FACE] Login réussi pour {user.Email}");
 
             return new LoginResponseDto
             {
@@ -113,7 +113,7 @@ namespace AssetFlow.Infrastructure.Services
                 new Claim("given_name",                  user.FirstName),
                 new Claim("family_name",                 user.LastName),
                 new Claim("name",                        $"{user.FirstName} {user.LastName}"),
-                // ✅ realm_access claim — identique à Keycloak
+                // realm_access claim — identique à Keycloak
                 new Claim("realm_access",
                     JsonSerializer.Serialize(new { roles = new[] { user.Role } })),
                 new Claim(ClaimTypes.Role, user.Role),

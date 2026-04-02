@@ -1,11 +1,3 @@
-// ============================================================
-// COUCHE  : AssetFlow.Infrastructure
-// FICHIER : Services/FournisseurService.cs
-// RÔLE    : Implémentation concrète de IFournisseurService.
-//           Accède à la BDD via EF Core.
-//           Même pattern que AuthService.cs, EmployeService.cs, IncidentService.cs
-// ============================================================
-
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Domain.Entities;
 using AssetFlow.Infrastructure.Data;
@@ -13,11 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AssetFlow.Infrastructure.Services
 {
-    /// <summary>
-    /// Implémentation du service fournisseur avec Entity Framework Core.
-    /// Enregistré dans Program.cs via :
-    ///   builder.Services.AddScoped&lt;IFournisseurService, FournisseurService&gt;();
-    /// </summary>
     public class FournisseurService : IFournisseurService
     {
         private readonly AppDbContext _context;
@@ -27,14 +14,7 @@ namespace AssetFlow.Infrastructure.Services
             _context = context;
         }
 
-        // ────────────────────────────────────────────────────────
         // GET ALL — Retourne tous les fournisseurs
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Récupère tous les fournisseurs triés alphabétiquement par nom.
-        /// AsNoTracking() = lecture seule, plus performant.
-        /// </summary>
         public async Task<List<Fournisseur>> GetAllAsync()
         {
             var fournisseurs = await _context.Fournisseurs
@@ -57,31 +37,14 @@ namespace AssetFlow.Infrastructure.Services
 
             return fournisseurs;
         }
-
-        // ────────────────────────────────────────────────────────
         // GET BY ID — Retourne un fournisseur par son IdFournisseur
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Retourne le fournisseur correspondant à l'ID donné.
-        /// Retourne null si aucun enregistrement trouvé.
-        /// </summary>
         public async Task<Fournisseur?> GetByIdAsync(int id)
         {
             return await _context.Fournisseurs
                 .AsNoTracking()
                 .FirstOrDefaultAsync(f => f.IdFournisseur == id);
         }
-
-        // ────────────────────────────────────────────────────────
         // RECHERCHER — Filtre sur Nom, Telephone, Adresse, Mail
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Recherche des fournisseurs dont un des champs
-        /// contient le terme passé en paramètre.
-        /// La comparaison est insensible à la casse (ToLower).
-        /// </summary>
         public async Task<List<Fournisseur>> RechercherAsync(string terme)
         {
             var t = terme.Trim().ToLower();
@@ -97,14 +60,7 @@ namespace AssetFlow.Infrastructure.Services
                 .ToListAsync();
         }
 
-        // ────────────────────────────────────────────────────────
         // AJOUTER — Insère un nouveau fournisseur
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Insère le fournisseur en base.
-        /// Après SaveChangesAsync(), IdFournisseur est renseigné par SQL Server.
-        /// </summary>
         public async Task<Fournisseur> AjouterAsync(Fournisseur fournisseur)
         {
             _context.Fournisseurs.Add(fournisseur);
@@ -112,14 +68,7 @@ namespace AssetFlow.Infrastructure.Services
             return fournisseur;   // IdFournisseur est maintenant peuplé
         }
 
-        // ────────────────────────────────────────────────────────
         // MODIFIER — Met à jour un fournisseur existant
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Charge l'enregistrement existant, met à jour ses champs,
-        /// puis sauvegarde. Lance une exception si l'ID est introuvable.
-        /// </summary>
         public async Task ModifierAsync(Fournisseur fournisseur)
         {
             // Récupérer l'enregistrement avec tracking (pour détecter les changements)
@@ -143,14 +92,7 @@ existant.DerniereCommande = fournisseur.DerniereCommande;
             await _context.SaveChangesAsync();
         }
 
-        // ────────────────────────────────────────────────────────
         // SUPPRIMER — Supprime un fournisseur par son ID
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Supprime définitivement le fournisseur.
-        /// Lance une exception si l'ID est introuvable.
-        /// </summary>
         public async Task SupprimerAsync(int id)
         {
             var fournisseur = await _context.Fournisseurs

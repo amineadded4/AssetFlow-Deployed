@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Pages / IT / MesEquipements.razor.cs
-// FICHIER COMPLET — ajout modal commentaire matériel
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
@@ -228,8 +223,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         {
             Navigation.NavigateTo($"/it/equipement/{affectationId}/article/{articleId}");
         }
-
-        // ── Helpers ───────────────────────────────────────────────
+        
         private string GetInitials()
         {
             var parts = UserName.Split(' ', StringSplitOptions.RemoveEmptyEntries);

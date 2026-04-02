@@ -1,12 +1,3 @@
-// ============================================================
-// Pages/Achat/Materiel.razor.cs — v6
-// UNE LIGNE PAR MATERIEL
-// + sous-lignes commandes (toggle bouton "i" sur matériel)
-// + panneau articles matériel (···) ou par commande (i commande)
-// + modification commande (sans quantité)
-// + suppression matériel cascade complète
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
@@ -24,7 +15,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         [Inject] private IJSRuntime JS { get; set; } = default!;
         [Inject] private AssetFlow.BlazorUI.Services.VoiceCommandService VoiceSvc { get; set; } = default!;
 
-        // ── VM formulaire matériel ─────────────────────────────────
+        // ── formulaire matériel ─────────────────────────────────
         private class FormulaireVm
         {
             public int      Id            { get; set; }
@@ -37,7 +28,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             public string?  ImageUrl      { get; set; }
         }
 
-        // ── VM formulaire nouvelle commande ───────────────────────
+        // ── formulaire nouvelle commande ───────────────────────
         private class FormulaireCommandeVm
         {
             public string    NumeroCommande      { get; set; } = string.Empty;
@@ -50,7 +41,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             public List<string?> NumerosSerie    { get; set; } = new();
         }
 
-        // ── VM formulaire modification commande ───────────────────
+        // ── formulaire modification commande ───────────────────
         private class FormulaireModifCommandeVm
         {
             public int       CommandeId          { get; set; }
@@ -156,7 +147,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     (a.NumeroSerie != null && a.NumeroSerie.Contains(_rechercheArticle, StringComparison.OrdinalIgnoreCase)) ||
                     a.NumeroCommande.Contains(_rechercheArticle, StringComparison.OrdinalIgnoreCase));
 
-        // ── Cycle de vie ───────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
             VoiceSvc.OnCommand += HandleVoiceCommand;

@@ -1,8 +1,3 @@
-// ============================================================
-// FICHIER  : Pages/Statistiques.razor.cs — v2
-// RÔLE     : Code-behind — filtres individuels par graphe
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
@@ -62,8 +57,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private string      _roleUtilisateur = "Service Achat";
         private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
-        // ─── Lifecycle ───────────────────────────────────────────
-
         protected override async Task OnInitializedAsync()
         {
             VoiceSvc.OnCommand += HandleVoiceCommand;
@@ -82,7 +75,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         {
             if (cmd.Type == VoiceCommandType.Navigation)
             {
-                // Géré globalement, pas ici
             }
             // D'autres commandes spécifiques à cette page peuvent être ajoutées ici
             await InvokeAsync(StateHasChanged);
@@ -158,7 +150,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                         : _nomUtilisateur[..Math.Min(2, _nomUtilisateur.Length)].ToUpper();
                 }
                 if (!string.IsNullOrWhiteSpace(role))
-                    _roleUtilisateur = Nettoyer(role);  // ✅ champ de classe, sans "var"
+                    _roleUtilisateur = Nettoyer(role); 
             }
             catch { }
         }
@@ -287,8 +279,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         }
 
         private void ToggleSidebar() => _sidebarOpen = !_sidebarOpen;
-
-        // ─── Helpers ─────────────────────────────────────────────
 
         private static string Nettoyer(string v)
         {

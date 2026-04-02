@@ -12,7 +12,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         public int       EmployeId        { get; set; }
         public string    FullName         { get; set; } = string.Empty;
         public string    Initials         { get; set; } = string.Empty;
-        public string    Role             { get; set; } = string.Empty;  // ← AJOUTER
+        public string    Role             { get; set; } = string.Empty;
 
         public string?   LastMessage      { get; set; }
         public DateTime? LastMessageTime  { get; set; }

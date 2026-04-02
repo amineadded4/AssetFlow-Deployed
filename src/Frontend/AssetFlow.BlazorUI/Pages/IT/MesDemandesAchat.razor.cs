@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Pages / IT / MesDemandesAchat.razor.cs
-// MODIF : UserId lu depuis localStorage et envoyé au service
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;
@@ -21,8 +16,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private string UserName       { get; set; } = "IT";
         private string ErrorMessage   { get; set; } = string.Empty;
         private string SuccessMessage { get; set; } = string.Empty;
-
-        // ── UserId stocké en localStorage sous la clé "user_id" ─
         private int? _userId = null;
 
         private List<DemandeAchatITDto> Demandes         { get; set; } = new();
@@ -66,7 +59,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             UserName         = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
             _roleUtilisateur = await LocalStorage.GetItemAsync<string>("user_role") ?? "IT";
 
-            // Lecture du user_id depuis le localStorage
             var userIdRaw = await LocalStorage.GetItemAsync<string>("user_id");
             _userId = int.TryParse(userIdRaw, out var parsedId) ? parsedId : null;
 
@@ -79,7 +71,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             StateHasChanged();
             try
             {
-                // On passe le userId au service — l'API filtre en base
                 Demandes = await DemandeService.GetDemandesAsync(_userId);
                 AppliquerFiltres();
             }
@@ -365,7 +356,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private void NextPage()         { if (CurrentPage < TotalPages) CurrentPage++; }
         private void GoToPage(int page) => CurrentPage = page;
 
-        // ── Helpers ──────────────────────────────────────────────
         private string GetInitials()
         {
             var parts = UserName.Split(' ', StringSplitOptions.RemoveEmptyEntries);

@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Services / EmployeService.cs  (FICHIER COMPLET)
-// MISE À JOUR : ajout SupprimerCommentaireAsync
-// ============================================================
-
 using System.Net.Http.Json;
 using Microsoft.JSInterop;
 using Blazored.LocalStorage;
@@ -83,12 +78,7 @@ namespace AssetFlow.BlazorUI.Services
         public string Message { get; set; } = string.Empty;
         public int?   Id      { get; set; }
     }
-            // ============================================================
-        // À AJOUTER dans EmployeService.cs (Frontend Blazor)
-        // Nouveau DTO + nouvelle méthode pour la vue IT
-        // ============================================================
-        
-        // ── DTO à ajouter avec les autres DTOs ───────────────────────
+
         public class CommentaireITDto
         {
             public int      Id                { get; set; }
@@ -103,7 +93,7 @@ namespace AssetFlow.BlazorUI.Services
             public string   Contenu           { get; set; } = string.Empty;
             public DateTime DateCreation      { get; set; }
         }
-        // ── DTO à ajouter avec les autres DTOs du frontend ───────────
+
         public class SentimentMaterielDto
         {
             public int    MaterielId          { get; set; }
@@ -120,10 +110,6 @@ namespace AssetFlow.BlazorUI.Services
             public double ScoreGlobal         { get; set; }
             public string SentimentDominant   { get; set; } = string.Empty;
         }
-
-    // ═══════════════════════════════════════════════
-    // SERVICE
-    // ═══════════════════════════════════════════════
 
     public class EmployeService
     {
@@ -172,7 +158,7 @@ namespace AssetFlow.BlazorUI.Services
 
         // ── Commentaires ──────────────────────────────────────
 
-        /// <summary>Envoie un commentaire sur un matériel</summary>
+        // Envoie un commentaire sur un matériel
         public async Task<CommentaireResultDto> AjouterCommentaireAsync(int materielId, string contenu)
         {
             var userId = await GetCurrentUserIdAsync();
@@ -199,7 +185,7 @@ namespace AssetFlow.BlazorUI.Services
             }
         }
 
-        /// <summary>Récupère les commentaires d'un utilisateur pour un matériel</summary>
+        // Récupère les commentaires d'un utilisateur pour un matériel
         public async Task<List<CommentaireDto>> GetCommentairesMaterielAsync(int materielId)
         {
             var userId = await GetCurrentUserIdAsync();
@@ -212,7 +198,7 @@ namespace AssetFlow.BlazorUI.Services
             catch { return new(); }
         }
 
-        /// <summary>Supprime un commentaire (seulement par son auteur)</summary>
+        // Supprime un commentaire (seulement par son auteur)
         public async Task<CommentaireResultDto> SupprimerCommentaireAsync(int commentaireId)
         {
             var userId = await GetCurrentUserIdAsync();
@@ -232,13 +218,8 @@ namespace AssetFlow.BlazorUI.Services
                 return new CommentaireResultDto { Succes = false, Message = ex.Message };
             }
         }
-
-                // ── Méthodes à ajouter dans la classe EmployeService ─────────
-                
-                /// <summary>Analyse sentiment d'un matériel via l'IA</summary>
-                // ── Méthodes à ajouter dans la classe EmployeService ─────────
         
-        /// <summary>Analyse sentiment d'un matériel via l'IA (HuggingFace gratuit)</summary>
+        // Analyse sentiment d'un matériel via l'IA (HuggingFace gratuit) 
         public async Task<SentimentMaterielDto?> GetSentimentMaterielAsync(int materielId)
         {
             try
@@ -249,7 +230,7 @@ namespace AssetFlow.BlazorUI.Services
             catch { return null; }
         }
         
-        /// <summary>Analyse sentiment de tous les matériels commentés</summary>
+        // Analyse sentiment de tous les matériels commentés
         public async Task<List<SentimentMaterielDto>> GetSentimentTousAsync()
         {
             try
@@ -259,7 +240,6 @@ namespace AssetFlow.BlazorUI.Services
             }
             catch { return new(); }
         }
-        // ── Helpers localStorage ──────────────────────────────
         public async Task<int> GetCurrentUserIdAsync()
         {
             try
@@ -304,11 +284,7 @@ namespace AssetFlow.BlazorUI.Services
             }
             catch { return new(); }
         }
-                // ============================================================
-        // PATCH 4 — EmployeService.cs (Frontend Blazor)
-        // Ajouter la méthode utilisée dans CommentairesIT.razor.cs
-        // ============================================================
-        /// <summary>Suppression admin IT — sans vérification d'auteur</summary>
+        // Suppression admin IT — sans vérification d'auteur
         public async Task<CommentaireResultDto> SupprimerCommentaireITAsync(int commentaireId)
         {
             try

@@ -1,10 +1,9 @@
-// wwwroot/js/faceAuth.js  — script classique (PAS type="module")
 let faceLandmarker = null;
 let stream = null;
 let animationId = null;
 let dotnetRef = null;
 
-// ✅ L'import dynamique est DANS la fonction async — pas au top level
+// L'import dynamique est DANS la fonction async
 window.initMediaPipe = async () => {
     try {
         // Import dynamique à l'intérieur = pas besoin de type="module"

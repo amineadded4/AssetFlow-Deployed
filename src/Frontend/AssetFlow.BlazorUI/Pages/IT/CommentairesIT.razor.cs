@@ -1,9 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Pages / IT / CommentairesIT.razor.cs
-// FIX : RenderApexDonut simplifié — le polling DOM est géré
-//       dans apexCharts_interop.js (_waitForElement)
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;

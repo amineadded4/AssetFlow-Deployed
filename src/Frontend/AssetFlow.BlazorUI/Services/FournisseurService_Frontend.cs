@@ -1,20 +1,9 @@
-// ============================================================
-// COUCHE  : AssetFlow.BlazorUI (Frontend)
-// FICHIER : Services/FournisseurService.cs
-// RÔLE    : Appelle l'API REST via HttpClient.
-//           Même structure qu'AuthService.cs, EmployeService.cs, IncidentService.cs.
-//           Enregistré dans Program.cs (BlazorUI) comme service Scoped.
-// ============================================================
-
 using System.Net.Http.Json;
 using AssetFlow.Application.DTOs;
 
 namespace AssetFlow.BlazorUI.Services
 {
-    /// <summary>
-    /// Service Blazor pour les appels HTTP vers /api/fournisseurs.
-    /// Injecté dans les pages Razor avec @inject FournisseurService FournisseurSvc.
-    /// </summary>
+    // Service Blazor pour les appels HTTP vers /api/fournisseurs.
     public class FournisseurService
     {
         private readonly HttpClient _http;
@@ -24,14 +13,7 @@ namespace AssetFlow.BlazorUI.Services
             _http = http;
         }
 
-        // ────────────────────────────────────────────────────────
         // GET ALL
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Appelle GET /api/fournisseurs.
-        /// Retourne liste vide si erreur réseau.
-        /// </summary>
         public async Task<List<FournisseurDto>> GetAllAsync()
         {
             try
@@ -47,14 +29,7 @@ namespace AssetFlow.BlazorUI.Services
             }
         }
 
-        // ────────────────────────────────────────────────────────
         // GET BY ID
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Appelle GET /api/fournisseurs/{id}.
-        /// Retourne null si non trouvé.
-        /// </summary>
         public async Task<FournisseurDto?> GetByIdAsync(int id)
         {
             try
@@ -68,14 +43,7 @@ namespace AssetFlow.BlazorUI.Services
             }
         }
 
-        // ────────────────────────────────────────────────────────
         // RECHERCHER
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Appelle GET /api/fournisseurs/recherche?terme=xxx.
-        /// Retourne liste vide si aucun résultat.
-        /// </summary>
         public async Task<List<FournisseurDto>> RechercherAsync(string terme)
         {
             try
@@ -93,14 +61,7 @@ namespace AssetFlow.BlazorUI.Services
             }
         }
 
-        // ────────────────────────────────────────────────────────
         // AJOUTER (POST)
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Appelle POST /api/fournisseurs avec le DTO de création.
-        /// Retourne la réponse contenant l'IdFournisseur généré.
-        /// </summary>
         public async Task<FournisseurReponseDto> AjouterAsync(CreerFournisseurDto dto)
         {
             try
@@ -122,13 +83,7 @@ namespace AssetFlow.BlazorUI.Services
             }
         }
 
-        // ────────────────────────────────────────────────────────
         // MODIFIER (PUT)
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Appelle PUT /api/fournisseurs/{id} avec le DTO de modification.
-        /// </summary>
         public async Task<FournisseurReponseDto> ModifierAsync(ModifierFournisseurDto dto)
         {
             try
@@ -151,13 +106,7 @@ namespace AssetFlow.BlazorUI.Services
             }
         }
 
-        // ────────────────────────────────────────────────────────
         // SUPPRIMER (DELETE)
-        // ────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Appelle DELETE /api/fournisseurs/{id}.
-        /// </summary>
         public async Task<FournisseurReponseDto> SupprimerAsync(int id)
         {
             try
@@ -178,8 +127,6 @@ namespace AssetFlow.BlazorUI.Services
                 return Echec(ex.Message);
             }
         }
-
-        // ── Helper privé pour construire une réponse d'échec ────
         private static FournisseurReponseDto Echec(string message) =>
             new() { Succes = false, Message = message };
     }

@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Services / AffectationClientService.cs
-// MISE À JOUR : ajout ProjetDisponibleDto + GetProjetsAsync
-// ============================================================
-
 using System.Net.Http.Json;
 
 namespace AssetFlow.BlazorUI.Services
@@ -34,7 +29,6 @@ namespace AssetFlow.BlazorUI.Services
         public List<ArticleDisponibleDto> Articles { get; set; } = new();
     }
 
-    // ← NOUVEAU
     public class ProjetDisponibleDto
     {
         public int    Id           { get; set; }
@@ -51,7 +45,7 @@ namespace AssetFlow.BlazorUI.Services
         public List<int> ArticleIds       { get; set; } = new();
         public string?   Observations     { get; set; }
         public DateTime? DateRetourPrevue { get; set; }
-        public int?      ProjetId         { get; set; } // ← NOUVEAU
+        public int?      ProjetId         { get; set; }
     }
 
     public class AffectationResultDto
@@ -86,7 +80,6 @@ namespace AssetFlow.BlazorUI.Services
             catch { return new(); }
         }
 
-        // ← NOUVEAU
         public async Task<List<ProjetDisponibleDto>> GetProjetsAsync(string? search = null)
         {
             var url = string.IsNullOrWhiteSpace(search)

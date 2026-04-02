@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Components / AchatSidebar.razor.cs
-// ============================================================
-
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -11,10 +7,8 @@ namespace AssetFlow.BlazorUI.Components
     {
         [Inject] private IJSRuntime JS { get; set; } = default!;
 
-        /// <summary>
-        /// Valeurs : "statistiques" | "equipements" | "materiel" |
-        /// "fournisseurs" | "demandes" | "scraping" | "messagerie"
-        /// </summary>
+        // Valeurs : "statistiques" | "equipements" | "materiel" |
+        // "fournisseurs" | "demandes" | "scraping" | "messagerie" ...
         [Parameter] public string ActivePage      { get; set; } = string.Empty;
         [Parameter] public bool   ForceOpen       { get; set; } = false;
 

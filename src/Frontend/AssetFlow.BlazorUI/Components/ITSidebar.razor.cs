@@ -9,7 +9,7 @@ namespace AssetFlow.BlazorUI.Components
 
         /// <summary>
         /// Valeurs acceptées : "dashboard" | "equipements" | "employes" |
-        /// "affectation" | "incidents" | "inventaire" | "achats" | "messagerie"
+        /// "affectation" | "incidents" | "inventaire" | "achats" | "messagerie" ...
         /// </summary>
         [Parameter] public string ActivePage { get; set; } = string.Empty;
         [Parameter] public bool ForceOpen { get; set; } = false;

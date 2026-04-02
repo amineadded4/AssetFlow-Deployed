@@ -1,14 +1,4 @@
 /* ============================================================
-   Statistiques.razor.css — v3
-   ROOT CAUSE FIX : ApexCharts ne peut pas calculer height:'100%'
-   si le parent n'a pas de hauteur px résolue.
-   Solution : .chart-body a une hauteur px FIXE, jamais flex-grow.
-   La .chart-card est en flex-column mais sa hauteur s'adapte au
-   contenu (header fixe + chart-body fixe) → pas d'étirement.
-   ============================================================ */
-
-
-/* ============================================================
    1. VARIABLES
    ============================================================ */
 .layout-shell {

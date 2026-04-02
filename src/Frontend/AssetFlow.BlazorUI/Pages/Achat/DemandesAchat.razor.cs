@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Pages / Achat / DemandesAchat.razor.cs
-// MODIF : ajout statut en_cours_traitement
-// ============================================================
-
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
@@ -104,8 +99,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 return q.OrderByDescending(d => d.DateCreation);
             }
         }
-
-        // ── Lifecycle ────────────────────────────────────────────
 
         protected override async Task OnInitializedAsync()
         {
@@ -361,8 +354,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private void FermerPreview() => _offrePreview = null;
         private void ToggleSidebar() => _sidebarOpen  = !_sidebarOpen;
 
-        // ── Mapper DTO → ViewModel ───────────────────────────────
-
         private static DemandeVm MapDtoVersVm(DemandeAchatDto dto)
         {
             var parts     = dto.DemandeurNom.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -402,8 +393,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 }).ToList()
             };
         }
-
-        // ── Helpers ──────────────────────────────────────────────
 
         private static string Nettoyer(string v)
         {

@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Services / CommandeService.cs — v4
-// Ajout : ModifierAsync, GetLignesMaterielsAsync
-// ============================================================
-
 using System.Net.Http.Json;
 using AssetFlow.Application.DTOs;
 
@@ -27,14 +22,14 @@ namespace AssetFlow.BlazorUI.Services
             return r ?? new();
         }
 
-        /// <summary>UNE LIGNE PAR MATERIEL avec commandes imbriquées</summary>
+        // UNE LIGNE PAR MATERIEL avec commandes imbriquées
         public async Task<List<LigneMaterielDto>> GetLignesMaterielsAsync()
         {
             var r = await _http.GetFromJsonAsync<List<LigneMaterielDto>>($"{Base}/lignes-materiels");
             return r ?? new();
         }
 
-        /// <summary>Compatibilité : une ligne par commande</summary>
+        // Compatibilité : une ligne par commande
         public async Task<List<LigneCommandeMaterielDto>> GetLignesCommandesAsync()
         {
             var r = await _http.GetFromJsonAsync<List<LigneCommandeMaterielDto>>($"{Base}/lignes-commandes");

@@ -1,8 +1,3 @@
-/* ============================================================
-   SignalerIncident.razor.css
-   Layout intégré dans employe-layout (sidebar + main)
-   ============================================================ */
-
 /* ══ LAYOUT (partagé avec les autres pages employé) ══ */
 .employe-layout {
     display: flex;

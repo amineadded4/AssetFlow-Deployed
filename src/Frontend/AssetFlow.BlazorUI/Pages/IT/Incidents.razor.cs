@@ -147,8 +147,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
                 MaterielSelectionne = Materiels.FirstOrDefault(m => m.MaterielId == MaterielSelectionne.MaterielId);
             await LoadEmployesAsync(Search); // refresh compteurs
         }
-
-        // ── Helpers CSS ──
+        
         private string GetStatutClass(string statut) => statut switch
         {
             "EnAttente" => "en-attente",

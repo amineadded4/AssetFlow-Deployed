@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Pages / Achat / MessagerieIT.razor.cs
-// Messagerie Agent Achat ↔ IT — miroir de MessagerieEmploye
-// ============================================================
-
 using System.Net.Http.Json;
 using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;

@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Services / FaceAuthClientService.cs
-// Appels API face-auth depuis le frontend Blazor
-// ============================================================
-
 using System.Net.Http.Json;
 using Blazored.LocalStorage;
 
@@ -31,9 +26,7 @@ namespace AssetFlow.BlazorUI.Services
             _localStorage = localStorage;
         }
 
-        /// <summary>
-        /// Login par reconnaissance faciale — stocke le token si succès
-        /// </summary>
+        // Login par reconnaissance faciale — stocke le token si succès
         public async Task<(bool Success, string Message)> FaceLoginAsync(FaceLoginRequest request)
         {
             try
@@ -64,9 +57,7 @@ namespace AssetFlow.BlazorUI.Services
             }
         }
 
-        /// <summary>
-        /// Enregistre le visage pour un utilisateur existant
-        /// </summary>
+        // Enregistre le visage pour un utilisateur existant
         public async Task<(bool Success, string Message)> RegisterFaceAsync(RegisterFaceRequest request)
         {
             try

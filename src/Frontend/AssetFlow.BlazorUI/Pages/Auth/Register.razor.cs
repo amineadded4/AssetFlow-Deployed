@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Pages / Auth / Register.razor.cs
-// Logique de la page d'inscription
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 
@@ -28,9 +23,7 @@ namespace AssetFlow.BlazorUI.Pages.Auth
         private string ErrorMessage { get; set; } = string.Empty;
         private string SuccessMessage { get; set; } = string.Empty;
 
-        /// <summary>
         /// Calcule la force du mot de passe (1=faible, 2=moyen, 3=fort)
-        /// </summary>
         private int PasswordStrength
         {
             get
@@ -46,9 +39,7 @@ namespace AssetFlow.BlazorUI.Pages.Auth
             }
         }
 
-        /// <summary>
         /// Traite la soumission du formulaire d'inscription
-        /// </summary>
         private async Task HandleRegister()
         {
             ErrorMessage = string.Empty;

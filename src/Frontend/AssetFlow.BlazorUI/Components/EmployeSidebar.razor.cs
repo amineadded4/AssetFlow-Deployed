@@ -1,8 +1,4 @@
-// ============================================================
-// AssetFlow.BlazorUI / Components / EmployeSidebar.razor.cs
 // Logique du composant sidebar employé réutilisable
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 

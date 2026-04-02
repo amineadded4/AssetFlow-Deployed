@@ -3,8 +3,7 @@
 
 """
 Script de Web Scraping MyTek (par catégorie) + Tunisianet + SpaceNet (par catégorie)
-Auteur: STAMBOULI Nada
-Projet: AssetFlow — Gestion de Parc Informatique
+
 """
 
 import sys

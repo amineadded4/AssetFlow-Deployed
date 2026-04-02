@@ -1,17 +1,3 @@
-@* ============================================================
-   Pages/Mobile/FicheMobile.razor
-   
-   Page PUBLIQUE — aucune authentification requise.
-   Accessible via l'URL encodée dans le QR Code :
-     http://votreapp.com/fiche/{affectationId}
-   
-   Optimisée pour lecture sur smartphone :
-   - Layout pleine largeur, 1 colonne
-   - Grands caractères, bonne lisibilité
-   - Dark mode automatique (suit préférence OS)
-   - CSS isolé, zéro dépendance externe
-   ============================================================ *@
-
 @page "/fiche/{AffectationId:int}/article/{ArticleId:int?}"
 @using AssetFlow.BlazorUI.Services
 

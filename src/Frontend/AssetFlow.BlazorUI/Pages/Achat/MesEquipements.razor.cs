@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Pages / Achat / MesEquipements.razor.cs
-// MISE À JOUR : Ajout modal commentaire (même logique que Employé)
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 using Blazored.LocalStorage;
@@ -53,10 +48,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         // ── Init ───────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
-            // Lecture du rôle AVANT le premier rendu pour éviter le flash
-            // de sidebar (passage AchatSidebar → AdminSidebar ou absence de sidebar).
-            // LocalStorage.GetItemAsync est async mais se résout avant le rendu
-            // car OnInitializedAsync est attendu avant le premier paint Blazor.
             VoiceSvc.OnCommand += HandleVoiceCommand;
             UserName = await LocalStorage.GetItemAsync<string>("user_name") ?? "Utilisateur";
             UserRole = await LocalStorage.GetItemAsync<string>("user_role") ?? "Achat";
@@ -126,7 +117,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             StateHasChanged();
         }
 
-        // IAsyncDisposable — ajoute ou complète
         public ValueTask DisposeAsync()
         {
             VoiceSvc.OnCommand -= HandleVoiceCommand;
@@ -303,8 +293,6 @@ private async Task SupprimerCommentaire(int commentaireId)
         {
             Navigation.NavigateTo($"/achat/equipement/{affectationId}/article/{articleId}");
         }
-
-        // ── Helpers UI ─────────────────────────────────────────
         private string GetStatutLabel(string statut) => statut switch
         {
             "EnCours"   => "BON",

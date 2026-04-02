@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Components / InputField.razor.cs
-// Logique du composant InputField réutilisable
-// ============================================================
-
 using Microsoft.AspNetCore.Components;
 
 namespace AssetFlow.BlazorUI.Components

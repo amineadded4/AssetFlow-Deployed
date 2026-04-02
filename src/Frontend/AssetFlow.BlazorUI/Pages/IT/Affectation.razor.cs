@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Pages / IT / Affectation.razor.cs
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
@@ -252,8 +248,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
             StateHasChanged();
         }
-
-        // ── Helpers ───────────────────────────────────────────
         private string GetInitials()
         {
             var parts = UserName.Split(' ', StringSplitOptions.RemoveEmptyEntries);

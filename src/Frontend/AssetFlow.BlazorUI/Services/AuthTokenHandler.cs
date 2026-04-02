@@ -1,5 +1,3 @@
-// Services/AuthTokenHandler.cs
-// Ce handler intercepte les requêtes HTTP sortantes pour ajouter le token d'authentification.
 using Blazored.LocalStorage;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -30,10 +28,8 @@ namespace AssetFlow.BlazorUI.Services
             return await base.SendAsync(request, cancellationToken);
         }
 
-        /// <summary>
-        /// Retourne un access_token valide.
-        /// Si expiré (ou expire dans moins de 60s), tente un refresh silencieux.
-        /// </summary>
+        // Retourne un access_token valide.
+        // Si expiré (ou expire dans moins de 60s), tente un refresh silencieux.
         private async Task<string?> GetValidTokenAsync()
         {
             var accessToken  = await _localStorage.GetItemAsync<string>("access_token");
@@ -61,10 +57,7 @@ namespace AssetFlow.BlazorUI.Services
             return accessToken;
         }
 
-        /// <summary>
-        /// Appelle Keycloak avec le refresh_token pour obtenir un nouveau access_token.
-        /// </summary>
-        // Remplacer TryRefreshTokenAsync entièrement :
+        // Appelle Keycloak avec le refresh_token pour obtenir un nouveau access_token.
         private async Task<string?> TryRefreshTokenAsync()
         {
             var refreshToken = await _localStorage.GetItemAsync<string>("refresh_token");

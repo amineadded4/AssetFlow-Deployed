@@ -54,12 +54,20 @@
                 <div class="alert alert-error">@ErrorMessage</div>
             }
 
-            <InputField Label="E-mail" Placeholder="votre@email.com"
-                @bind-Value="Email" InputType="email"
-                HasError="EmailError" ErrorMessage="Adresse email invalide" />
+            <div @onkeydown="HandleKeyDown">
 
-            <InputField Label="Mot de passe" Placeholder="••••••••"
-                @bind-Value="Password" InputType="password" ShowPasswordToggle="true" />
+                <InputField Label="E-mail" Placeholder="votre@email.com"
+                    @bind-Value="Email" InputType="email"
+                    HasError="EmailError" ErrorMessage="Adresse email invalide" />
+
+                <InputField Label="Mot de passe" Placeholder="••••••••"
+                    @bind-Value="Password" InputType="password" ShowPasswordToggle="true" />
+
+                <div class="form-options">
+                    <a href="/forgot-password" class="link">Mot de passe oublié ?</a>
+                </div>
+
+            </div>
 
             <div class="form-options">
                 <a href="/forgot-password" class="link">Mot de passe oublié ?</a>

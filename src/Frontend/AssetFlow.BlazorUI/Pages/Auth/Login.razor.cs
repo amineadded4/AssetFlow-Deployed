@@ -1,5 +1,6 @@
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using AssetFlow.BlazorUI.DTOs;
 namespace AssetFlow.BlazorUI.Pages.Auth
 {
@@ -49,7 +50,6 @@ namespace AssetFlow.BlazorUI.Pages.Auth
             _ => "Accès administrateur complet."
         };
 
-        // Appelée au clic sur "Se connecter"
         // Valide les champs puis appelle le service d'auth
         private async Task HandleLogin()
         {
@@ -101,6 +101,16 @@ namespace AssetFlow.BlazorUI.Pages.Auth
             else
             {
                 ErrorMessage = message;
+            }
+        }
+        private async Task HandleKeyDown(KeyboardEventArgs e)
+        {
+            if (e.Key == "Enter" 
+                && !string.IsNullOrEmpty(Email) 
+                && !string.IsNullOrEmpty(Password)
+                && !IsLoading)
+            {
+                await HandleLogin();
             }
         }
     }

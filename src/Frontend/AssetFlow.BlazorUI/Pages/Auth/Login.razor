@@ -69,10 +69,6 @@
 
             </div>
 
-            <div class="form-options">
-                <a href="/forgot-password" class="link">Mot de passe oublié ?</a>
-            </div>
-
             <button class="btn-primary" @onclick="HandleLogin" disabled="@IsLoading">
                 @(IsLoading ? "Connexion en cours..." : "Se connecter")
             </button>

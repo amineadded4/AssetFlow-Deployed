@@ -1,15 +1,5 @@
-// ============================================================
-// COUCHE  : AssetFlow.Application
-// FICHIER : DTOs/FournisseurDtos.cs
-// RÔLE    : Objets de transfert entre le Controller et le Frontend.
-//           Même pattern que AuthDtos.cs, EmployeDtos.cs, IncidentDtos.cs
-// ============================================================
-
 namespace AssetFlow.Application.DTOs
 {
-    // ─────────────────────────────
-    // DTO LECTURE (GET)
-    // ─────────────────────────────
     public class FournisseurDto
     {
         public int IdFournisseur { get; set; }
@@ -24,9 +14,6 @@ namespace AssetFlow.Application.DTOs
         public DateTime? DerniereCommande { get; set; }
     }
 
-    // ─────────────────────────────
-    // DTO CREATION (POST)
-    // ─────────────────────────────
     public class CreerFournisseurDto
     {
         public string Nom { get; set; } = string.Empty;
@@ -39,10 +26,6 @@ namespace AssetFlow.Application.DTOs
         public decimal ScoreFiabilite { get; set; }
         public DateTime? DerniereCommande { get; set; }
     }
-
-    // ─────────────────────────────
-    // DTO MODIFICATION (PUT)
-    // ─────────────────────────────
     public class ModifierFournisseurDto
     {
         public int IdFournisseur { get; set; }
@@ -56,10 +39,6 @@ namespace AssetFlow.Application.DTOs
         public decimal ScoreFiabilite { get; set; }
         public DateTime? DerniereCommande { get; set; }
     }
-
-    // ─────────────────────────────
-    // DTO REPONSE
-    // ─────────────────────────────
     public class FournisseurReponseDto
     {
         public bool Succes { get; set; }

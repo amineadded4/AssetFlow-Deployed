@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / StockITController.cs
-// Consultation stock (lecture) + configuration seuils — IT only
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -18,36 +13,28 @@ namespace AssetFlow.WebAPI.Controllers
         private readonly IMaterielService _svc;
         public StockITController(IMaterielService svc) => _svc = svc;
 
-        // ──────────────────────────────────────────────────────
         // GET api/it/stock
         // Liste complète des matériels (lecture seule)
-        // ──────────────────────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> GetAll()
             => Ok(await _svc.GetAllAsync());
 
-        // ──────────────────────────────────────────────────────
         // GET api/it/stock/search?terme=...&categorie=...
         // Recherche filtrée
-        // ──────────────────────────────────────────────────────
         [HttpGet("search")]
         public async Task<IActionResult> Search(
             [FromQuery] string? terme,
             [FromQuery] string? categorie)
             => Ok(await _svc.SearchAsync(terme, categorie));
 
-        // ──────────────────────────────────────────────────────
         // GET api/it/stock/stats
         // KPI cards (totaux, alertes, ruptures)
-        // ──────────────────────────────────────────────────────
         [HttpGet("stats")]
         public async Task<IActionResult> Stats()
             => Ok(await _svc.GetStatsAsync());
 
-        // ──────────────────────────────────────────────────────
         // GET api/it/stock/{id}
         // Détail d'un matériel
-        // ──────────────────────────────────────────────────────
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -55,10 +42,8 @@ namespace AssetFlow.WebAPI.Controllers
             return m is null ? NotFound() : Ok(m);
         }
 
-        // ──────────────────────────────────────────────────────
         // PATCH api/it/stock/{id}/seuil
         // Mise à jour du seuil minimum uniquement (pas de modif métier)
-        // ──────────────────────────────────────────────────────
         [HttpPatch("{id:int}/seuil")]
         public async Task<IActionResult> UpdateSeuil(int id, [FromBody] UpdateSeuilDto dto)
         {
@@ -80,7 +65,7 @@ namespace AssetFlow.WebAPI.Controllers
                 Description   = materiel.Description,
                 Categorie     = materiel.Categorie,
                 QuantiteStock = materiel.QuantiteStock,
-                QuantiteMin   = dto.SeuilMin,        // ← seulement ça change
+                QuantiteMin   = dto.SeuilMin,        
                 Unite         = materiel.Unite,
                 Emplacement   = materiel.Emplacement,
                 ImageUrl      = materiel.ImageUrl
@@ -90,8 +75,6 @@ namespace AssetFlow.WebAPI.Controllers
             return result.Succes ? Ok(result) : BadRequest(result);
         }
     }
-
-    // DTO léger pour la mise à jour des seuils
     public class UpdateSeuilDto
     {
         public int SeuilMin      { get; set; }

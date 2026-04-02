@@ -1,7 +1,3 @@
-// ============================================================
-// FICHIER  : Pages/Achat/WebScraping.razor.cs
-// ============================================================
-
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Net.Http;
@@ -92,8 +88,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private string _toastType = "ws-toast-success";
         private string      _roleUtilisateur = "Service Achat";
         private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
-
-        // ── Lifecycle ───────────────────────────────────────────
 
         protected override async Task OnInitializedAsync()
         {
@@ -341,8 +335,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 AfficherToast($"Erreur export : {ex.Message}", "ws-toast-error");
             }
         }
-
-        // ── Helpers ─────────────────────────────────────────────
 
         private static string Nettoyer(string v)
         {

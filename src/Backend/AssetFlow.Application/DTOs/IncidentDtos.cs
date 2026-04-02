@@ -1,13 +1,5 @@
-// ============================================================
-// AssetFlow.Application / DTOs / IncidentDtos.cs
-// DTOs pour la gestion des incidents
-// ============================================================
-
 namespace AssetFlow.Application.DTOs
 {
-    /// <summary>
-    /// DTO pour signaler un nouvel incident
-    /// </summary>
     public class SignalerIncidentRequestDto
     {
         public int AffectationId { get; set; }
@@ -16,10 +8,6 @@ namespace AssetFlow.Application.DTOs
         public int Urgence { get; set; }
         public string Description { get; set; } = string.Empty;
     }
-
-    /// <summary>
-    /// Réponse après signalement d'incident
-    /// </summary>
     public class SignalerIncidentResponseDto
     {
         public bool Success { get; set; }
@@ -27,10 +15,6 @@ namespace AssetFlow.Application.DTOs
         public int? IncidentId { get; set; }
         public string? NumeroIncident { get; set; }
     }
-
-    /// <summary>
-    /// DTO représentant un incident pour l'affichage
-    /// </summary>
     public class IncidentDto
     {
         public int Id { get; set; }

@@ -1,7 +1,3 @@
-// ============================================================
-// Pages/IT/SignalerIncident.razor.cs
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;

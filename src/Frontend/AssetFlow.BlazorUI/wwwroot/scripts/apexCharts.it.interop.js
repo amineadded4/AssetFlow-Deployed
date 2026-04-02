@@ -1,8 +1,4 @@
-// ============================================================
-// wwwroot/scripts/apexCharts.it.interop.js — v1
 // Graphes pour le tableau de bord IT
-// Même pattern que apexCharts.interop.js (lecture hauteur DOM)
-// ============================================================
 
 window.ApexITInterop = (function () {
 

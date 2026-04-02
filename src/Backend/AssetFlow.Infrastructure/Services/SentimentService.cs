@@ -1,9 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / SentimentService.cs
-// FIX : Mistral retourne { commentaires:[...], statistiques:{...} }
-//       → on lit les stats dans le sous-objet "statistiques"
-// ============================================================
-
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;

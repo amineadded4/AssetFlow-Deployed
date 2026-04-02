@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / SentimentController.cs
-// ============================================================
-
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,10 +16,8 @@ namespace AssetFlow.WebAPI.Controllers
             _service = service;
         }
 
-        /// <summary>
-        /// GET api/sentiment/materiel/{materielId}
-        /// Analyse de sentiment pour un matériel donné
-        /// </summary>
+        // GET api/sentiment/materiel/{materielId}
+        // Analyse de sentiment pour un matériel donné
         [HttpGet("materiel/{materielId}")]
         public async Task<IActionResult> AnalyserMateriel(int materielId)
         {
@@ -38,11 +32,8 @@ namespace AssetFlow.WebAPI.Controllers
                 return NotFound(ex.Message);
             }
         }
-
-        /// <summary>
-        /// GET api/sentiment/tous
-        /// Analyse de sentiment pour tous les matériels commentés
-        /// </summary>
+        // GET api/sentiment/tous
+        // Analyse de sentiment pour tous les matériels commentés
         [HttpGet("tous")]
         public async Task<IActionResult> AnalyserTous()
         {

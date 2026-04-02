@@ -1,7 +1,3 @@
-// ============================================================
-// AdminFaceSetup.razor.cs
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -291,9 +287,6 @@ namespace AssetFlow.BlazorUI.Pages.Admin
             StateHasChanged();
         }
 
-        // ────────────────────────────────────────────────────
-        // Helpers
-        // ────────────────────────────────────────────────────
         private async Task<string?> GetAdminEmailAsync()
         {
             try

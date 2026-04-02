@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.Domain / Entities / ChatMessage.cs
-// ============================================================
- 
 namespace AssetFlow.Domain.Entities
 {
     public class ChatMessage
@@ -13,7 +9,6 @@ namespace AssetFlow.Domain.Entities
         public DateTime SentAt     { get; set; } = DateTime.UtcNow;
         public bool     IsRead     { get; set; } = false;
  
-        // Navigation
         public User? Sender   { get; set; }
         public User? Receiver { get; set; }
     }

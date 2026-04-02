@@ -1,8 +1,3 @@
-// ============================================================
-// Pages/IT/DetailsEquipement.razor.cs
-// MISE À JOUR : Chargement des incidents de l'affectation
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -101,7 +96,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             Navigation.NavigateTo($"/it/incident/{AffectationId}/article/{ArticleId}");
         }
 
-        // ── Helpers UI ─────────────────────────────────────────
         private string GetInitials()
         {
             var parts = UserName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -119,9 +113,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
             _           => statut
         };
 
-        /// <summary>
-        /// Couleur du point de la timeline selon le statut de l'incident
-        /// </summary>
+        // Couleur du point de la timeline selon le statut de l'incident
         private string GetIncidentDotClass(string statut) => statut switch
         {
             "Resolu"   => "resolu",
@@ -131,9 +123,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
             _          => "attente"
         };
 
-        /// <summary>
-        /// Classe CSS pour le badge d'urgence
-        /// </summary>
+        // Classe CSS pour le badge d'urgence
         private string GetUrgenceClass(int urgence)
         {
             if (urgence <= 33) return "faible";

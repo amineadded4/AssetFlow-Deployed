@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / StatistiquesITService.cs
-// Utilise AppDbContext directement (pas d'interface IAssetFlowDbContext)
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Domain.Entities;

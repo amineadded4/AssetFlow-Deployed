@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / DemandesAchatController.cs
-// MODIF : MapToDto inclut les lignes de matériel
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Domain.Entities;
@@ -112,8 +107,6 @@ namespace AssetFlow.WebApi.Controllers
                 return NotFound(new { Message = "PDF introuvable." });
             return File(contenu, "application/pdf");
         }
-
-        // ── Mapper Entité → DTO (inclut les lignes) ──────────────
         private static DemandeAchatDto MapToDto(DemandeAchat d) => new()
         {
             IdDemande    = d.IdDemande,

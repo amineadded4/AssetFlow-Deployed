@@ -1,16 +1,9 @@
-// ============================================================
-// AssetFlow.BlazorUI / Services / IncidentService.cs
-// MISE À JOUR : Ajout de GetIncidentsByAffectationAsync
-// ============================================================
-
 using System.Net.Http.Json;
 using Blazored.LocalStorage;
 
 namespace AssetFlow.BlazorUI.Services
 {
-    /// <summary>
-    /// DTO pour signaler un incident (request)
-    /// </summary>
+    // DTO pour signaler un incident (request)
     public class SignalerIncidentRequestDto
     {
         public int AffectationId { get; set; }
@@ -20,9 +13,7 @@ namespace AssetFlow.BlazorUI.Services
         public string Description { get; set; } = string.Empty;
     }
 
-    /// <summary>
-    /// DTO pour la réponse après signalement
-    /// </summary>
+    // DTO pour la réponse après signalement
     public class SignalerIncidentResponseDto
     {
         public bool Success { get; set; }
@@ -31,9 +22,7 @@ namespace AssetFlow.BlazorUI.Services
         public string? NumeroIncident { get; set; }
     }
 
-    /// <summary>
-    /// DTO représentant un incident
-    /// </summary>
+    // DTO représentant un incident
     public class IncidentDto
     {
         public int Id { get; set; }
@@ -52,9 +41,7 @@ namespace AssetFlow.BlazorUI.Services
         public string MaterielReference { get; set; } = string.Empty;
     }
 
-    /// <summary>
-    /// Service pour gérer les incidents côté frontend
-    /// </summary>
+    // Service pour gérer les incidents côté frontend
     public class IncidentService
     {
         private readonly HttpClient _httpClient;
@@ -66,9 +53,7 @@ namespace AssetFlow.BlazorUI.Services
             _localStorage = localStorage;
         }
 
-        /// <summary>
-        /// Signale un nouvel incident
-        /// </summary>
+        // Signale un nouvel incident
         public async Task<SignalerIncidentResponseDto> SignalerIncidentAsync(SignalerIncidentRequestDto request)
         {
             try
@@ -101,10 +86,7 @@ namespace AssetFlow.BlazorUI.Services
             }
         }
 
-        /// <summary>
-        /// Récupère tous les incidents liés à une affectation spécifique
-        /// NOUVEAU : utilisé dans DetailsEquipement pour afficher l'historique des incidents
-        /// </summary>
+        // Récupère tous les incidents liés à une affectation spécifique
         public async Task<List<IncidentDto>> GetIncidentsByAffectationAsync(int affectationId)
         {
             try
@@ -138,9 +120,7 @@ namespace AssetFlow.BlazorUI.Services
             }
         }
 
-        /// <summary>
-        /// Récupère le détail d'un incident
-        /// </summary>
+        // Récupère le détail d'un incident
         public async Task<IncidentDto?> GetIncidentDetailAsync(int incidentId)
         {
             try

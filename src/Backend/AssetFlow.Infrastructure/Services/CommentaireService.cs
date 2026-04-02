@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / CommentaireService.cs
-// MISE À JOUR : ajout GetTousLesCommentairesAsync
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Domain.Entities;
@@ -19,8 +14,6 @@ namespace AssetFlow.Infrastructure.Services
         {
             _context = context;
         }
-
-        // ── Ajouter ──────────────────────────────────────────────
         public async Task<CommentaireResultDto> AjouterCommentaireAsync(CreerCommentaireDto dto)
         {
             try
@@ -49,8 +42,6 @@ namespace AssetFlow.Infrastructure.Services
                 return new CommentaireResultDto { Succes = false, Message = $"Erreur : {ex.Message}" };
             }
         }
-
-        // ── Lire (vue utilisateur) ────────────────────────────────
         public async Task<List<CommentaireDto>> GetCommentairesMaterielAsync(int materielId, int userId)
         {
             var commentaires = await _context.CommentairesMateriel
@@ -61,8 +52,6 @@ namespace AssetFlow.Infrastructure.Services
 
             return commentaires.Select(c => MapToDto(c)).ToList();
         }
-
-        // ── Supprimer ─────────────────────────────────────────────
         public async Task<CommentaireResultDto> SupprimerCommentaireAsync(int commentaireId, int utilisateurId)
         {
             try
@@ -123,7 +112,7 @@ namespace AssetFlow.Infrastructure.Services
                 DateCreation      = c.DateCreation
             }).ToList();
         }
-        //Suppression de tous les commentaires pour l'it
+        // Suppression de tous les commentaires pour l'it
         public async Task<CommentaireResultDto> SupprimerCommentaireAdminAsync(int commentaireId)
         {
             try
@@ -144,8 +133,6 @@ namespace AssetFlow.Infrastructure.Services
                 return new CommentaireResultDto { Succes = false, Message = $"Erreur : {ex.Message}" };
             }
         }
-
-        // ── Helpers ───────────────────────────────────────────────
         private static CommentaireDto MapToDto(CommentaireMateriel c) => new()
         {
             Id              = c.Id,

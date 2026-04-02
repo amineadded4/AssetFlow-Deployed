@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.Application / Services / ConnectionTracker.cs
-// ============================================================
-
 using AssetFlow.Application.Interfaces;
 
 namespace AssetFlow.Infrastructure.Services

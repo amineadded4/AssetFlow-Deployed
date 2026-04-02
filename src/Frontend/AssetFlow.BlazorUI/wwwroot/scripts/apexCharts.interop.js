@@ -1,9 +1,6 @@
-// ============================================================
-// wwwroot/scripts/apexCharts.interop.js — v5
 // FIX DÉFINITIF : Blazor InvokeVoidAsync ne peut PAS awaiter
 // une fonction JS async. On utilise une fonction SYNCHRONE
 // qui lance le rendu en micro-tâche via Promise.resolve().then()
-// ============================================================
 
 window.ApexInterop = (function () {
 

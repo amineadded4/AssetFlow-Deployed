@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.Application / Services / ChatService.cs
-// ============================================================
-
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Domain.Entities;
 using AssetFlow.Infrastructure.Data;

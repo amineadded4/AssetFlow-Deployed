@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Application / DTOs / CommandeDtos.cs — v4
-// Ajout : ModifierCommandeDto
-// ============================================================
-
 namespace AssetFlow.Application.DTOs
 {
     public class CommandeDto
@@ -41,10 +36,6 @@ namespace AssetFlow.Application.DTOs
         public DateTime? DateFinGarantie { get; set; }
         public List<string?> NumerosSerie { get; set; } = new();
     }
-
-    /// <summary>
-    /// Modification d'une commande existante (sans changer la quantité ni les articles).
-    /// </summary>
     public class ModifierCommandeDto
     {
         public int       Id               { get; set; }
@@ -63,11 +54,6 @@ namespace AssetFlow.Application.DTOs
         public string Message { get; set; } = string.Empty;
         public int? IdCommande { get; set; }
     }
-
-    /// <summary>
-    /// UNE LIGNE PAR MATERIEL dans le tableau.
-    /// Les commandes associées sont dans la liste Commandes.
-    /// </summary>
     public class LigneMaterielDto
     {
         // Matériel
@@ -86,7 +72,6 @@ namespace AssetFlow.Application.DTOs
         public List<CommandeDto> Commandes { get; set; } = new();
     }
 
-    // Conservé pour compatibilité interne
     public class LigneCommandeMaterielDto
     {
         public int      MaterielId    { get; set; }

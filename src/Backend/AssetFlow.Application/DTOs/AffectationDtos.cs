@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Application / DTOs / AffectationDtos.cs
-// MISE À JOUR : ajout ProjetId dans CreerAffectationDto
-// ============================================================
-
 namespace AssetFlow.Application.DTOs
 {
     public class UtilisateurDisponibleDto

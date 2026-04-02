@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Services / DemandeAchatITClientService.cs
-// AJOUT : UserId envoyé depuis le localStorage pour filtrer les demandes
-// ============================================================
-
 using System.Net.Http.Json;
 using AssetFlow.Application.DTOs;
 

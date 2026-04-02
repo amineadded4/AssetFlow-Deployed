@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Services / MaterielService.cs
-// Client HTTP — MISE À JOUR : ajout SupprimerAvecCascadeAsync
-// ============================================================
-
 using System.Net.Http.Json;
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
@@ -62,10 +57,7 @@ namespace AssetFlow.BlazorUI.Services
                    ?? new() { Succes = false, Message = "Réponse vide du serveur." };
         }
 
-        /// <summary>
-        /// Supprime un matériel et toutes ses affectations + incidents associés (cascade).
-        /// Appelle DELETE /api/materiel/{id}/cascade
-        /// </summary>
+        // Supprime un matériel et toutes ses affectations + incidents associés (cascade).
         public async Task<MaterielResultDto> SupprimerAvecCascadeAsync(int id)
         {
             var resp = await _http.DeleteAsync($"{Base}/{id}/cascade");

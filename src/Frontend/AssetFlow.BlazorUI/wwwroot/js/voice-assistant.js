@@ -1,4 +1,3 @@
-// wwwroot/js/voice-assistant.js
 window.VoiceAssistant = (function () {
     let recognition = null;
     let dotNetRef   = null;

@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Hubs / ChatHub.cs
-// ============================================================
-
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 

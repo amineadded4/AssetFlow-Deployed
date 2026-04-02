@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Pages / Employe / MesEquipements.razor.cs
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 

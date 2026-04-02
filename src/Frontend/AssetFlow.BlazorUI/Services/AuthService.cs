@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Services / AuthService.cs
-// MISE À JOUR : Stocke refresh_token + token_expires_at pour refresh automatique
-// ============================================================
-
 using System.Net.Http.Json;
 using Blazored.LocalStorage;
 
@@ -42,9 +37,7 @@ namespace AssetFlow.BlazorUI.Services
         public string Message { get; set; } = string.Empty;
     }
 
-    /// <summary>
-    /// Service d'authentification côté Blazor
-    /// </summary>
+    // Service d'authentification côté Blazor
     public class AuthService
     {
         private readonly HttpClient _httpClient;
@@ -56,9 +49,7 @@ namespace AssetFlow.BlazorUI.Services
             _localStorage = localStorage;
         }
 
-        /// <summary>
-        /// Appelle POST api/auth/login et stocke les infos dans localStorage
-        /// </summary>
+        // Appelle POST api/auth/login et stocke les infos dans localStorage
         public async Task<(bool Success, string Message)> LoginAsync(LoginRequest request)
         {
             try
@@ -109,9 +100,7 @@ namespace AssetFlow.BlazorUI.Services
             }
         }
 
-        /// <summary>
-        /// Déconnexion : supprime toutes les clés du localStorage
-        /// </summary>
+        // Déconnexion : supprime toutes les clés du localStorage
         public async Task LogoutAsync()
         {
             await _localStorage.RemoveItemAsync("user_id");

@@ -19,7 +19,6 @@ namespace AssetFlow.BlazorUI.Services
         public Task<HttpResponseMessage> DeleteAsync(int id)
             => _http.DeleteAsync($"api/projects/{id}");
 
-        // ← NOUVEAU
         public async Task<List<ProjetAffectationDto>> GetAffectationsAsync(int projetId)
         {
             try
@@ -46,7 +45,6 @@ namespace AssetFlow.BlazorUI.Services
         public DateTime  UpdatedAt   { get; set; }
     }
 
-    // ← NOUVEAU
     public class ProjetAffectationDto
     {
         public int       AffectationId    { get; set; }

@@ -35,7 +35,6 @@ namespace AssetFlow.BlazorUI.Services
         public List<ArticleAffectationDto> Articles { get; set; } = new();
     }
 
-    // ── NOUVEAU : DTO projet avec ses affectations ──
     public class ProjetAffectationListeDto
     {
         public int    Id          { get; set; }
@@ -67,11 +66,10 @@ namespace AssetFlow.BlazorUI.Services
             catch { return new(); }
         }
 
-        // ── NOUVEAU : Projets avec affectations ──
+        // ── Projets avec affectations ──
         public async Task<List<ProjetAffectationListeDto>> GetProjetsAvecAffectationsAsync(string? search = null)
         {
             // Récupère les projets depuis api/affectation/projets
-            // (déjà existant, retourne les projets non terminés)
             var url = string.IsNullOrWhiteSpace(search)
                 ? "api/affectation/projets"
                 : $"api/affectation/projets?search={Uri.EscapeDataString(search)}";

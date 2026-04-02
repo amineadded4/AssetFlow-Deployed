@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / StatistiquesService.cs — v2
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Domain.Entities;

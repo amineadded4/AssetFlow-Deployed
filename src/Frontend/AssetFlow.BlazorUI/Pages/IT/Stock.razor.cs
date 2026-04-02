@@ -126,7 +126,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             else { SeuilErrorMsg = "Erreur lors de la sauvegarde."; StateHasChanged(); }
         }
 
-        // ── Helpers ──
         private (string label, string css) GetStatut(MaterielDto m)
         {
             if (m.QuantiteStock == 0)                            return ("RUPTURE",    "rupture");

@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Application / DTOs / CommentaireDtos.cs  (COMPLET)
-// MISE À JOUR : ajout CommentaireITDto pour vue IT
-// ============================================================
-
 namespace AssetFlow.Application.DTOs
 {
     public class CreerCommentaireDto
@@ -23,7 +18,6 @@ namespace AssetFlow.Application.DTOs
         public DateTime DateCreation    { get; set; }
     }
 
-    /// <summary>DTO enrichi pour la vue IT — contient les infos matériel</summary>
     public class CommentaireITDto
     {
         public int      Id               { get; set; }

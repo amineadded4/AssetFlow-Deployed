@@ -1,8 +1,4 @@
-// ============================================================
-// AssetFlow.BlazorUI / Components / ThemeToggle.razor.cs
-// Logique du bouton dark/light mode
 // Utilise JSInterop pour ajouter/retirer la classe "dark" sur <html>
-// ============================================================
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;

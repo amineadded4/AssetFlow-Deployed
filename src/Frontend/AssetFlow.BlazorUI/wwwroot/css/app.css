@@ -1,9 +1,3 @@
-/* ============================================================
-   app.css — GLOBAL UNIQUEMENT
-   Variables, reset, composants réutilisables dans toutes les pages
-   NE PAS ajouter de styles spécifiques à une page ici
-   ============================================================ */
-
 /* === VARIABLES & THÈME === */
 :root {
     --primary: #136dec;

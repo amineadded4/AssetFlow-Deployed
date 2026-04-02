@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Services / ArticleService.cs
-// Client HTTP pour la gestion des articles individuels
-// ============================================================
-
 using System.Net.Http.Json;
 
 namespace AssetFlow.BlazorUI.Services
@@ -14,7 +9,7 @@ namespace AssetFlow.BlazorUI.Services
 
         public ArticleService(HttpClient http) => _http = http;
 
-        /// <summary>Met à jour le numéro de série d'un article individuel</summary>
+        // Met à jour le numéro de série d'un article individuel
         public async Task<bool> UpdateNumeroSerieAsync(int articleId, string? numeroSerie)
         {
             var payload = new { NumeroSerie = string.IsNullOrWhiteSpace(numeroSerie) ? null : numeroSerie.Trim() };

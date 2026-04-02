@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / DemandeAchatService.cs
-// MODIF : ajout statut "en_cours_traitement"
-// ============================================================
-
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Domain.Entities;
 using AssetFlow.Infrastructure.Data;

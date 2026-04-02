@@ -1,8 +1,3 @@
-// ============================================================
-// FICHIER  : Pages/IT/DashboardIT.razor.cs
-// RÔLE     : Code-behind — tableau de bord statistiques IT
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
@@ -34,8 +29,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
         // ─── Filtre : Évolution des incidents (semaines) ─────────
         private DateTime _semDebut = DateTime.Today.AddDays(-55);
         private DateTime _semFin   = DateTime.Today;
-
-        // ─── Lifecycle ───────────────────────────────────────────
 
         protected override async Task OnInitializedAsync()
         {
@@ -193,8 +186,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
         }
 
         private void ToggleSidebar() => _sidebarOpen = !_sidebarOpen;
-
-        // ─── Helpers ─────────────────────────────────────────────
 
         private static string Nettoyer(string v)
         {

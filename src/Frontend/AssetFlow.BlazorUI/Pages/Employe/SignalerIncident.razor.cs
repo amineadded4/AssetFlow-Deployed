@@ -1,7 +1,3 @@
-// ============================================================
-// Pages/Employe/SignalerIncident.razor.cs
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 

@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / RedisOffreService.cs
-// ============================================================
-
 using AssetFlow.Application.Interfaces;
 using StackExchange.Redis;
 

@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / KeycloakAuthService.cs
-// MISE À JOUR : Retourne UserId dans LoginResponseDto
-// ============================================================
-
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -32,10 +27,7 @@ namespace AssetFlow.Infrastructure.Services
             _config = config;
         }
 
-        /// <summary>
-        /// Login : appelle Keycloak avec email+password, récupère le token JWT
-        /// AJOUT : Retourne aussi l'ID utilisateur depuis SQL Server
-        /// </summary>
+        // Login : appelle Keycloak avec email+password, récupère le token JWT
         public async Task<LoginResponseDto?> LoginAsync(LoginRequestDto request)
         {
             var tokenUrl = $"{KeycloakUrl}/protocol/openid-connect/token";
@@ -85,10 +77,7 @@ namespace AssetFlow.Infrastructure.Services
                 Email = user.Email
             };
         }
-
-        /// <summary>
-        /// Register : crée l'utilisateur dans Keycloak + SQL Server
-        /// </summary>
+        // Register : crée l'utilisateur dans Keycloak + SQL Server
         public async Task<RegisterResponseDto> RegisterAsync(RegisterRequestDto request)
         {
             var exists = await _dbContext.Users.AnyAsync(u => u.Email == request.Email);

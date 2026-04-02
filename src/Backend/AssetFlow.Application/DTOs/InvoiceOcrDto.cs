@@ -1,8 +1,4 @@
-// ============================================================
-// AssetFlow.Application / DTOs / InvoiceOcrDto.cs
-// Mirrors the JSON structure extracted by Gemini
-// ============================================================
-
+// Mirrors the JSON structure extracted by Llama4
 namespace AssetFlow.Application.DTOs
 {
     public class InvoiceOcrDto

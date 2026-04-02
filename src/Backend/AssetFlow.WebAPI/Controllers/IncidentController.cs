@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / IncidentController.cs
-// MISE À JOUR : Ajout endpoint GET api/incident/affectation/{affectationId}
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -21,11 +16,7 @@ namespace AssetFlow.WebAPI.Controllers
         {
             _incidentService = incidentService;
         }
-
-        /// <summary>
         /// POST api/incident/signaler
-        /// Signale un nouvel incident
-        /// </summary>
         [HttpPost("signaler")]
         public async Task<IActionResult> SignalerIncident([FromBody] SignalerIncidentRequestDto request)
         {
@@ -46,10 +37,8 @@ namespace AssetFlow.WebAPI.Controllers
             return Ok(result);
         }
 
-        /// <summary>
-        /// GET api/incident/affectation/{affectationId}
-        /// NOUVEAU : Récupère tous les incidents liés à une affectation
-        /// </summary>
+        // GET api/incident/affectation/{affectationId}
+        // Récupère tous les incidents liés à une affectation
         [HttpGet("affectation/{affectationId}")]
         public async Task<IActionResult> GetIncidentsByAffectation(int affectationId)
         {
@@ -60,10 +49,8 @@ namespace AssetFlow.WebAPI.Controllers
             return Ok(incidents);
         }
 
-        /// <summary>
         /// GET api/incident/{incidentId}
         /// Récupère le détail d'un incident
-        /// </summary>
         [HttpGet("{incidentId}")]
         public async Task<IActionResult> GetIncidentDetail(int incidentId)
         {

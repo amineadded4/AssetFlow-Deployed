@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Services / OffreAchatService.cs
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using AssetFlow.Infrastructure.Data;

@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / DemandeAchatITController.cs
-// MODIF : GET accepte userId en query param (nullable) pour filtrer
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +18,6 @@ namespace AssetFlow.WebAPI.Controllers
         }
 
         // GET api/it/demandesachat?userId=5
-        // userId est nullable : si absent → toutes les demandes (utile pour Admin)
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DemandeAchatITDto>>> GetAll(
             [FromQuery] int? userId = null)

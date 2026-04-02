@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / CommandesController.cs — v4
-// Ajout : PUT /{id} pour modifier une commande
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -33,12 +28,12 @@ namespace AssetFlow.WebAPI.Controllers
             return c is null ? NotFound() : Ok(c);
         }
 
-        /// <summary>UNE LIGNE PAR MATERIEL avec commandes imbriquées</summary>
+        // UNE LIGNE PAR MATERIEL avec commandes imbriquées
         [HttpGet("lignes-materiels")]
         public async Task<IActionResult> GetLignesMateriels()
             => Ok(await _svc.GetLignesMaterielsAsync());
 
-        /// <summary>Compatibilité : une ligne par commande</summary>
+        // Compatibilité : une ligne par commande
         [HttpGet("lignes-commandes")]
         public async Task<IActionResult> GetLignesCommandes()
             => Ok(await _svc.GetLignesCommandesAsync());
@@ -58,7 +53,7 @@ namespace AssetFlow.WebAPI.Controllers
             return result.Succes ? Ok(result) : BadRequest(result);
         }
 
-        /// <summary>Modifier N°commande, fournisseur, dates (sans toucher à la quantité)</summary>
+        // Modifier N°commande, fournisseur, dates (sans toucher à la quantité)
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] ModifierCommandeDto dto)
         {

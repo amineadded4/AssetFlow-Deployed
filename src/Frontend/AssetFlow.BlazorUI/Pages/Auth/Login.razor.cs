@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Pages / Auth / Login.razor.cs
-// Logique de la page de connexion
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 
@@ -54,10 +49,8 @@ namespace AssetFlow.BlazorUI.Pages.Auth
             _ => "Accès administrateur complet."
         };
 
-        /// <summary>
-        /// Appelée au clic sur "Se connecter"
-        /// Valide les champs puis appelle le service d'auth
-        /// </summary>
+        // Appelée au clic sur "Se connecter"
+        // Valide les champs puis appelle le service d'auth
         private async Task HandleLogin()
         {
             // Réinitialiser les erreurs

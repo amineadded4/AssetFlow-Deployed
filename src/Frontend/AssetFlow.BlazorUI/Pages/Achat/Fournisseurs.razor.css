@@ -1,12 +1,4 @@
 /* ============================================================
-   FICHIER : Fournisseurs.razor.css  (CSS Isolation Blazor)
-   v4 : Sidebar redessinée pour matcher le style Employé
-        (width 200px, nav-link avec border-left pill, même dark blue)
-        + Titres de colonnes tableau plus larges
-   ============================================================ */
-
-
-/* ============================================================
    1. VARIABLES — thème clair (défaut)
    ============================================================ */
 .layout-shell {

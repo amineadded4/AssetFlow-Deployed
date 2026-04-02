@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.WebAPI / Controllers / EmployeController.cs
-// MISE À JOUR : ajout endpoint GET materiels-groupes
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -22,10 +17,7 @@ namespace AssetFlow.WebAPI.Controllers
             _employeService = employeService;
         }
 
-        /// <summary>
-        /// GET api/employe/equipements/{utilisateurId}
-        /// Liste plate des affectations (rétrocompatibilité)
-        /// </summary>
+        // GET api/employe/equipements/{utilisateurId}
         [HttpGet("equipements/{utilisateurId}")]
         public async Task<IActionResult> GetEquipementsAffectes(int utilisateurId)
         {
@@ -33,23 +25,16 @@ namespace AssetFlow.WebAPI.Controllers
             var equipements = await _employeService.GetEquipementsAffectesAsync(utilisateurId);
             return Ok(equipements);
         }
-
-        /// <summary>
-        /// GET api/employe/equipements/detail/{affectationId}
-        /// Détail d'une affectation
-        /// </summary>
+        // GET api/employe/equipements/detail/{affectationId}
         [HttpGet("equipements/detail/{affectationId}")]
         public async Task<IActionResult> GetEquipementDetail(int affectationId, [FromQuery] int articleId = 0)
         {
             var equipement = await _employeService.GetEquipementDetailAsync(affectationId, articleId); 
             return Ok(equipement);
         }
-
-        /// <summary>
-        /// GET api/employe/{utilisateurId}/materiels-groupes
-        /// Retourne les matériels groupés avec leurs articles individuels.
-        /// C'est l'endpoint utilisé par la nouvelle grille MesEquipements.
-        /// </summary>
+        // GET api/employe/{utilisateurId}/materiels-groupes
+        // Retourne les matériels groupés avec leurs articles individuels.
+        // C'est l'endpoint utilisé par la nouvelle grille MesEquipements.
         [HttpGet("{utilisateurId}/materiels-groupes")]
         public async Task<IActionResult> GetMaterielsGroupes(int utilisateurId)
         {

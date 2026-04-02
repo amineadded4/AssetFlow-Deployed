@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Services / OffreDemandeService.cs
-// Client HTTP pour la gestion des offres et du chat IT
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using System.Net.Http.Json;
 

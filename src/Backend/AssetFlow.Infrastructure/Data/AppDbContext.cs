@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Infrastructure / Data / AppDbContext.cs
-// MISE À JOUR : Ajout Commande + ArticleIndividuel
-// ============================================================
-
 using AssetFlow.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,8 +6,6 @@ namespace AssetFlow.Infrastructure.Data
       public class AppDbContext : DbContext
       {
             public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
-            // === TABLES ===
             public DbSet<User> Users { get; set; }
             public DbSet<Materiel> Materiels { get; set; }
             public DbSet<Affectation> Affectations { get; set; }
@@ -34,6 +27,7 @@ namespace AssetFlow.Infrastructure.Data
                   // === USER ===
                   modelBuilder.Entity<User>(entity =>
                   {
+                        entity.ToTable("Utilisateurs");
                         entity.HasKey(u => u.Id);
                         entity.Property(u => u.Email).IsRequired().HasMaxLength(200);
                         entity.Property(u => u.FirstName).IsRequired().HasMaxLength(100);
@@ -137,7 +131,6 @@ namespace AssetFlow.Infrastructure.Data
                         entity.Property(a => a.NumeroSerie).HasMaxLength(200);
                         entity.Property(a => a.Statut).HasConversion<string>().HasMaxLength(50);
 
-                        // Index unique sur NumeroSerie (uniquement si non null)
                         entity.HasIndex(a => a.NumeroSerie)
                         .IsUnique()
                         .HasFilter("[NumeroSerie] IS NOT NULL");
@@ -155,7 +148,7 @@ namespace AssetFlow.Infrastructure.Data
                         entity.HasOne(a => a.Affectation)
                       .WithMany(af => af.Articles)
                       .HasForeignKey(a => a.AffectationId)
-                      .OnDelete(DeleteBehavior.SetNull)  // si affectation supprimée → null
+                      .OnDelete(DeleteBehavior.SetNull)
                       .IsRequired(false);
                   });
                   modelBuilder.Entity<DemandeAchat>(entity =>
@@ -256,6 +249,7 @@ namespace AssetFlow.Infrastructure.Data
 
                       modelBuilder.Entity<Project>(entity =>
                         {
+                        entity.ToTable("Projets");
                         entity.HasKey(p => p.Id);
                         entity.Property(p => p.Nom).IsRequired().HasMaxLength(200);
                         entity.Property(p => p.Description).HasMaxLength(2000);

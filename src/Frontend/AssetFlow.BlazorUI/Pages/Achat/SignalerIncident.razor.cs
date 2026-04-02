@@ -1,15 +1,3 @@
-// ============================================================
-// Pages/Employe/SignalerIncident.razor.cs
-//
-// MODIFICATIONS PAR RAPPORT À L'ORIGINAL :
-//   1. Route optionnelle : AffectationId n'est plus obligatoire
-//   2. OnInitializedAsync charge GetMesEquipementsAsync()
-//   3. Si AffectationId est fourni dans l'URL → pré-sélection dans la dropdown
-//   4. La validation vérifie que SelectedAffectationId > 0
-//
-// AUCUN changement dans le design ou la logique de soumission.
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 
@@ -88,7 +76,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         {
             ErrorMessage = string.Empty;
 
-            // Validation sur SelectedArticleId (pas SelectedAffectationId)
+            // Validation sur SelectedArticleId
             if (SelectedArticleId <= 0)
             {
                 ErrorMessage = "Veuillez sélectionner un article.";
@@ -131,8 +119,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 IsSubmitting = false;
             }
         }
-
-        // ── Helpers UI ─────────────────────────────────────────
         private string GetUrgencyLabel()
         {
             if (Urgence <= 33) return "FAIBLE";
@@ -156,7 +142,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 return parts[0][..2].ToUpper();
             return "??";
         }
-        // Helper pour afficher la désignation dans le select :
         private string GetDesignation(int affectationId)
         {
             var groupe = Groupes.FirstOrDefault(g =>

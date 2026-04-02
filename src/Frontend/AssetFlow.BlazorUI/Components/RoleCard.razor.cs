@@ -1,8 +1,3 @@
-
-// ============================================================
-// AssetFlow.BlazorUI / Components / RoleCard.razor.cs
-// ============================================================
-
 using Microsoft.AspNetCore.Components;
 
 namespace AssetFlow.BlazorUI.Components

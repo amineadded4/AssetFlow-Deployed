@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Pages / IT / OffresDemandeIT.razor.cs
-// FINAL: sélection unique, modal confirm, Redis save
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;
@@ -144,7 +139,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             return content;
         }
 
-        // ── Lifecycle ────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
             _userName = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
@@ -402,7 +396,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             _pdfModalName = string.Empty;
         }
 
-        // ── Helpers ──────────────────────────────────────────────
         private OffreFormState GetOrCreate(Guid id)
         {
             if (!_states.ContainsKey(id))

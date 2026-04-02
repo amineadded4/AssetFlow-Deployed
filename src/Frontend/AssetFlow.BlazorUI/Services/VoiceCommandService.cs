@@ -1,4 +1,3 @@
-// Services/VoiceCommandService.cs
 using Microsoft.AspNetCore.Components;
 
 namespace AssetFlow.BlazorUI.Services
@@ -26,8 +25,8 @@ namespace AssetFlow.BlazorUI.Services
     {
         public VoiceCommandType Type        { get; set; }
         public string?          NavigateTo  { get; set; }
-        public string?          Reference   { get; set; } // ex: "SN-200"
-        public string?          Designation { get; set; } // ex: "Souris sans fil"
+        public string?          Reference   { get; set; }
+        public string?          Designation { get; set; }
         public string           RawText     { get; set; } = string.Empty;
     }
 
@@ -205,7 +204,6 @@ namespace AssetFlow.BlazorUI.Services
             return new() { Type = VoiceCommandType.Unknown };
         }
 
-        // ── Helpers ────────────────────────────────────────────────
         private static bool HasAction(string t)
             => t.Contains("ajouter") || t.Contains("modifier") || t.Contains("supprimer")
             || t.Contains("voir") || t.Contains("article") || t.Contains("commande");

@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.BlazorUI / Services / StatistiquesService.cs
-// Appels HTTP vers GET /api/statistiques
-// ============================================================
-
 using AssetFlow.Application.DTOs;
 using System.Net.Http.Json;
 

@@ -1,5 +1,3 @@
-// Services/RoleAuthGuard.cs
-// Un composant Blazor pour protéger l'accès à certaines pages selon les rôles de l'utilisateur
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 
@@ -15,7 +13,7 @@ namespace AssetFlow.BlazorUI.Services
 
     private bool   _authorized = false;
     private bool   _checked    = false;
-    private string _role       = string.Empty; // ← stocker le rôle
+    private string _role       = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -33,7 +31,7 @@ namespace AssetFlow.BlazorUI.Services
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
         if (_checked && _authorized)
-            builder.AddContent(0, ChildContent?.Invoke(_role)); // ← passe le rôle
+            builder.AddContent(0, ChildContent?.Invoke(_role));
     }
 }
 }

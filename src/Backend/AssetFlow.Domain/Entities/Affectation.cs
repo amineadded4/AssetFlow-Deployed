@@ -1,8 +1,3 @@
-// ============================================================
-// AssetFlow.Domain / Entities / Affectation.cs
-// MISE À JOUR : ajout ProjetId nullable (affectation à un projet)
-// ============================================================
-
 namespace AssetFlow.Domain.Entities
 {
     public class Affectation
@@ -24,7 +19,6 @@ namespace AssetFlow.Domain.Entities
         public List<ArticleIndividuel> Articles { get; set; } = new();
         public EtatAffectation Etat { get; set; } = EtatAffectation.Courante;
 
-        // ← NOUVEAU : affectation à un projet (nullable)
         public int? ProjetId { get; set; }
         public Project? Projet { get; set; }
     }

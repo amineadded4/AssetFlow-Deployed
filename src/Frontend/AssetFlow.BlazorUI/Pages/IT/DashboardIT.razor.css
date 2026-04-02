@@ -1,12 +1,4 @@
 /* ============================================================
-   DashboardIT.razor.css — v1
-   Tableau de bord statistiques IT
-   Même structure que Statistiques.razor.css (achat)
-   hauteur px fixe sur .it-chart-body pour ApexCharts
-   ============================================================ */
-
-
-/* ============================================================
    1. VARIABLES
    ============================================================ */
 .it-layout {

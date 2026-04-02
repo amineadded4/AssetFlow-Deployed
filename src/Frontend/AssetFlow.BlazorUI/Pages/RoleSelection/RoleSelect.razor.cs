@@ -1,7 +1,3 @@
-// ============================================================
-// RoleSelect.razor.cs — MISE À JOUR : onglet Face login
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;

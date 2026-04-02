@@ -1,7 +1,3 @@
-// ============================================================
-// AdminProjects.razor.cs — MISE À JOUR : dropdown affectations
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 

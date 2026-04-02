@@ -1,8 +1,3 @@
-// ============================================================
-// Pages/Mobile/FicheMobile.razor.cs
-// Code-behind de la fiche mobile publique
-// ============================================================
-
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 
@@ -24,7 +19,6 @@ namespace AssetFlow.BlazorUI.Pages.Mobile
             try
             {
                 // Réutilise GetEquipementDetailAsync — endpoint public
-                // (côté backend, cet endpoint n'a pas [Authorize] pour le QR)
                 Equipement = await EmployeService.GetEquipementDetailAsync(AffectationId, ArticleId);
             }
             catch

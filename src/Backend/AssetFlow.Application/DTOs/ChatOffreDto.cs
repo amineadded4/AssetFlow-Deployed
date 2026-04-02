@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.Application / DTOs / ChatOffreDto.cs
-// ============================================================
-
 namespace AssetFlow.Application.DTOs
 {
     public class ChatbotMessageDto

@@ -1,7 +1,3 @@
-// ============================================================
-// AssetFlow.Application / Interfaces / IConnectionTracker.cs
-// ============================================================
-
 namespace AssetFlow.Application.Interfaces
 {
     public interface IConnectionTracker

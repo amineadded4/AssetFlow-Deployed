@@ -1,13 +1,3 @@
-// ============================================================
-// COUCHE  : AssetFlow.BlazorUI
-// FICHIER : Services/DemandeAchatService.cs
-// RÔLE    : Appelle l'API REST via HttpClient.
-//           Même pattern que FournisseurService.cs côté frontend.
-//
-// ENREGISTREMENT dans Program.cs (BlazorUI) :
-//   builder.Services.AddScoped<DemandeAchatService>();
-// ============================================================
-
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using AssetFlow.Application.DTOs;

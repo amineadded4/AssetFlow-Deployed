@@ -1,8 +1,3 @@
-/* ============================================================
-   IncidentSuccess.razor.css
-   Page de confirmation de signalement avec dark mode
-   ============================================================ */
-
 .success-container {
     min-height: 100vh;
     display: flex;

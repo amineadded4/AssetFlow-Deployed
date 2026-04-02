@@ -1,9 +1,3 @@
-// ============================================================
-// AssetFlow.Application / DTOs / StatistiquesDtos.cs — v2
-// Inclut des méthodes de filtrage côté client (Blazor)
-// pour éviter des appels API supplémentaires
-// ============================================================
-
 using System.Globalization;
 
 namespace AssetFlow.Application.DTOs
@@ -40,8 +34,6 @@ namespace AssetFlow.Application.DTOs
         public int    HorsService  { get; set; }
         public int    EnReparation { get; set; }
     }
-
-    /// <summary>Articles individuels groupés par catégorie de matériel</summary>
     public class ArticlesParCategorieDto
     {
         public string Categorie   { get; set; } = string.Empty;
@@ -50,15 +42,11 @@ namespace AssetFlow.Application.DTOs
         public int    HorsService { get; set; }
         public int    EnReparation{ get; set; }
     }
-
-    /// <summary>Point brut d'une demande — pour filtrage client</summary>
     public class DemandeRawDto
     {
         public DateTime DateCreation { get; set; }
         public string   Statut       { get; set; } = string.Empty;
     }
-
-    // ── DTO global retourné par l'API ─────────────────────────
 
     public class DashboardStatsDto
     {
@@ -73,12 +61,7 @@ namespace AssetFlow.Application.DTOs
         public List<ArticlesParMaterielDto>   ArticlesParMateriel  { get; set; } = new();
         public List<ArticlesParCategorieDto>  ArticlesParCategorie { get; set; } = new();
 
-        /// <summary>Toutes les demandes brutes pour filtrage côté client</summary>
         public List<DemandeRawDto>            DemandesRaw          { get; set; } = new();
-
-        // ── Méthodes de filtrage client ───────────────────────
-
-        /// <summary>Calcule la répartition des statuts selon année et mois</summary>
         public EtatDemandesDto GetEtatDemandes(int annee, int mois)
         {
             var q = DemandesRaw.Where(d => d.DateCreation.Year == annee);
@@ -93,11 +76,6 @@ namespace AssetFlow.Application.DTOs
                 Refuse    = list.Count(d => d.Statut == "refuse"),
             };
         }
-
-        /// <summary>
-        /// Retourne N semaines entre dateDebut et dateFin (de la plus ancienne à la plus récente).
-        /// Si la plage couvre plus de N semaines, on prend les N dernières.
-        /// </summary>
         public List<DemandesParSemaineDto> GetDemandesParSemaine(
             DateTime debut, DateTime fin, int nbSemaines = 8)
         {
@@ -133,11 +111,6 @@ namespace AssetFlow.Application.DTOs
 
             return result;
         }
-
-        /// <summary>
-        /// Retourne les 4 semaines d'un mois donné.
-        /// S1 = jours 1-7, S2 = 8-14, S3 = 15-21, S4 = 22-fin
-        /// </summary>
         public List<DemandesParSemaineDto> GetDemandesSemaineDuMois(int annee, int mois)
         {
             var result = new List<DemandesParSemaineDto>();

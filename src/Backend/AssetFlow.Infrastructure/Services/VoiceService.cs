@@ -31,6 +31,8 @@ namespace AssetFlow.Infrastructure.Services
               DemandesAchat       → /demandes-achat
               ScrapingMarche      → /achat/web-scraping
               Messagerie          → /achat/messagerie
+              SignalerIncident    → /achat/incident
+              Incident            → /achat/incident
             EquipeAchat → Actions :
               AjouterMateriel, ModifierMateriel, SupprimerMateriel,
               VoirCommandes, VoirArticles, ConfigurerSeuil,

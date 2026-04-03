@@ -22,8 +22,9 @@ namespace AssetFlow.BlazorUI.Services
         Commentaires,
         Projets,
         Incident,
+        SignalerIncident,
 
-        // Actions
+        // Actions achat
         AjouterMateriel,
         ModifierMateriel,
         SupprimerMateriel,
@@ -107,6 +108,7 @@ namespace AssetFlow.BlazorUI.Services
             VoiceCommandType.Commentaires,
             VoiceCommandType.Projets,
             VoiceCommandType.Incident,
+            VoiceCommandType.SignalerIncident, 
         };
 
         private static VoiceCommand MapToCommand(VoiceCommandResponse r)

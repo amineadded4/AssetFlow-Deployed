@@ -62,12 +62,16 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             {
                 switch (cmd.Type)
                 {
-                    case VoiceCommandType.Navigation 
-                        when cmd.NavigateTo?.Contains("détails") == true:
-                        // Petit délai pour laisser les autres handlers se terminer d'abord
+                    // ✅ Même logique que DetailsEquipement pour "incident"
+                    case VoiceCommandType.VoirArticles:
+                    case VoiceCommandType.VoirArticlesEquipement:
+                    case VoiceCommandType.Navigation
+                        when cmd.NavigateTo?.Contains("equipement") == true
+                        || cmd.NavigateTo?.Contains("materiel") == true:
                         await Task.Delay(50);
-                        Navigation.NavigateTo(
-                            $"/achat/equipement/{AffectationId}/article/{ArticleId}");
+                        if (AffectationId > 0)
+                            Navigation.NavigateTo(
+                                $"/achat/equipement/{AffectationId}/article/{ArticleId}");
                         break;
                     case VoiceCommandType.SignalerIncident:
                     case VoiceCommandType.SoumettreIncident:

@@ -61,6 +61,8 @@ namespace AssetFlow.BlazorUI.Services
         FiltrerParPrix,       
         LancerRecherche,  
         ExporterExcelScraping, 
+        // ── Actions Messagerie ──────────────────────────────────
+        SélectionnerConversation,
 
         // ── Actions Incident ────────────────────────────────────
         SoumettreIncident,

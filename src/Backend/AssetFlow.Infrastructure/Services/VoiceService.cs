@@ -37,7 +37,7 @@ namespace AssetFlow.Infrastructure.Services
               AjouterMateriel, ModifierMateriel, SupprimerMateriel,
               VoirCommandes, VoirArticles, ConfigurerSeuil,
               ExporterExcel, ExporterPdf,
-              VoirArticlesEquipement, VoirCommentairesEquipement
+              VoirArticlesEquipement, VoirCommentairesEquipement,SoumettreIncident
 
             IT → Navigation :
               Dashboard           → /dashboard/it

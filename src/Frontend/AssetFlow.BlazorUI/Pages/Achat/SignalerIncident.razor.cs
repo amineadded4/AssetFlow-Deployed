@@ -19,6 +19,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         [Inject] private IncidentService IncidentService { get; set; } = default!;
         [Inject] private EmployeService EmployeService { get; set; } = default!;
         [Inject] private NavigationManager Navigation { get; set; } = default!;
+        [Inject] private AssetFlow.BlazorUI.Services.VoiceCommandService VoiceSvc { get; set; } = default!;
 
         // ── Formulaire ──────────────────────────────────────────
         private string TypeIncident { get; set; } = "Panne";
@@ -42,6 +43,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         // ── Initialisation ─────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
+            VoiceSvc.OnCommand += HandleVoiceCommand;
             UserName = await EmployeService.GetCurrentUserNameAsync();
             _roleUtilisateur = await EmployeService.GetCurrentUserRoleAsync(); // ← lire le bon champ !
             _roleCharge = true;
@@ -53,6 +55,36 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 SelectedArticleId = ArticleId;
 
             IsLoading = false;
+        }
+         private Task HandleVoiceCommand(VoiceCommand cmd)
+        {
+            return InvokeAsync(async () =>
+            {
+                switch (cmd.Type)
+                {
+                    case VoiceCommandType.Navigation 
+                        when cmd.NavigateTo?.Contains("détails") == true:
+                        // Petit délai pour laisser les autres handlers se terminer d'abord
+                        await Task.Delay(50);
+                        Navigation.NavigateTo(
+                            $"/achat/equipement/{AffectationId}/article/{ArticleId}");
+                        break;
+                    case VoiceCommandType.SoumettreIncident:
+                        await SoumettreIncident();
+                        break;
+
+                    case VoiceCommandType.Navigation when cmd.NavigateTo != null:
+                        await Task.Delay(50);
+                        Navigation.NavigateTo(cmd.NavigateTo);
+                        break;
+                }
+                StateHasChanged();
+            });
+        }
+        public ValueTask DisposeAsync()
+        {
+            VoiceSvc.OnCommand -= HandleVoiceCommand;
+            return ValueTask.CompletedTask;
         }
 
         // ── Sélection du type d'incident ───────────────────────

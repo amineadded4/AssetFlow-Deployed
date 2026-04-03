@@ -35,6 +35,7 @@ namespace AssetFlow.BlazorUI.Services
         ExporterPdf,
         VoirArticlesEquipement,
         VoirCommentairesEquipement,
+        SoumettreIncident,
 
         Unknown
     }

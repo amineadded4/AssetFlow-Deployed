@@ -196,6 +196,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     }
 
                     case VoiceCommandType.VoirArticles:
+                    case VoiceCommandType.VoirArticlesEquipement:  // ← AJOUTER
                     {
                         var lg = TrouverMateriel(cmd.Reference, cmd.Designation);
                         if (lg != null) await OuvrirArticlesMateriel(lg);

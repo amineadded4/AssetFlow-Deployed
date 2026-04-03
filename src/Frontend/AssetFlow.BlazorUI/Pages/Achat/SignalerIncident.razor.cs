@@ -69,6 +69,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                         Navigation.NavigateTo(
                             $"/achat/equipement/{AffectationId}/article/{ArticleId}");
                         break;
+                    case VoiceCommandType.SignalerIncident:
                     case VoiceCommandType.SoumettreIncident:
                         await SoumettreIncident();
                         break;

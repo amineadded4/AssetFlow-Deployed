@@ -65,6 +65,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             {
                 switch (cmd.Type)
                 {
+                    case VoiceCommandType.SoumettreIncident:
                     case VoiceCommandType.Navigation 
                         when cmd.NavigateTo?.Contains("incident") == true:
                         // Petit délai pour laisser les autres handlers se terminer d'abord

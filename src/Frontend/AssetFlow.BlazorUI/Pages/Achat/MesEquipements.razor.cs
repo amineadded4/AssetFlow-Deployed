@@ -61,11 +61,13 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             {
                 switch (cmd.Type)
                 {
+                    // ✅ Les deux intents ouvrent le modal articles sur cette page
                     case VoiceCommandType.VoirArticlesEquipement:
+                    case VoiceCommandType.VoirArticles:
                     {
                         var m = TrouverMateriel(cmd.Reference, cmd.Designation);
                         if (m != null) OuvrirModal(m);
-                        else AfficherToastVoice($"Équipement introuvable.");
+                        else AfficherToastVoice("Équipement introuvable.");
                         break;
                     }
 
@@ -73,7 +75,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     {
                         var m = TrouverMateriel(cmd.Reference, cmd.Designation);
                         if (m != null) await OuvrirModalCommentaire(m);
-                        else AfficherToastVoice($"Équipement introuvable.");
+                        else AfficherToastVoice("Équipement introuvable.");
                         break;
                     }
                 }

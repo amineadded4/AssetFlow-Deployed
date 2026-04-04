@@ -9,6 +9,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         [Inject] private AffectationClientService AffectationService { get; set; } = default!;
         [Inject] private NavigationManager        Navigation          { get; set; } = default!;
         [Inject] private ILocalStorageService     LocalStorage        { get; set; } = default!;
+        [Inject] private VoiceCommandService VoiceSvc { get; set; } = default!;
 
         // ── Mode ──────────────────────────────────────────────
         private bool ModeProjet { get; set; } = false;
@@ -84,6 +85,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         // ── Init ──────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
+            VoiceSvc.OnCommand += HandleVoiceCommand;
             UserName = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
             _roleUtilisateur = await LocalStorage.GetItemAsync<string>("user_role") ?? "IT";
             await Task.WhenAll(
@@ -91,6 +93,159 @@ namespace AssetFlow.BlazorUI.Pages.IT
                 LoadUtilisateursAsync(),
                 LoadProjetsAsync()
             );
+        }
+        private Task HandleVoiceCommand(VoiceCommand cmd)
+        {
+            return InvokeAsync(async () =>
+            {
+                switch (cmd.Type)
+                {
+                    // ── Sélectionner un matériel ───────────────────
+                    // "sélectionner PC Azus" / "choisir SN-200"
+                    case VoiceCommandType.VoirArticles:
+                    case VoiceCommandType.SélectionnerMateriel:
+                    case VoiceCommandType.VoirArticlesEquipement:
+                    case VoiceCommandType.SélectionnerDemande
+                        when cmd.NavigateTo == null:
+                    {
+                        var m = TrouverMateriel(cmd.Reference, cmd.Designation);
+                        if (m != null) SelectMateriel(m);
+                        else ErrorMessage = $"Matériel '{cmd.Designation ?? cmd.Reference}' introuvable.";
+                        break;
+                    }
+
+                    // ── Basculer vers Affecter à un utilisateur ────
+                    // "affecter à un employé" / "afficher les employés"
+                    case VoiceCommandType.SélectionnerEmploye
+                        when string.IsNullOrWhiteSpace(cmd.Designation):
+                        SetMode(false);
+                        break;
+
+                    // ── Basculer vers Affecter à un projet ─────────
+                    // "affecter à un projet" / "afficher les projets"
+                    case VoiceCommandType.SélectionnerProjet
+                        when string.IsNullOrWhiteSpace(cmd.Designation):
+                        SetMode(true);
+                        break;
+
+                    // ── Sélectionner un utilisateur par nom ────────
+                    // "sélectionner adem added"
+                    case VoiceCommandType.SélectionnerEmploye:
+                    {
+                        SetMode(false);
+                        var u = TrouverUtilisateur(cmd.Designation);
+                        if (u != null) SelectUtilisateur(u);
+                        else ErrorMessage = $"Employé '{cmd.Designation}' introuvable.";
+                        break;
+                    }
+
+                    // ── Sélectionner un projet par nom ─────────────
+                    // "sélectionner projet Alpha"
+                    case VoiceCommandType.SélectionnerProjet:
+                    {
+                        SetMode(true);
+                        var p = TrouverProjet(cmd.Designation);
+                        if (p != null) SelectProjet(p);
+                        else ErrorMessage = $"Projet '{cmd.Designation}' introuvable.";
+                        break;
+                    }
+
+                    // ── Confirmer l'affectation ────────────────────
+                    // "confirmer l'affectation"
+                    case VoiceCommandType.SoumettreIncident: // réutilise intent "confirmer"
+                        if (CanConfirm)
+                            await ConfirmerAffectation();
+                        else
+                            ErrorMessage = "Veuillez sélectionner un matériel, des articles et un bénéficiaire.";
+                        break;
+                }
+
+                // Auto-clear après 3s
+                if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    StateHasChanged();
+                    await Task.Delay(3000);
+                    ErrorMessage = string.Empty;
+                }
+
+                StateHasChanged();
+            });
+        }
+
+        // ── Recherche matériel par référence ou nom approché ──
+        private MaterielDisponibleDto? TrouverMateriel(string? reference, string? designation)
+        {
+            // Priorité à la référence exacte (SN-200)
+            if (!string.IsNullOrWhiteSpace(reference))
+            {
+                var byRef = MaterielsDisponibles.FirstOrDefault(m =>
+                    m.Reference.Equals(reference, StringComparison.OrdinalIgnoreCase));
+                if (byRef != null) return byRef;
+            }
+
+            // Sinon recherche par nom approché
+            if (!string.IsNullOrWhiteSpace(designation))
+            {
+                var terms = designation.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                return MaterielsDisponibles
+                    .Select(m => new
+                    {
+                        Materiel = m,
+                        Score    = terms.Count(t =>
+                            m.Designation.ToLower().Contains(t) ||
+                            m.Reference.ToLower().Contains(t))
+                    })
+                    .Where(x => x.Score > 0)
+                    .OrderByDescending(x => x.Score)
+                    .Select(x => x.Materiel)
+                    .FirstOrDefault();
+            }
+
+            return null;
+        }
+
+        // ── Recherche utilisateur par nom approché ─────────────
+        private UtilisateurDisponibleDto? TrouverUtilisateur(string? designation)
+        {
+            if (string.IsNullOrWhiteSpace(designation)) return null;
+
+            var exact = UtilisateursDisponibles.FirstOrDefault(u =>
+                u.FullName.Equals(designation, StringComparison.OrdinalIgnoreCase));
+            if (exact != null) return exact;
+
+            var terms = designation.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            return UtilisateursDisponibles
+                .Select(u => new
+                {
+                    User  = u,
+                    Score = terms.Count(t => u.FullName.ToLower().Contains(t))
+                })
+                .Where(x => x.Score > 0)
+                .OrderByDescending(x => x.Score)
+                .Select(x => x.User)
+                .FirstOrDefault();
+        }
+
+        // ── Recherche projet par nom approché ──────────────────
+        private ProjetDisponibleDto? TrouverProjet(string? designation)
+        {
+            if (string.IsNullOrWhiteSpace(designation)) return null;
+
+            var exact = ProjetsDisponibles.FirstOrDefault(p =>
+                p.Nom.Equals(designation, StringComparison.OrdinalIgnoreCase));
+            if (exact != null) return exact;
+
+            var terms = designation.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            return ProjetsDisponibles
+                .Select(p => new
+                {
+                    Projet = p,
+                    Score  = terms.Count(t => p.Nom.ToLower().Contains(t))
+                })
+                .Where(x => x.Score > 0)
+                .OrderByDescending(x => x.Score)
+                .Select(x => x.Projet)
+                .FirstOrDefault();
         }
 
         // ── Mode toggle ───────────────────────────────────────
@@ -273,6 +428,11 @@ namespace AssetFlow.BlazorUI.Pages.IT
             _          => ""
         };
 
-        public void Dispose() => _materielDebounce?.Dispose();
+        // REMPLACER Dispose()
+        public void Dispose()
+        {
+            _materielDebounce?.Dispose();
+            VoiceSvc.OnCommand -= HandleVoiceCommand; // ← AJOUTER
+        }
     }
 }

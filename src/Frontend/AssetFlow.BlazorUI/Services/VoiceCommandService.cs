@@ -70,7 +70,7 @@ namespace AssetFlow.BlazorUI.Services
         SélectionnerEmploye,   
         SélectionnerProjet,      
         RévoquerAffectation,     
-
+        SélectionnerMateriel,
         Unknown
     }
     public class VoiceCommand

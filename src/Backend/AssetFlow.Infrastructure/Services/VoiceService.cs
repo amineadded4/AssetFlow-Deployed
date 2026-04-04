@@ -62,11 +62,13 @@ namespace AssetFlow.Infrastructure.Services
         ITEquipements       → /it/equipements
         Employes            → /it/employes
         Affectation         → /it/affectation
-        Incidents           → /it/incidents
+        Incidents,gérer les incident(s),voir les incident(s),page incident(s)          → /it/incidents
         Inventaire          → /it/inventaire
         Achats              → /it/demandes-IT
         Messagerie          → /it/messagerie
         Commentaires        → /it/commentaires
+        SignalerIncident    → /it/incident
+        Incident            → /it/incident
 
         IT → Actions :
         SélectionnerEmploye,    → désignation = nom de l'employé ("adem added", "Aziz"...)
@@ -79,6 +81,7 @@ namespace AssetFlow.Infrastructure.Services
         Employe → Navigation :
         MesEquipements      → /employe/equipements
         Incident            → /employe/incident
+        SignalerIncident    → /employe/incident
         Messagerie          → /employe/messagerie
             Employe → Actions :
             VoirArticlesEquipement, VoirCommentairesEquipement

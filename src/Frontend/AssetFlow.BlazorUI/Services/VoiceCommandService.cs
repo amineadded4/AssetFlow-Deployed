@@ -67,7 +67,8 @@ namespace AssetFlow.BlazorUI.Services
         // ── Actions Incident ────────────────────────────────────
         SoumettreIncident,
         // ── Actions Affectation (IT) ────────────────────────────
-        SélectionnerEmploye,     
+        SélectionnerEmploye,   
+        SélectionnerProjet,      
         RévoquerAffectation,     
 
         Unknown

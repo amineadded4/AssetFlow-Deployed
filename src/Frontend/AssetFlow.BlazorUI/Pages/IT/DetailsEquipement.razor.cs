@@ -13,6 +13,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         [Inject] private IncidentService IncidentService { get; set; } = default!;
         [Inject] private NavigationManager Navigation    { get; set; } = default!;
         [Inject] private IJSRuntime JS                   { get; set; } = default!;
+        [Inject] private VoiceCommandService VoiceSvc { get; set; } = default!;
 
         // ── Paramètre URL ──────────────────────────────────────
         [Parameter] public int AffectationId { get; set; }
@@ -40,6 +41,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         // ── Init ───────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
+            VoiceSvc.OnCommand += HandleVoiceCommand;
             UserName = await EmployeService.GetCurrentUserNameAsync();
             UserRole = await EmployeService.GetCurrentUserRoleAsync();
 
@@ -49,7 +51,33 @@ namespace AssetFlow.BlazorUI.Pages.IT
                 ChargerIncidents()
             );
         }
+        public async ValueTask DisposeAsync()
+        {
+            VoiceSvc.OnCommand -= HandleVoiceCommand;
+        }
+        private Task HandleVoiceCommand(VoiceCommand cmd)
+        {
+            return InvokeAsync(async () =>
+            {
+                switch (cmd.Type)
+                {
+                    case VoiceCommandType.SoumettreIncident:
+                    case VoiceCommandType.Navigation 
+                        when cmd.NavigateTo?.Contains("incident") == true:
+                        // Petit délai pour laisser les autres handlers se terminer d'abord
+                        await Task.Delay(50);
+                        Navigation.NavigateTo(
+                            $"/it/incident/{AffectationId}/article/{ArticleId}");
+                        break;
 
+                    case VoiceCommandType.Navigation when cmd.NavigateTo != null:
+                        await Task.Delay(50);
+                        Navigation.NavigateTo(cmd.NavigateTo);
+                        break;
+                }
+                StateHasChanged();
+            });
+        }
         protected override void OnParametersSet()
         {
             QrSvg = BuildQrSvg(FicheUrl);

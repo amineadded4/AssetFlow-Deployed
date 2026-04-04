@@ -15,6 +15,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         [Inject] private ILocalStorageService     LocalStorage { get; set; } = default!;
         [Inject] private HttpClient               Http         { get; set; } = default!;
         [Inject] private IJSRuntime               JS           { get; set; } = default!;
+        [Inject] private VoiceCommandService VoiceSvc { get; set; } = default!;
 
         private string UserName       { get; set; } = "IT";
         private int    CurrentUserId                = 0;
@@ -54,12 +55,45 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
         protected override async Task OnInitializedAsync()
         {
+            VoiceSvc.OnCommand += HandleVoiceCommand;
             UserName = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT User";
             CurrentUserId = await LocalStorage.GetItemAsync<int>("user_id");
             _roleUtilisateur = await LocalStorage.GetItemAsync<string>("user_role") ?? "IT";
 
             await LoadConversationsAsync();
             await ConnectHubAsync();
+        }
+        private async Task HandleVoiceCommand(VoiceCommand cmd)
+        {
+            await InvokeAsync(async () =>
+            {
+                switch (cmd.Type)
+                {
+                    case VoiceCommandType.SélectionnerConversation 
+                        when !string.IsNullOrWhiteSpace(cmd.Designation):
+                    {
+                        // Recherche insensible à la casse et partielle
+                        var recherche = cmd.Designation.Trim();
+                        var user = Conversations.FirstOrDefault(u =>
+                            u.FullName.Contains(recherche, StringComparison.OrdinalIgnoreCase));
+
+                        if (user != null)
+                            await SelectConversation(user);
+                        else
+                        {
+                            // Tentative de correspondance mot par mot
+                            var mots = recherche.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                            user = Conversations.FirstOrDefault(u =>
+                                mots.All(m => u.FullName.Contains(m, StringComparison.OrdinalIgnoreCase)));
+
+                            if (user != null)
+                                await SelectConversation(user);
+                        }
+                        break;
+                    }
+                }
+                StateHasChanged();
+            });
         }
 
         private async Task ConnectHubAsync()
@@ -329,6 +363,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
         public async ValueTask DisposeAsync()
         {
+            VoiceSvc.OnCommand -= HandleVoiceCommand;
             _typingTimer?.Dispose();
             if (_hub != null)
             {

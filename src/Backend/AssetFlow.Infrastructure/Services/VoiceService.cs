@@ -76,6 +76,8 @@ namespace AssetFlow.Infrastructure.Services
         SélectionnerProjet,    → désignation = nom du projet ("Projet 1", "Projet 2"...)
         RévoquerAffectation,    → désignation = nom du matériel ou référence ("Souris sans fil", "SN-900")
 
+        SélectionnerConversation, → désignation = nom complet ou partiel de la personne
+
         Admin → Toutes les intentions EquipeAchat + IT + :
         Projets             → /admin/projets
 
@@ -86,6 +88,7 @@ namespace AssetFlow.Infrastructure.Services
         Messagerie          → /employe/messagerie
             Employe → Actions :
             VoirArticlesEquipement, VoirCommentairesEquipement,SoumettreIncident
+            SélectionnerConversation, → désignation = nom complet ou partiel de la personne
 
         Règles d'extraction :
         - Si la phrase contient une référence type "SN-200", "SN 900", extrais-la en format "SN-XXX"

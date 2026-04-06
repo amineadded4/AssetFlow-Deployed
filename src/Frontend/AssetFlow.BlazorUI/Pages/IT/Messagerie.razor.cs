@@ -15,7 +15,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         [Inject] private ILocalStorageService     LocalStorage { get; set; } = default!;
         [Inject] private HttpClient               Http         { get; set; } = default!;
         [Inject] private IJSRuntime               JS           { get; set; } = default!;
-        [Inject] private VoiceCommandService VoiceSvc { get; set; } = default!;
+        [Inject] private VoiceCommandService      VoiceSvc     { get; set; } = default!;
 
         private string UserName       { get; set; } = "IT";
         private int    CurrentUserId                = 0;
@@ -36,8 +36,15 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private System.Timers.Timer? _typingTimer;
         private bool                 _isTyping = false;
 
+        // ── Voice recording ──────────────────────────────────────────────────
+        private bool   _isRecording      = false;
+        private bool   _hasVoiceBlob     = false;
+        private double _recordingSeconds = 0;
+        private System.Timers.Timer? _recordTimer;
+        // ─────────────────────────────────────────────────────────────────────
+
         private string RoleFilter { get; set; } = "Tous";
-        private string      _roleUtilisateur = "Service IT";
+        private string _roleUtilisateur = "Service IT";
         private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
         private List<ConversationDto> ConversationsFiltrees =>
@@ -63,16 +70,16 @@ namespace AssetFlow.BlazorUI.Pages.IT
             await LoadConversationsAsync();
             await ConnectHubAsync();
         }
+
         private async Task HandleVoiceCommand(VoiceCommand cmd)
         {
             await InvokeAsync(async () =>
             {
                 switch (cmd.Type)
                 {
-                    case VoiceCommandType.SélectionnerConversation 
+                    case VoiceCommandType.SélectionnerConversation
                         when !string.IsNullOrWhiteSpace(cmd.Designation):
                     {
-                        // Recherche insensible à la casse et partielle
                         var recherche = cmd.Designation.Trim();
                         var user = Conversations.FirstOrDefault(u =>
                             u.FullName.Contains(recherche, StringComparison.OrdinalIgnoreCase));
@@ -81,7 +88,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
                             await SelectConversation(user);
                         else
                         {
-                            // Tentative de correspondance mot par mot
                             var mots = recherche.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                             user = Conversations.FirstOrDefault(u =>
                                 mots.All(m => u.FullName.Contains(m, StringComparison.OrdinalIgnoreCase)));
@@ -101,7 +107,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             try
             {
                 var token  = await LocalStorage.GetItemAsync<string>("access_token") ?? "";
-                // Pointer vers le backend (Http.BaseAddress = http://localhost:5235/)
                 var hubUrl = Http.BaseAddress!.ToString().TrimEnd('/') + "/chathub";
 
                 _hub = new HubConnectionBuilder()
@@ -119,7 +124,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
                         var otherId = msg.SenderId == CurrentUserId ? msg.ReceiverId : msg.SenderId;
                         if (SelectedConv?.EmployeId == otherId)
                         {
-                            // Éviter les doublons (le message optimiste est déjà affiché)
                             if (!CurrentMessages.Any(m => m.Content == msg.Content && m.SenderId == msg.SenderId
                                 && Math.Abs((m.SentAt - msg.SentAt).TotalSeconds) < 5 && m.Id != msg.Id))
                             {
@@ -127,7 +131,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
                                     CurrentMessages.Add(msg);
                                 else
                                 {
-                                    // Mettre à jour l'ID réel du message optimiste
                                     var optimistic = CurrentMessages.LastOrDefault(m => m.SenderId == CurrentUserId && m.Id < 1000);
                                     if (optimistic != null) optimistic.Id = msg.Id;
                                 }
@@ -186,9 +189,9 @@ namespace AssetFlow.BlazorUI.Pages.IT
                         StateHasChanged();
                     });
                 });
+
                 await _hub.StartAsync();
                 _hubConnected = true;
-                // Annoncer la présence avec l'userId explicite
                 await _hub.SendAsync("UserConnected", CurrentUserId);
                 await _hub.SendAsync("GetOnlineUsers");
                 StateHasChanged();
@@ -255,10 +258,9 @@ namespace AssetFlow.BlazorUI.Pages.IT
             var content    = NewMessage.Trim();
             var receiverId = SelectedConv.EmployeId;
 
-            // Affichage optimiste immédiat
             var optimisticMsg = new ChatMessageDto
             {
-                Id         = -(CurrentMessages.Count + 1), // ID temporaire négatif
+                Id         = -(CurrentMessages.Count + 1),
                 SenderId   = CurrentUserId,
                 ReceiverId = receiverId,
                 Content    = content,
@@ -271,15 +273,8 @@ namespace AssetFlow.BlazorUI.Pages.IT
             StateHasChanged();
             await ScrollToBottomAsync();
 
-            // Envoi via SignalR — senderId passé explicitement (pas de claim JWT côté hub)
-            try
-            {
-                await _hub.SendAsync("SendMessage", CurrentUserId, receiverId, content);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur envoi message: {ex.Message}");
-            }
+            try { await _hub.SendAsync("SendMessage", CurrentUserId, receiverId, content); }
+            catch (Exception ex) { Console.WriteLine($"Erreur envoi message: {ex.Message}"); }
 
             await SendTypingIndicatorAsync(false);
         }
@@ -321,11 +316,121 @@ namespace AssetFlow.BlazorUI.Pages.IT
             var otherId = msg.SenderId == CurrentUserId ? msg.ReceiverId : msg.SenderId;
             var conv = Conversations.FirstOrDefault(c => c.EmployeId == otherId);
             if (conv == null) return;
-            conv.LastMessage     = msg.Content;
+            conv.LastMessage     = msg.Content.StartsWith("[VOICE]") ? "🎤 Message vocal" : msg.Content;
             conv.LastMessageTime = msg.SentAt;
             if (msg.SenderId != CurrentUserId && SelectedConv?.EmployeId != otherId)
                 conv.UnreadCount++;
         }
+
+        // ── Voice recording methods ──────────────────────────────────────────
+
+        private async Task ToggleRecording()
+        {
+            if (_isRecording)
+                await StopRecording();
+            else
+                await StartRecording();
+        }
+
+        private async Task StartRecording()
+        {
+            _isRecording      = true;
+            _hasVoiceBlob     = false;
+            _recordingSeconds = 0;
+            StateHasChanged();
+
+            _recordTimer = new System.Timers.Timer(1000);
+            _recordTimer.Elapsed += async (_, _) =>
+            {
+                _recordingSeconds++;
+                await InvokeAsync(StateHasChanged);
+            };
+            _recordTimer.AutoReset = true;
+            _recordTimer.Start();
+
+            try { await JS.InvokeVoidAsync("voiceRecorder.start"); }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur microphone: {ex.Message}");
+                _isRecording = false;
+                _recordTimer?.Dispose();
+                _recordTimer = null;
+                StateHasChanged();
+            }
+        }
+
+        private async Task StopRecording()
+        {
+            _recordTimer?.Stop();
+            _recordTimer?.Dispose();
+            _recordTimer = null;
+            _isRecording  = false;
+
+            try
+            {
+                var base64 = await JS.InvokeAsync<string>("voiceRecorder.stop");
+                if (!string.IsNullOrEmpty(base64))
+                    _hasVoiceBlob = true;
+            }
+            catch (Exception ex) { Console.WriteLine($"Erreur stop recording: {ex.Message}"); }
+
+            StateHasChanged();
+        }
+
+        private async Task CancelVoice()
+        {
+            _recordTimer?.Stop();
+            _recordTimer?.Dispose();
+            _recordTimer      = null;
+            _isRecording      = false;
+            _hasVoiceBlob     = false;
+            _recordingSeconds = 0;
+            try { await JS.InvokeVoidAsync("voiceRecorder.cancel"); } catch { }
+            StateHasChanged();
+        }
+
+        private async Task SendVoiceMessage()
+        {
+            if (SelectedConv == null || _hub?.State != HubConnectionState.Connected) return;
+
+            string base64;
+            try { base64 = await JS.InvokeAsync<string>("voiceRecorder.getBlob"); }
+            catch { return; }
+
+            if (string.IsNullOrEmpty(base64)) return;
+
+            var content    = $"[VOICE]{base64}";
+            var receiverId = SelectedConv.EmployeId;
+
+            var optimisticMsg = new ChatMessageDto
+            {
+                Id         = -(CurrentMessages.Count + 1),
+                SenderId   = CurrentUserId,
+                ReceiverId = receiverId,
+                Content    = content,
+                SentAt     = DateTime.Now,
+                IsRead     = false
+            };
+            CurrentMessages.Add(optimisticMsg);
+            UpdateConversationWithMessage(optimisticMsg);
+
+            _hasVoiceBlob     = false;
+            _recordingSeconds = 0;
+            StateHasChanged();
+            await ScrollToBottomAsync();
+
+            try { await _hub.SendAsync("SendMessage", CurrentUserId, receiverId, content); }
+            catch (Exception ex) { Console.WriteLine($"Erreur envoi vocal: {ex.Message}"); }
+        }
+
+        private string FormatRecordTime(double secs)
+        {
+            var m = (int)secs / 60;
+            var s = (int)secs % 60;
+            return $"{m:D2}:{s:D2}";
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
 
         private void BackToList() { _conversationOpen = false; SelectedConv = null; }
 
@@ -365,6 +470,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         {
             VoiceSvc.OnCommand -= HandleVoiceCommand;
             _typingTimer?.Dispose();
+            _recordTimer?.Dispose();
             if (_hub != null)
             {
                 if (_hub.State == HubConnectionState.Connected)

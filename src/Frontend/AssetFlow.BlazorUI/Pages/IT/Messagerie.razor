@@ -18,7 +18,7 @@
 
     @* ── OVERLAY MOBILE ── *@
     @if (_menuOpen)
-    { <div  @onclick="() => _menuOpen = !_menuOpen"></div> } 
+    { <div  @onclick="() => _menuOpen = !_menuOpen"></div> }
 
     @* ── MAIN ── *@
     <main class="msg-main">
@@ -31,7 +31,6 @@
                 <h1 class="msg-page-title">Messagerie</h1>
                 <p class="msg-page-sub">Communication en temps réel avec les employés</p>
             </div>
-            @* Connection status *@
             <div class="msg-conn-status @(_hubConnected ? "connected" : "disconnected")">
                 <span class="msg-conn-dot"></span>
                 <span class="msg-conn-label">@(_hubConnected ? "En ligne" : "Reconnexion...")</span>
@@ -180,7 +179,6 @@
                         }
                         else
                         {
-                            @* Group messages by date *@
                             @foreach (var group in GroupedMessages)
                             {
                                 <div class="msg-date-separator">
@@ -195,7 +193,25 @@
                                             <div class="msg-bubble-avatar">@SelectedConv.Initials</div>
                                         }
                                         <div class="msg-bubble @(isMe ? "bubble-me" : "bubble-them")">
-                                            <span class="msg-bubble-text">@msg.Content</span>
+                                            @if (msg.Content.StartsWith("[VOICE]"))
+                                            {
+                                                @* ── Audio player ── *@
+                                                <div class="msg-audio-player">
+                                                    <button class="msg-play-btn"
+                                                            onclick="playVoiceMessage(this, '@msg.Content.Substring(7)')">
+                                                        <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                                    </button>
+                                                    <div class="msg-audio-wave">
+                                                        <span></span><span></span><span></span>
+                                                        <span></span><span></span><span></span><span></span>
+                                                    </div>
+                                                    <span class="msg-audio-dur">🎤</span>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="msg-bubble-text">@msg.Content</span>
+                                            }
                                             <div class="msg-bubble-meta">
                                                 <span class="msg-bubble-time">@msg.SentAt.ToString("HH:mm")</span>
                                                 @if (isMe)
@@ -203,12 +219,10 @@
                                                     <span class="msg-read-status" title="@(msg.IsRead ? "Vu" : "Envoyé")">
                                                         @if (msg.IsRead)
                                                         {
-                                                            @* Double check bleu = vu *@
                                                             <svg class="msg-check-icon seen" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/><path d="M16 6 8 14" opacity="0.5"/></svg>
                                                         }
                                                         else
                                                         {
-                                                            @* Check simple gris = envoyé *@
                                                             <svg class="msg-check-icon sent" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
                                                         }
                                                     </span>
@@ -233,20 +247,77 @@
 
                     @* ── Input zone ── *@
                     <div class="msg-input-zone">
-                        <div class="msg-input-wrap">
-                            <textarea class="msg-textarea"
-                                      placeholder="Écrire un message..."
-                                      @bind="NewMessage"
-                                      @bind:event="oninput"
-                                      @onkeydown="@(e => OnKeyDown(e))"
-                                      rows="1"
-                                      id="msgInput"></textarea>
-                            <button class="msg-send-btn @(string.IsNullOrWhiteSpace(NewMessage) ? "" : "active")"
-                                    disabled="@(string.IsNullOrWhiteSpace(NewMessage) || !_hubConnected)"
-                                    @onclick="SendMessage">
-                                <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                            </button>
-                        </div>
+
+                        @if (_isRecording)
+                        {
+                            @* ── Barre d'enregistrement ── *@
+                            <div class="msg-voice-recording">
+                                <span class="msg-rec-dot"></span>
+                                <span class="msg-rec-timer">@FormatRecordTime(_recordingSeconds)</span>
+                                <div class="msg-rec-wave">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </div>
+                                <button class="msg-rec-cancel" @onclick="CancelVoice" title="Annuler">
+                                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                                <button class="msg-rec-stop" @onclick="StopRecording" title="Arrêter">
+                                    <svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+                                </button>
+                            </div>
+                        }
+                        else if (_hasVoiceBlob)
+                        {
+                            @* ── Prévisualisation avant envoi ── *@
+                            <div class="msg-voice-preview">
+                                <svg class="msg-voice-icon" viewBox="0 0 24 24">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                    <line x1="12" y1="19" x2="12" y2="23"/>
+                                    <line x1="8" y1="23" x2="16" y2="23"/>
+                                </svg>
+                                <span class="msg-voice-duration">@FormatRecordTime(_recordingSeconds)</span>
+                                <div class="msg-voice-bars">
+                                    <span></span><span></span><span></span><span></span>
+                                    <span></span><span></span><span></span>
+                                </div>
+                                <button class="msg-rec-cancel" @onclick="CancelVoice" title="Supprimer">
+                                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                                <button class="msg-send-btn active" @onclick="SendVoiceMessage" title="Envoyer le message vocal">
+                                    <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            @* ── Zone de saisie normale ── *@
+                            <div class="msg-input-wrap">
+                                <textarea class="msg-textarea"
+                                          placeholder="Écrire un message..."
+                                          @bind="NewMessage"
+                                          @bind:event="oninput"
+                                          @onkeydown="@(e => OnKeyDown(e))"
+                                          rows="1"
+                                          id="msgInput"></textarea>
+                                <button class="msg-mic-btn"
+                                        disabled="@(!_hubConnected)"
+                                        @onclick="ToggleRecording"
+                                        title="Enregistrer un message vocal">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                        <line x1="12" y1="19" x2="12" y2="23"/>
+                                        <line x1="8" y1="23" x2="16" y2="23"/>
+                                    </svg>
+                                </button>
+                                <button class="msg-send-btn @(string.IsNullOrWhiteSpace(NewMessage) ? "" : "active")"
+                                        disabled="@(string.IsNullOrWhiteSpace(NewMessage) || !_hubConnected)"
+                                        @onclick="SendMessage">
+                                    <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                </button>
+                            </div>
+                        }
+
                         <p class="msg-input-hint">Appuyez sur <kbd>Entrée</kbd> pour envoyer · <kbd>Maj+Entrée</kbd> pour une nouvelle ligne</p>
                     </div>
                 }

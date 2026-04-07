@@ -60,7 +60,7 @@ namespace AssetFlow.Infrastructure.Services
             var notif = await _db.Notifications.FindAsync(notificationId);
             if (notif == null || notif.EstLue) return;
 
-            notif.EstLue     = true;
+            notif.EstLue      = true;
             notif.DateLecture = DateTime.UtcNow;
             await _db.SaveChangesAsync();
         }
@@ -78,7 +78,7 @@ namespace AssetFlow.Infrastructure.Services
 
             foreach (var n in nonLues)
             {
-                n.EstLue     = true;
+                n.EstLue      = true;
                 n.DateLecture = maintenant;
             }
 
@@ -90,7 +90,7 @@ namespace AssetFlow.Infrastructure.Services
         {
             var maintenant = DateTime.UtcNow;
 
-            // Affectations courantes avec date de retour dépassée
+            // ── 1. Affectations courantes avec date de retour dépassée ────────
             var affectationsExpirees = await _db.Affectations
                 .Include(a => a.Materiel)
                 .Include(a => a.Utilisateur)
@@ -103,11 +103,12 @@ namespace AssetFlow.Infrastructure.Services
 
             foreach (var aff in affectationsExpirees)
             {
-                // Vérifie si une notification non lue existe déjà pour cette affectation
+                // FIX : on ne filtre plus sur !EstLue — une notif par affectation par 24h suffit,
+                // qu'elle soit lue ou non. Cela évite la duplication après "marquer comme lu".
                 var dejaPresente = await _db.Notifications.AnyAsync(n =>
                     n.AffectationId == aff.Id &&
                     n.Type == TypeNotification.AffectationExpiree &&
-                    !n.EstLue);
+                    n.DateCreation >= maintenant.AddDays(-1)); // max 1 notif/24h
 
                 if (dejaPresente) continue;
 
@@ -135,7 +136,7 @@ namespace AssetFlow.Infrastructure.Services
                 });
             }
 
-            // Affectations qui vont expirer dans moins de 3 jours (alerte préventive)
+            // ── 2. Affectations qui vont expirer dans moins de 3 jours ────────
             var bientotExpirees = await _db.Affectations
                 .Include(a => a.Materiel)
                 .Include(a => a.Utilisateur)
@@ -149,10 +150,11 @@ namespace AssetFlow.Infrastructure.Services
 
             foreach (var aff in bientotExpirees)
             {
+                // Déjà cohérent : pas de filtre EstLue ici, fenêtre 24h
                 var dejaPresente = await _db.Notifications.AnyAsync(n =>
                     n.AffectationId == aff.Id &&
                     n.Type == TypeNotification.RetourEnRetard &&
-                    n.DateCreation >= maintenant.AddDays(-1)); // max 1 notif/jour
+                    n.DateCreation >= maintenant.AddDays(-1));
 
                 if (dejaPresente) continue;
 

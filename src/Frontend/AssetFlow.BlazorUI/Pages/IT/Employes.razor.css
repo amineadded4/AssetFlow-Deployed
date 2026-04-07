@@ -338,6 +338,7 @@ html.dark .emp-role-filter { border-bottom-color: #1e2d42; }
 /* Bouton cloche */
 .notif-bell-btn {
     position: relative;
+    left:50px;
     width: 38px;
     height: 38px;
     border-radius: 0.625rem;

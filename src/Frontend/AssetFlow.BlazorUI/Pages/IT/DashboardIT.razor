@@ -126,6 +126,61 @@
                     </div>
                 </div>
 
+                @* ── AJOUTER ICI : Heatmap incidents par jour ── *@
+                <div class="it-charts-grid it-grid-1">
+                    <div class="it-chart-card it-heatmap-card">
+                        <div class="it-chart-header">
+                            <div class="it-chart-title-row">
+                                <div class="it-chart-title">
+                                    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                    Activité des incidents — Vue calendrier
+                                </div>
+                                <div class="it-inline-filters">
+                                    <label class="it-mini-label">Année</label>
+                                    <select class="it-mini-select" @onchange="OnHeatmapAnneeChange">
+                                        @foreach (var y in _heatmapAnnees)
+                                        {
+                                            <option value="@y" selected="@(_heatmapAnnee == y)">@y</option>
+                                        }
+                                    </select>
+                                    <label class="it-mini-label">Matériel</label>
+                                    @* REMPLACER le select matériel *@
+                                    <select class="it-mini-select it-mini-select-wide" @onchange="OnHeatmapMaterielChange">
+                                        <option value="0">Tous les matériels</option>
+                                        @foreach (var m in _stats.MaterielsDisponibles)
+                                        {
+                                            <option value="@m.MaterielId" 
+                                                    selected="@(_heatmapMaterielId == m.MaterielId)">
+                                                @m.Designation
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <span class="it-chart-sub">Nombre d'incidents par jour · intensité selon la fréquence</span>
+                        </div>
+                        <div class="it-heatmap-container">
+                            <div class="it-heatmap-months" id="heatmap-months-labels"></div>
+                            <div class="it-heatmap-body">
+                                <div class="it-heatmap-days-labels">
+                                    <span>Lun</span><span></span><span>Mer</span><span></span>
+                                    <span>Ven</span><span></span><span>Dim</span>
+                                </div>
+                                <div class="it-heatmap-grid" id="heatmap-grid"></div>
+                            </div>
+                            <div class="it-heatmap-legend">
+                                <span class="it-heatmap-legend-label">Moins</span>
+                                <div class="it-heatmap-legend-cell" data-level="0"></div>
+                                <div class="it-heatmap-legend-cell" data-level="1"></div>
+                                <div class="it-heatmap-legend-cell" data-level="2"></div>
+                                <div class="it-heatmap-legend-cell" data-level="3"></div>
+                                <div class="it-heatmap-legend-cell" data-level="4"></div>
+                                <span class="it-heatmap-legend-label">Plus</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 @* ── Row 1 : Incidents par type + Statut des incidents ── *@
                 <div class="it-charts-grid it-grid-2">
                     <div class="it-chart-card">

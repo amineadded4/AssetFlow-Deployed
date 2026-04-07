@@ -47,6 +47,11 @@ namespace AssetFlow.Application.DTOs
         public DateTime DateCreation { get; set; }
         public string   Statut       { get; set; } = string.Empty;
     }
+    public class MaterielHeatmapDto
+    {
+        public int    MaterielId  { get; set; }
+        public string Designation { get; set; } = string.Empty;
+    }
 
     public class DashboardStatsDto
     {

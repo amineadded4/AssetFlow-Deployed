@@ -58,6 +58,12 @@ namespace AssetFlow.BlazorUI.DTOs
         public string   Statut          { get; set; } = string.Empty;
         public string   TypeIncident    { get; set; } = string.Empty;
         public int      Urgence         { get; set; }
+        public int?      MaterielId      { get; set; }
+    }
+    public class MaterielHeatmapDto
+    {
+        public int    MaterielId  { get; set; }
+        public string Designation { get; set; } = string.Empty;
     }
 
 
@@ -80,6 +86,7 @@ namespace AssetFlow.BlazorUI.DTOs
         public List<ResolutionTempsDto>        TendanceResolution     { get; set; } = new();
 
         public List<IncidentRawDto> IncidentsRaw { get; set; } = new();
+        public List<MaterielHeatmapDto> MaterielsDisponibles { get; set; } = new();
 
         public List<IncidentSemaineDto> GetIncidentsParSemaine(DateTime debut, DateTime fin, int nbSemaines = 8)
         {

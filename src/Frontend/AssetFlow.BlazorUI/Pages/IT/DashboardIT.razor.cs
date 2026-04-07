@@ -33,6 +33,11 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private DateTime _semFin   = DateTime.Today;
         private HubConnection? _hubConnection;
 
+        // ─── Heatmap ─────────────────────────────────────────────
+        private int    _heatmapAnnee    = DateTime.Today.Year;
+        private int _heatmapMaterielId = 0; 
+        private List<int> _heatmapAnnees = new();
+
         protected override async Task OnInitializedAsync()
         {
             VoiceSvc.OnCommand -= HandleVoiceCommand; 
@@ -210,7 +215,14 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
             await Task.Delay(80); // DOM settle
             if (_stats != null)
+            {
                 await RenderAllCharts();
+                var minYear = _stats.IncidentsRaw.Any()
+                    ? _stats.IncidentsRaw.Min(i => i.DateIncident.Year)
+                    : DateTime.Today.Year;
+                _heatmapAnnees = Enumerable.Range(minYear, DateTime.Today.Year - minYear + 1).ToList();
+                if (!_heatmapAnnees.Any()) _heatmapAnnees.Add(DateTime.Today.Year);
+            }
         }
 
         private async Task ChargerInfosUtilisateur()
@@ -271,11 +283,44 @@ namespace AssetFlow.BlazorUI.Pages.IT
                 // 7. Équipements par catégorie (Radial Bar)
                 await JS.InvokeVoidAsync("ApexITInterop.renderEquipementsParCategorie",
                     "chart-equipements-categorie", _stats.EquipementsParCategorie, dark);
+                // 8. Heatmap
+                await Task.Delay(50);
+                await RenderHeatmap();
             }
             catch (Exception ex)
             {
                 AfficherToast($"Erreur graphes : {ex.Message}", "it-toast-error");
             }
+        }
+        private void OnHeatmapAnneeChange(ChangeEventArgs e)
+        {
+            if (int.TryParse(e.Value?.ToString(), out var y)) _heatmapAnnee = y;
+            _ = RenderHeatmap();
+        }
+
+        private void OnHeatmapMaterielChange(ChangeEventArgs e)
+        {
+            if (int.TryParse(e.Value?.ToString(), out var id))
+                _heatmapMaterielId = id;
+            _ = RenderHeatmap();
+        }
+
+        private async Task RenderHeatmap()
+        {
+            if (_stats == null) return;
+
+            var incidents = _stats.IncidentsRaw
+                .Where(i => i.DateIncident.Year == _heatmapAnnee);
+
+            if (_heatmapMaterielId != 0)
+                incidents = incidents.Where(i => i.MaterielId == _heatmapMaterielId);
+
+            var data = incidents
+                .GroupBy(i => i.DateIncident.Date.ToString("yyyy-MM-dd"))
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            await JS.InvokeVoidAsync("ApexITInterop.renderHeatmap",
+                "heatmap-grid", "heatmap-months-labels", data, _heatmapAnnee, _theme == "dark");
         }
 
         // ─── Rendu individuel — Évolution ────────────────────────

@@ -381,3 +381,204 @@ html.dark .it-mini-date { background:#1e2d3f; color:var(--text-primary); }
     .it-chart-title { font-size:11px; }
     .it-mini-label  { display:none; }
 }
+
+/* ============================================================
+   HEATMAP CALENDRIER
+   ============================================================ */
+.it-heatmap-card {
+    padding-bottom: 20px;
+}
+
+.it-heatmap-container {
+    padding: 8px 20px 12px;
+    width: 100%;
+    overflow-x: auto;
+}
+
+.it-heatmap-months {
+    display: flex;
+    padding-left: 36px;
+    margin-bottom: 4px;
+    min-width: 700px;
+}
+
+.it-heatmap-month-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.it-heatmap-body {
+    display: flex;
+    gap: 6px;
+    min-width: 700px;
+}
+
+.it-heatmap-days-labels {
+    display: grid;
+    grid-template-rows: repeat(7, 14px);
+    gap: 3px;
+    margin-top: 1px;
+    width: 30px;
+    flex-shrink: 0;
+}
+
+.it-heatmap-days-labels span {
+    font-size: 10px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.it-heatmap-grid {
+    display: flex;
+    gap: 3px;
+    flex: 1;
+}
+
+.it-heatmap-col {
+    display: grid;
+    grid-template-rows: repeat(7, 14px);
+    gap: 3px;
+}
+
+.it-heatmap-cell {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    position: relative;
+}
+
+.it-heatmap-cell:hover {
+    transform: scale(1.4);
+    z-index: 10;
+    opacity: 1 !important;
+}
+
+/* Light mode levels */
+.it-layout .it-heatmap-cell[data-level="0"] { background: var(--border); opacity: 0.5; }
+.it-layout .it-heatmap-cell[data-level="1"] { background: #bbf7d0; }
+.it-layout .it-heatmap-cell[data-level="2"] { background: #4ade80; }
+.it-layout .it-heatmap-cell[data-level="3"] { background: #f97316; }
+.it-layout .it-heatmap-cell[data-level="4"] { background: #ef4444; }
+
+/* Dark mode levels */
+html.dark .it-layout .it-heatmap-cell[data-level="0"] { background: #1e2d3d; opacity: 0.8; }
+html.dark .it-layout .it-heatmap-cell[data-level="1"] { background: #166534; }
+html.dark .it-layout .it-heatmap-cell[data-level="2"] { background: #15803d; }
+html.dark .it-layout .it-heatmap-cell[data-level="3"] { background: #c2410c; }
+html.dark .it-layout .it-heatmap-cell[data-level="4"] { background: #dc2626; }
+
+/* Tooltip natif */
+.it-heatmap-cell[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: 11px;
+    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 999;
+    pointer-events: none;
+}
+
+.it-heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 12px;
+    padding-left: 36px;
+    justify-content: flex-end;
+}
+
+.it-heatmap-legend-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin: 0 4px;
+}
+
+.it-heatmap-legend-cell {
+    width: 13px;
+    height: 13px;
+    border-radius: 3px;
+}
+
+/* Copier les mêmes couleurs pour la légende */
+.it-layout .it-heatmap-legend-cell[data-level="0"] { background: var(--border); opacity: 0.5; }
+.it-layout .it-heatmap-legend-cell[data-level="1"] { background: #bbf7d0; }
+.it-layout .it-heatmap-legend-cell[data-level="2"] { background: #4ade80; }
+.it-layout .it-heatmap-legend-cell[data-level="3"] { background: #f97316; }
+.it-layout .it-heatmap-legend-cell[data-level="4"] { background: #ef4444; }
+
+html.dark .it-layout .it-heatmap-legend-cell[data-level="0"] { background: #1e2d3d; }
+html.dark .it-layout .it-heatmap-legend-cell[data-level="1"] { background: #166534; }
+html.dark .it-layout .it-heatmap-legend-cell[data-level="2"] { background: #15803d; }
+html.dark .it-layout .it-heatmap-legend-cell[data-level="3"] { background: #c2410c; }
+html.dark .it-layout .it-heatmap-legend-cell[data-level="4"] { background: #dc2626; }
+
+/* Select élargi */
+.it-mini-select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    padding: 3px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color var(--t);
+}
+.it-mini-select:hover { border-color: var(--primary); }
+.it-mini-select-wide  { min-width: 160px; }
+
+::deep .it-heatmap-cell[data-level="0"] { background: var(--border); opacity: 0.5; }
+::deep .it-heatmap-cell[data-level="1"] { background: #bbf7d0; }
+::deep .it-heatmap-cell[data-level="2"] { background: #4ade80; }
+::deep .it-heatmap-cell[data-level="3"] { background: #f97316; }
+::deep .it-heatmap-cell[data-level="4"] { background: #ef4444; }
+
+html.dark ::deep .it-heatmap-cell[data-level="0"] { background: #1e2d3d; opacity: 0.8; }
+html.dark ::deep .it-heatmap-cell[data-level="1"] { background: #166534; }
+html.dark ::deep .it-heatmap-cell[data-level="2"] { background: #15803d; }
+html.dark ::deep .it-heatmap-cell[data-level="3"] { background: #c2410c; }
+html.dark ::deep .it-heatmap-cell[data-level="4"] { background: #dc2626; }
+
+/* Même chose pour les col et la légende */
+::deep .it-heatmap-col {
+    display: grid;
+    grid-template-rows: repeat(7, 14px);
+    gap: 3px;
+}
+::deep .it-heatmap-cell {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    position: relative;
+}
+::deep .it-heatmap-cell:hover {
+    transform: scale(1.4);
+    z-index: 10;
+    opacity: 1 !important;
+}
+::deep .it-heatmap-legend-cell[data-level="0"] { background: var(--border); opacity: 0.5; }
+::deep .it-heatmap-legend-cell[data-level="1"] { background: #bbf7d0; }
+::deep .it-heatmap-legend-cell[data-level="2"] { background: #4ade80; }
+::deep .it-heatmap-legend-cell[data-level="3"] { background: #f97316; }
+::deep .it-heatmap-legend-cell[data-level="4"] { background: #ef4444; }
+html.dark ::deep .it-heatmap-legend-cell[data-level="0"] { background: #1e2d3d; }
+html.dark ::deep .it-heatmap-legend-cell[data-level="1"] { background: #166534; }
+html.dark ::deep .it-heatmap-legend-cell[data-level="2"] { background: #15803d; }
+html.dark ::deep .it-heatmap-legend-cell[data-level="3"] { background: #c2410c; }
+html.dark ::deep .it-heatmap-legend-cell[data-level="4"] { background: #dc2626; }

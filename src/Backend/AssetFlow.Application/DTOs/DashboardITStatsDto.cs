@@ -58,6 +58,7 @@ namespace AssetFlow.Application.DTOs
         public string   Statut          { get; set; } = string.Empty;
         public string   TypeIncident    { get; set; } = string.Empty;
         public int      Urgence         { get; set; }
+        public int? MaterielId { get; set; }
     }
 
 
@@ -119,5 +120,6 @@ namespace AssetFlow.Application.DTOs
                 .GroupBy(i => i.TypeIncident)
                 .ToDictionary(g => g.Key, g => g.Average(i => i.Urgence));
         }
+        public List<MaterielHeatmapDto> MaterielsDisponibles { get; set; } = new();
     }
 }

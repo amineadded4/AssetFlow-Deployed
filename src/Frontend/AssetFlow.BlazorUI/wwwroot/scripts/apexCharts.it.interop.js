@@ -407,6 +407,99 @@ window.ApexITInterop = (function () {
             },
         });
     }
+    // ================================================================
+    // 8. Heatmap — Activité des incidents par jour (style GitHub)
+    // ================================================================
+    function renderHeatmap(gridId, monthsId, data, year, dark) {
+        console.log("🔥 renderHeatmap appelé", { gridId, year, data, keys: Object.keys(data) });
+        const grid     = document.getElementById(gridId);
+        const monthsEl = document.getElementById(monthsId);
+        console.log("🔥 grid:", grid, "monthsEl:", monthsEl);
+        if (!grid || !monthsEl) return;
+
+        grid.innerHTML     = '';
+        monthsEl.innerHTML = '';
+
+        const MONTHS_FR = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+
+        // Trouver le premier lundi ≤ 1er janvier
+        const jan1    = new Date(year, 0, 1);
+        const dec31   = new Date(year, 11, 31);
+        const startDay = new Date(jan1);
+        const dow      = startDay.getDay(); // 0 = Dim
+        startDay.setDate(startDay.getDate() + (dow === 0 ? -6 : 1 - dow));
+
+        // Max pour les niveaux relatifs
+        const vals   = Object.values(data).map(Number);
+        const maxVal = vals.length ? Math.max(...vals) : 1;
+        const getLevel = count => {
+            if (!count)          return 0;
+            const r = count / maxVal;
+            if (r <= 0.20)       return 1;
+            if (r <= 0.50)       return 2;
+            if (r <= 0.80)       return 3;
+            return 4;
+        };
+
+        let monthPositions = {};
+        let colIndex = 0;
+        let cur = new Date(startDay);
+
+        while (cur <= dec31) {
+            const col = document.createElement('div');
+            col.className = 'it-heatmap-col';
+
+            for (let d = 0; d < 7; d++) {
+                const cell = document.createElement('div');
+                cell.className = 'it-heatmap-cell';
+
+                const inYear  = cur.getFullYear() === year;
+                const dateKey = [
+                    cur.getFullYear(),
+                    String(cur.getMonth() + 1).padStart(2, '0'),
+                    String(cur.getDate()).padStart(2, '0')
+                ].join('-');
+
+                const count   = inYear ? (data[dateKey] || 0) : 0;
+
+                cell.dataset.level = inYear ? getLevel(count) : 0;
+                if (!inYear) cell.style.opacity = '0.15';
+
+                if (inYear && count > 0) {
+                    const label = cur.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+                    cell.title = `${label} — ${count} incident${count > 1 ? 's' : ''}`;
+                } else if (inYear) {
+                    cell.title = cur.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+                }
+
+                // Enregistrer la colonne du premier jour de chaque mois
+                if (d === 0 && inYear) {
+                    const m = cur.getMonth();
+                    if (!(m in monthPositions)) monthPositions[m] = colIndex;
+                }
+
+                col.appendChild(cell);
+                cur.setDate(cur.getDate() + 1);
+            }
+
+            grid.appendChild(col);
+            colIndex++;
+        }
+
+        // Labels des mois positionnés dynamiquement
+        const CELL_W = 20; // 14px cell + 3px gap
+        MONTHS_FR.forEach((name, m) => {
+            const pos = monthPositions[m];
+            if (pos === undefined) return;
+            const nextPos = monthPositions[m + 1] ?? colIndex;
+            const span    = document.createElement('span');
+            span.className   = 'it-heatmap-month-label';
+            span.textContent = name;
+            span.style.width = ((nextPos - pos) * CELL_W) + 'px';
+            monthsEl.appendChild(span);
+        });
+    }
+
 
     // ── API publique ──────────────────────────────────────────
     return {
@@ -417,6 +510,7 @@ window.ApexITInterop = (function () {
         renderTendanceResolution,
         renderEquipementsParCategorie,
         renderIncidentStatutGauge,
+        renderHeatmap,
         destroyChart: _destroy,
         destroyAll:   () => Object.keys(_charts).forEach(_destroy),
     };

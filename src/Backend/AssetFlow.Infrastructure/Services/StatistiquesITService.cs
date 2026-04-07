@@ -104,8 +104,9 @@ namespace AssetFlow.Infrastructure.Services
                 .CountAsync(d => d.Statut == "en_attente");
 
             // ── Incidents bruts (12 dernières semaines) ───────────
-            var dateLimite = DateTime.UtcNow.AddDays(-84);
+            var dateLimite = new DateTime(DateTime.UtcNow.Year - 1, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             var incidentsRaw = await _db.Incidents
+                .Include(i => i.Affectation)
                 .Where(i => i.DateIncident >= dateLimite)
                 .Select(i => new IncidentRawDto
                 {
@@ -114,7 +115,9 @@ namespace AssetFlow.Infrastructure.Services
                     Statut         = i.Statut.ToString(),
                     TypeIncident   = i.TypeIncident,
                     Urgence        = i.Urgence,
+                    MaterielId     = i.Affectation.MaterielId,
                 })
+                
                 .ToListAsync();
 
             // ── Tendance résolution (8 dernières semaines) ─────────
@@ -142,6 +145,11 @@ namespace AssetFlow.Infrastructure.Services
                 });
                 cursor = cursor.AddDays(7);
             }
+            var materielsDisponibles = await _db.Materiels
+                .OrderBy(m => m.Designation)
+                .Select(m => new MaterielHeatmapDto { MaterielId = m.Id, Designation = m.Designation })
+                .ToListAsync();
+
 
             return new DashboardITStatsDto
             {
@@ -158,6 +166,7 @@ namespace AssetFlow.Infrastructure.Services
                 EquipementsParCategorie = equipDtos,
                 TendanceResolution      = tendanceResolution,
                 IncidentsRaw            = incidentsRaw,
+                MaterielsDisponibles = materielsDisponibles,
             };
         }
     }

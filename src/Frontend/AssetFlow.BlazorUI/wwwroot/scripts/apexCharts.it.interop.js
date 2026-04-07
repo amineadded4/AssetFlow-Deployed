@@ -487,7 +487,7 @@ window.ApexITInterop = (function () {
         }
 
         // Labels des mois positionnés dynamiquement
-        const CELL_W = 20; // 14px cell + 3px gap
+        const CELL_W = 17; // 14px cell + 3px gap
         MONTHS_FR.forEach((name, m) => {
             const pos = monthPositions[m];
             if (pos === undefined) return;

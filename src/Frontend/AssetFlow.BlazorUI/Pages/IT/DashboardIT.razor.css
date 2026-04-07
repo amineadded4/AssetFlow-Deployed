@@ -389,10 +389,19 @@ html.dark .it-mini-date { background:#1e2d3f; color:var(--text-primary); }
     padding-bottom: 20px;
 }
 
+/* Centrer le bloc heatmap (mois + grille) */
 .it-heatmap-container {
     padding: 8px 20px 12px;
     width: 100%;
     overflow-x: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;   /* ← centre horizontalement */
+}
+::deep .it-heatmap-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .it-heatmap-months {

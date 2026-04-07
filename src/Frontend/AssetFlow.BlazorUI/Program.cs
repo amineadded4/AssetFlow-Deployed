@@ -57,5 +57,6 @@ builder.Services.AddScoped<FaceAuthClientService>();
 builder.Services.AddSingleton<VoiceCommandService>();
 builder.Services.AddScoped<VoiceNluService>();
 builder.Services.AddScoped<OffreDemandeService>();
+builder.Services.AddScoped<NotificationService>();
 
 await builder.Build().RunAsync();

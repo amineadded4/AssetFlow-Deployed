@@ -2,16 +2,18 @@ using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using AssetFlow.BlazorUI.DTOs;
+using Microsoft.JSInterop;
 
 namespace AssetFlow.BlazorUI.Pages.IT
 {
-    public partial class Employes
+    public partial class Employes : IAsyncDisposable
     {
-        [Inject] private EmployeManagementService Svc         { get; set; } = default!;
-        [Inject] private ILocalStorageService     LocalStorage { get; set; } = default!;
-        
-        [Inject] private NavigationManager    Navigation     { get; set; } = default!;
-        [Inject] private VoiceCommandService VoiceSvc { get; set; } = default!;
+        [Inject] private EmployeManagementService    Svc              { get; set; } = default!;
+        [Inject] private NotificationService   NotifSvc         { get; set; } = default!;
+        [Inject] private ILocalStorageService        LocalStorage     { get; set; } = default!;
+        [Inject] private NavigationManager           Navigation       { get; set; } = default!;
+        [Inject] private VoiceCommandService         VoiceSvc         { get; set; } = default!;
+        [Inject] private IJSRuntime                  JS               { get; set; } = default!;
 
         // ── Mode toggle ──
         private bool ModeProjet { get; set; } = false;
@@ -23,10 +25,8 @@ namespace AssetFlow.BlazorUI.Pages.IT
             get
             {
                 var q = _allEmployees.AsEnumerable();
-
                 if (FiltreRoleEmp != "tous")
                     q = q.Where(u => u.Role.Equals(FiltreRoleEmp, StringComparison.OrdinalIgnoreCase));
-
                 if (!string.IsNullOrWhiteSpace(Search))
                 {
                     var s = Search.Trim().ToLower();
@@ -35,7 +35,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
                         u.Email.ToLower().Contains(s)    ||
                         u.Role.ToLower().Contains(s));
                 }
-
                 return q.ToList();
             }
         }
@@ -44,11 +43,11 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private string FiltreRoleEmp { get; set; } = "tous";
 
         // ── Projets ──
-        private List<ProjetAffectationListeDto> Projets           { get; set; } = new();
-        private ProjetAffectationListeDto?      ProjetSelectionne { get; set; }
+        private List<ProjetAffectationListeDto> Projets             { get; set; } = new();
+        private ProjetAffectationListeDto?      ProjetSelectionne   { get; set; }
         private List<AffectationEmployeDto>     AffectationsProjets { get; set; } = new();
-        private string                          ProjetSearch      { get; set; } = string.Empty;
-        private bool                            LoadingProjets    { get; set; } = false;
+        private string                          ProjetSearch        { get; set; } = string.Empty;
+        private bool                            LoadingProjets      { get; set; } = false;
 
         // ── Communs ──
         private AffectationEmployeDto? AffectationARetirer { get; set; }
@@ -61,10 +60,20 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private bool    LoadingAffectations { get; set; } = false;
         private bool    IsRetiring          { get; set; } = false;
 
+        // ── Notifications ──
+        private bool                    _notifOpen    = false;
+        private bool                    _loadingNotifs = false;
+        private int                     _nbNonLues    = 0;
+        private List<NotificationDto>   _notifications = new();
+        private System.Timers.Timer?    _notifTimer;
+
         private System.Timers.Timer? _debounce;
         private bool _menuOpen = false;
-        private string      _roleUtilisateur = "Service IT";
+        private string _roleUtilisateur = "Service IT";
         private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+
+        // ── Dark Mode ──
+        private bool _isDark = false;
 
         // ── Computed ──
         private List<AffectationEmployeDto> AffectationsCourantes =>
@@ -82,180 +91,203 @@ namespace AssetFlow.BlazorUI.Pages.IT
         protected override async Task OnInitializedAsync()
         {
             VoiceSvc.OnCommand += HandleVoiceCommand;
-            UserName = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
+            UserName         = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
             _roleUtilisateur = await LocalStorage.GetItemAsync<string>("user_role") ?? "IT";
+
+            // Restaurer le dark mode depuis localStorage
+            _isDark = await LocalStorage.GetItemAsync<bool>("darkMode");
+            await ApplyDark(_isDark);
+
             await LoadEmployesAsync();
+            await RefreshCountAsync();
+
+            // Actualiser le compteur toutes les 60 secondes
+            _notifTimer = new System.Timers.Timer(60_000);
+            _notifTimer.Elapsed += async (_, _) =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    await RefreshCountAsync();
+                    StateHasChanged();
+                });
+            };
+            _notifTimer.AutoReset = true;
+            _notifTimer.Start();
         }
-        public ValueTask DisposeAsync()
+
+        public async ValueTask DisposeAsync()
         {
             VoiceSvc.OnCommand -= HandleVoiceCommand;
-            return ValueTask.CompletedTask;
+            _notifTimer?.Stop();
+            _notifTimer?.Dispose();
         }
+
+        // ── Dark Mode ──
+        private async Task ToggleDark()
+        {
+            _isDark = !_isDark;
+            await LocalStorage.SetItemAsync("darkMode", _isDark);
+            await ApplyDark(_isDark);
+        }
+
+        private async Task ApplyDark(bool dark)
+        {
+            await JS.InvokeVoidAsync("eval",
+                dark ? "document.documentElement.classList.add('dark')"
+                     : "document.documentElement.classList.remove('dark')");
+        }
+
+        // ── Notifications ──
+        private async Task RefreshCountAsync()
+        {
+            _nbNonLues = await NotifSvc.GetNombreNonLuesAsync();
+        }
+
+        private async Task ToggleNotifications()
+        {
+            _notifOpen = !_notifOpen;
+            if (_notifOpen && !_notifications.Any())
+                await LoadNotificationsAsync();
+        }
+
+        private async Task LoadNotificationsAsync()
+        {
+            _loadingNotifs = true;
+            StateHasChanged();
+            _notifications = await NotifSvc.GetNotificationsAsync();
+            _loadingNotifs = false;
+            StateHasChanged();
+        }
+
+        private async Task MarquerLue(NotificationDto notif)
+        {
+            if (notif.EstLue) return;
+            notif.EstLue = true; // Optimistic update
+            _nbNonLues   = Math.Max(0, _nbNonLues - 1);
+            await NotifSvc.MarquerCommeLueAsync(notif.Id);
+            StateHasChanged();
+        }
+
+        private async Task MarquerToutesLues()
+        {
+            await NotifSvc.MarquerToutesCommeLuesAsync();
+            foreach (var n in _notifications) n.EstLue = true;
+            _nbNonLues = 0;
+            StateHasChanged();
+        }
+
+        private static string GetNiveauClass(string niveau) => niveau switch
+        {
+            "Critique"      => "critique",
+            "Avertissement" => "avertissement",
+            _               => "info"
+        };
+
+        // ── Voice ──
         private Task HandleVoiceCommand(VoiceCommand cmd)
         {
             return InvokeAsync(async () =>
             {
                 switch (cmd.Type)
                 {
-                // ── Basculer vers l'onglet Employés ────────────────────
-                case VoiceCommandType.SélectionnerEmploye
-                    when string.IsNullOrWhiteSpace(cmd.Designation):
-                    await SetMode(false);  // ✅ bascule sur Employés
-                    break;
-
-                // ── Basculer vers l'onglet Projets ─────────────────────
-                case VoiceCommandType.SélectionnerProjet
-                    when string.IsNullOrWhiteSpace(cmd.Designation):
-                    await SetMode(true);   // ✅ bascule sur Projets
-                    break;
-
-                // ── Sélectionner un employé par nom ────────────────────
-                case VoiceCommandType.SélectionnerEmploye:
-                {
-                    await SetMode(false);  // ✅ s'assurer qu'on est sur l'onglet Employés
-                    var e = TrouverEmploye(cmd.Designation);
-                    if (e != null) await SelectEmploye(e);
-                    else { ErrorMsg = $"Employé '{cmd.Designation}' introuvable."; }
-                    break;
-                }
-
-                // ── Sélectionner un projet par nom ─────────────────────
-                case VoiceCommandType.SélectionnerProjet:
-                {
-                    await SetMode(true);   // ✅ s'assurer qu'on est sur l'onglet Projets
-                    var p = TrouverProjet(cmd.Designation);
-                    if (p != null) await SelectProjet(p);
-                    else { ErrorMsg = $"Projet '{cmd.Designation}' introuvable."; }
-                    break;
-                }
-
-                    // ── Révoquer une affectation ───────────────────
+                    case VoiceCommandType.SélectionnerEmploye when string.IsNullOrWhiteSpace(cmd.Designation):
+                        await SetMode(false); break;
+                    case VoiceCommandType.SélectionnerProjet when string.IsNullOrWhiteSpace(cmd.Designation):
+                        await SetMode(true);  break;
+                    case VoiceCommandType.SélectionnerEmploye:
+                    {
+                        await SetMode(false);
+                        var e = TrouverEmploye(cmd.Designation);
+                        if (e != null) await SelectEmploye(e);
+                        else ErrorMsg = $"Employé '{cmd.Designation}' introuvable.";
+                        break;
+                    }
+                    case VoiceCommandType.SélectionnerProjet:
+                    {
+                        await SetMode(true);
+                        var p = TrouverProjet(cmd.Designation);
+                        if (p != null) await SelectProjet(p);
+                        else ErrorMsg = $"Projet '{cmd.Designation}' introuvable.";
+                        break;
+                    }
                     case VoiceCommandType.RévoquerAffectation:
                     {
-                        // ✅ Vérifier les deux modes
                         if (EmployeSelectionne == null && ProjetSelectionne == null)
-                        {
-                            ErrorMsg = "Sélectionnez d'abord un employé ou un projet.";
-                            break;
-                        }
+                        { ErrorMsg = "Sélectionnez d'abord un employé ou un projet."; break; }
                         var a = TrouverAffectation(cmd.Designation ?? cmd.Reference);
-                        if (a != null)
-                            DemanderConfirmation(a);
-                        else
-                            ErrorMsg = $"Affectation '{cmd.Designation ?? cmd.Reference}' introuvable.";
+                        if (a != null) DemanderConfirmation(a);
+                        else ErrorMsg = $"Affectation '{cmd.Designation ?? cmd.Reference}' introuvable.";
                         break;
                     }
                 }
-
-                // ✅ Auto-clear du message après 3s
                 if (!string.IsNullOrEmpty(ErrorMsg))
                 {
                     StateHasChanged();
                     await Task.Delay(3000);
                     ErrorMsg = string.Empty;
                 }
-
                 StateHasChanged();
             });
         }
+
+        // ── Helpers recherche vocale ──
         private ProjetAffectationListeDto? TrouverProjet(string? designation)
         {
             if (string.IsNullOrWhiteSpace(designation)) return null;
-
-            var exact = Projets.FirstOrDefault(p =>
-                p.Nom.Equals(designation, StringComparison.OrdinalIgnoreCase));
+            var exact = Projets.FirstOrDefault(p => p.Nom.Equals(designation, StringComparison.OrdinalIgnoreCase));
             if (exact != null) return exact;
-
             var terms = designation.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            return Projets
-                .Select(p => new
-                {
-                    Projet = p,
-                    Score  = terms.Count(t => p.Nom.ToLower().Contains(t))
-                })
-                .Where(x => x.Score > 0)
-                .OrderByDescending(x => x.Score)
-                .Select(x => x.Projet)
-                .FirstOrDefault();
+            return Projets.Select(p => new { Projet = p, Score = terms.Count(t => p.Nom.ToLower().Contains(t)) })
+                          .Where(x => x.Score > 0).OrderByDescending(x => x.Score)
+                          .Select(x => x.Projet).FirstOrDefault();
         }
-
-        // ✅ Type réel : EmployeListeDto, liste réelle : _allEmployees
         private EmployeListeDto? TrouverEmploye(string? designation)
         {
             if (string.IsNullOrWhiteSpace(designation)) return null;
-
-            // Correspondance exacte d'abord
-            var exact = _allEmployees.FirstOrDefault(e =>
-                e.FullName.Equals(designation, StringComparison.OrdinalIgnoreCase));
+            var exact = _allEmployees.FirstOrDefault(e => e.FullName.Equals(designation, StringComparison.OrdinalIgnoreCase));
             if (exact != null) return exact;
-
-            // Score par termes — insensible à la casse
             var terms = designation.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            return _allEmployees
-                .Select(e => new
-                {
-                    Employe = e,
-                    Score   = terms.Count(t => e.FullName.ToLower().Contains(t))
-                })
-                .Where(x => x.Score > 0)
-                .OrderByDescending(x => x.Score)
-                .Select(x => x.Employe)
-                .FirstOrDefault();
+            return _allEmployees.Select(e => new { Employe = e, Score = terms.Count(t => e.FullName.ToLower().Contains(t)) })
+                                .Where(x => x.Score > 0).OrderByDescending(x => x.Score)
+                                .Select(x => x.Employe).FirstOrDefault();
         }
-
-        // ✅ Type réel : AffectationEmployeDto, liste réelle : Affectations
-        // Cherche par NomMateriel OU Reference (insensible à la casse)
         private AffectationEmployeDto? TrouverAffectation(string? input)
         {
             if (string.IsNullOrWhiteSpace(input)) return null;
-
             var d = input.ToLower().Trim();
-
-            // ✅ Cherche dans la liste active selon le mode courant
             var liste = ModeProjet ? AffectationsProjets : Affectations;
-
-            return liste.FirstOrDefault(a =>
-                a.Designation.ToLower().Contains(d) ||
-                a.Reference.ToLower().Contains(d));
+            return liste.FirstOrDefault(a => a.Designation.ToLower().Contains(d) || a.Reference.ToLower().Contains(d));
         }
 
         // ── Mode toggle ──
         private async Task SetMode(bool projet)
         {
-            ModeProjet         = projet;
-            EmployeSelectionne = null;
-            ProjetSelectionne  = null;
-            Affectations       = new();
+            ModeProjet          = projet;
+            EmployeSelectionne  = null;
+            ProjetSelectionne   = null;
+            Affectations        = new();
             AffectationsProjets = new();
-            FiltreEtat         = "tous";
-            SuccessMsg         = string.Empty;
-            ErrorMsg           = string.Empty;
-
-            if (projet && !Projets.Any())
-                await LoadProjetsAsync();
+            FiltreEtat          = "tous";
+            SuccessMsg          = string.Empty;
+            ErrorMsg            = string.Empty;
+            if (projet && !Projets.Any()) await LoadProjetsAsync();
         }
 
-        // ── Employés ──
         private async Task LoadEmployesAsync(string? search = null)
         {
             LoadingEmployes = true;
             StateHasChanged();
-            _allEmployees       = await Svc.GetEmployesAsync(search);
+            _allEmployees   = await Svc.GetEmployesAsync(search);
             LoadingEmployes = false;
             StateHasChanged();
         }
-
-        private void OnSearchInput(ChangeEventArgs e)
-        {
-            Search = e.Value?.ToString() ?? string.Empty;
-        }
+        private void OnSearchInput(ChangeEventArgs e) => Search = e.Value?.ToString() ?? string.Empty;
 
         private async Task SelectEmploye(EmployeListeDto emp)
         {
             EmployeSelectionne  = emp;
             FiltreEtat          = "tous";
-            SuccessMsg          = string.Empty;
-            ErrorMsg            = string.Empty;
+            SuccessMsg = ErrorMsg = string.Empty;
             LoadingAffectations = true;
             StateHasChanged();
             Affectations        = await Svc.GetAffectationsAsync(emp.Id);
@@ -263,7 +295,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             StateHasChanged();
         }
 
-        // ── Projets ──
         private async Task LoadProjetsAsync(string? search = null)
         {
             LoadingProjets = true;
@@ -272,7 +303,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             LoadingProjets = false;
             StateHasChanged();
         }
-
         private void OnProjetSearchInput(ChangeEventArgs e)
         {
             ProjetSearch = e.Value?.ToString() ?? string.Empty;
@@ -286,13 +316,11 @@ namespace AssetFlow.BlazorUI.Pages.IT
             _debounce.AutoReset = false;
             _debounce.Start();
         }
-
         private async Task SelectProjet(ProjetAffectationListeDto projet)
         {
             ProjetSelectionne   = projet;
             FiltreEtat          = "tous";
-            SuccessMsg          = string.Empty;
-            ErrorMsg            = string.Empty;
+            SuccessMsg = ErrorMsg = string.Empty;
             LoadingAffectations = true;
             StateHasChanged();
             AffectationsProjets = await Svc.GetAffectationsProjetAsync(projet.Id);
@@ -300,7 +328,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             StateHasChanged();
         }
 
-        // ── Révocation ──
         private void DemanderConfirmation(AffectationEmployeDto aff) => AffectationARetirer = aff;
         private void AnnulerConfirmation()                           => AffectationARetirer = null;
 
@@ -308,15 +335,11 @@ namespace AssetFlow.BlazorUI.Pages.IT
         {
             if (AffectationARetirer == null) return;
             IsRetiring = true;
-            SuccessMsg = string.Empty;
-            ErrorMsg   = string.Empty;
+            SuccessMsg = ErrorMsg = string.Empty;
             StateHasChanged();
-
             var (succes, message) = await Svc.RetirerAffectationAsync(AffectationARetirer.AffectationId);
-
             IsRetiring          = false;
             AffectationARetirer = null;
-
             if (succes)
             {
                 SuccessMsg = message;
@@ -330,9 +353,11 @@ namespace AssetFlow.BlazorUI.Pages.IT
                     AffectationsProjets = await Svc.GetAffectationsProjetAsync(ProjetSelectionne.Id);
                     await LoadProjetsAsync(ProjetSearch);
                 }
+                // Rafraîchir les notifications après retrait
+                _notifications.Clear();
+                await RefreshCountAsync();
             }
             else { ErrorMsg = message; }
-
             StateHasChanged();
         }
 
@@ -343,7 +368,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             "Suspendu" => "statut-suspendu",
             _          => ""
         };
-
         private static string GetPrioriteClass(string priorite) => priorite switch
         {
             "Critique" => "priorite-critique",
@@ -352,7 +376,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             "Faible"   => "priorite-faible",
             _          => ""
         };
-
         private string GetInitials()
         {
             var parts = UserName.Split(' ', StringSplitOptions.RemoveEmptyEntries);

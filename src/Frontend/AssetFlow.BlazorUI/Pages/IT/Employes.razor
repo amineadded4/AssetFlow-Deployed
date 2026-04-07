@@ -1,6 +1,7 @@
 @page "/it/employes"
 @using AssetFlow.BlazorUI.Services
 @using AssetFlow.BlazorUI.Components
+@using AssetFlow.BlazorUI.DTOs
 
 <RoleAuthGuard AllowedRoles="@(new[]{"IT","Admin"})">
 <div class="emp-layout">
@@ -15,10 +16,9 @@
             <ITSidebar ActivePage="employes" ForceOpen="_menuOpen" />
         }
 
-
     @* ══════ OVERLAY MENU MOBILE ══════ *@
     @if (_menuOpen)
-    { <div  @onclick="() => _menuOpen = !_menuOpen"></div> } 
+    { <div class="emp-menu-overlay" @onclick="() => _menuOpen = !_menuOpen"></div> }
 
     @* ══════ MAIN ══════ *@
     <main class="emp-main">
@@ -58,6 +58,126 @@
                     <input type="text" placeholder="Rechercher un projet..." value="@ProjetSearch" @oninput="OnProjetSearchInput" />
                 </div>
             }
+
+            @* ── Cloche de Notifications ── *@
+            <div class="notif-bell-wrapper" @onclick:stopPropagation="true">
+                <button class="notif-bell-btn @(_notifOpen ? "active" : "")"
+                        @onclick="ToggleNotifications"
+                        aria-label="Notifications">
+                    <svg viewBox="0 0 24 24" class="notif-bell-icon">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    @if (_nbNonLues > 0)
+                    {
+                        <span class="notif-badge @(_nbNonLues > 9 ? "large" : "")">
+                            @(_nbNonLues > 99 ? "99+" : _nbNonLues.ToString())
+                        </span>
+                    }
+                </button>
+
+                @* ── Panneau Notifications ── *@
+                @if (_notifOpen)
+                {
+                    <div class="notif-panel">
+                        <div class="notif-panel-header">
+                            <div class="notif-panel-title-row">
+                                <span class="notif-panel-title">Notifications</span>
+                                @if (_nbNonLues > 0)
+                                {
+                                    <span class="notif-count-badge">@_nbNonLues non lue(s)</span>
+                                }
+                            </div>
+                            @if (_notifications.Any(n => !n.EstLue))
+                            {
+                                <button class="notif-tout-lire-btn" @onclick="MarquerToutesLues">
+                                    <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/><path d="m27 6-11 11" opacity="0"/></svg>
+                                    Tout marquer lu
+                                </button>
+                            }
+                        </div>
+
+                        @if (_loadingNotifs)
+                        {
+                            <div class="notif-loading">
+                                <div class="notif-spinner"></div>
+                                <span>Chargement...</span>
+                            </div>
+                        }
+                        else if (!_notifications.Any())
+                        {
+                            <div class="notif-empty">
+                                <div class="notif-empty-icon">
+                                    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                                </div>
+                                <p>Aucune notification</p>
+                                <span>Tout est à jour ✓</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="notif-list">
+                                @foreach (var notif in _notifications)
+                                {
+                                    <div class="notif-item @(!notif.EstLue ? "unread" : "") @GetNiveauClass(notif.Niveau)"
+                                         @onclick="() => MarquerLue(notif)">
+                                        <div class="notif-item-icon-wrap @GetNiveauClass(notif.Niveau)">
+                                            @if (notif.EstCritique)
+                                            {
+                                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                                            }
+                                            else if (notif.EstPreventif)
+                                            {
+                                                <svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg>
+                                            }
+                                            else
+                                            {
+                                                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                                            }
+                                        </div>
+                                        <div class="notif-item-body">
+                                            <p class="notif-item-titre">@notif.Titre</p>
+                                            <p class="notif-item-msg">@notif.Message</p>
+                                            <div class="notif-item-meta">
+                                                <span class="notif-item-time">@notif.TempsRelatif</span>
+                                                @if (notif.JoursRetard.HasValue && notif.JoursRetard > 0)
+                                                {
+                                                    <span class="notif-retard-pill">@notif.JoursRetard j de retard</span>
+                                                }
+                                            </div>
+                                        </div>
+                                        @if (!notif.EstLue)
+                                        {
+                                            <div class="notif-unread-dot"></div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <div class="notif-panel-footer">
+                            <span class="notif-footer-info">
+                                Affectations expirées surveillées en temps réel
+                            </span>
+                        </div>
+                    </div>
+
+                    @* Overlay transparent pour fermer le panneau *@
+                    <div class="notif-overlay" @onclick="() => _notifOpen = false"></div>
+                }
+            </div>
+
+            @* ── Dark Mode ── *@
+            <button class="emp-dark-btn" @onclick="ToggleDark" aria-label="Mode sombre">
+                @if (_isDark)
+                {
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                }
+                else
+                {
+                    <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                }
+            </button>
         </header>
 
         @* Alertes *@
@@ -132,7 +252,7 @@
                 }
                 else
                 {
-                    @* ── Liste Projets ── *@
+                    @* ── Liste Projets ── (inchangé) *@
                     <div class="emp-col-header">
                         <span class="emp-col-title">Projets</span>
                         <span class="emp-badge">@Projets.Count</span>
@@ -145,7 +265,7 @@
                     {
                         <div class="emp-empty">
                             <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z"/><path d="M16 3v4M8 3v4M2 11h20"/></svg>
-                            <p>Aucun projet avec affectations</p>
+                            <p>Aucun projet trouvé</p>
                         </div>
                     }
                     else
@@ -153,9 +273,9 @@
                         <div class="emp-list">
                             @foreach (var proj in Projets)
                             {
-                                var isSelected = ProjetSelectionne?.Id == proj.Id;
-                                <div class="emp-card @(isSelected ? "selected" : "")" @onclick="() => SelectProjet(proj)">
-                                    <div class="emp-projet-icon @(isSelected ? "sel" : "")">
+                                var isSel = ProjetSelectionne?.Id == proj.Id;
+                                <div class="emp-card @(isSel ? "selected" : "")" @onclick="() => SelectProjet(proj)">
+                                    <div class="emp-projet-icon @(isSel ? "sel" : "")">
                                         <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z"/><path d="M16 3v4M8 3v4M2 11h20"/></svg>
                                     </div>
                                     <div class="emp-card-info">
@@ -183,24 +303,15 @@
 
             @* ════ COLONNE DROITE ════ *@
             <div class="emp-col-right">
-
-                @if (!ModeProjet && EmployeSelectionne == null)
+                @if ((!ModeProjet && EmployeSelectionne == null) || (ModeProjet && ProjetSelectionne == null))
                 {
                     <div class="emp-placeholder">
-                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        <p>Sélectionnez un employé<br/>pour voir ses affectations</p>
-                    </div>
-                }
-                else if (ModeProjet && ProjetSelectionne == null)
-                {
-                    <div class="emp-placeholder">
-                        <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z"/><path d="M16 3v4M8 3v4M2 11h20"/></svg>
-                        <p>Sélectionnez un projet<br/>pour voir ses affectations</p>
+                        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <p>Sélectionnez un @(ModeProjet ? "projet" : "employé")<br/>pour voir ses affectations</p>
                     </div>
                 }
                 else
                 {
-                    @* ── En-tête ── *@
                     <div class="emp-detail-header">
                         @if (!ModeProjet)
                         {
@@ -229,7 +340,6 @@
                         <span class="emp-detail-count">@NbActives affectation(s) active(s)</span>
                     </div>
 
-                    @* ── Filtre tabs ── *@
                     <div class="emp-filter-tabs">
                         <button class="emp-filter-tab @(FiltreEtat == "tous"     ? "active" : "")" @onclick='() => FiltreEtat = "tous"'>Toutes (@AffectationsCourantes.Count)</button>
                         <button class="emp-filter-tab @(FiltreEtat == "Courante" ? "active" : "")" @onclick='() => FiltreEtat = "Courante"'>Courantes (@AffectationsCourantes.Count(a => a.Etat == "Courante"))</button>

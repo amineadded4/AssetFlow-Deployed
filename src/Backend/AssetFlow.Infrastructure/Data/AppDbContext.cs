@@ -19,6 +19,7 @@ namespace AssetFlow.Infrastructure.Data
             public DbSet<Project> Projects { get; set; }
             public DbSet<LigneDemande>  LigneDemande  { get; set; } 
             public DbSet<CommentaireMateriel> CommentairesMateriel => Set<CommentaireMateriel>();
+            public DbSet<Notification> Notifications { get; set; }
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
             {
@@ -209,29 +210,29 @@ namespace AssetFlow.Infrastructure.Data
                   });
 
                   modelBuilder.Entity<OffreAchat>(entity =>
-{
-      entity.ToTable("OffreAchat");
-      entity.HasKey(o => o.IdOffre);
+                  {
+                        entity.ToTable("OffreAchat");
+                        entity.HasKey(o => o.IdOffre);
 
-      entity.Property(o => o.IdOffre)
-            .HasColumnType("uniqueidentifier")
-            .HasDefaultValueSql("NEWID()");
+                        entity.Property(o => o.IdOffre)
+                              .HasColumnType("uniqueidentifier")
+                              .HasDefaultValueSql("NEWID()");
 
-      entity.Property(o => o.NomFichier)
-            .IsRequired()
-            .HasColumnType("varchar(300)");
+                        entity.Property(o => o.NomFichier)
+                              .IsRequired()
+                              .HasColumnType("varchar(300)");
 
-      entity.Property(o => o.Taille)
-            .HasColumnType("bigint");
+                        entity.Property(o => o.Taille)
+                              .HasColumnType("bigint");
 
-      entity.Property(o => o.ContenuPdf)
-            .HasColumnType("varbinary(max)");
+                        entity.Property(o => o.ContenuPdf)
+                              .HasColumnType("varbinary(max)");
 
-      entity.Property(o => o.EstChoisie)
-            .HasDefaultValue(false);
+                        entity.Property(o => o.EstChoisie)
+                              .HasDefaultValue(false);
 
 
-});
+                  });
                   modelBuilder.Entity<ChatMessage>(entity =>
                       {
                             entity.HasKey(m => m.Id);
@@ -266,38 +267,70 @@ namespace AssetFlow.Infrastructure.Data
                         entity.Property(p => p.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
                         entity.Property(p => p.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
                         });
- modelBuilder.Entity<LigneDemande>(entity =>
-    {
-        entity.HasKey(l => l.IdLigne);
-        entity.Property(l => l.NomProduit).IsRequired().HasMaxLength(200);
-        entity.Property(l => l.Quantite).HasDefaultValue(1);
+                        modelBuilder.Entity<LigneDemande>(entity =>
+                        {
+                              entity.HasKey(l => l.IdLigne);
+                              entity.Property(l => l.NomProduit).IsRequired().HasMaxLength(200);
+                              entity.Property(l => l.Quantite).HasDefaultValue(1);
 
-        entity.HasOne(l => l.Demande)
-              .WithMany(d => d.Lignes)
-              .HasForeignKey(l => l.IdDemande)
-              .OnDelete(DeleteBehavior.Cascade);
-    });
-// ── BLOC 2 : Ajouter dans OnModelCreating ───────────────────
-modelBuilder.Entity<CommentaireMateriel>(e =>
-{
-    e.ToTable("CommentairesMateriel");
-    e.HasKey(c => c.Id);
- 
-    e.Property(c => c.Contenu)
-     .HasMaxLength(1000)
-     .IsRequired();
- 
-    e.HasOne(c => c.Materiel)
-     .WithMany()
-     .HasForeignKey(c => c.MaterielId)
-     .OnDelete(DeleteBehavior.Cascade);
- 
-    e.HasOne(c => c.Utilisateur)
-     .WithMany()
-     .HasForeignKey(c => c.UtilisateurId)
-     .OnDelete(DeleteBehavior.Restrict);
-});
+                              entity.HasOne(l => l.Demande)
+                                    .WithMany(d => d.Lignes)
+                                    .HasForeignKey(l => l.IdDemande)
+                                    .OnDelete(DeleteBehavior.Cascade);
+                        });
+                        // ── BLOC 2 : Ajouter dans OnModelCreating ───────────────────
+                        modelBuilder.Entity<CommentaireMateriel>(e =>
+                        {
+                        e.ToTable("CommentairesMateriel");
+                        e.HasKey(c => c.Id);
+                        
+                        e.Property(c => c.Contenu)
+                        .HasMaxLength(1000)
+                        .IsRequired();
+                        
+                        e.HasOne(c => c.Materiel)
+                        .WithMany()
+                        .HasForeignKey(c => c.MaterielId)
+                        .OnDelete(DeleteBehavior.Cascade);
+                        
+                        e.HasOne(c => c.Utilisateur)
+                        .WithMany()
+                        .HasForeignKey(c => c.UtilisateurId)
+                        .OnDelete(DeleteBehavior.Restrict);
+                        });
 
-            }
-      }
-}
+                        modelBuilder.Entity<Notification>(entity =>
+                        {
+                        entity.ToTable("Notifications");
+                        entity.HasKey(n => n.Id);
+                        
+                        entity.Property(n => n.Titre)
+                              .IsRequired()
+                              .HasMaxLength(200);
+                        
+                        entity.Property(n => n.Message)
+                              .IsRequired()
+                              .HasMaxLength(1000);
+                        
+                        entity.Property(n => n.RoleDestinataire)
+                              .HasMaxLength(50);
+                        
+                        // Index pour accélérer les requêtes fréquentes
+                        entity.HasIndex(n => new { n.EstLue, n.RoleDestinataire });
+                        entity.HasIndex(n => n.DateCreation);
+                        
+                        // Relations optionnelles
+                        entity.HasOne(n => n.Affectation)
+                              .WithMany()
+                              .HasForeignKey(n => n.AffectationId)
+                              .OnDelete(DeleteBehavior.SetNull);
+                        
+                        entity.HasOne(n => n.Utilisateur)
+                              .WithMany()
+                              .HasForeignKey(n => n.UtilisateurId)
+                              .OnDelete(DeleteBehavior.SetNull);
+                        });
+
+                                    }
+                              }
+                        }

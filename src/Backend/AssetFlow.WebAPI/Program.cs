@@ -151,6 +151,7 @@ builder.Services.AddScoped<IDashboardNotifier>(sp =>
         ()  => hub.Clients.Group("dashboard-it").SendAsync("DashboardITUpdated")
     );
 });
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 // === SIGNALR ===
 builder.Services.AddSignalR();

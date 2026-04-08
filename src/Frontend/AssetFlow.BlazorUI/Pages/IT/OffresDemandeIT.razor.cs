@@ -124,6 +124,18 @@ namespace AssetFlow.BlazorUI.Pages.IT
         
                     if (!_chatOpen) _unreadCount++;
                 }
+                else
+                {
+                    // ✅ AJOUT : traiter null comme un échec
+                    Console.WriteLine($"[CB-CHAT] ❌ result == null → RecordFailure()");
+                    _cbChat.RecordFailure();
+                    Console.WriteLine($"[CB-CHAT] 📊 État après RecordFailure : {_cbChat.State}");
+                    _chatMessages.Add(new ChatbotMessageDto
+                    {
+                        Role    = "assistant",
+                        Content = "Je ne suis pas disponible en ce moment. Veuillez réessayer dans quelques instants."
+                    });
+                }
             }
             catch (HttpRequestException)
             {

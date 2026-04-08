@@ -804,7 +804,7 @@ html.dark .offre-cb-halfopen {
 /* ─── Décalage si 2 banners ───────────────────────────────── */
 .offre-cb-open.offre-cb-chat,
 .offre-cb-halfopen.offre-cb-chat {
-    top: 58px;
+    top: 68px;
 }
 
 /* ─── Icône ───────────────────────────────────────────────── */

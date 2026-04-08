@@ -4,6 +4,81 @@
 
 <RoleAuthGuard AllowedRoles="@(new[]{"IT","Admin"})" Context="userRole">
     @{ _roleUtilisateur = userRole; }  @* ← assigné avant le premier rendu du contenu *@
+    @* OCR — OPEN *@
+    @if (_cbOcr.State == CbState.Open)
+    {
+        <div class="offre-cb-strip offre-cb-open">
+            <div class="offre-cb-strip-icon">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="offre-cb-strip-body">
+                <span class="offre-cb-strip-title">Analyse OCR indisponible</span>
+                <span class="offre-cb-strip-desc">Le service d'analyse est temporairement suspendu suite à plusieurs erreurs. Reprise automatique dans&nbsp;<strong>@_countOcr s</strong>.</span>
+            </div>
+            <div class="offre-cb-strip-countdown">
+                <span class="offre-cb-num">@_countOcr</span>
+                <span class="offre-cb-unit">sec</span>
+            </div>
+            <button class="offre-cb-strip-close" @onclick="() => _cbService.Ocr.Reset()">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+    }
+
+    @* OCR — HALF-OPEN *@
+    @if (_cbOcr.State == CbState.HalfOpen)
+    {
+        <div class="offre-cb-strip offre-cb-halfopen">
+            <div class="offre-cb-strip-icon">
+                <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </div>
+            <div class="offre-cb-strip-body">
+                <span class="offre-cb-strip-title">Reconnexion OCR en cours…</span>
+                <span class="offre-cb-strip-desc">La prochaine analyse servira de vérification de disponibilité du service.</span>
+            </div>
+            <div class="offre-cb-pulse-wrap">
+                <span class="offre-cb-pulse-dot"></span>
+            </div>
+        </div>
+    }
+
+    @* CHAT — OPEN *@
+    @if (_cbChat.State == CbState.Open)
+    {
+        <div class="offre-cb-strip offre-cb-open offre-cb-chat">
+            <div class="offre-cb-strip-icon">
+                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="offre-cb-strip-body">
+                <span class="offre-cb-strip-title">Assistant IA indisponible</span>
+                <span class="offre-cb-strip-desc">Le chatbot est temporairement suspendu. Reprise dans&nbsp;<strong>@_countChat s</strong>.</span>
+            </div>
+            <div class="offre-cb-strip-countdown offre-cb-countdown-chat">
+                <span class="offre-cb-num">@_countChat</span>
+                <span class="offre-cb-unit">sec</span>
+            </div>
+            <button class="offre-cb-strip-close" @onclick="() => _cbService.Chat.Reset()">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+    }
+
+    @* CHAT — HALF-OPEN *@
+    @if (_cbChat.State == CbState.HalfOpen)
+    {
+        <div class="offre-cb-strip offre-cb-halfopen offre-cb-chat">
+            <div class="offre-cb-strip-icon">
+                <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </div>
+            <div class="offre-cb-strip-body">
+                <span class="offre-cb-strip-title">Reconnexion chatbot en cours…</span>
+                <span class="offre-cb-strip-desc">Le prochain message servira de test de disponibilité.</span>
+            </div>
+            <div class="offre-cb-pulse-wrap">
+                <span class="offre-cb-pulse-dot offre-cb-pulse-chat"></span>
+            </div>
+        </div>
+    }
     <div class="oda-layout">
         @if (_estAdmin)
         {

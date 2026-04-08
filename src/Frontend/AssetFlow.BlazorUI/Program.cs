@@ -59,5 +59,6 @@ builder.Services.AddScoped<VoiceNluService>();
 builder.Services.AddScoped<OffreDemandeService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddSingleton<ScraperCircuitBreakerService>();
+builder.Services.AddScoped<OffreCircuitBreakerService>();
 
 await builder.Build().RunAsync();

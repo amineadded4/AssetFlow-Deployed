@@ -742,3 +742,282 @@ html.dark .oda-chat-input-wrap { background: #1c2128; border-color: #1e2d42; }
     opacity: 0.8;
     line-height: 1.45;
 }
+
+/* ============================================================
+   OFFRE CIRCUIT BREAKER — VERSION FINALE
+   ============================================================ */
+
+/* ─── Bande principale ─────────────────────────────────────── */
+.offre-cb-strip {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2000;
+
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    padding: 0.8rem 1.5rem;
+    min-height: 58px;
+
+    border-bottom: 1px solid;
+    border-left: 5px solid;
+
+    backdrop-filter: blur(10px);
+
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+    animation: offre-cb-slide-down 0.3s ease;
+}
+
+@keyframes offre-cb-slide-down {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── OPEN (ROUGE) ────────────────────────────────────────── */
+.offre-cb-open {
+    background: linear-gradient(90deg, #fee2e2, #fecaca);
+    border-color: #f87171;
+    border-left-color: #ef4444;
+}
+
+html.dark .offre-cb-open {
+    background: linear-gradient(90deg, #7f1d1d, #991b1b);
+    border-color: #f87171;
+}
+
+/* ─── HALF-OPEN (JAUNE) ───────────────────────────────────── */
+.offre-cb-halfopen {
+    background: linear-gradient(90deg, #fef3c7, #fde68a);
+    border-color: #f59e0b;
+    border-left-color: #f59e0b;
+}
+
+html.dark .offre-cb-halfopen {
+    background: linear-gradient(90deg, #78350f, #92400e);
+    border-color: #fbbf24;
+}
+
+/* ─── Décalage si 2 banners ───────────────────────────────── */
+.offre-cb-open.offre-cb-chat,
+.offre-cb-halfopen.offre-cb-chat {
+    top: 58px;
+}
+
+/* ─── Icône ───────────────────────────────────────────────── */
+.offre-cb-strip-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.offre-cb-open .offre-cb-strip-icon {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.offre-cb-halfopen .offre-cb-strip-icon {
+    background: rgba(245, 158, 11, 0.2);
+    color: #d97706;
+}
+
+.offre-cb-strip-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+}
+
+/* ─── Texte ───────────────────────────────────────────────── */
+.offre-cb-strip-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.offre-cb-strip-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+}
+
+.offre-cb-open .offre-cb-strip-title {
+    color: #b91c1c;
+}
+
+.offre-cb-halfopen .offre-cb-strip-title {
+    color: #92400e;
+}
+
+html.dark .offre-cb-strip-title {
+    color: #fff;
+}
+
+.offre-cb-strip-desc {
+    font-size: 0.8rem;
+    color: rgba(0,0,0,0.75);
+}
+
+html.dark .offre-cb-strip-desc {
+    color: rgba(255,255,255,0.85);
+}
+
+/* ─── Countdown ───────────────────────────────────────────── */
+.offre-cb-strip-countdown {
+    flex-shrink: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    min-width: 64px;
+    padding: 0.45rem 0.85rem;
+
+    border-radius: 10px;
+    border: 2px solid;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.offre-cb-open .offre-cb-strip-countdown {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.offre-cb-halfopen .offre-cb-strip-countdown {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: rgba(245, 158, 11, 0.4);
+}
+
+.offre-cb-num {
+    font-size: 1.6rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.offre-cb-open .offre-cb-num {
+    color: #bd8686;
+}
+
+.offre-cb-halfopen .offre-cb-num {
+    color: #92400e;
+}
+
+.offre-cb-unit {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+/* ─── Pulse HALF-OPEN ─────────────────────────────────────── */
+.offre-cb-pulse-wrap {
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.offre-cb-pulse-dot {
+    width: 14px;
+    height: 14px;
+
+    border-radius: 50%;
+    background: #f59e0b;
+
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5);
+    animation: offre-cb-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes offre-cb-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+    70%  { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+/* ─── BOUTON CLOSE (FIX COMPLET) ───────────────────────────── */
+.offre-cb-strip-close {
+    flex-shrink: 0;
+
+    width: 30px;
+    height: 30px;
+
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.2);
+
+    background: rgba(255,255,255,0.7);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+/* SVG ICON FIX */
+.offre-cb-strip-close svg {
+    width: 14px;
+    height: 14px;
+
+    stroke: #111;
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+}
+
+/* couleur selon état */
+.offre-cb-open .offre-cb-strip-close svg {
+    stroke: #7f1d1d;
+}
+
+.offre-cb-halfopen .offre-cb-strip-close svg {
+    stroke: #78350f;
+}
+
+/* hover */
+.offre-cb-strip-close:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+/* dark mode */
+html.dark .offre-cb-strip-close {
+    background: rgba(0,0,0,0.3);
+    border-color: rgba(255,255,255,0.25);
+}
+
+html.dark .offre-cb-strip-close svg {
+    stroke: #fff;
+}
+
+html.dark .offre-cb-strip-close:hover {
+    background: rgba(255,255,255,0.12);
+}
+
+/* ─── Responsive ─────────────────────────────────────────── */
+@media (max-width: 600px) {
+    .offre-cb-strip {
+        flex-wrap: wrap;
+        gap: 0.7rem;
+        padding: 0.7rem 1rem;
+    }
+
+    .offre-cb-strip-countdown {
+        align-self: flex-start;
+    }
+
+    .offre-cb-strip-body {
+        min-width: 0;
+    }
+}

@@ -6,13 +6,20 @@ using Microsoft.AspNetCore.Components.Web;
 
 namespace AssetFlow.BlazorUI.Pages.IT
 {
-    public partial class OffresDemandeIT : ComponentBase
+    public partial class OffresDemandeIT : ComponentBase,IAsyncDisposable
     {
         [Parameter] public int DemandeId { get; set; }
 
         [Inject] private OffreDemandeService  OffreService { get; set; } = default!;
         [Inject] private NavigationManager    Navigation   { get; set; } = default!;
         [Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
+        [Inject] private OffreCircuitBreakerService _cbService { get; set; } = default!;
+
+        private OffreCircuit _cbOcr  => _cbService.Ocr;
+        private OffreCircuit _cbChat => _cbService.Chat;
+        private int _countOcr  = 0;
+        private int _countChat = 0;
+        private System.Threading.Timer? _cbTimer;
 
         private bool    _isLoading = true;
         private bool    _menuOpen  = false;
@@ -61,14 +68,28 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private async Task SendChatMessage()
         {
             if (string.IsNullOrWhiteSpace(_chatInput) || _chatLoading) return;
-
+        
+            // ── Circuit Breaker Chat ─────────────────────────────────────────────────
+            if (_cbChat.TryTransitionHalfOpen())
+            {
+                StateHasChanged();
+                await Task.Delay(3000);
+            }
+        
+            if (!_cbChat.CanSend())
+            {
+                // La bannière affiche déjà le message — ne pas polluer le chat
+                return;
+            }
+            // ── Fin Circuit Breaker ──────────────────────────────────────────────────
+        
             var userMsg  = _chatInput.Trim();
             _chatInput   = string.Empty;
             _chatLoading = true;
-
+        
             _chatMessages.Add(new ChatbotMessageDto { Role = "user", Content = userMsg });
             StateHasChanged();
-
+        
             try
             {
                 var offresCtx = _offres.Select(o =>
@@ -83,7 +104,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
                         fraisLivraison = !string.IsNullOrEmpty(fs.FraisLivraison) ? fs.FraisLivraison : o.FraisLivraison
                     };
                 }).ToList();
-
+        
                 var payload = new
                 {
                     userId    = _userId,
@@ -91,23 +112,40 @@ namespace AssetFlow.BlazorUI.Pages.IT
                     message   = userMsg,
                     offres    = offresCtx
                 };
-
+        
                 var result = await OffreService.SendChatMessageAsync(payload);
                 if (result != null)
                 {
+                    _cbChat.RecordSuccess();
                     _chatMessages.Add(new ChatbotMessageDto { Role = "assistant", Content = result.Reply });
-
+        
                     if (!string.IsNullOrEmpty(result.RecommendedOffre))
                         _recommendedOffre = result.RecommendedOffre;
-
+        
                     if (!_chatOpen) _unreadCount++;
                 }
             }
+            catch (HttpRequestException)
+            {
+                _cbChat.RecordFailure();
+                _chatMessages.Add(new ChatbotMessageDto
+                {
+                    Role    = "assistant",
+                    Content = "Je ne suis pas disponible en ce moment. Veuillez réessayer dans quelques instants."
+                });
+            }
             catch (Exception ex)
             {
-                _chatMessages.Add(new ChatbotMessageDto { Role = "assistant", Content = $"Erreur : {ex.Message}" });
+                _cbChat.RecordFailure();
+                _chatMessages.Add(new ChatbotMessageDto
+                {
+                    Role    = "assistant",
+                    Content = ex.Message.Contains("401") || ex.Message.Contains("Unauthorized")
+                        ? "Service non autorisé. Vérifiez la configuration du chatbot."
+                        : "Une erreur est survenue. Veuillez réessayer."
+                });
             }
-
+        
             _chatLoading = false;
             StateHasChanged();
         }
@@ -145,6 +183,26 @@ namespace AssetFlow.BlazorUI.Pages.IT
             _userId   = await LocalStorage.GetItemAsync<string>("user_id")   ?? "unknown";
 
             await LoadOffres();
+            DemarrerCbTimer();
+        }
+        private void DemarrerCbTimer()
+        {
+            _cbTimer = new System.Threading.Timer(async _ =>
+            {
+                _countOcr  = _cbOcr.SecondsRemaining;
+                _countChat = _cbChat.SecondsRemaining;
+        
+                // Tenter les transitions Open→HalfOpen si timeout expiré
+                _cbOcr.TryTransitionHalfOpen();
+                _cbChat.TryTransitionHalfOpen();
+        
+                await InvokeAsync(StateHasChanged);
+            }, null, 0, 1000);
+        }
+        public async ValueTask DisposeAsync()
+        {
+            if (_cbTimer != null)
+                await _cbTimer.DisposeAsync();
         }
 
         private async Task LoadOffres()
@@ -267,41 +325,93 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private async Task RunOcr(OffreAchatDto offre)
         {
             if (_confirmedId.HasValue) return;
-
+        
+            // ── Circuit Breaker OCR ──────────────────────────────────────────────────
+            // Étape 1 : tenter la transition Open → HalfOpen si timeout expiré
+            if (_cbOcr.TryTransitionHalfOpen())
+            {
+                StateHasChanged();         // affiche la bannière ambre
+                await Task.Delay(3500);    // laisse l'utilisateur voir la bannière
+            }
+        
+            // Étape 2 : bloquer si circuit encore OPEN
+            if (!_cbOcr.CanSend())
+            {
+                // Ne pas afficher l'erreur technique brute — la bannière suffit
+                return;
+            }
+            // ── Fin Circuit Breaker ──────────────────────────────────────────────────
+        
             _ocrStatus[offre.IdOffre] = OcrStatus.Running;
             _ocrError.Remove(offre.IdOffre);
             StateHasChanged();
-
+        
             try
             {
                 var (invoice, error) = await OffreService.AnalyzeOcrAsync(offre.IdOffre);
-
+        
                 if (error != null)
                 {
-                    _ocrError[offre.IdOffre]  = error;
+                    // Enregistrer l'échec DANS le circuit breaker
+                    _cbOcr.RecordFailure();
+        
+                    // Afficher un message propre (jamais le message technique brut)
+                    _ocrError[offre.IdOffre]  = FormatOcrError(error);
                     _ocrStatus[offre.IdOffre] = OcrStatus.Error;
                     StateHasChanged();
                     return;
                 }
-
+        
                 if (invoice == null)
                 {
-                    _ocrError[offre.IdOffre]  = "Aucune donnée extraite.";
+                    _cbOcr.RecordFailure();
+                    _ocrError[offre.IdOffre]  = "Le service d'analyse n'a retourné aucune donnée. Veuillez réessayer.";
                     _ocrStatus[offre.IdOffre] = OcrStatus.Error;
                     StateHasChanged();
                     return;
                 }
-
+        
+                // Succès
+                _cbOcr.RecordSuccess();
                 ApplyInvoiceToState(offre.IdOffre, invoice);
                 _ocrStatus[offre.IdOffre] = OcrStatus.Done;
             }
             catch (Exception ex)
             {
-                _ocrError[offre.IdOffre]  = ex.Message;
+                _cbOcr.RecordFailure();
+                _ocrError[offre.IdOffre]  = FormatOcrError(ex.Message);
                 _ocrStatus[offre.IdOffre] = OcrStatus.Error;
             }
-
+        
             StateHasChanged();
+        }
+        
+        /// Transforme les erreurs techniques en messages lisibles pour l'utilisateur.
+        private static string FormatOcrError(string raw)
+        {
+            if (raw.Contains("401") || raw.Contains("Unauthorized"))
+                return "Le service d'analyse OCR n'est pas autorisé. Vérifiez la configuration.";
+        
+            if (raw.Contains("403") || raw.Contains("Forbidden"))
+                return "Accès refusé au service d'analyse OCR.";
+        
+            if (raw.Contains("404") || raw.Contains("Not Found"))
+                return "Le service d'analyse OCR est introuvable. Vérifiez l'URL de configuration.";
+        
+            if (raw.Contains("429") || raw.Contains("Too Many"))
+                return "Trop de requêtes envoyées. Patientez quelques instants avant de réessayer.";
+        
+            if (raw.Contains("500") || raw.Contains("Internal Server"))
+                return "Le service d'analyse OCR rencontre une erreur interne. Réessayez plus tard.";
+        
+            if (raw.Contains("timeout") || raw.Contains("Timeout") || raw.Contains("TaskCanceled"))
+                return "Le service d'analyse OCR a mis trop de temps à répondre. Réessayez.";
+        
+            if (raw.Contains("HttpRequestException") || raw.Contains("Connection") || raw.Contains("Network"))
+                return "Impossible de joindre le service d'analyse OCR. Vérifiez votre connexion.";
+        
+            // Message générique — ne jamais exposer le message technique brut
+            return "Une erreur est survenue lors de l'analyse. Veuillez réessayer.";
         }
 
         // ── Confirmer → Redis ────────────────────────────────────

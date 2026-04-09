@@ -127,9 +127,102 @@ namespace AssetFlow.BlazorUI.Pages.Admin
 
         private async Task ExportAsync(string format)
         {
-            // Placeholder : à connecter avec un endpoint export backend
-            await JS.InvokeVoidAsync("alert", $"Export {format.ToUpper()} — fonctionnalité à brancher sur l'endpoint /api/audit-logs/export");
+            if (Result == null || !Result.Items.Any()) return;
+
+            if (format == "excel") await ExporterExcel();
+            else if (format == "pdf") await ExporterPdf();
         }
+
+        private async Task ExporterExcel()
+        {
+            try
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("Date;Utilisateur;Email;Action;Catégorie;Entité;Détails");
+
+                foreach (var log in Result!.Items)
+                {
+                    sb.AppendLine($"{Csv(log.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"))};{Csv(log.Utilisateur)};{Csv(log.Email)};{Csv(log.Action)};{Csv(log.Categorie)};{Csv(log.Entite)};{Csv(log.Details ?? "")}");
+                }
+
+                var bytes = System.Text.Encoding.UTF8.GetPreamble()
+                            .Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+                var b64   = Convert.ToBase64String(bytes);
+                var fn    = $"audit_logs_{DateTime.Now:yyyyMMdd_HHmm}.csv";
+
+                await JS.InvokeVoidAsync("eval",
+                    $@"(function(){{var a=document.createElement('a');a.href='data:text/csv;base64,{b64}';a.download='{fn}';document.body.appendChild(a);a.click();document.body.removeChild(a);}})();");
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Erreur export : {ex.Message}";
+            }
+        }
+
+        private async Task ExporterPdf()
+        {
+            try
+            {
+                var rows = new System.Text.StringBuilder();
+                foreach (var log in Result!.Items)
+                {
+                    rows.AppendLine($@"
+                        <tr>
+                            <td>{HE(log.Timestamp.ToString("dd/MM/yyyy HH:mm"))}</td>
+                            <td>{HE(log.Utilisateur)}<br/><small style='color:#888'>{HE(log.Email)}</small></td>
+                            <td><span class='badge action'>{HE(log.Action)}</span></td>
+                            <td><span class='badge cat'>{HE(log.Categorie)}</span></td>
+                            <td>{HE(log.Entite)}</td>
+                            <td>{HE(log.Details ?? "—")}</td>
+                        </tr>");
+                }
+
+                var html = $@"<!DOCTYPE html>
+        <html><head><meta charset='utf-8'/>
+        <title>Journal d'Audit</title>
+        <style>
+        body{{font-family:Arial;font-size:11px;margin:20px}}
+        h2{{color:#136dec}}
+        table{{width:100%;border-collapse:collapse}}
+        th{{background:#136dec;color:#fff;padding:7px 8px;font-size:10px;text-transform:uppercase;text-align:left}}
+        td{{padding:6px 8px;border-bottom:1px solid #eee;font-size:10px;vertical-align:top}}
+        tr:nth-child(even){{background:#f8fafc}}
+        .badge{{padding:2px 7px;border-radius:4px;font-size:9px;font-weight:bold}}
+        .action{{background:#dbeafe;color:#1d4ed8}}
+        .cat{{background:#f3e8ff;color:#7c3aed}}
+        small{{font-size:9px}}
+        </style>
+        </head>
+        <body>
+        <h2>Journal d'Audit — AssetFlow</h2>
+        <p style='color:#888'>Exporté le {DateTime.Now:dd/MM/yyyy HH:mm} · {Result!.Items.Count} entrées</p>
+        <table>
+        <thead>
+            <tr>
+            <th>Date</th><th>Utilisateur</th><th>Action</th>
+            <th>Catégorie</th><th>Entité</th><th>Détails</th>
+            </tr>
+        </thead>
+        <tbody>{rows}</tbody>
+        </table>
+        </body></html>";
+
+                await JS.InvokeVoidAsync("eval",
+                    $@"(function(){{var w=window.open('','_blank','width=1100,height=750');w.document.write({System.Text.Json.JsonSerializer.Serialize(html)});w.document.close();w.focus();setTimeout(function(){{w.print();}},500);}})();");
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Erreur export : {ex.Message}";
+            }
+        }
+
+        // ── Helpers ──
+        private static string Csv(string v)
+            => v.Contains(';') || v.Contains('"') || v.Contains('\n')
+                ? $"\"{v.Replace("\"", "\"\"")}\"" : v;
+
+        private static string HE(string v)
+            => System.Net.WebUtility.HtmlEncode(v);
 
         // ── Pagination helpers ──
         private IEnumerable<int> GetPageNumbers()

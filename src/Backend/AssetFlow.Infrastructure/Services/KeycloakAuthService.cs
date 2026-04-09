@@ -15,16 +15,18 @@ namespace AssetFlow.Infrastructure.Services
         private readonly HttpClient _httpClient;
         private readonly AppDbContext _dbContext;
         private readonly IConfiguration _config;
+        private readonly IAuditLogService _audit;
 
         private string KeycloakUrl => _config["Keycloak:Authority"]!;
         private string ClientId => _config["Keycloak:ClientId"]!;
         private string ClientSecret => _config["Keycloak:ClientSecret"]!;
 
-        public KeycloakAuthService(HttpClient httpClient, AppDbContext dbContext, IConfiguration config)
+        public KeycloakAuthService(HttpClient httpClient, AppDbContext dbContext, IConfiguration config, IAuditLogService audit)
         {
             _httpClient = httpClient;
             _dbContext = dbContext;
             _config = config;
+            _audit = audit;
         }
 
         // Login : appelle Keycloak avec email+password, récupère le token JWT
@@ -65,6 +67,17 @@ namespace AssetFlow.Infrastructure.Services
             // ===== VÉRIFIER LE RÔLE =====
             if (!string.Equals(user.Role, request.Role, StringComparison.OrdinalIgnoreCase))
                 return null; // Rôle incorrect → login refusé
+
+            await _audit.LogAsync(new CreateAuditLogDto
+            {
+                Utilisateur = $"{user.FirstName} {user.LastName}",
+                Email       = user.Email,
+                Action      = IAuditLogService.Actions.Connexion,
+                Categorie   = IAuditLogService.Categories.Inscription,
+                Entite      = "Session Utilisateur",
+                Details     = "Authentification réussie via Keycloak SSO",
+                UserId      = user.Id
+            });
 
             return new LoginResponseDto
             {
@@ -156,6 +169,17 @@ namespace AssetFlow.Infrastructure.Services
 
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
+
+            await _audit.LogAsync(new CreateAuditLogDto
+            {
+                Utilisateur = $"{user.FirstName} {user.LastName}",
+                Email       = user.Email,
+                Action      = IAuditLogService.Actions.Inscription,
+                Categorie   = IAuditLogService.Categories.Inscription,
+                Entite      = "Session Utilisateur",
+                Details     = $"Nouvel utilisateur enregistré : rôle {user.Role}",
+                UserId      = user.Id
+            });
 
             return new RegisterResponseDto
             {

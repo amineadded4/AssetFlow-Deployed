@@ -64,7 +64,8 @@ namespace AssetFlow.WebAPI.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var success = await _service.DeleteAsync(id);
+            var userName  = Request.Headers["X-User-Name"].FirstOrDefault() ?? "Inconnu";
+            var success = await _service.DeleteAsync(id,userName);
             if (!success) return NotFound();
             return NoContent();
         }

@@ -2,6 +2,7 @@ using AssetFlow.Application.Interfaces;
 using AssetFlow.Domain.Entities;
 using AssetFlow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using AssetFlow.Application.DTOs;
 
 namespace AssetFlow.Infrastructure.Services
 {
@@ -9,11 +10,13 @@ namespace AssetFlow.Infrastructure.Services
     {
         private readonly AppDbContext _context;
         private readonly IDashboardNotifier _notifier;
+        private readonly IAuditLogService _audit;
 
-        public DemandeAchatService(AppDbContext context, IDashboardNotifier notifier)
+        public DemandeAchatService(AppDbContext context, IDashboardNotifier notifier, IAuditLogService audit)
         {
             _context = context;
             _notifier = notifier;
+            _audit = audit;
         }
 
         public async Task<List<DemandeAchat>> GetAllAsync()
@@ -36,7 +39,7 @@ namespace AssetFlow.Infrastructure.Services
         }
 
         public async Task ChangerStatutAsync(
-            int idDemande, string statut, string? motifRefus = null)
+            int idDemande, string statut, string userName,string? motifRefus = null)
         {
             var demande = await _context.DemandeAchat
                 .FirstOrDefaultAsync(d => d.IdDemande == idDemande);
@@ -67,6 +70,15 @@ namespace AssetFlow.Infrastructure.Services
             await _context.SaveChangesAsync();
             await _notifier.NotifyAsync();
             await _notifier.NotifyITAsync();
+            await _audit.LogAsync(new CreateAuditLogDto
+            {
+                Utilisateur = userName,
+                Email       = "system",
+                Action      = IAuditLogService.Actions.Changement,
+                Categorie   = IAuditLogService.Categories.DemandeAchat,
+                Entite      = $"Demande #{idDemande}",
+                Details     = $"Statut mis à jour → {statut}" + (motifRefus != null ? $" | Motif: {motifRefus}" : "")
+            });
         }
 
         public async Task<OffreAchat> AjouterOffreAsync(int idDemande, OffreAchat offre)

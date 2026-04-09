@@ -54,14 +54,15 @@ namespace AssetFlow.BlazorUI.Services
         // ────────────────────────────────────────────────────────
 
         public async Task<DemandeAchatReponseDto> ChangerStatutAsync(
-            int id, string statut, string? motifRefus = null)
+            int id, string statut, string userName,string? motifRefus = null)
         {
             try
             {
                 var dto = new ChangerStatutDto
                 {
                     Statut     = statut,
-                    MotifRefus = motifRefus
+                    MotifRefus = motifRefus,
+                    Utilisateur = userName
                 };
 
                 var response = await _http

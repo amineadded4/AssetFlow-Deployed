@@ -370,9 +370,11 @@ namespace AssetFlow.BlazorUI.Pages.IT
             SuccessMessage = string.Empty;
             ErrorMessage   = string.Empty;
             StateHasChanged();
+            var name = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
 
             var request = new CreerAffectationRequest
             {
+                user_name = name,
                 MaterielId       = MaterielSelectionne!.Id,
                 UtilisateurId    = ModeProjet ? null : UtilisateurSelectionne!.Id,
                 ProjetId         = ModeProjet ? ProjetSelectionne!.Id : null,

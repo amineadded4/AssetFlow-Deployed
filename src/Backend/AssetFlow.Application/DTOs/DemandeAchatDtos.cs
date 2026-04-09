@@ -62,6 +62,7 @@ namespace AssetFlow.Application.DTOs
 
     public class CreateDemandeAchatDto
     {
+        public string Utilisateur   { get; set; } = string.Empty;
         public int? UserId { get; set; } 
         public string  NomProduit   { get; set; } = string.Empty;
         public string? Description  { get; set; }
@@ -73,6 +74,7 @@ namespace AssetFlow.Application.DTOs
     {
         public string  Statut     { get; set; } = string.Empty;
         public string? MotifRefus { get; set; }
+        public string Utilisateur { get; set; } = string.Empty;
     }
 
 

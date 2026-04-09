@@ -46,7 +46,7 @@ namespace AssetFlow.WebApi.Controllers
 
             try
             {
-                await _service.ChangerStatutAsync(id, dto.Statut, dto.MotifRefus);
+                await _service.ChangerStatutAsync(id, dto.Statut, dto.Utilisateur, dto.MotifRefus);
                 return Ok(new DemandeAchatReponseDto { Succes = true, Message = $"Statut mis à jour : {dto.Statut}", IdDemande = id });
             }
             catch (KeyNotFoundException ex) { return NotFound(new DemandeAchatReponseDto { Succes = false, Message = ex.Message }); }

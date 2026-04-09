@@ -152,6 +152,7 @@ builder.Services.AddScoped<IDashboardNotifier>(sp =>
     );
 });
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 // === SIGNALR ===
 builder.Services.AddSignalR();

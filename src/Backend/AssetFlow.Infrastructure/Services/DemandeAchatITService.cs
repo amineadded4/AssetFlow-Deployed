@@ -10,11 +10,13 @@ namespace AssetFlow.Infrastructure.Services
     {
         private readonly AppDbContext _context;
         private readonly IDashboardNotifier _notifier;
+        private readonly IAuditLogService _audit;
 
-        public DemandeAchatITService(AppDbContext context, IDashboardNotifier notifier)
+        public DemandeAchatITService(AppDbContext context, IDashboardNotifier notifier, IAuditLogService audit)
         {
             _context = context;
             _notifier = notifier;
+            _audit = audit;
         }
 
         public async Task<IEnumerable<DemandeAchatITDto>> GetAllAsync(int? userId)
@@ -72,6 +74,15 @@ namespace AssetFlow.Infrastructure.Services
             await _context.SaveChangesAsync();
             await _notifier.NotifyAsync();
             await _notifier.NotifyITAsync();
+            await _audit.LogAsync(new CreateAuditLogDto
+            {
+                Utilisateur = dto.Utilisateur,        // remplacez par l'utilisateur courant si disponible
+                Email       = "system",
+                Action      = IAuditLogService.Actions.Creation,
+                Categorie   = IAuditLogService.Categories.DemandeAchat,
+                Entite      = $"Demande d'achat #{demande.Reference}",
+                Details     = $"Nouvelle demande d'achat créée : \"{demande.NomProduit}\" (Qté: {demande.Quantite})"
+            });
             return ToDto(demande);
         }
         public async Task<DemandeAchatITDto?> UpdateAsync(int id, UpdateDemandeAchatDto dto)
@@ -106,9 +117,18 @@ namespace AssetFlow.Infrastructure.Services
             }
 
             await _context.SaveChangesAsync();
+            await _audit.LogAsync(new CreateAuditLogDto
+            {
+                Utilisateur = dto.Utilisateur,        // remplacez par l'utilisateur courant si disponible
+                Email       = "system",
+                Action      = IAuditLogService.Actions.Modification,
+                Categorie   = IAuditLogService.Categories.DemandeAchat,
+                Entite      = $"Demande d'achat #{demande.Reference}",
+                Details     = $"Demande d'achat mise à jour : \"{demande.NomProduit}\" (Qté: {demande.Quantite})"
+            });
             return ToDto(demande);
         }
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id,string userName)
         {
             var demande = await _context.DemandeAchat
                 .Include(d => d.Lignes)
@@ -127,6 +147,15 @@ namespace AssetFlow.Infrastructure.Services
 
             _context.DemandeAchat.Remove(demande);
             await _context.SaveChangesAsync();
+            await _audit.LogAsync(new CreateAuditLogDto
+            {
+                Utilisateur = userName,
+                Email       = "system",
+                Action      = IAuditLogService.Actions.Suppression,
+                Categorie   = IAuditLogService.Categories.Materiel,
+                Entite      = $"Matériel #{demande.Reference}",
+                Details     = $"Supprimé avec cascade : \"{demande.NomProduit}\""
+            });
             return true;
         }
         private static DemandeAchatITDto ToDto(DemandeAchat d) => new()

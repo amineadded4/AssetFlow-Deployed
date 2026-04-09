@@ -10,9 +10,10 @@ namespace AssetFlow.Infrastructure.Services
     {
         private readonly AppDbContext _db;
         private readonly IDashboardNotifier _notifier;
+        private readonly IAuditLogService _audit;
 
-        public AffectationService(AppDbContext db, IDashboardNotifier notifier)
-        { _db = db; _notifier = notifier; }
+        public AffectationService(AppDbContext db, IDashboardNotifier notifier,IAuditLogService a)
+        { _db = db; _notifier = notifier; _audit = a;}
 
         // ── Utilisateurs ─────────────────────────────────────
         public async Task<List<UtilisateurDisponibleDto>> GetUtilisateursDisponiblesAsync(string? search = null)
@@ -186,6 +187,15 @@ namespace AssetFlow.Infrastructure.Services
             var beneficiaire = dto.ProjetId.HasValue
                 ? (await _db.Projects.FindAsync(dto.ProjetId.Value))?.Nom ?? "projet"
                 : $"{utilisateur.FirstName} {utilisateur.LastName}";
+            await _audit.LogAsync(new CreateAuditLogDto
+            {
+                Utilisateur = dto.user_name,
+                Email       = "system",
+                Action      = IAuditLogService.Actions.Affectation,
+                Categorie   = IAuditLogService.Categories.Affectation,
+                Entite      = $"Affectation #{affectation.Id}",
+                Details     = $"{articles.Count} article(s) de \"{materiel.Designation}\" affecté(s) à {beneficiaire}"
+            });
 
             return new AffectationResultDto
             {

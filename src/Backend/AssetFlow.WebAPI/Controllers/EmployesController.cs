@@ -26,7 +26,8 @@ namespace AssetFlow.WebAPI.Controllers
         [HttpDelete("affectations/{affectationId:int}")]
         public async Task<IActionResult> RetirerAffectation(int affectationId)
         {
-            var result = await _svc.RetirerAffectationAsync(affectationId);
+            var userName  = Request.Headers["X-User-Name"].FirstOrDefault() ?? "Inconnu";
+            var result = await _svc.RetirerAffectationAsync(userName, affectationId);
             return result.Succes ? Ok(result) : BadRequest(result);
         }
     }

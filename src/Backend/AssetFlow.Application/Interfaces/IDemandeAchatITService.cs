@@ -8,6 +8,6 @@ namespace AssetFlow.Application.Interfaces
         Task<DemandeAchatITDto?> GetByIdAsync(int id);
         Task<DemandeAchatITDto>  CreateAsync(CreateDemandeAchatDto dto);
         Task<DemandeAchatITDto?> UpdateAsync(int id, UpdateDemandeAchatDto dto);
-        Task<bool> DeleteAsync(int id);
+        Task<bool> DeleteAsync(int id,string userName);
     }
 }

@@ -20,6 +20,7 @@ namespace AssetFlow.Infrastructure.Data
             public DbSet<LigneDemande>  LigneDemande  { get; set; } 
             public DbSet<CommentaireMateriel> CommentairesMateriel => Set<CommentaireMateriel>();
             public DbSet<Notification> Notifications { get; set; }
+            public DbSet<AuditLog> AuditLogs { get; set; }
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
             {
@@ -329,6 +330,25 @@ namespace AssetFlow.Infrastructure.Data
                               .WithMany()
                               .HasForeignKey(n => n.UtilisateurId)
                               .OnDelete(DeleteBehavior.SetNull);
+                        });
+
+                        modelBuilder.Entity<AuditLog>(entity =>
+                        {
+                        entity.HasKey(a => a.Id);
+                        entity.Property(a => a.Utilisateur).IsRequired().HasMaxLength(200);
+                        entity.Property(a => a.Email).IsRequired().HasMaxLength(200);
+                        entity.Property(a => a.Action).IsRequired().HasMaxLength(100);
+                        entity.Property(a => a.Categorie).IsRequired().HasMaxLength(100);
+                        entity.Property(a => a.Entite).IsRequired().HasMaxLength(200);
+                        entity.Property(a => a.Details).HasMaxLength(2000);
+                        entity.HasIndex(a => a.Timestamp);
+                        entity.HasIndex(a => a.UserId);
+
+                        entity.HasOne(a => a.User)
+                              .WithMany()
+                              .HasForeignKey(a => a.UserId)
+                              .OnDelete(DeleteBehavior.SetNull)
+                              .IsRequired(false);
                         });
 
                                     }

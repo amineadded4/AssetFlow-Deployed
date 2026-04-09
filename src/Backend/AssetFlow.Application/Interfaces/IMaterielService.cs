@@ -9,10 +9,10 @@ namespace AssetFlow.Application.Interfaces
         Task<IEnumerable<MaterielDto>> SearchAsync(string? terme, string? categorie);
         Task<MaterielResultDto> CreerAsync(CreerMaterielDto dto);
         Task<MaterielResultDto> ModifierAsync(ModifierMaterielDto dto);
-        Task<MaterielResultDto> SupprimerAsync(int id);
+        Task<MaterielResultDto> SupprimerAsync(string userName,int id);
 
         /// <summary>Supprime un matériel + ses affectations + les incidents de ces affectations</summary>
-        Task<MaterielResultDto> SupprimerAvecCascadeAsync(int id);
+        Task<MaterielResultDto> SupprimerAvecCascadeAsync(string userName,int id);
 
         Task<MaterielStatsDto> GetStatsAsync();
     }

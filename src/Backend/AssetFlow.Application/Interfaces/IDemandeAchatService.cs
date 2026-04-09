@@ -7,7 +7,7 @@ namespace AssetFlow.Application.Interfaces
         Task<List<DemandeAchat>> GetAllAsync();
 
         Task<DemandeAchat?> GetByIdAsync(int id);
-        Task ChangerStatutAsync(int idDemande, string statut, string? motifRefus = null);
+        Task ChangerStatutAsync(int idDemande, string statut, string userName,string? motifRefus = null);
 
         // ── Offres PDF ───────────────────────────────────────────
 

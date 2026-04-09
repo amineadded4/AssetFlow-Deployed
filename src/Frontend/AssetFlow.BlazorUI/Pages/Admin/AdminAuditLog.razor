@@ -1,0 +1,323 @@
+@page "/admin/journal-audit"
+@using AssetFlow.BlazorUI.Components
+
+<div class="admin-shell">
+
+    <AdminSidebar ForceOpen="_sidebarOpen" />
+
+    <main class="admin-main">
+        <RoleAuthGuard AllowedRoles="@(new[]{"Admin"})">
+        <div class="audit-page">
+
+            @* ── EN-TÊTE ── *@
+            <div class="audit-header">
+                <div class="audit-header-left">
+                    <button class="audit-hamburger" @onclick="() => _sidebarOpen = !_sidebarOpen">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <line x1="3" y1="6"  x2="21" y2="6"/>
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 class="audit-title">Journal d'Audit</h1>
+                        <p class="audit-subtitle">Historique complet des actions système pour la conformité et la sécurité.</p>
+                    </div>
+                </div>
+                <div class="audit-header-actions">
+                    <button class="audit-btn-export pdf" @onclick='() => ExportAsync("pdf")' disabled="@IsLoading">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="9" y1="13" x2="15" y2="13"/>
+                            <line x1="9" y1="17" x2="15" y2="17"/>
+                        </svg>
+                        PDF
+                    </button>
+                    <button class="audit-btn-export excel" @onclick='() => ExportAsync("excel")' disabled="@IsLoading">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <path d="M3 9h18M3 15h18M9 3v18"/>
+                        </svg>
+                        Excel
+                    </button>
+                    <button class="audit-btn-refresh" @onclick="LoadLogsAsync" disabled="@IsLoading">
+                        <svg class="@(IsLoading ? "spinning" : "")" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                        Actualiser
+                    </button>
+                </div>
+            </div>
+
+            @* ── FILTRES ── *@
+            <div class="audit-filters">
+                @* Période *@
+                <div class="audit-filter-item date-range">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8"  y1="2" x2="8"  y2="6"/>
+                        <line x1="3"  y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <input type="date" class="audit-date-input" @bind="FilterDateDebut" @bind:event="onchange" @oninput="OnFilterChanged" />
+                    <span class="date-sep">→</span>
+                    <input type="date" class="audit-date-input" @bind="FilterDateFin" @bind:event="onchange" @oninput="OnFilterChanged" />
+                </div>
+
+                @* Catégorie *@
+                <div class="audit-filter-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 6h16M7 12h10M10 18h4"/>
+                    </svg>
+                    <select class="audit-select" @bind="FilterCategorie" @bind:after="OnFilterChanged">
+                        <option value="">Toutes les catégories</option>
+                        <option value="Inscription">Inscription</option>
+                        <option value="Matériel">Matériel</option>
+                        <option value="Affectation">Affectation</option>
+                        <option value="DemandeAchat">Demande d'achat</option>
+                    </select>
+                </div>
+
+                @* Action *@
+                <div class="audit-filter-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+                    </svg>
+                    <select class="audit-select" @bind="FilterAction" @bind:after="OnFilterChanged">
+                        <option value="">Toutes les actions</option>
+                        <option value="CONNEXION">Connexion</option>
+                        <option value="INSCRIPTION">Inscription</option>
+                        <option value="CREATION">Création</option>
+                        <option value="MODIFICATION">Modification</option>
+                        <option value="SUPPRESSION">Suppression</option>
+                        <option value="AFFECTATION">Affectation</option>
+                        <option value="REVOCATION">Révocation</option>
+                        <option value="CHANGEMENT ÉTAT">Changement d'état</option>
+                    </select>
+                </div>
+
+                @* Recherche *@
+                <div class="audit-filter-item search-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" class="audit-search-input" placeholder="Rechercher une entité, un utilisateur..."
+                           @bind="FilterSearch" @oninput="OnSearchInput" />
+                    @if (!string.IsNullOrWhiteSpace(FilterSearch))
+                    {
+                        <button class="audit-clear-search" @onclick="ClearSearch">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round">
+                                <path d="M18 6 6 18M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    }
+                </div>
+
+                @* Bouton reset filtres *@
+                @if (HasActiveFilters)
+                {
+                    <button class="audit-reset-filters" @onclick="ResetFilters">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+                        </svg>
+                        Réinitialiser
+                    </button>
+                }
+            </div>
+
+            @* ── COMPTEUR ── *@
+            @if (!IsLoading && Result != null)
+            {
+                <div class="audit-count-bar">
+                    <span class="audit-count-label">
+                        Affichage de <strong>@(((CurrentPage - 1) * PageSize) + 1)–@Math.Min(CurrentPage * PageSize, Result.Total)</strong>
+                        sur <strong>@Result.Total</strong> entrées
+                    </span>
+                    <div class="audit-page-size">
+                        <span>Lignes par page</span>
+                        <select class="audit-select-sm" @bind="PageSize" @bind:after="OnPageSizeChanged">
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+            }
+
+            @* ── TABLEAU ── *@
+            <div class="audit-table-wrap">
+                @if (IsLoading)
+                {
+                    <div class="audit-loading">
+                        <div class="audit-spinner"></div>
+                        <span>Chargement du journal...</span>
+                    </div>
+                }
+                else if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="audit-alert-error">@ErrorMessage</div>
+                }
+                else if (Result == null || !Result.Items.Any())
+                {
+                    <div class="audit-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+                        </svg>
+                        <p>Aucune entrée trouvée</p>
+                        <p class="audit-empty-hint">Essayez d'élargir les filtres de recherche.</p>
+                    </div>
+                }
+                else
+                {
+                    <table class="audit-table">
+                        <thead>
+                            <tr>
+                                <th>TIMESTAMP</th>
+                                <th>UTILISATEUR</th>
+                                <th>ACTION</th>
+                                <th>ENTITÉ CONCERNÉE</th>
+                                <th>DÉTAILS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var log in Result.Items)
+                            {
+                                <tr class="audit-row" @onclick="() => OpenDetail(log)">
+                                    <td class="audit-ts">
+                                        <span class="ts-date">@log.Timestamp.ToLocalTime().ToString("yyyy-MM-dd")</span>
+                                        <span class="ts-time">@log.Timestamp.ToLocalTime().ToString("HH:mm:ss.fff")</span>
+                                    </td>
+                                    <td>
+                                        <div class="audit-user">
+                                            <div class="audit-avatar" style="background:@GetAvatarColor(log.Utilisateur)">
+                                                @GetInitials(log.Utilisateur)
+                                            </div>
+                                            <div class="audit-user-info">
+                                                <span class="audit-username">@log.Utilisateur</span>
+                                                <span class="audit-email">@log.Email</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="audit-badges">
+                                            <span class="audit-badge action @GetActionClass(log.Action)">@log.Action</span>
+                                            <span class="audit-badge cat @GetCatClass(log.Categorie)">@GetCatLabel(log.Categorie)</span>
+                                        </div>
+                                    </td>
+                                    <td class="audit-entite">@log.Entite</td>
+                                    <td class="audit-details-cell">
+                                        @if (!string.IsNullOrEmpty(log.Details))
+                                        {
+                                            <span class="audit-details-preview">
+                                                @(log.Details.Length > 55 ? log.Details[..55] + "…" : log.Details)
+                                            </span>
+                                            @if (log.Details.Length > 55)
+                                            {
+                                                <button class="audit-voir-plus" @onclick:stopPropagation="true" @onclick="() => OpenDetail(log)">VOIR PLUS</button>
+                                            }
+                                        }
+                                        else { <span class="audit-details-empty">—</span> }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+
+            @* ── PAGINATION ── *@
+            @if (Result != null && Result.TotalPages > 1)
+            {
+                <div class="audit-pagination">
+                    <button class="audit-page-btn" @onclick="() => GoToPage(1)" disabled="@(CurrentPage == 1)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+                    </button>
+                    <button class="audit-page-btn" @onclick="() => GoToPage(CurrentPage - 1)" disabled="@(CurrentPage == 1)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+
+                    @foreach (var p in GetPageNumbers())
+                    {
+                        if (p == -1)
+                        {
+                            <span class="audit-page-dots">…</span>
+                        }
+                        else
+                        {
+                            <button class="audit-page-btn @(p == CurrentPage ? "active" : "")" @onclick="() => GoToPage(p)">@p</button>
+                        }
+                    }
+
+                    <button class="audit-page-btn" @onclick="() => GoToPage(CurrentPage + 1)" disabled="@(CurrentPage == Result.TotalPages)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                    <button class="audit-page-btn" @onclick="() => GoToPage(Result.TotalPages)" disabled="@(CurrentPage == Result.TotalPages)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+                    </button>
+                </div>
+            }
+
+            @* ── FOOTER ── *@
+            <div class="audit-footer">
+                <span>ASSETFLOW_AUDIT_SERVICE_V1.0</span>
+                <span>LAST_SYNC: @DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") UTC</span>
+            </div>
+
+        </div>
+        </RoleAuthGuard>
+    </main>
+</div>
+
+@* ── MODAL DÉTAIL ── *@
+@if (DetailLog != null)
+{
+    <div class="audit-modal-overlay" @onclick="CloseDetail">
+        <div class="audit-modal" @onclick:stopPropagation="true">
+            <div class="audit-modal-header">
+                <div class="audit-modal-title-block">
+                    <span class="audit-badge action @GetActionClass(DetailLog.Action)">@DetailLog.Action</span>
+                    <h2 class="audit-modal-title">@DetailLog.Entite</h2>
+                </div>
+                <button class="audit-modal-close" @onclick="CloseDetail">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="audit-modal-body">
+                <div class="audit-modal-row">
+                    <span class="audit-modal-label">Horodatage</span>
+                    <span class="audit-modal-value mono">@DetailLog.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss.fff")</span>
+                </div>
+                <div class="audit-modal-row">
+                    <span class="audit-modal-label">Utilisateur</span>
+                    <div class="audit-user">
+                        <div class="audit-avatar" style="background:@GetAvatarColor(DetailLog.Utilisateur)">@GetInitials(DetailLog.Utilisateur)</div>
+                        <div class="audit-user-info">
+                            <span class="audit-username">@DetailLog.Utilisateur</span>
+                            <span class="audit-email">@DetailLog.Email</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="audit-modal-row">
+                    <span class="audit-modal-label">Catégorie</span>
+                    <span class="audit-badge cat @GetCatClass(DetailLog.Categorie)">@GetCatLabel(DetailLog.Categorie)</span>
+                </div>
+                <div class="audit-modal-row">
+                    <span class="audit-modal-label">Entité</span>
+                    <span class="audit-modal-value">@DetailLog.Entite</span>
+                </div>
+                <div class="audit-modal-row full">
+                    <span class="audit-modal-label">Détails complets</span>
+                    <p class="audit-modal-details">@(DetailLog.Details ?? "Aucun détail disponible.")</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _sidebarOpen = false;
+}

@@ -188,6 +188,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
             {
                 await DemandeService.CreateDemandeAsync(new CreateDemandeAchatDto
                 {
+                    Utilisateur = UserName,
                     UserId       = _userId,          // ← envoyé depuis le localStorage
                     NomProduit   = _form.NomDemande.Trim(),
                     Description  = _form.Description?.Trim(),
@@ -282,6 +283,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
             {
                 await DemandeService.UpdateDemandeAsync(_editDemandeId, new UpdateDemandeAchatDto
                 {
+                    Utilisateur = UserName,
                     NomProduit  = _editForm.NomDemande.Trim(),
                     Description = _editForm.Description?.Trim(),
                     Lignes      = _editForm.Lignes.Select(l => new CreateLigneDemandeDto

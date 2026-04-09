@@ -477,8 +477,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             var ancien     = demande.Statut;
             demande.Statut = nouveauStatut;
             StateHasChanged();
-
-            var reponse = await DemandeAchatSvc.ChangerStatutAsync(demandeId, nouveauStatut);
+            var reponse = await DemandeAchatSvc.ChangerStatutAsync(demandeId, nouveauStatut, _nomUtilisateur);
 
             if (reponse.Succes)
             {
@@ -503,7 +502,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             var demande = _demandes.FirstOrDefault(d => d.Id == demandeId);
             if (demande == null) return;
 
-            var reponse = await DemandeAchatSvc.ChangerStatutAsync(demandeId, "refuse", _motifRefus.Trim());
+            var reponse = await DemandeAchatSvc.ChangerStatutAsync(demandeId, "refuse", _nomUtilisateur, _motifRefus.Trim());
 
             if (reponse.Succes)
             {

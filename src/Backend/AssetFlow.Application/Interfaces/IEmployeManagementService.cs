@@ -6,6 +6,6 @@ namespace AssetFlow.Application.Interfaces
     {
         Task<List<EmployeListeDto>> GetEmployesAsync(string? search = null);
         Task<List<AffectationEmployeDto>> GetAffectationsEmployeAsync(int utilisateurId);
-        Task<RetirerAffectationResultDto> RetirerAffectationAsync(int affectationId);
+        Task<RetirerAffectationResultDto> RetirerAffectationAsync(string userName, int affectationId);
     }
 }

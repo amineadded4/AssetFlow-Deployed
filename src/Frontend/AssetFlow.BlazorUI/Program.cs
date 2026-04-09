@@ -62,5 +62,6 @@ builder.Services.AddScoped<NotificationService>();
 builder.Services.AddSingleton<ScraperCircuitBreakerService>();
 builder.Services.AddScoped<OffreCircuitBreakerService>();
 builder.Services.AddScoped<CommentaireCircuitBreakerService>();
+builder.Services.AddScoped<AuditLogService>();
 
 await builder.Build().RunAsync();

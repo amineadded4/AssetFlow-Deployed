@@ -1,10 +1,13 @@
 using System.Net.Http.Json;
 using AssetFlow.BlazorUI.DTOs;
+using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components;
 namespace AssetFlow.BlazorUI.Services
 {
 
     public class EmployeManagementService
     {
+        [Inject] private ILocalStorageService        LocalStorage     { get; set; } = default!;
         private readonly HttpClient _http;
         private const string Base = "api/employes";
 
@@ -65,7 +68,12 @@ namespace AssetFlow.BlazorUI.Services
         {
             try
             {
-                var resp   = await _http.DeleteAsync($"{Base}/affectations/{affectationId}");
+                var userName = await LocalStorage.GetItemAsync<string>("user_name") ?? "Inconnu";
+
+                var request = new HttpRequestMessage(HttpMethod.Delete, $"{Base}/affectations/{affectationId}");
+                request.Headers.Add("X-User-Name", userName);
+
+                var resp   = await _http.SendAsync(request);
                 var result = await resp.Content.ReadFromJsonAsync<RetirerAffectationResultDto>();
                 return (result?.Succes ?? false, result?.Message ?? "Erreur");
             }

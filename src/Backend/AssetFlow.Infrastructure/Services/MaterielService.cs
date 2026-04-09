@@ -10,8 +10,9 @@ namespace AssetFlow.Infrastructure.Services
     {
         private readonly AppDbContext _db;
         private readonly IDashboardNotifier _notifier;
-        public MaterielService(AppDbContext db, IDashboardNotifier notifier)
-        { _db = db; _notifier = notifier; }
+        private readonly IAuditLogService _audit;
+        public MaterielService(AppDbContext db, IDashboardNotifier notifier, IAuditLogService audit)
+        { _db = db; _notifier = notifier; _audit = audit; }
 
         private static MaterielDto ToDto(Materiel m) => new()
         {
@@ -92,6 +93,15 @@ namespace AssetFlow.Infrastructure.Services
             await _db.SaveChangesAsync();
             await _notifier.NotifyAsync();
             await _notifier.NotifyITAsync();
+            await _audit.LogAsync(new CreateAuditLogDto
+            {
+                Utilisateur = dto.Utilisateur,        // remplacez par l'utilisateur courant si disponible
+                Email       = "system",
+                Action      = IAuditLogService.Actions.Creation,
+                Categorie   = IAuditLogService.Categories.Materiel,
+                Entite      = $"Matériel #{materiel.Reference}",
+                Details     = $"Nouveau matériel ajouté : \"{materiel.Designation}\" (Qté: {materiel.QuantiteStock})"
+            });
             return new MaterielResultDto { Succes = true, Message = "Matériel créé avec succès.", IdMateriel = materiel.Id };
         }
 
@@ -117,11 +127,20 @@ namespace AssetFlow.Infrastructure.Services
             await _db.SaveChangesAsync();
             await _notifier.NotifyAsync();
             await _notifier.NotifyITAsync();
+            await _audit.LogAsync(new CreateAuditLogDto
+            {
+                Utilisateur = dto.Utilisateur,        // remplacez par l'utilisateur courant si disponible
+                Email       = "system",
+                Action      = IAuditLogService.Actions.Modification,
+                Categorie   = IAuditLogService.Categories.Materiel,
+                Entite      = $"Matériel #{dto.Reference}",
+                Details     = $"Matériel mis à jour : \"{dto.Designation}\""
+            });
             return new MaterielResultDto { Succes = true, Message = "Matériel mis à jour." };
         }
 
-        public async Task<MaterielResultDto> SupprimerAsync(int id)
-            => await SupprimerAvecCascadeAsync(id);
+        public async Task<MaterielResultDto> SupprimerAsync(string userName,int id)
+            => await SupprimerAvecCascadeAsync(userName,id);
 
         //   1. Incidents liés aux articles de toutes les commandes
         //   2. Articles individuels de toutes les commandes
@@ -129,7 +148,7 @@ namespace AssetFlow.Infrastructure.Services
         //   4. Incidents liés aux affectations (via AffectationId)
         //   5. Affectations du matériel
         //   6. Le matériel lui-même
-        public async Task<MaterielResultDto> SupprimerAvecCascadeAsync(int id)
+        public async Task<MaterielResultDto> SupprimerAvecCascadeAsync(string userName,int id)
         {
             var materiel = await _db.Materiels.FindAsync(id);
             if (materiel is null)
@@ -188,6 +207,15 @@ namespace AssetFlow.Infrastructure.Services
                 await _notifier.NotifyAsync();
                 await _notifier.NotifyITAsync();
                 await tx.CommitAsync();
+                await _audit.LogAsync(new CreateAuditLogDto
+                {
+                    Utilisateur = userName,
+                    Email       = "system",
+                    Action      = IAuditLogService.Actions.Suppression,
+                    Categorie   = IAuditLogService.Categories.Materiel,
+                    Entite      = $"Matériel #{materiel.Reference}",
+                    Details     = $"Supprimé avec cascade : \"{materiel.Designation}\""
+                });
 
                 return new MaterielResultDto
                 {

@@ -63,7 +63,8 @@ namespace AssetFlow.WebAPI.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await _svc.SupprimerAsync(id);
+            var userName  = Request.Headers["X-User-Name"].FirstOrDefault() ?? "Inconnu";
+            var result = await _svc.SupprimerAsync(userName,id);
             return result.Succes ? Ok(result) : BadRequest(result);
         }
 
@@ -72,7 +73,8 @@ namespace AssetFlow.WebAPI.Controllers
         [HttpDelete("{id:int}/cascade")]
         public async Task<IActionResult> DeleteCascade(int id)
         {
-            var result = await _svc.SupprimerAvecCascadeAsync(id);
+            var userName  = Request.Headers["X-User-Name"].FirstOrDefault() ?? "Inconnu";
+            var result = await _svc.SupprimerAvecCascadeAsync(userName,id);
             return result.Succes ? Ok(result) : BadRequest(result);
         }
     }

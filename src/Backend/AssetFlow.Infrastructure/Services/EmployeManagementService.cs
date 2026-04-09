@@ -9,7 +9,12 @@ namespace AssetFlow.Infrastructure.Services
     public class EmployeManagementService : IEmployeManagementService
     {
         private readonly AppDbContext _db;
-        public EmployeManagementService(AppDbContext db) => _db = db;
+        private readonly IAuditLogService _audit;
+        public EmployeManagementService(AppDbContext db, IAuditLogService audit)
+        {
+            _db = db;
+            _audit = audit;
+        }
 
         public async Task<List<EmployeListeDto>> GetEmployesAsync(string? search = null)
         {
@@ -78,7 +83,7 @@ namespace AssetFlow.Infrastructure.Services
             }).ToList();
         }
 
-        public async Task<RetirerAffectationResultDto> RetirerAffectationAsync(int affectationId)
+        public async Task<RetirerAffectationResultDto> RetirerAffectationAsync(string userName, int affectationId)
         {
             var affectation = await _db.Affectations
                 .Include(a => a.Articles)
@@ -106,6 +111,15 @@ namespace AssetFlow.Infrastructure.Services
             affectation.Materiel.QuantiteStock += affectation.Articles.Count;
 
             await _db.SaveChangesAsync();
+            await _audit.LogAsync(new CreateAuditLogDto
+            {
+                Utilisateur = userName,
+                Email       = "system",
+                Action      = IAuditLogService.Actions.Revocation,
+                Categorie   = IAuditLogService.Categories.Affectation,
+                Entite      = $"Affectation #{affectation.Id}",
+                Details     = $"{affectation.Articles.Count} article(s) de \"{affectation.Materiel.Designation}\" remis en stock"
+            });
 
             return new RetirerAffectationResultDto
             {

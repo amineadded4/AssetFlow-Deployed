@@ -18,6 +18,6 @@ namespace AssetFlow.Application.Interfaces
         Task<CommandeReponseDto> CreerAsync(CreerCommandeDto dto);
         Task<CommandeReponseDto> ModifierAsync(ModifierCommandeDto dto);
 
-        Task<CommandeReponseDto> SupprimerAsync(int id);
+        Task<CommandeReponseDto> SupprimerAsync(string utilisateur, int id);
     }
 }

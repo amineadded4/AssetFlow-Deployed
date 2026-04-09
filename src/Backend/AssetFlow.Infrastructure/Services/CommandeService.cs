@@ -10,8 +10,9 @@ namespace AssetFlow.Infrastructure.Services
     {
         private readonly AppDbContext _db;
         private readonly IDashboardNotifier _notifier;
-        public CommandeService(AppDbContext db, IDashboardNotifier notifier)
-        { _db = db; _notifier = notifier; }
+        private readonly IAuditLogService _audit;
+        public CommandeService(AppDbContext db, IDashboardNotifier notifier, IAuditLogService audit)
+        { _db = db; _notifier = notifier; _audit = audit; }
         private static ArticleDto ToArticleDto(ArticleIndividuel a) => new()
         {
             Id             = a.Id,
@@ -276,6 +277,15 @@ namespace AssetFlow.Infrastructure.Services
                 await _notifier.NotifyAsync();
                 await _notifier.NotifyITAsync();
                 await transaction.CommitAsync();
+                await _audit.LogAsync(new CreateAuditLogDto
+                {
+                    Utilisateur = dto.Utilisateur,        // remplacez par l'utilisateur courant si disponible
+                    Email       = "system",
+                    Action      = IAuditLogService.Actions.Creation,
+                    Categorie   = IAuditLogService.Categories.Commande,
+                    Entite      = $"Commande #{commande.NumeroCommande}",
+                    Details     = $"Nouvelle commande créée : \"{commande.NumeroCommande}\" (Qté: {commande.QuantiteAchetee})"
+                });
 
                 return new CommandeReponseDto
                 {
@@ -336,6 +346,15 @@ namespace AssetFlow.Infrastructure.Services
             await _notifier.NotifyAsync();
             await _notifier.NotifyITAsync();    
 
+            await _audit.LogAsync(new CreateAuditLogDto
+                {
+                    Utilisateur = dto.Utilisateur,        // remplacez par l'utilisateur courant si disponible
+                    Email       = "system",
+                    Action      = IAuditLogService.Actions.Modification,
+                    Categorie   = IAuditLogService.Categories.Commande,
+                    Entite      = $"Commande #{commande.NumeroCommande}",
+                    Details     = $"Commande modifiée : \"{commande.NumeroCommande}\" (Qté: {commande.QuantiteAchetee})"
+                });
             return new CommandeReponseDto
             {
                 Succes     = true,
@@ -343,7 +362,7 @@ namespace AssetFlow.Infrastructure.Services
                 IdCommande = commande.Id
             };
         }
-        public async Task<CommandeReponseDto> SupprimerAsync(int id)
+        public async Task<CommandeReponseDto> SupprimerAsync(string utilisateur, int id)
         {
             var commande = await _db.Commandes
                 .Include(c => c.Articles)
@@ -376,6 +395,15 @@ namespace AssetFlow.Infrastructure.Services
             _db.ArticlesIndividuels.RemoveRange(commande.Articles);
             _db.Commandes.Remove(commande);
             await _db.SaveChangesAsync();
+            await _audit.LogAsync(new CreateAuditLogDto
+                {
+                    Utilisateur = utilisateur,        // remplacez par l'utilisateur courant si disponible
+                    Email       = "system",
+                    Action      = IAuditLogService.Actions.Suppression,
+                    Categorie   = IAuditLogService.Categories.Commande,
+                    Entite      = $"Commande #{commande.NumeroCommande}",
+                    Details     = $"Commande supprimée : \"{commande.NumeroCommande}\" (Qté: {commande.QuantiteAchetee})"
+                });
 
             return new CommandeReponseDto { Succes = true, Message = $"Commande {commande.NumeroCommande} supprimée." };
         }

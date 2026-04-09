@@ -14,6 +14,7 @@ namespace AssetFlow.Application.Interfaces
             public const string Materiel     = "Matériel";
             public const string Affectation  = "Affectation";
             public const string DemandeAchat = "DemandeAchat";
+            public const string Commande      = "Commande";
         }
 
         static class Actions

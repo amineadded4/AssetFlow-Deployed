@@ -1,5 +1,7 @@
 using System.Net.Http.Json;
 using AssetFlow.BlazorUI.DTOs;
+using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components;
 
 namespace AssetFlow.BlazorUI.Services
 {
@@ -7,8 +9,13 @@ namespace AssetFlow.BlazorUI.Services
     {
         private readonly HttpClient _http;
         private const string Base = "api/commandes";
+        [Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
 
-        public CommandeService(HttpClient http) => _http = http;
+        public CommandeService(HttpClient http, ILocalStorageService localStorage)
+        {
+            _http = http;
+            LocalStorage = localStorage;
+        }
 
         public async Task<List<CommandeDto>> GetAllAsync()
         {
@@ -64,9 +71,14 @@ namespace AssetFlow.BlazorUI.Services
 
         public async Task<CommandeReponseDto> SupprimerAsync(int id)
         {
-            var resp = await _http.DeleteAsync($"{Base}/{id}");
+            var userName = (await LocalStorage.GetItemAsync<string>("user_name") ?? "Inconnu").Trim('"');
+
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"{Base}/{id}");
+            request.Headers.Add("X-User-Name", userName);
+
+            var resp = await _http.SendAsync(request);
             return await resp.Content.ReadFromJsonAsync<CommandeReponseDto>()
-                   ?? new() { Succes = false, Message = "Réponse vide." };
+                ?? new() { Succes = false, Message = "Réponse vide." };
         }
     }
 }

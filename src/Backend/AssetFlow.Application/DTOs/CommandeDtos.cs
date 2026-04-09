@@ -27,6 +27,7 @@ namespace AssetFlow.Application.DTOs
 
     public class CreerCommandeDto
     {
+        public string Utilisateur { get; set; } = string.Empty;
         public string NumeroCommande { get; set; } = string.Empty;
         public int MaterielId { get; set; }
         public int FournisseurId { get; set; }
@@ -38,6 +39,7 @@ namespace AssetFlow.Application.DTOs
     }
     public class ModifierCommandeDto
     {
+        public string Utilisateur { get; set; } = string.Empty;
         public int       Id               { get; set; }
         public string    NumeroCommande   { get; set; } = string.Empty;
         public int       FournisseurId    { get; set; }

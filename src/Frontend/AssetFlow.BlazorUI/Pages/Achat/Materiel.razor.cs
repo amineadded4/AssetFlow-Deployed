@@ -488,6 +488,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                         AjusterArticles();
                         var cmd = await CommandeSvc.CreerAsync(new CreerCommandeDto
                         {
+                            Utilisateur = _currentUserName,
                             NumeroCommande  = _formCommande.NumeroCommande.Trim(),
                             MaterielId      = materielId,
                             FournisseurId   = _formCommande.FournisseurId,
@@ -525,6 +526,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     AjusterArticles();
                     var cmd = await CommandeSvc.CreerAsync(new CreerCommandeDto
                     {
+                        Utilisateur = _currentUserName,
                         NumeroCommande  = _formCommande.NumeroCommande.Trim(),
                         MaterielId      = materielId,
                         FournisseurId   = _formCommande.FournisseurId,
@@ -587,6 +589,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             {
                 var dto = new ModifierCommandeDto
                 {
+                    Utilisateur = _currentUserName,
                     Id                  = _formModifCommande.CommandeId,
                     NumeroCommande      = _formModifCommande.NumeroCommande.Trim(),
                     FournisseurId       = _formModifCommande.FournisseurId,

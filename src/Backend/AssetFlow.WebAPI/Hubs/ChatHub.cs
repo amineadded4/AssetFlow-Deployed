@@ -5,8 +5,8 @@ namespace AssetFlow.WebAPI.Hubs
 {
     public class ChatHub : Hub
     {
-        private readonly IChatService        _chatService;
-        private readonly IConnectionTracker  _tracker;
+        private readonly IChatService       _chatService;
+        private readonly IConnectionTracker _tracker;
 
         public ChatHub(IChatService chatService, IConnectionTracker tracker)
         {
@@ -32,17 +32,32 @@ namespace AssetFlow.WebAPI.Hubs
                 if (isFullyOffline)
                     await Clients.Others.SendAsync("UserOnlineStatus", userId.Value, false);
             }
-
             await base.OnDisconnectedAsync(exception);
         }
 
-        // ── Envoi de message ─────────────────────────────────────────────────
+        // ── Envoi message texte ──────────────────────────────────────────────
 
         public async Task SendMessage(int senderId, int receiverId, string content)
         {
             if (string.IsNullOrWhiteSpace(content)) return;
 
             var dto = await _chatService.SendMessageAsync(senderId, receiverId, content);
+
+            await Clients.Group($"user_{receiverId}").SendAsync("ReceiveMessage", dto);
+            await Clients.Caller.SendAsync("ReceiveMessage", dto);
+        }
+
+        // ── Envoi message vocal ──────────────────────────────────────────────
+        // audioBase64   : données audio encodées en base64 (webm/ogg)
+        // durationSeconds : durée réelle enregistrée côté client (max 60)
+
+        public async Task SendVoiceMessage(int senderId, int receiverId,
+                                           string audioBase64, int durationSeconds)
+        {
+            if (string.IsNullOrWhiteSpace(audioBase64)) return;
+
+            var dto = await _chatService.SendVoiceMessageAsync(
+                          senderId, receiverId, audioBase64, durationSeconds);
 
             await Clients.Group($"user_{receiverId}").SendAsync("ReceiveMessage", dto);
             await Clients.Caller.SendAsync("ReceiveMessage", dto);
@@ -70,15 +85,5 @@ namespace AssetFlow.WebAPI.Hubs
             var onlineIds = _tracker.GetOnlineUserIds();
             await Clients.Caller.SendAsync("OnlineUsers", onlineIds);
         }
-    }
-
-    public class ChatMessagePayload
-    {
-        public int      Id         { get; set; }
-        public int      SenderId   { get; set; }
-        public int      ReceiverId { get; set; }
-        public string   Content    { get; set; } = string.Empty;
-        public DateTime SentAt     { get; set; }
-        public bool     IsRead     { get; set; }
     }
 }

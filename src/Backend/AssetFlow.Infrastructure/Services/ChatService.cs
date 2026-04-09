@@ -12,7 +12,9 @@ namespace AssetFlow.Infrastructure.Services
 
         public ChatService(AppDbContext db) => _db = db;
 
-        public async Task<ChatMessagePayload> SendMessageAsync(int senderId, int receiverId, string content)
+        // ── Message texte ────────────────────────────────────────────────────
+        public async Task<ChatMessagePayload> SendMessageAsync(
+            int senderId, int receiverId, string content)
         {
             var msg = new ChatMessage
             {
@@ -26,17 +28,34 @@ namespace AssetFlow.Infrastructure.Services
             _db.ChatMessages.Add(msg);
             await _db.SaveChangesAsync();
 
-            return new ChatMessagePayload
-            {
-                Id         = msg.Id,
-                SenderId   = msg.SenderId,
-                ReceiverId = msg.ReceiverId,
-                Content    = msg.Content,
-                SentAt     = msg.SentAt,
-                IsRead     = false
-            };
+            return MapToPayload(msg);
         }
 
+        // ── Message vocal ────────────────────────────────────────────────────
+        public async Task<ChatMessagePayload> SendVoiceMessageAsync(
+            int senderId, int receiverId, string audioBase64, int durationSeconds)
+        {
+            // Limiter à 60 secondes côté serveur (sécurité)
+            if (durationSeconds > 60) durationSeconds = 60;
+
+            var msg = new ChatMessage
+            {
+                SenderId             = senderId,
+                ReceiverId           = receiverId,
+                Content              = string.Empty,      // vide pour les vocaux
+                AudioData            = audioBase64,
+                AudioDurationSeconds = durationSeconds,
+                SentAt               = DateTime.UtcNow,
+                IsRead               = false
+            };
+
+            _db.ChatMessages.Add(msg);
+            await _db.SaveChangesAsync();
+
+            return MapToPayload(msg);
+        }
+
+        // ── Marquer comme lu ─────────────────────────────────────────────────
         public async Task MarkReadAsync(int readerId, int senderId)
         {
             var unread = await _db.ChatMessages
@@ -49,8 +68,20 @@ namespace AssetFlow.Infrastructure.Services
 
         public Task<List<int>> GetOnlineUsersAsync()
         {
-            // La liste en mémoire est gérée par le Hub — on délègue via le ConnectionTracker
             throw new NotImplementedException("Utiliser IConnectionTracker pour accéder aux users en ligne.");
         }
+
+        // ── Helpers ──────────────────────────────────────────────────────────
+        private static ChatMessagePayload MapToPayload(ChatMessage msg) => new()
+        {
+            Id                   = msg.Id,
+            SenderId             = msg.SenderId,
+            ReceiverId           = msg.ReceiverId,
+            Content              = msg.Content,
+            SentAt               = msg.SentAt,
+            IsRead               = msg.IsRead,
+            AudioData            = msg.AudioData,
+            AudioDurationSeconds = msg.AudioDurationSeconds
+        };
     }
 }

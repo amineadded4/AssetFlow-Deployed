@@ -11,6 +11,12 @@ using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ── Augmenter la limite de taille du body HTTP (pour les vocaux en base64) ──
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10 MB
+});
+
 // === BASE DE DONNÉES ===
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -153,8 +159,11 @@ builder.Services.AddScoped<IDashboardNotifier>(sp =>
 });
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
-// === SIGNALR ===
-builder.Services.AddSignalR();
+// === SIGNALR — limite augmentée pour les messages vocaux (base64 audio) ===
+builder.Services.AddSignalR(options =>
+{
+    options.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10 MB (défaut : 32 KB)
+});
 
 // === CORS ===
 // AllowCredentials() requis par SignalR → WithOrigins() obligatoire (pas AllowAnyOrigin)
@@ -172,7 +181,12 @@ builder.Services.AddCors(options =>
 });
 
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Augmenter la limite de profondeur JSON (sécurité pour les gros payloads)
+        options.JsonSerializerOptions.MaxDepth = 64;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
  

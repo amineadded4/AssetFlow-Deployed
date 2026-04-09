@@ -193,25 +193,31 @@
                                             <div class="msg-bubble-avatar">@SelectedConv.Initials</div>
                                         }
                                         <div class="msg-bubble @(isMe ? "bubble-me" : "bubble-them")">
-                                            @if (msg.Content.StartsWith("[VOICE]"))
+
+                                            @* ── CORRECTION : utiliser msg.IsVoice au lieu de msg.Content.StartsWith("[VOICE]") ── *@
+                                            @if (msg.IsVoice)
                                             {
                                                 @* ── Audio player ── *@
                                                 <div class="msg-audio-player">
                                                     <button class="msg-play-btn"
-                                                            onclick="playVoiceMessage(this, '@msg.Content.Substring(7)')">
+                                                            onclick="playVoiceMessage(this, '@msg.AudioData')">
                                                         <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                                     </button>
                                                     <div class="msg-audio-wave">
                                                         <span></span><span></span><span></span>
                                                         <span></span><span></span><span></span><span></span>
                                                     </div>
-                                                    <span class="msg-audio-dur">🎤</span>
+                                                    @* ── CORRECTION : afficher la durée réelle ── *@
+                                                    <span class="msg-audio-dur">
+                                                        🎤 @(msg.AudioDurationSeconds > 0 ? FormatRecordTime(msg.AudioDurationSeconds) : "")
+                                                    </span>
                                                 </div>
                                             }
                                             else
                                             {
                                                 <span class="msg-bubble-text">@msg.Content</span>
                                             }
+
                                             <div class="msg-bubble-meta">
                                                 <span class="msg-bubble-time">@msg.SentAt.ToString("HH:mm")</span>
                                                 @if (isMe)

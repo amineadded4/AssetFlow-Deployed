@@ -41,6 +41,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private bool   _hasVoiceBlob     = false;
         private double _recordingSeconds = 0;
         private System.Timers.Timer? _recordTimer;
+        private const int MaxVoiceSeconds = 60;
         // ─────────────────────────────────────────────────────────────────────
 
         private string RoleFilter { get; set; } = "Tous";
@@ -91,7 +92,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
                             var mots = recherche.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                             user = Conversations.FirstOrDefault(u =>
                                 mots.All(m => u.FullName.Contains(m, StringComparison.OrdinalIgnoreCase)));
-
                             if (user != null)
                                 await SelectConversation(user);
                         }
@@ -117,6 +117,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
                     .WithAutomaticReconnect()
                     .Build();
 
+                // ── Réception d'un message (texte ou vocal) ──────────────────
                 _hub.On<ChatMessageDto>("ReceiveMessage", async msg =>
                 {
                     await InvokeAsync(async () =>
@@ -124,15 +125,20 @@ namespace AssetFlow.BlazorUI.Pages.IT
                         var otherId = msg.SenderId == CurrentUserId ? msg.ReceiverId : msg.SenderId;
                         if (SelectedConv?.EmployeId == otherId)
                         {
-                            if (!CurrentMessages.Any(m => m.Content == msg.Content && m.SenderId == msg.SenderId
-                                && Math.Abs((m.SentAt - msg.SentAt).TotalSeconds) < 5 && m.Id != msg.Id))
+                            if (msg.SenderId != CurrentUserId)
                             {
-                                if (msg.SenderId != CurrentUserId)
-                                    CurrentMessages.Add(msg);
-                                else
+                                CurrentMessages.Add(msg);
+                            }
+                            else
+                            {
+                                // Mise à jour du message optimiste (texte ou vocal)
+                                var optimistic = CurrentMessages.LastOrDefault(
+                                    m => m.SenderId == CurrentUserId && m.Id < 0);
+                                if (optimistic != null)
                                 {
-                                    var optimistic = CurrentMessages.LastOrDefault(m => m.SenderId == CurrentUserId && m.Id < 1000);
-                                    if (optimistic != null) optimistic.Id = msg.Id;
+                                    optimistic.Id                   = msg.Id;
+                                    optimistic.AudioData            = msg.AudioData;
+                                    optimistic.AudioDurationSeconds = msg.AudioDurationSeconds;
                                 }
                             }
                             if (msg.SenderId != CurrentUserId)
@@ -316,13 +322,14 @@ namespace AssetFlow.BlazorUI.Pages.IT
             var otherId = msg.SenderId == CurrentUserId ? msg.ReceiverId : msg.SenderId;
             var conv = Conversations.FirstOrDefault(c => c.EmployeId == otherId);
             if (conv == null) return;
-            conv.LastMessage     = msg.Content.StartsWith("[VOICE]") ? "🎤 Message vocal" : msg.Content;
+            // Prévisualisation : vocal → emoji, texte → contenu
+            conv.LastMessage     = msg.IsVoice ? "🎤 Message vocal" : msg.Content;
             conv.LastMessageTime = msg.SentAt;
             if (msg.SenderId != CurrentUserId && SelectedConv?.EmployeId != otherId)
                 conv.UnreadCount++;
         }
 
-        // ── Voice recording methods ──────────────────────────────────────────
+        // ── Voice recording ──────────────────────────────────────────────────
 
         private async Task ToggleRecording()
         {
@@ -343,7 +350,11 @@ namespace AssetFlow.BlazorUI.Pages.IT
             _recordTimer.Elapsed += async (_, _) =>
             {
                 _recordingSeconds++;
-                await InvokeAsync(StateHasChanged);
+                // Arrêt automatique après 60 secondes
+                if (_recordingSeconds >= MaxVoiceSeconds)
+                    await InvokeAsync(StopRecording);
+                else
+                    await InvokeAsync(StateHasChanged);
             };
             _recordTimer.AutoReset = true;
             _recordTimer.Start();
@@ -399,17 +410,20 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
             if (string.IsNullOrEmpty(base64)) return;
 
-            var content    = $"[VOICE]{base64}";
             var receiverId = SelectedConv.EmployeId;
+            var duration   = (int)Math.Min(_recordingSeconds, MaxVoiceSeconds);
 
+            // Message optimiste affiché immédiatement
             var optimisticMsg = new ChatMessageDto
             {
-                Id         = -(CurrentMessages.Count + 1),
-                SenderId   = CurrentUserId,
-                ReceiverId = receiverId,
-                Content    = content,
-                SentAt     = DateTime.Now,
-                IsRead     = false
+                Id                   = -(CurrentMessages.Count + 1),
+                SenderId             = CurrentUserId,
+                ReceiverId           = receiverId,
+                Content              = string.Empty,
+                AudioData            = base64,
+                AudioDurationSeconds = duration,
+                SentAt               = DateTime.Now,
+                IsRead               = false
             };
             CurrentMessages.Add(optimisticMsg);
             UpdateConversationWithMessage(optimisticMsg);
@@ -419,7 +433,11 @@ namespace AssetFlow.BlazorUI.Pages.IT
             StateHasChanged();
             await ScrollToBottomAsync();
 
-            try { await _hub.SendAsync("SendMessage", CurrentUserId, receiverId, content); }
+            // Envoi via la nouvelle méthode Hub dédiée aux vocaux
+            try
+            {
+                await _hub.SendAsync("SendVoiceMessage", CurrentUserId, receiverId, base64, duration);
+            }
             catch (Exception ex) { Console.WriteLine($"Erreur envoi vocal: {ex.Message}"); }
         }
 

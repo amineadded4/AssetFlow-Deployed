@@ -12,7 +12,7 @@ namespace AssetFlow.BlazorUI.DTOs
         public bool      IsTyping        { get; set; }
     }
 
-    public class ChatMessageDto
+    /*public class ChatMessageDto
     {
         public int      Id         { get; set; }
         public int      SenderId   { get; set; }
@@ -20,7 +20,7 @@ namespace AssetFlow.BlazorUI.DTOs
         public string   Content    { get; set; } = string.Empty;
         public DateTime SentAt     { get; set; }
         public bool     IsRead     { get; set; }
-    }
+    }*/
 
     public class ConversationSummaryDto
     {

@@ -1,6 +1,6 @@
-namespace AssetFlow.Application.DTOs
+namespace AssetFlow.BlazorUI.DTOs
 {
-    public class ChatMessagePayload
+    public class ChatMessageDto
     {
         public int      Id                   { get; set; }
         public int      SenderId             { get; set; }
@@ -9,10 +9,10 @@ namespace AssetFlow.Application.DTOs
         public DateTime SentAt               { get; set; }
         public bool     IsRead               { get; set; }
 
-        // ── Message vocal ──────────────────────────────────────────────
+        // ── Message vocal ──────────────────────────────────────────────────
         public string?  AudioData            { get; set; } = null;
         public int      AudioDurationSeconds { get; set; } = 0;
         public bool     IsVoice              => AudioData != null;
-        // ──────────────────────────────────────────────────────────────
+        // ──────────────────────────────────────────────────────────────────
     }
 }

@@ -152,30 +152,11 @@ namespace AssetFlow.Infrastructure.Data
                       .OnDelete(DeleteBehavior.SetNull)
                       .IsRequired(false);
                   });
+
                   modelBuilder.Entity<DemandeAchat>(entity =>
                   {
                         entity.ToTable("DemandeAchat");
                         entity.HasKey(d => d.IdDemande);
-                        entity.Property(d => d.IdDemande).ValueGeneratedOnAdd();
-
-                        entity.Property(d => d.Reference)
-                              .IsRequired()
-                              .HasColumnType("varchar(30)");
-
-                        entity.Property(d => d.NomProduit)
-                              .IsRequired()
-                              .HasColumnType("varchar(200)");
-
-                        entity.Property(d => d.Quantite)
-                              .HasDefaultValue(1);
-
-                        entity.Property(d => d.Description)
-                              .HasColumnType("nvarchar(max)");
-
-                        entity.Property(d => d.Statut)
-                              .IsRequired()
-                              .HasColumnType("varchar(20)")
-                              .HasDefaultValue("en_attente");
 
                         entity.Property(d => d.DateCreation)
                               .HasColumnType("datetime2")
@@ -190,7 +171,6 @@ namespace AssetFlow.Infrastructure.Data
                         entity.Property(d => d.UserId)
                               .IsRequired(false)
                               .HasDefaultValue(0);
-                        
 
                   // Relation 1→N vers OffreAchat (CASCADE DELETE)
                   entity.HasMany(d => d.Offres)
@@ -230,26 +210,46 @@ namespace AssetFlow.Infrastructure.Data
 
                         entity.Property(o => o.EstChoisie)
                               .HasDefaultValue(false);
-
-
                   });
-                  modelBuilder.Entity<ChatMessage>(entity =>
-                      {
-                            entity.HasKey(m => m.Id);
-                            entity.Property(m => m.Content).IsRequired().HasMaxLength(4000);
-                            entity.HasOne(m => m.Sender)
-                .WithMany()
-                .HasForeignKey(m => m.SenderId)
-                .OnDelete(DeleteBehavior.Restrict);
-                            entity.HasOne(m => m.Receiver)
-                .WithMany()
-                .HasForeignKey(m => m.ReceiverId)
-                .OnDelete(DeleteBehavior.Restrict);
-                            entity.HasIndex(m => new { m.SenderId, m.ReceiverId, m.SentAt });
-                      });
 
-                      modelBuilder.Entity<Project>(entity =>
-                        {
+                  // === CHAT MESSAGE ===
+                  modelBuilder.Entity<ChatMessage>(entity =>
+                  {
+                        entity.HasKey(m => m.Id);
+
+                        // ── CORRECTION 1 : Content optionnel pour les messages vocaux ──
+                        // Un vocal a Content = string.Empty → IsRequired(false) évite
+                        // toute contrainte NOT NULL qui bloquerait l'insertion
+                        entity.Property(m => m.Content)
+                              .IsRequired(false)
+                              .HasMaxLength(4000)
+                              .HasDefaultValue(string.Empty);
+
+                        // ── CORRECTION 2 : AudioData explicitement nvarchar(max) ──
+                        // Sans annotation, EF peut limiter à nvarchar(4000) sur certaines
+                        // migrations. On force nvarchar(max) pour stocker le base64 audio.
+                        entity.Property(m => m.AudioData)
+                              .HasColumnType("nvarchar(max)")
+                              .IsRequired(false);
+
+                        entity.Property(m => m.AudioDurationSeconds)
+                              .HasDefaultValue(0);
+
+                        entity.HasOne(m => m.Sender)
+                              .WithMany()
+                              .HasForeignKey(m => m.SenderId)
+                              .OnDelete(DeleteBehavior.Restrict);
+
+                        entity.HasOne(m => m.Receiver)
+                              .WithMany()
+                              .HasForeignKey(m => m.ReceiverId)
+                              .OnDelete(DeleteBehavior.Restrict);
+
+                        entity.HasIndex(m => new { m.SenderId, m.ReceiverId, m.SentAt });
+                  });
+
+                  modelBuilder.Entity<Project>(entity =>
+                  {
                         entity.ToTable("Projets");
                         entity.HasKey(p => p.Id);
                         entity.Property(p => p.Nom).IsRequired().HasMaxLength(200);
@@ -266,21 +266,22 @@ namespace AssetFlow.Infrastructure.Data
                         entity.Property(p => p.Budget).HasColumnType("decimal(18,2)");
                         entity.Property(p => p.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
                         entity.Property(p => p.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
-                        });
-                        modelBuilder.Entity<LigneDemande>(entity =>
-                        {
-                              entity.HasKey(l => l.IdLigne);
-                              entity.Property(l => l.NomProduit).IsRequired().HasMaxLength(200);
-                              entity.Property(l => l.Quantite).HasDefaultValue(1);
+                  });
 
-                              entity.HasOne(l => l.Demande)
-                                    .WithMany(d => d.Lignes)
-                                    .HasForeignKey(l => l.IdDemande)
-                                    .OnDelete(DeleteBehavior.Cascade);
-                        });
-                        // ── BLOC 2 : Ajouter dans OnModelCreating ───────────────────
-                        modelBuilder.Entity<CommentaireMateriel>(e =>
-                        {
+                  modelBuilder.Entity<LigneDemande>(entity =>
+                  {
+                        entity.HasKey(l => l.IdLigne);
+                        entity.Property(l => l.NomProduit).IsRequired().HasMaxLength(200);
+                        entity.Property(l => l.Quantite).HasDefaultValue(1);
+
+                        entity.HasOne(l => l.Demande)
+                              .WithMany(d => d.Lignes)
+                              .HasForeignKey(l => l.IdDemande)
+                              .OnDelete(DeleteBehavior.Cascade);
+                  });
+
+                  modelBuilder.Entity<CommentaireMateriel>(e =>
+                  {
                         e.ToTable("CommentairesMateriel");
                         e.HasKey(c => c.Id);
                         
@@ -297,10 +298,10 @@ namespace AssetFlow.Infrastructure.Data
                         .WithMany()
                         .HasForeignKey(c => c.UtilisateurId)
                         .OnDelete(DeleteBehavior.Restrict);
-                        });
+                  });
 
-                        modelBuilder.Entity<Notification>(entity =>
-                        {
+                  modelBuilder.Entity<Notification>(entity =>
+                  {
                         entity.ToTable("Notifications");
                         entity.HasKey(n => n.Id);
                         
@@ -315,11 +316,9 @@ namespace AssetFlow.Infrastructure.Data
                         entity.Property(n => n.RoleDestinataire)
                               .HasMaxLength(50);
                         
-                        // Index pour accélérer les requêtes fréquentes
                         entity.HasIndex(n => new { n.EstLue, n.RoleDestinataire });
                         entity.HasIndex(n => n.DateCreation);
                         
-                        // Relations optionnelles
                         entity.HasOne(n => n.Affectation)
                               .WithMany()
                               .HasForeignKey(n => n.AffectationId)
@@ -329,8 +328,7 @@ namespace AssetFlow.Infrastructure.Data
                               .WithMany()
                               .HasForeignKey(n => n.UtilisateurId)
                               .OnDelete(DeleteBehavior.SetNull);
-                        });
-
-                                    }
-                              }
-                        }
+                  });
+            }
+      }
+}

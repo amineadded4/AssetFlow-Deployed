@@ -276,7 +276,7 @@ namespace AssetFlow.BlazorUI.Pages.Admin
 
         private static string GetCatClass(string cat) => cat switch
         {
-            "Inscription"  => "cat-inscription",
+            "Authentification"  => "cat-inscription",
             "Matériel"     => "cat-materiel",
             "Affectation"  => "cat-affectation",
             "DemandeAchat" => "cat-demande",

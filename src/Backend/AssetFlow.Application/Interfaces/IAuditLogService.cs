@@ -10,7 +10,7 @@ namespace AssetFlow.Application.Interfaces
         // Helpers statiques pour les catégories et actions
         static class Categories
         {
-            public const string Inscription  = "Inscription";
+            public const string Inscription  = "Authentification";
             public const string Materiel     = "Matériel";
             public const string Affectation  = "Affectation";
             public const string DemandeAchat = "DemandeAchat";

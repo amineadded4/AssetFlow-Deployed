@@ -303,10 +303,11 @@
                         </div>
                         <div class="sk-field">
                             <label class="sk-label">Catégorie <span class="req">*</span></label>
-                            <input class="sk-inp @(_erreurs.ContainsKey("Categorie") ? "inp-err" : "")" @bind="_form.Categorie" placeholder="Ex: Ordinateur" list="cat-list" />
-                            <datalist id="cat-list">
-                                @foreach (var c in _categories) { <option value="@c" /> }
-                            </datalist>
+                            <select class="sk-inp @(_erreurs.ContainsKey("Categorie") ? "inp-err" : "")" @bind="_form.Categorie">
+                                <option value="">— Choisir —</option>
+                                <option value="Infrastructure">Infrastructure</option>
+                                <option value="Normal">Normal</option>
+                            </select>
                             @if (_erreurs.TryGetValue("Categorie", out var ec)) { <span class="sk-err-msg">@ec</span> }
                         </div>
                     </div>

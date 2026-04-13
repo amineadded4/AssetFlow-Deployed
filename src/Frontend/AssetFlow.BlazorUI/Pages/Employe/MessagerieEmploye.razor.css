@@ -1,4 +1,4 @@
-/* ══ LAYOUT (copié de MesEquipements car CSS scoped non partagé) ══ */
+/* ══ LAYOUT ══ */
 .employe-layout { display:flex; height:100vh; overflow:hidden; background:var(--bg); }
 
 .employe-main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
@@ -8,11 +8,7 @@ html.dark .employe-header { background:rgba(16,24,34,0.8); border-bottom-color:r
 .header-title { font-size:1.25rem; font-weight:800; color:var(--text); margin:0; letter-spacing:-0.025em; }
 .emp-page-sub { font-size:0.78rem; color:var(--text-muted); margin:0; }
 
-/* MessagerieEmploye.razor.css — réutilise les variables de app.css */
-
-/* ── Body chat (dans employe-main) ── */
-.emp-page-sub { font-size:0.78rem; color:var(--text-muted); margin:0; }
-
+/* ── Body chat ── */
 .msg-body { flex:1; overflow:hidden; display:flex; min-height:0; }
 
 /* ── Colonne gauche ── */
@@ -100,10 +96,10 @@ html.dark .msg-chat-header { background:#101826; border-bottom-color:#1e2d42; }
 .msg-no-messages svg { width:40px; height:40px; stroke:currentColor; fill:none; stroke-width:1.25; opacity:0.2; }
 .msg-no-messages p { font-size:0.85rem; margin:0; }
 
+/* Bulles */
 .msg-bubble-wrap { display:flex; align-items:flex-end; gap:0.5rem; margin:0.175rem 0; }
 .msg-bubble-wrap.me   { justify-content:flex-end; }
 .msg-bubble-wrap.them { justify-content:flex-start; }
-
 .msg-bubble-avatar { width:28px; height:28px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:700; color:var(--text-muted); flex-shrink:0; }
 .msg-bubble { max-width:62%; padding:0.6rem 0.875rem; border-radius:1.125rem; display:flex; flex-direction:column; gap:0.2rem; animation:bubbleIn 0.18s cubic-bezier(0.16,1,0.3,1); }
 @keyframes bubbleIn { from{opacity:0;transform:translateY(6px) scale(0.97)} to{opacity:1;transform:none} }
@@ -126,14 +122,118 @@ html.dark .bubble-them { background:#161f2e; border-color:#1e2d42; }
 .msg-typing-dots span:nth-child(3) { animation-delay:0.4s; }
 @keyframes typingBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-4px)} }
 
-/* Input */
-.msg-input-zone { background:var(--surface); border-top:1px solid var(--border); padding:0.875rem 1.25rem 0.75rem; flex-shrink:0; margin-bottom: 50px;}
+/* ═══════════════════════════════════════════════════════════════
+   ── AUDIO PLAYER dans les bulles (style Messenger) ──
+   ═══════════════════════════════════════════════════════════════ */
+.msg-audio-player {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.1rem 0;
+    min-width: 200px;
+}
+
+.msg-play-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: transform 0.15s, opacity 0.15s;
+}
+.bubble-me   .msg-play-btn { background: rgba(255,255,255,0.25); color: white; }
+.bubble-them .msg-play-btn { background: var(--primary); color: white; }
+.msg-play-btn:hover { transform: scale(1.08); opacity: 0.9; }
+.msg-play-btn svg { width: 14px; height: 14px; fill: currentColor; stroke: none; }
+
+.msg-audio-waveform {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+    height: 28px;
+}
+.msg-audio-waveform span {
+    flex: 1;
+    border-radius: 9999px;
+    transition: height 0.2s;
+}
+.bubble-me   .msg-audio-waveform span { background: rgba(255,255,255,0.55); }
+.bubble-them .msg-audio-waveform span { background: var(--primary); opacity: 0.6; }
+
+.msg-audio-waveform span:nth-child(1)  { height: 8px; }
+.msg-audio-waveform span:nth-child(2)  { height: 16px; }
+.msg-audio-waveform span:nth-child(3)  { height: 22px; }
+.msg-audio-waveform span:nth-child(4)  { height: 12px; }
+.msg-audio-waveform span:nth-child(5)  { height: 26px; }
+.msg-audio-waveform span:nth-child(6)  { height: 18px; }
+.msg-audio-waveform span:nth-child(7)  { height: 10px; }
+.msg-audio-waveform span:nth-child(8)  { height: 20px; }
+.msg-audio-waveform span:nth-child(9)  { height: 14px; }
+.msg-audio-waveform span:nth-child(10) { height: 24px; }
+.msg-audio-waveform span:nth-child(11) { height: 8px; }
+.msg-audio-waveform span:nth-child(12) { height: 16px; }
+
+.msg-audio-waveform.playing span {
+    animation: msgWavePlay 0.6s ease-in-out infinite alternate;
+}
+.msg-audio-waveform.playing span:nth-child(odd)  { animation-delay: 0s; }
+.msg-audio-waveform.playing span:nth-child(even) { animation-delay: 0.3s; }
+@keyframes msgWavePlay {
+    from { opacity: 0.4; transform: scaleY(0.6); }
+    to   { opacity: 1;   transform: scaleY(1.2); }
+}
+
+.msg-audio-dur {
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.bubble-me   .msg-audio-dur { color: rgba(255,255,255,0.85); }
+.bubble-them .msg-audio-dur { color: var(--text-muted); }
+
+/* ═══════════════════════════════════════════════════════════════
+   ── INPUT ZONE ──
+   ═══════════════════════════════════════════════════════════════ */
+.msg-input-zone {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 0.75rem 1.25rem 0.625rem;
+    flex-shrink: 0;
+    margin-bottom: 50px;
+}
 html.dark .msg-input-zone { background:#101826; border-top-color:#1e2d42; }
+
 .msg-input-wrap { display:flex; align-items:center; gap:0.75rem; background:var(--surface-2); border:1px solid var(--border); border-radius:1rem; padding:0.2rem 0.5rem 0.2rem 1rem; transition:border-color 0.2s, box-shadow 0.2s; }
 html.dark .msg-input-wrap { background:#0d1520; border-color:#1e2d42; }
 .msg-input-wrap:focus-within { border-color:var(--primary); box-shadow:0 0 0 2.5px rgba(19,109,236,0.12); }
-.msg-textarea { flex:1; background:transparent; border:none; outline:none; resize:none; font-size:0.875rem; color:var(--text); line-height:1.5; max-height:120px; overflow-y:auto; font-family:inherit; padding: 0.5rem 0;}
+.msg-textarea { flex:1; background:transparent; border:none; outline:none; resize:none; font-size:0.875rem; color:var(--text); line-height:1.5; max-height:120px; overflow-y:auto; font-family:inherit; padding:0.5rem 0; }
 .msg-textarea::placeholder { color:var(--text-faint); }
+
+/* Bouton micro */
+.msg-mic-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.18s;
+}
+.msg-mic-btn:hover { background: rgba(19,109,236,0.1); color: var(--primary); }
+.msg-mic-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.msg-mic-btn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
 .msg-send-btn { width:36px; height:36px; border-radius:0.625rem; border:none; background:var(--border); color:var(--text-faint); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:all 0.18s; }
 .msg-send-btn.active { background:var(--primary); color:white; box-shadow:0 2px 10px rgba(19,109,236,0.3); }
 .msg-send-btn.active:hover { background:var(--primary-hover); transform:scale(1.06); }
@@ -142,8 +242,209 @@ html.dark .msg-input-wrap { background:#0d1520; border-color:#1e2d42; }
 .msg-input-hint { font-size:0.65rem; color:var(--text-faint); margin:0.4rem 0 0; }
 .msg-input-hint kbd { background:var(--border); border-radius:3px; padding:0 3px; font-size:0.6rem; }
 
+/* ═══════════════════════════════════════════════════════════════
+   ── BARRE D'ENREGISTREMENT STYLE MESSENGER ──
+   ═══════════════════════════════════════════════════════════════ */
+.msg-voice-recording-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--surface-2);
+    border: 1.5px solid #ef4444;
+    border-radius: 1rem;
+    padding: 0.5rem 0.875rem;
+    animation: msgRecBorderPulse 2s ease-in-out infinite;
+}
+html.dark .msg-voice-recording-bar { background: #0d1520; }
+
+@keyframes msgRecBorderPulse {
+    0%,100% { border-color: #ef4444; box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    50%      { border-color: #f87171; box-shadow: 0 0 0 4px rgba(239,68,68,0.12); }
+}
+
+.msg-rec-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.msg-rec-pulse {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ef4444;
+    animation: msgPulseRed 1s ease-in-out infinite;
+    flex-shrink: 0;
+}
+@keyframes msgPulseRed {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%     { opacity: 0.4; transform: scale(0.75); }
+}
+
+.msg-rec-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #ef4444;
+}
+
+.msg-rec-timer {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    min-width: 2.5rem;
+}
+
+.msg-rec-wave-anim {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    height: 28px;
+}
+.msg-rec-wave-anim span {
+    width: 3px;
+    border-radius: 9999px;
+    background: var(--primary);
+    animation: msgRecWave 0.8s ease-in-out infinite alternate;
+}
+.msg-rec-wave-anim span:nth-child(1) { height: 6px;  animation-delay: 0s; }
+.msg-rec-wave-anim span:nth-child(2) { height: 14px; animation-delay: 0.1s; }
+.msg-rec-wave-anim span:nth-child(3) { height: 22px; animation-delay: 0.2s; }
+.msg-rec-wave-anim span:nth-child(4) { height: 10px; animation-delay: 0.3s; }
+.msg-rec-wave-anim span:nth-child(5) { height: 18px; animation-delay: 0.15s; }
+.msg-rec-wave-anim span:nth-child(6) { height: 26px; animation-delay: 0.05s; }
+.msg-rec-wave-anim span:nth-child(7) { height: 12px; animation-delay: 0.25s; }
+.msg-rec-wave-anim span:nth-child(8) { height: 8px;  animation-delay: 0.35s; }
+@keyframes msgRecWave {
+    from { transform: scaleY(0.4); opacity: 0.5; }
+    to   { transform: scaleY(1);   opacity: 1; }
+}
+
+.msg-rec-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-shrink: 0;
+}
+
+.msg-rec-cancel-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(239,68,68,0.1);
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s;
+}
+.msg-rec-cancel-btn:hover { background: rgba(239,68,68,0.2); transform: scale(1.05); }
+.msg-rec-cancel-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+.msg-rec-stop-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s;
+    box-shadow: 0 2px 8px rgba(19,109,236,0.35);
+}
+.msg-rec-stop-btn:hover { transform: scale(1.08); }
+.msg-rec-stop-btn svg { width: 14px; height: 14px; stroke: none; fill: white; }
+
+/* ═══════════════════════════════════════════════════════════════
+   ── BARRE DE PRÉVISUALISATION STYLE MESSENGER ──
+   ═══════════════════════════════════════════════════════════════ */
+.msg-voice-preview-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(19,109,236,0.07);
+    border: 1.5px solid rgba(19,109,236,0.2);
+    border-radius: 1rem;
+    padding: 0.5rem 0.875rem;
+}
+html.dark .msg-voice-preview-bar { background: rgba(19,109,236,0.1); border-color: rgba(19,109,236,0.25); }
+
+.msg-preview-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.msg-preview-icon svg { width: 16px; height: 16px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+.msg-preview-info {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+.msg-preview-label { font-size: 0.72rem; font-weight: 600; color: var(--primary); }
+.msg-preview-dur   { font-size: 0.8rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+
+.msg-preview-bars {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 24px;
+}
+.msg-preview-bars span {
+    flex: 1;
+    border-radius: 9999px;
+    background: var(--primary);
+    opacity: 0.4;
+}
+.msg-preview-bars span:nth-child(1) { height: 6px; }
+.msg-preview-bars span:nth-child(2) { height: 14px; }
+.msg-preview-bars span:nth-child(3) { height: 20px; }
+.msg-preview-bars span:nth-child(4) { height: 10px; }
+.msg-preview-bars span:nth-child(5) { height: 18px; }
+.msg-preview-bars span:nth-child(6) { height: 8px; }
+.msg-preview-bars span:nth-child(7) { height: 16px; }
+.msg-preview-bars span:nth-child(8) { height: 12px; }
+
+.msg-preview-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-shrink: 0;
+}
+
+.msg-send-voice-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s;
+    box-shadow: 0 2px 8px rgba(19,109,236,0.35);
+}
+.msg-send-voice-btn:hover { transform: scale(1.08); }
+.msg-send-voice-btn svg { width: 14px; height: 14px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; }
+
 /* Connection status */
-.msg-conn-status { display:flex; align-items:center; gap:0.45rem; padding:0.35rem 0.75rem; border-radius:9999px; font-size:0.72rem; font-weight:600; border:1px solid; margin-left:auto;margin-right: 40px; }
+.msg-conn-status { display:flex; align-items:center; gap:0.45rem; padding:0.35rem 0.75rem; border-radius:9999px; font-size:0.72rem; font-weight:600; border:1px solid; margin-left:auto; margin-right:40px; }
 .msg-conn-status.connected    { background:rgba(16,185,129,0.1); color:#10b981; border-color:rgba(16,185,129,0.25); }
 .msg-conn-status.disconnected { background:rgba(239,68,68,0.08); color:#ef4444; border-color:rgba(239,68,68,0.2); }
 .msg-conn-dot { width:7px; height:7px; border-radius:50%; background:currentColor; }
@@ -156,31 +457,11 @@ html.dark .msg-input-wrap { background:#0d1520; border-color:#1e2d42; }
 .msg-spinner { width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:msgSpin 0.7s linear infinite; flex-shrink:0; }
 @keyframes msgSpin { to { transform:rotate(360deg); } }
 
-/* Responsive */
+/* ── Responsive ── */
 @media (max-width: 768px) {
-
-    /* ✅ AJOUT : passer le layout en colonne pour que la sidebar
-       devienne la barre de navigation horizontale en haut */
-    .employe-layout {
-        flex-direction: column;
-        height: 100vh;
-        overflow: hidden;
-    }
-
-    /* ✅ AJOUT : employe-main doit prendre le reste de la hauteur */
-    .employe-main {
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-    }
-
-    /* ✅ AJOUT : le header doit avoir un padding réduit sur mobile */
-    .employe-header {
-        padding: 0 1rem;
-        height: 3.5rem;
-    }
-
-    /* Le reste de vos règles existantes */
+    .employe-layout { flex-direction: column; height: 100vh; overflow: hidden; }
+    .employe-main { flex: 1; min-height: 0; overflow: hidden; }
+    .employe-header { padding: 0 1rem; height: 3.5rem; }
     .msg-body { position: relative; overflow: hidden; }
     .msg-col-left { width: 100%; border-right: none; }
     .msg-col-left.mobile-hidden { display: none; }
@@ -188,9 +469,12 @@ html.dark .msg-input-wrap { background:#0d1520; border-color:#1e2d42; }
     .msg-col-right.mobile-visible { display: flex; }
     .msg-back-btn { display: flex; }
     .msg-bubble { max-width: 80%; }
-    .msg-conn-status{display: none;}
-    .employe-header{justify-content: flex-start;}
+    .msg-conn-status { display: none; }
+    .employe-header { justify-content: flex-start; }
     .header-title-group { flex: 1; }
+    .msg-voice-recording-bar { gap: 0.5rem; padding: 0.5rem 0.75rem; }
+    .msg-rec-label { display: none; }
+    .msg-audio-player { min-width: 160px; }
 }
 
 /* ══ HAMBURGER ══ */
@@ -216,8 +500,7 @@ html.dark .msg-input-wrap { background:#0d1520; border-color:#1e2d42; }
     background: var(--text);
     border-radius: 2px;
 }
-
 @media (max-width: 768px) {
     .emp-hamburger-btn { display: flex; }
-    .employe-sidebar   { display: none; }  /* cachée, le drawer prend le relais */
+    .employe-sidebar   { display: none; }
 }

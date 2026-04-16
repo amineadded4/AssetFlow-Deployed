@@ -1,16 +1,17 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using AssetFlow.BlazorUI.Services;
 
 namespace AssetFlow.BlazorUI.Components
 {
     public partial class AchatSidebar : ComponentBase
     {
         [Inject] private IJSRuntime JS { get; set; } = default!;
+        [Inject] private DemandeAchatService DemandeAchatSvc { get; set; } = default!; // NOUVEAU
 
-        // Valeurs : "statistiques" | "equipements" | "materiel" |
-        // "fournisseurs" | "demandes" | "scraping" | "messagerie" ...
-        [Parameter] public string ActivePage      { get; set; } = string.Empty;
-        [Parameter] public bool   ForceOpen       { get; set; } = false;
+        [Parameter] public string ActivePage { get; set; } = string.Empty;
+        [Parameter] public bool   ForceOpen  { get; set; } = false;
+        [Parameter] public int    NombreNonVus { get; set; } = 0; // NOUVEAU
 
         private bool   _drawerOpen      = false;
         private string _nomUtilisateur  = "Agent Achat";
@@ -38,6 +39,9 @@ namespace AssetFlow.BlazorUI.Components
                     _roleUtilisateur = Nettoyer(role);
             }
             catch { }
+
+            // NOUVEAU : charger le count des demandes non vues
+            NombreNonVus = await DemandeAchatSvc.GetCountNonVusAsync();
         }
 
         protected override void OnParametersSet()

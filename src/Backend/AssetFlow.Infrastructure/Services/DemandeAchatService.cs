@@ -118,5 +118,22 @@ namespace AssetFlow.Infrastructure.Services
 
             return offre?.ContenuPdf;
         }
+        public async Task MarquerVuAsync(int idDemande)
+        {
+            var demande = await _context.DemandeAchat
+                .FirstOrDefaultAsync(d => d.IdDemande == idDemande);
+            
+            if (demande != null && demande.VuParAchatLe == null)
+            {
+                demande.VuParAchatLe = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<int> CountNonVusAsync()
+        {
+            return await _context.DemandeAchat
+                .CountAsync(d => d.VuParAchatLe == null);
+        }
     }
 }

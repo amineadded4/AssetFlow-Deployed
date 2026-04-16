@@ -14,6 +14,7 @@ namespace AssetFlow.Application.DTOs
 
         public List<LigneDemandeDto> Lignes { get; set; } = new();
         public List<OffreAchatDto>   Offres { get; set; } = new();
+        public DateTime? VuParAchatLe { get; set; }
     }
 
 }

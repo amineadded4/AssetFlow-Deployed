@@ -107,6 +107,22 @@ namespace AssetFlow.WebApi.Controllers
                 return NotFound(new { Message = "PDF introuvable." });
             return File(contenu, "application/pdf");
         }
+
+        // PUT /api/demandes/{id}/vu
+        [HttpPut("{id:int}/vu")]
+        public async Task<IActionResult> MarquerVu(int id)
+        {
+            await _service.MarquerVuAsync(id);
+            return Ok();
+        }
+
+        // GET /api/demandes/non-vus/count
+        [HttpGet("non-vus/count")]
+        public async Task<ActionResult<int>> CountNonVus()
+        {
+            var count = await _service.CountNonVusAsync();
+            return Ok(count);
+        }
         private static DemandeAchatDto MapToDto(DemandeAchat d) => new()
         {
             IdDemande    = d.IdDemande,
@@ -133,7 +149,8 @@ namespace AssetFlow.WebApi.Controllers
                 NomFichier = o.NomFichier,
                 Taille     = o.Taille,
                 EstChoisie = o.EstChoisie
-            }).ToList()
+            }).ToList(),
+            VuParAchatLe = d.VuParAchatLe
         };
     }
 }

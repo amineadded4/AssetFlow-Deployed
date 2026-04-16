@@ -149,6 +149,20 @@ namespace AssetFlow.BlazorUI.Services
             var baseUrl = _http.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
             return $"{baseUrl}/api/demandes/{idDemande}/offres/{idOffre}/pdf";
         }
+        public async Task MarquerVuAsync(int idDemande)
+        {
+            try { await _http.PutAsync($"api/demandes/{idDemande}/vu", null); }
+            catch { }
+        }
+
+        public async Task<int> GetCountNonVusAsync()
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<int>("api/demandes/non-vus/count");
+            }
+            catch { return 0; }
+        }
 
         // ── Helpers privés ──────────────────────────────────────
 

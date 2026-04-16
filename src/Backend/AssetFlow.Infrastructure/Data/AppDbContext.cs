@@ -173,6 +173,9 @@ namespace AssetFlow.Infrastructure.Data
                         entity.Property(d => d.UserId)
                               .IsRequired(false)
                               .HasDefaultValue(0);
+                        entity.Property(d => d.VuParAchatLe)
+                              .HasColumnType("datetime2")
+                              .IsRequired(false);
 
                   // Relation 1→N vers OffreAchat (CASCADE DELETE)
                   entity.HasMany(d => d.Offres)

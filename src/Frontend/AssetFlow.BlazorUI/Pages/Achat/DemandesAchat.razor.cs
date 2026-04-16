@@ -48,6 +48,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             public string?       MotifRefus   { get; set; }
             public List<LigneVm> Lignes       { get; set; } = new();
             public List<OffreVm> Offres       { get; set; } = new();
+            public DateTime? VuParAchatLe { get; set; }
         }
 
         // ── État ─────────────────────────────────────────────────
@@ -68,6 +69,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private OffreVm?        _offrePreview        = null;
         private string          _toastMsg            = string.Empty;
         private string          _toastType           = "toast-success";
+        private int _countNonVus = 0;
 
         // ── Computed ─────────────────────────────────────────────
 
@@ -113,6 +115,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
             await ChargerInfosUtilisateur();
             await ChargerDemandesAsync();
+            _countNonVus = await DemandeAchatSvc.GetCountNonVusAsync();
         }
         public ValueTask DisposeAsync()
         {
@@ -188,10 +191,18 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         // ── Actions ──────────────────────────────────────────────
 
-        private void SelectionnerDemande(DemandeVm d)
+        private async Task SelectionnerDemande(DemandeVm d)
         {
             _demandeSelectionnee = d;
             _motifRefus          = string.Empty;
+            if (d.VuParAchatLe == null)
+            {
+                d.VuParAchatLe = DateTime.UtcNow; // optimistic update
+                await DemandeAchatSvc.MarquerVuAsync(d.Id);
+                // mettre à jour le badge sidebar
+                _countNonVus = Math.Max(0, _countNonVus - 1);
+                StateHasChanged();
+            }
         }
 
         private void SetTab(string tab)
@@ -393,7 +404,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     NomFichier = o.NomFichier,
                     Taille     = o.Taille,
                     EstChoisie = o.EstChoisie
-                }).ToList()
+                }).ToList(),
+                VuParAchatLe = dto.VuParAchatLe
             };
         }
 

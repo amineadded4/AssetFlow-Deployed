@@ -16,6 +16,7 @@ namespace AssetFlow.Domain.Entities
         public User? User  { get; set; }
         public List<OffreAchat>   Offres { get; set; } = new();
         public List<LigneDemande> Lignes { get; set; } = new();
+        public DateTime? VuParAchatLe { get; set; } = null;
     }
 
     public class LigneDemande

@@ -17,5 +17,8 @@ namespace AssetFlow.Application.Interfaces
 
         // Retourne le binaire PDF pour l'aperçu / téléchargement
         Task<byte[]?> GetContenuPdfAsync(Guid idOffre);
+
+        Task MarquerVuAsync(int idDemande);
+        Task<int> CountNonVusAsync();
     }
 }

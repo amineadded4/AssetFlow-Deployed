@@ -7,160 +7,93 @@ namespace AssetFlow.BlazorUI.Pages.Admin
 {
     public partial class MemoireIntelligente : ComponentBase, IAsyncDisposable
     {
-        [Inject] private GraphService    GraphSvc { get; set; } = default!;
-        [Inject] private IJSRuntime      JS       { get; set; } = default!;
+        [Inject] private GraphService GraphSvc { get; set; } = default!;
+        [Inject] private IJSRuntime   JS       { get; set; } = default!;
 
-        // ── État ──────────────────────────────────────────────────────────────
-        private bool              _sidebarOpen = false;
-        private bool              _loading     = true;
-        private string            _error       = string.Empty;
-        private bool              _darkMode    = true;
-        private bool              _intelligence = false;
-        private string            _search      = string.Empty;
-        private DateTime?         _lastSync;
+        // ── State ──────────────────────────────────────────────────────────────
+        private bool _sidebarOpen = false;
+        private bool _listLoading = true;
+        private bool _graphLoading = false;
+        private string _graphError = string.Empty;
+        private string _tab = "materiel";
+        private string _search = string.Empty;
+        private string? _selectedId = null;
+        private GraphEntitySummaryDto? _selectedEntity = null;
+        private GraphStatsDto? _stats;
+        private DateTime? _lastSync;
+        private int _graphNodeCount = 0;
 
-        private GraphResponseDto? _data;
-        private GraphInsightDto?  _selectedInsight;
+        private List<GraphEntitySummaryDto> _materiels     = new();
+        private List<GraphEntitySummaryDto> _utilisateurs  = new();
+        private List<GraphEntitySummaryDto> _demandes      = new();
+        private List<GraphEntitySummaryDto> _projets       = new();
+
         private DotNetObjectReference<MemoireIntelligente>? _dotnetRef;
 
         // ── Computed ──────────────────────────────────────────────────────────
-        private List<GraphInsightDto> _filteredInsights =>
+        private List<GraphEntitySummaryDto> CurrentList => _tab switch
+        {
+            "utilisateur" => _utilisateurs,
+            "demande"     => _demandes,
+            "projet"      => _projets,
+            _             => _materiels
+        };
+
+        private List<GraphEntitySummaryDto> FilteredEntities =>
             string.IsNullOrWhiteSpace(_search)
-                ? (_data?.Insights ?? new())
-                : (_data?.Insights ?? new())
-                    .Where(i => i.Title.Contains(_search, StringComparison.OrdinalIgnoreCase)
-                             || i.Message.Contains(_search, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+                ? CurrentList
+                : CurrentList.Where(e =>
+                    e.Label.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+                    e.Detail.Contains(_search, StringComparison.OrdinalIgnoreCase)).ToList();
 
         // ── Lifecycle ─────────────────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
-            // Charger préférence thème
-            try
-            {
-                var saved = await JS.InvokeAsync<string?>("eval", "localStorage.getItem('mi_dark_mode')");
-                if (saved == "false") _darkMode = false;
-            }
-            catch { /* Pas de localStorage en SSR */ }
-
-            await LoadData();
+            await Task.WhenAll(
+                LoadStats(),
+                LoadList("materiel")
+            );
         }
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+        private async Task LoadStats()
         {
-            if (firstRender && _data != null && !_loading)
-            {
-                await InitGraph();
-            }
-        }
-
-        // ── Chargement données ────────────────────────────────────────────────
-        private async Task LoadData()
-        {
-            _loading = true;
-            _error   = string.Empty;
-            StateHasChanged();
-
-            try
-            {
-                _data     = await GraphSvc.GetGraphAsync();
-                _lastSync = DateTime.UtcNow;
-
-                if (_data == null)
-                {
-                    _error = "Impossible de charger le graphe. Vérifiez la connexion au backend.";
-                }
-            }
-            catch (Exception ex)
-            {
-                _error = $"Erreur : {ex.Message}";
-            }
-            finally
-            {
-                _loading = false;
-                StateHasChanged();
-            }
-
-            // Initialiser le graphe après rendu
-            if (_data != null)
-            {
-                await Task.Delay(50); // Laisser le DOM se mettre à jour
-                await InitGraph();
-            }
-        }
-
-        // ── Graphe JS ─────────────────────────────────────────────────────────
-        private async Task InitGraph()
-        {
-            if (_data == null) return;
-            try
-            {
-                _dotnetRef = DotNetObjectReference.Create(this);
-                await JS.InvokeVoidAsync("GraphEngine.init", "mi-canvas", _dotnetRef);
-                await JS.InvokeVoidAsync("GraphEngine.setData",
-                    _data.Nodes, _data.Links);
-                await JS.InvokeVoidAsync("GraphEngine.setIntelligenceMode", _intelligence);
-            }
-            catch { /* Canvas pas encore prêt */ }
-        }
-
-        // ── Callback depuis JS (clic sur un nœud) ────────────────────────────
-        [JSInvokable]
-        public async Task OnNodeClicked(string nodeId)
-        {
-            // Chercher d'abord dans les insights existants
-            var existing = _data?.Insights.FirstOrDefault(i => i.EntityId == nodeId);
-            if (existing != null)
-            {
-                _selectedInsight = existing;
-                StateHasChanged();
-                return;
-            }
-
-            // Sinon demander au backend
-            var insight = await GraphSvc.GetNodeInsightAsync(nodeId);
-            if (insight != null)
-            {
-                _selectedInsight = insight;
-                StateHasChanged();
-            }
-        }
-
-        // ── Actions ───────────────────────────────────────────────────────────
-        private async Task ToggleDark()
-        {
-            _darkMode = !_darkMode;
-            try
-            {
-                await JS.InvokeVoidAsync("eval",
-                    $"localStorage.setItem('mi_dark_mode', '{_darkMode.ToString().ToLower()}')");
-            }
-            catch { }
-        }
-
-        private async Task ToggleIntelligence()
-        {
-            _intelligence = !_intelligence;
-            try
-            {
-                await JS.InvokeVoidAsync("GraphEngine.setIntelligenceMode", _intelligence);
-            }
-            catch { }
+            _stats = await GraphSvc.GetStatsAsync();
+            _lastSync = DateTime.UtcNow;
             StateHasChanged();
         }
 
-        private async Task FocusNode(string nodeId)
+        private async Task LoadList(string tab)
         {
-            try
+            _listLoading = true;
+            StateHasChanged();
+
+            switch (tab)
             {
-                await JS.InvokeVoidAsync("GraphEngine.highlight", nodeId);
+                case "materiel":
+                    if (!_materiels.Any()) _materiels = await GraphSvc.GetMaterielsAsync();
+                    break;
+                case "utilisateur":
+                    if (!_utilisateurs.Any()) _utilisateurs = await GraphSvc.GetUtilisateursAsync();
+                    break;
+                case "demande":
+                    if (!_demandes.Any()) _demandes = await GraphSvc.GetDemandesAsync();
+                    break;
+                case "projet":
+                    if (!_projets.Any()) _projets = await GraphSvc.GetProjetsAsync();
+                    break;
             }
-            catch { }
+
+            _listLoading = false;
+            StateHasChanged();
         }
 
-        private void SelectInsight(GraphInsightDto insight)
+        // ── Tab / Search ──────────────────────────────────────────────────────
+        private async Task SwitchTab(string tab)
         {
-            _selectedInsight = _selectedInsight == insight ? null : insight;
+            _tab = tab;
+            _search = string.Empty;
+            StateHasChanged();
+            await LoadList(tab);
         }
 
         private void OnSearch(Microsoft.AspNetCore.Components.ChangeEventArgs e)
@@ -169,37 +102,139 @@ namespace AssetFlow.BlazorUI.Pages.Admin
             StateHasChanged();
         }
 
-        private void ClearSearch()
+        // ── Select entity → build graph ───────────────────────────────────────
+        private async Task SelectEntity(GraphEntitySummaryDto ent)
         {
-            _search = string.Empty;
+            if (_selectedId == ent.Id) return;
+
+            _selectedId     = ent.Id;
+            _selectedEntity = ent;
+            _graphError     = string.Empty;
+            _graphLoading   = true;
             StateHasChanged();
+
+            try
+            {
+                // Parse numeric id from prefixed id (e.g. "m-5" → 5)
+                if (!int.TryParse(ent.Id.Split('-').Last(), out int numId))
+                {
+                    _graphError = "Identifiant invalide.";
+                    return;
+                }
+
+                GraphResponseDto? graphData = ent.Type switch
+                {
+                    "materiel"    => await GraphSvc.GetGraphForMaterielAsync(numId),
+                    "utilisateur" => await GraphSvc.GetGraphForUtilisateurAsync(numId),
+                    "demande"     => await GraphSvc.GetGraphForDemandeAsync(numId),
+                    "projet"      => await GraphSvc.GetGraphForProjetAsync(numId),
+                    _             => null
+                };
+
+                if (graphData == null)
+                {
+                    _graphError = "Impossible de charger le graphe. Vérifiez la connexion au backend.";
+                    return;
+                }
+
+                _graphNodeCount = graphData.Nodes.Count;
+                _graphLoading   = false;
+                StateHasChanged();
+
+                // Laisser le DOM se mettre à jour (canvas visible)
+                await Task.Delay(30);
+                await InitGraph(graphData);
+            }
+            catch (Exception ex)
+            {
+                _graphError = $"Erreur : {ex.Message}";
+            }
+            finally
+            {
+                _graphLoading = false;
+                StateHasChanged();
+            }
         }
 
-        // ── Helpers ───────────────────────────────────────────────────────────
-        private static string InsightTypeLabel(string type) => type switch
+        private async Task InitGraph(GraphResponseDto data)
         {
-            "warning"        => "Anomalie",
-            "correlation"    => "Corrélation",
-            "recommendation" => "Recommandation",
-            _                => "Information"
+            try
+            {
+                _dotnetRef ??= DotNetObjectReference.Create(this);
+                await JS.InvokeVoidAsync("GraphEngine.init", "mi-canvas", _dotnetRef);
+                await JS.InvokeVoidAsync("GraphEngine.setData", data.Nodes, data.Links);
+            }
+            catch { /* Canvas pas encore prêt */ }
+        }
+
+        // ── UI Helpers ────────────────────────────────────────────────────────
+        internal string GetEntColor(GraphEntitySummaryDto e) => e.Type switch
+        {
+            "materiel"    => e.Status == "critical" ? "#ef4444" : e.Status == "warning" ? "#f59e0b" : "#3b82f6",
+            "utilisateur" => "#8b5cf6",
+            "demande"     => "#14b8a6",
+            "projet"      => "#10b981",
+            _             => "#94a3b8"
         };
 
-        private static string FormatTime(DateTime dt)
+        internal string GetEntBg(GraphEntitySummaryDto e) => e.Type switch
         {
-            var diff = DateTime.UtcNow - dt;
-            if (diff.TotalMinutes < 1)  return "à l'instant";
-            if (diff.TotalHours   < 1)  return $"il y a {(int)diff.TotalMinutes} min";
-            if (diff.TotalDays    < 1)  return $"il y a {(int)diff.TotalHours} h";
-            return dt.ToString("dd/MM HH:mm");
-        }
+            "materiel"    => e.Status == "critical" ? "rgba(239,68,68,0.10)" : e.Status == "warning" ? "rgba(245,158,11,0.10)" : "rgba(59,130,246,0.10)",
+            "utilisateur" => "rgba(139,92,246,0.10)",
+            "demande"     => "rgba(20,184,166,0.10)",
+            "projet"      => "rgba(16,185,129,0.10)",
+            _             => "rgba(148,163,184,0.10)"
+        };
+
+        internal string GetEntIcon(GraphEntitySummaryDto e) => e.Type switch
+        {
+            "materiel"    => "◈",
+            "utilisateur" => "◉",
+            "demande"     => "◇",
+            "projet"      => "▣",
+            _             => "●"
+        };
+
+        internal string GetBadgeText(GraphEntitySummaryDto e) => e.Type switch
+        {
+            "materiel"    => $"{e.Count} inc.",
+            "utilisateur" => $"{e.Count} inc.",
+            "demande"     => $"{e.Count} offres",
+            "projet"      => $"{e.Count} mat.",
+            _             => $"{e.Count}"
+        };
+
+        internal string GetBadgeBg(GraphEntitySummaryDto e) => e.Type switch
+        {
+            "materiel"    => "rgba(239,68,68,0.12)",
+            "utilisateur" => "rgba(139,92,246,0.12)",
+            "demande"     => "rgba(20,184,166,0.12)",
+            "projet"      => "rgba(16,185,129,0.12)",
+            _             => "rgba(148,163,184,0.12)"
+        };
+
+        internal string GetBadgeColor(GraphEntitySummaryDto e) => e.Type switch
+        {
+            "materiel"    => "#ef4444",
+            "utilisateur" => "#8b5cf6",
+            "demande"     => "#14b8a6",
+            "projet"      => "#10b981",
+            _             => "#94a3b8"
+        };
+
+        internal string GetBadgeBorder(GraphEntitySummaryDto e) => e.Type switch
+        {
+            "materiel"    => "rgba(239,68,68,0.20)",
+            "utilisateur" => "rgba(139,92,246,0.20)",
+            "demande"     => "rgba(20,184,166,0.20)",
+            "projet"      => "rgba(16,185,129,0.20)",
+            _             => "rgba(148,163,184,0.20)"
+        };
 
         // ── Dispose ───────────────────────────────────────────────────────────
         public async ValueTask DisposeAsync()
         {
-            try
-            {
-                await JS.InvokeVoidAsync("GraphEngine.destroy");
-            }
+            try { await JS.InvokeVoidAsync("GraphEngine.destroy"); }
             catch { }
             _dotnetRef?.Dispose();
         }

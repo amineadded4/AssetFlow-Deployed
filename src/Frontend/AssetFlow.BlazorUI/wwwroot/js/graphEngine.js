@@ -257,15 +257,15 @@ window.GraphEngine = (function () {
 
             ctx.save();
             ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-            ctx.strokeStyle = hov ? col + '6a' : col + '1e';
-            ctx.lineWidth   = hov ? 1.6 : 0.9;
+            ctx.strokeStyle = hov ? col + 'cc' : col + '55';
+            ctx.lineWidth   = hov ? 2.2 : 1.4;
             ctx.setLineDash([]);
             ctx.stroke();
 
-            if (hov && l.label) {
+            if (l.label) {
                 const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
                 ctx.font = '9px "Consolas", monospace';
-                ctx.fillStyle = 'rgba(148,163,184,0.72)';
+                ctx.fillStyle = hov ? 'rgba(200,220,255,0.85)' : 'rgba(148,163,184,0.55)';
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillText(l.label, mx, my - 9);
             }

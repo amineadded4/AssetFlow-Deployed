@@ -124,9 +124,7 @@ namespace AssetFlow.Infrastructure.Services
                 .Distinct()
                 .ToListAsync();
 
-            var query = _context.Users.AsNoTracking()
-                .Where(u => u.IsApproved && u.Role != "Admin");
-
+            var query = _context.Users.AsNoTracking();
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var s = search.Trim().ToLower();

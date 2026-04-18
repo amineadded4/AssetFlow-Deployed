@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using AssetFlow.BlazorUI.DTOs;
 using AssetFlow.BlazorUI.Services;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AssetFlow.BlazorUI.Pages.Achat
 {
@@ -12,6 +13,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         [Inject] private DemandeAchatService DemandeAchatSvc { get; set; } = default!;
         [Inject] private HttpClient          _http           { get; set; } = default!;
         [Inject] private NavigationManager Navigation    { get; set; } = default!;
+        private HubConnection? _hubConnection;
 
         // ── ViewModels ───────────────────────────────────────────
 
@@ -116,10 +118,58 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             await ChargerInfosUtilisateur();
             await ChargerDemandesAsync();
             _countNonVus = await DemandeAchatSvc.GetCountNonVusAsync();
+            await ConnecterSignalR();
         }
-        public ValueTask DisposeAsync()
+
+        private async Task ConnecterSignalR()
         {
-            return ValueTask.CompletedTask;
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try { return await JS.InvokeAsync<string?>("eval",
+                            "localStorage.getItem('access_token') || localStorage.getItem('token')"); }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        var dtos = await DemandeAchatSvc.GetAllAsync();
+                        _demandes = dtos.Select(MapDtoVersVm).ToList();
+                        // Resynchroniser la demande sélectionnée
+                        if (_demandeSelectionnee != null)
+                            _demandeSelectionnee = _demandes.FirstOrDefault(d => d.Id == _demandeSelectionnee.Id);
+                        _countNonVus = await DemandeAchatSvc.GetCountNonVusAsync();
+                    }
+                    catch { }
+                    finally { StateHasChanged(); }
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+            }
+            catch { }
+        }
+
+        // Remplacer le DisposeAsync existant :
+        public async ValueTask DisposeAsync()
+        {
+            if (_hubConnection is not null)
+            {
+                try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
+                await _hubConnection.DisposeAsync();
+            }
         }
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {

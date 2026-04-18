@@ -1,22 +1,25 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using AssetFlow.BlazorUI.Services;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AssetFlow.BlazorUI.Components
 {
-    public partial class AchatSidebar : ComponentBase
+    public partial class AchatSidebar : ComponentBase, IAsyncDisposable
     {
         [Inject] private IJSRuntime JS { get; set; } = default!;
-        [Inject] private DemandeAchatService DemandeAchatSvc { get; set; } = default!; // NOUVEAU
+        [Inject] private DemandeAchatService DemandeAchatSvc { get; set; } = default!;
 
         [Parameter] public string ActivePage { get; set; } = string.Empty;
         [Parameter] public bool   ForceOpen  { get; set; } = false;
-        [Parameter] public int    NombreNonVus { get; set; } = 0; // NOUVEAU
 
+        // ── NombreNonVus géré entièrement en interne (plus de [Parameter]) ──
+        private int    _nombreNonVus   = 0;
         private bool   _drawerOpen      = false;
         private string _nomUtilisateur  = "Agent Achat";
         private string _roleUtilisateur = "Service Achat";
         private string _initiales       = "AA";
+        private HubConnection? _hubConnection;
 
         protected override async Task OnInitializedAsync()
         {
@@ -40,13 +43,71 @@ namespace AssetFlow.BlazorUI.Components
             }
             catch { }
 
-            // NOUVEAU : charger le count des demandes non vues
-            NombreNonVus = await DemandeAchatSvc.GetCountNonVusAsync();
+            _nombreNonVus = await DemandeAchatSvc.GetCountNonVusAsync();
+            await ConnecterSignalR();
+        }
+
+        private async Task ConnecterSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try
+                        {
+                            return await JS.InvokeAsync<string?>("eval",
+                                "localStorage.getItem('access_token') || localStorage.getItem('token')");
+                        }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            // Après reconnexion → rejoindre le groupe + resynchroniser le badge
+            _hubConnection.Reconnected += async _ =>
+            {
+                try { await _hubConnection.InvokeAsync("JoinDashboard"); } catch { }
+                await InvokeAsync(async () =>
+                {
+                    try { _nombreNonVus = await DemandeAchatSvc.GetCountNonVusAsync(); }
+                    catch { }
+                    finally { StateHasChanged(); }
+                });
+            };
+
+            // Nouvelle demande créée/modifiée → resynchroniser le badge
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    try { _nombreNonVus = await DemandeAchatSvc.GetCountNonVusAsync(); }
+                    catch { }
+                    finally { StateHasChanged(); }
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+            }
+            catch { }
         }
 
         protected override void OnParametersSet()
         {
             if (ForceOpen) _drawerOpen = true;
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_hubConnection is not null)
+            {
+                try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
+                await _hubConnection.DisposeAsync();
+            }
         }
 
         private static string Nettoyer(string v)

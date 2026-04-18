@@ -35,6 +35,8 @@ namespace AssetFlow.Infrastructure.Services
 
                 _context.CommentairesMateriel.Add(commentaire);
                 await _context.SaveChangesAsync();
+                await _notifier.NotifyAsync();
+                await _notifier.NotifyITAsync();
                 await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
                 {
                     Type   = "utilisateur",
@@ -73,6 +75,8 @@ namespace AssetFlow.Infrastructure.Services
 
                 _context.CommentairesMateriel.Remove(commentaire);
                 await _context.SaveChangesAsync();
+                await _notifier.NotifyAsync();
+                await _notifier.NotifyITAsync();
                 await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
                 {
                     Type   = "utilisateur",
@@ -137,6 +141,8 @@ namespace AssetFlow.Infrastructure.Services
                 var utilisateurId = commentaire.UtilisateurId; 
                 _context.CommentairesMateriel.Remove(commentaire);
                 await _context.SaveChangesAsync();
+                await _notifier.NotifyAsync();
+                await _notifier.NotifyITAsync();
                 await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
                 {
                     Type   = "utilisateur",

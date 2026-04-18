@@ -108,6 +108,8 @@ namespace AssetFlow.Infrastructure.Services
             }
 
             await _context.SaveChangesAsync();
+            await _notifier.NotifyAsync();
+            await _notifier.NotifyITAsync();
             // ── MEMORY ──────────────────────────────────────────────────────────
             await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
             {
@@ -140,6 +142,8 @@ namespace AssetFlow.Infrastructure.Services
 
             _context.DemandeAchat.Remove(demande);
             await _context.SaveChangesAsync();
+            await _notifier.NotifyAsync();
+            await _notifier.NotifyITAsync();
             // ── MEMORY ──────────────────────────────────────────────────────────
             // On notifie un refresh global des demandes (l'entité n'existe plus)
             await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new

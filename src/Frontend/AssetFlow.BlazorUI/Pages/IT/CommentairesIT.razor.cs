@@ -4,6 +4,7 @@ using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using AssetFlow.BlazorUI.DTOs;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AssetFlow.BlazorUI.Pages.IT
 {
@@ -13,6 +14,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         [Inject] private ILocalStorageService LocalStorage   { get; set; } = default!;
         [Inject] private IJSRuntime           JS             { get; set; } = default!;
         [Inject] private CommentaireCircuitBreakerService _cbService { get; set; } = default!;
+        private HubConnection? _hubConnection;
 
         private List<CommentaireITDto> Commentaires        { get; set; } = new();
         private List<CommentaireITDto> CommentairesFiltres { get; set; } = new();
@@ -49,6 +51,52 @@ namespace AssetFlow.BlazorUI.Pages.IT
             await ChargerInfosUtilisateur();
             await ChargerCommentaires();
             DemarrerCbTimer(); 
+            await ConnecterSignalR();
+        }
+        private async Task ConnecterSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try
+                        {
+                            return await JS.InvokeAsync<string?>("eval",
+                                "localStorage.getItem('access_token') || localStorage.getItem('token')");
+                        }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            // Nouveau commentaire ajouté/supprimé → recharger
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        Commentaires = await EmployeService.GetTousLesCommentairesAsync(
+                            string.IsNullOrWhiteSpace(SearchQuery) ? null : SearchQuery);
+                        AppliquerFiltres();
+                        // Invalider les sentiments calculés — données ont changé
+                        Sentiments          = new();
+                        SentimentDisponible = new();
+                        SentimentEnCours    = new();
+                    }
+                    catch { }
+                    finally { StateHasChanged(); }
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+            }
+            catch { }
         }
         private async Task AfficherToast(string message)
         {
@@ -81,6 +129,11 @@ namespace AssetFlow.BlazorUI.Pages.IT
         {
             if (_cbTimer != null)
                 await _cbTimer.DisposeAsync();
+            if (_hubConnection is not null)
+            {
+                try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
+                await _hubConnection.DisposeAsync();
+            }
         }
 
         private async Task ChargerInfosUtilisateur()

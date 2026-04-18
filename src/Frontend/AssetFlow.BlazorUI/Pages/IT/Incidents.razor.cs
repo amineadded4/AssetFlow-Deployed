@@ -2,6 +2,8 @@ using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using AssetFlow.BlazorUI.DTOs;
+using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.JSInterop;
 
 namespace AssetFlow.BlazorUI.Pages.IT
 {
@@ -9,9 +11,11 @@ namespace AssetFlow.BlazorUI.Pages.IT
     {
         [Inject] private ITIncidentService    Svc          { get; set; } = default!;
         [Inject] private ILocalStorageService LocalStorage  { get; set; } = default!;
+        [Inject] private IJSRuntime JS { get; set; } = default!;
 
         private List<IncidentEmployeDto> _allEmployes = new();
         private string FiltreRole { get; set; } = "tous";
+        private HubConnection? _hubConnection;
         private List<IncidentEmployeDto> Employes
         {
             get
@@ -61,7 +65,108 @@ namespace AssetFlow.BlazorUI.Pages.IT
             UserName = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
             _roleUtilisateur = _roleUtilisateur = await LocalStorage.GetItemAsync<string>("user_role") ?? "IT";
             await LoadEmployesAsync();
+            await ConnecterSignalR();
         }
+        private async Task ConnecterSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try
+                        {
+                            return await JS.InvokeAsync<string?>("eval",
+                                "localStorage.getItem('access_token') || localStorage.getItem('token')");
+                        }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        // Refresh compteurs employés
+                        _allEmployes = await Svc.GetEmployesAsync();
+
+                        // Refresh matériels/incidents si un employé est sélectionné
+                        if (EmployeSelectionne != null)
+                        {
+                            Materiels = await Svc.GetMaterielsAsync(EmployeSelectionne.UtilisateurId);
+
+                            if (MaterielSelectionne != null)
+                                MaterielSelectionne = Materiels.FirstOrDefault(
+                                    m => m.MaterielId == MaterielSelectionne.MaterielId);
+
+                            // Mettre à jour le compteur de l'employé sélectionné
+                            var emp = _allEmployes.FirstOrDefault(
+                                e => e.UtilisateurId == EmployeSelectionne.UtilisateurId);
+                            if (emp != null) EmployeSelectionne = emp;
+                        }
+                    }
+                    catch { /* silencieux */ }
+                    finally
+                    {
+                        StateHasChanged();
+                    }
+                });
+            });
+
+            // Incidents signalés/résolus → même refresh
+            _hubConnection.On("DashboardITUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        _allEmployes = await Svc.GetEmployesAsync();
+
+                        if (EmployeSelectionne != null)
+                        {
+                            Materiels = await Svc.GetMaterielsAsync(EmployeSelectionne.UtilisateurId);
+
+                            if (MaterielSelectionne != null)
+                                MaterielSelectionne = Materiels.FirstOrDefault(
+                                    m => m.MaterielId == MaterielSelectionne.MaterielId);
+
+                            var emp = _allEmployes.FirstOrDefault(
+                                e => e.UtilisateurId == EmployeSelectionne.UtilisateurId);
+                            if (emp != null) EmployeSelectionne = emp;
+                        }
+                    }
+                    catch { /* silencieux */ }
+                    finally { StateHasChanged(); }
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+                await _hubConnection.InvokeAsync("JoinDashboardIT");
+            }
+            catch { /* reste statique si SignalR non dispo */ }
+        }
+        public async ValueTask DisposeAsync()
+        {
+            _debounce?.Dispose();
+            if (_hubConnection is not null)
+            {
+                try
+                {
+                    await _hubConnection.InvokeAsync("LeaveDashboard");
+                    await _hubConnection.InvokeAsync("LeaveDashboardIT");
+                }
+                catch { }
+                await _hubConnection.DisposeAsync();
+            }
+        }
+        
 
         private async Task LoadEmployesAsync(string? search = null)
         {

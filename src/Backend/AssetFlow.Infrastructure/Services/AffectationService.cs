@@ -181,7 +181,6 @@ namespace AssetFlow.Infrastructure.Services
 
             materiel.QuantiteStock = Math.Max(0, materiel.QuantiteStock - articles.Count);
             await _db.SaveChangesAsync();
-            await _db.SaveChangesAsync();
             await _notifier.NotifyAsync();
             await _notifier.NotifyITAsync();
 

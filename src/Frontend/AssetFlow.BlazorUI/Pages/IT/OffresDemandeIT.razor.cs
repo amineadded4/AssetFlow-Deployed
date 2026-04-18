@@ -4,6 +4,8 @@ using AssetFlow.BlazorUI.CircuitBreaker;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.JSInterop;
 
 namespace AssetFlow.BlazorUI.Pages.IT
 {
@@ -15,6 +17,8 @@ namespace AssetFlow.BlazorUI.Pages.IT
         [Inject] private NavigationManager    Navigation   { get; set; } = default!;
         [Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
         [Inject] private OffreCircuitBreakerService _cbService { get; set; } = default!;
+        [Inject] private IJSRuntime JS { get; set; } = default!;
+        private HubConnection? _hubConnection;
 
         private OffreCircuit _cbOcr  => _cbService.Ocr;
         private OffreCircuit _cbChat => _cbService.Chat;
@@ -197,6 +201,65 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
             await LoadOffres();
             DemarrerCbTimer();
+            await ConnecterSignalR();
+        }
+        private async Task ConnecterSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try { return await JS.InvokeAsync<string?>("eval",
+                            "localStorage.getItem('access_token') || localStorage.getItem('token')"); }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        var nouvelles = await OffreService.GetOffresByDemandeAsync(DemandeId);
+                        // Préserver l'état OCR/formulaire des offres existantes
+                        foreach (var offre in nouvelles)
+                        {
+                            if (_confirmedId == null)
+                            {
+                                var dejaChoisie = nouvelles.FirstOrDefault(o => o.EstChoisie);
+                                if (dejaChoisie != null) _confirmedId = dejaChoisie.IdOffre;
+                            }
+                        }
+                        _offres = nouvelles;
+                    }
+                    catch { }
+                    finally { StateHasChanged(); }
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+            }
+            catch { }
+        }
+
+        // Modifier le DisposeAsync existant pour y ajouter le hub :
+        public async ValueTask DisposeAsync()
+        {
+            if (_cbTimer != null)
+                await _cbTimer.DisposeAsync();
+
+            if (_hubConnection is not null)
+            {
+                try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
+                await _hubConnection.DisposeAsync();
+            }
         }
         private void DemarrerCbTimer()
         {
@@ -211,11 +274,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
         
                 await InvokeAsync(StateHasChanged);
             }, null, 0, 1000);
-        }
-        public async ValueTask DisposeAsync()
-        {
-            if (_cbTimer != null)
-                await _cbTimer.DisposeAsync();
         }
 
         private async Task LoadOffres()

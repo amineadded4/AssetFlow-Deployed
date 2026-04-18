@@ -2,6 +2,8 @@ using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 using Blazored.LocalStorage;
 using AssetFlow.BlazorUI.DTOs;
+using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.JSInterop;
 
 namespace AssetFlow.BlazorUI.Pages.Achat
 {
@@ -10,6 +12,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         [Inject] private EmployeService    EmployeService { get; set; } = default!;
         [Inject] private NavigationManager Navigation     { get; set; } = default!;
         [Inject] private ILocalStorageService LocalStorage   { get; set; } = default!;
+        [Inject] private IJSRuntime JS { get; set; } = default!;
         // ── Données ────────────────────────────────────────────
         private List<MaterielAffecteGroupeDto> MaterielsGroupes        { get; set; } = new();
         private List<MaterielAffecteGroupeDto> MaterielsGroupesFiltres { get; set; } = new();
@@ -43,6 +46,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private bool _estAdmin => UserRole.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
         private void ToggleSidebar() => _sidebarOpen = !_sidebarOpen;
+        private HubConnection? _hubConnection;
 
         // ── Init ───────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
@@ -51,6 +55,52 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             UserRole = await LocalStorage.GetItemAsync<string>("user_role") ?? "Achat";
 
             await LoadMaterielsGroupesAsync();
+            await ConnecterSignalR();
+        }
+        private async Task ConnecterSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try
+                        {
+                            return await JS.InvokeAsync<string?>("eval",
+                                "localStorage.getItem('access_token') || localStorage.getItem('token')");
+                        }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            // Toute action (affectation, révocation, incident...) → recharger
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    // Ne pas mettre IsLoading=true pour éviter le flash
+                    try
+                    {
+                        MaterielsGroupes = await EmployeService.GetMaterielsGroupesAsync();
+                        FiltrerMateriels(); // ← réappliquer le filtre actif au lieu de juste =MaterielsGroupes
+                    }
+                    catch { /* silencieux */ }
+                    finally
+                    {
+                        IsLoading = false;
+                        StateHasChanged();
+                    }
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+            }
+            catch { /* reste statique si SignalR non dispo */ }
         }
         private async void AfficherToastVoice(string msg)
         {
@@ -61,9 +111,13 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             StateHasChanged();
         }
 
-        public ValueTask DisposeAsync()
+        public async ValueTask DisposeAsync()
         {
-            return ValueTask.CompletedTask;
+            if (_hubConnection is not null)
+            {
+                try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
+                await _hubConnection.DisposeAsync();
+            }
         }
         private async Task LoadMaterielsGroupesAsync()
         {
@@ -73,7 +127,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 ErrorMessage = string.Empty;
 
                 MaterielsGroupes        = await EmployeService.GetMaterielsGroupesAsync();
-                MaterielsGroupesFiltres = MaterielsGroupes;
+                FiltrerMateriels();
             }
             catch (Exception ex)
             {

@@ -10,10 +10,13 @@ namespace AssetFlow.Infrastructure.Services
     {
         private readonly AppDbContext _db;
         private readonly IAuditLogService _audit;
-        public EmployeManagementService(AppDbContext db, IAuditLogService audit)
+        private readonly IDashboardNotifier _notifier; // AJOUTÉ
+
+        public EmployeManagementService(AppDbContext db, IAuditLogService audit, IDashboardNotifier notifier) // AJOUTÉ
         {
-            _db = db;
-            _audit = audit;
+            _db       = db;
+            _audit    = audit;
+            _notifier = notifier; // AJOUTÉ
         }
 
         public async Task<List<EmployeListeDto>> GetEmployesAsync(string? search = null)
@@ -34,7 +37,6 @@ namespace AssetFlow.Infrastructure.Services
             var users = await query.OrderBy(u => u.FirstName).ToListAsync();
             var userIds = users.Select(u => u.Id).ToList();
 
-            // Compter les affectations Courantes par employé
             var counts = await _db.Affectations
                 .Where(a => userIds.Contains(a.UtilisateurId.Value) && a.Etat == EtatAffectation.Courante)
                 .GroupBy(a => a.UtilisateurId)
@@ -43,13 +45,13 @@ namespace AssetFlow.Infrastructure.Services
 
             return users.Select(u => new EmployeListeDto
             {
-                Id         = u.Id,
-                FullName   = $"{u.FirstName} {u.LastName}",
-                Email      = u.Email,
-                Role = u.Role,
-                Initials   = GetInitials(u.FirstName, u.LastName),
+                Id                    = u.Id,
+                FullName              = $"{u.FirstName} {u.LastName}",
+                Email                 = u.Email,
+                Role                  = u.Role,
+                Initials              = GetInitials(u.FirstName, u.LastName),
                 NbAffectationsActives = counts.FirstOrDefault(c => c.UserId == u.Id)?.Count ?? 0,
-                CreatedAt  = u.CreatedAt
+                CreatedAt             = u.CreatedAt
             }).ToList();
         }
 
@@ -64,17 +66,17 @@ namespace AssetFlow.Infrastructure.Services
 
             return affectations.Select(a => new AffectationEmployeDto
             {
-                AffectationId     = a.Id,
-                MaterielId        = a.MaterielId,
-                Designation       = a.Materiel.Designation,
-                Reference         = a.Materiel.Reference,
-                Categorie         = a.Materiel.Categorie,
-                ImageUrl          = a.Materiel.ImageUrl,
-                DateAffectation   = a.DateAffectation,
-                DateRetourPrevue  = a.DateRetour,
-                Etat              = a.Etat.ToString(),
-                Observations      = a.Observations,
-                Articles          = a.Articles.Select(art => new ArticleAffectationDto
+                AffectationId    = a.Id,
+                MaterielId       = a.MaterielId,
+                Designation      = a.Materiel.Designation,
+                Reference        = a.Materiel.Reference,
+                Categorie        = a.Materiel.Categorie,
+                ImageUrl         = a.Materiel.ImageUrl,
+                DateAffectation  = a.DateAffectation,
+                DateRetourPrevue = a.DateRetour,
+                Etat             = a.Etat.ToString(),
+                Observations     = a.Observations,
+                Articles         = a.Articles.Select(art => new ArticleAffectationDto
                 {
                     ArticleId   = art.Id,
                     NumeroSerie = art.NumeroSerie ?? $"S/N #{art.Id}",
@@ -96,21 +98,53 @@ namespace AssetFlow.Infrastructure.Services
             if (affectation.Etat == EtatAffectation.Terminee)
                 return new RetirerAffectationResultDto { Succes = false, Message = "Affectation déjà terminée." };
 
-            // Remettre les articles en Disponible
+            // Capturer les IDs AVANT modification pour les notifications
+            var materielId   = affectation.MaterielId;
+            var utilisateurId = affectation.UtilisateurId;
+            var projetId     = affectation.ProjetId;
+
             foreach (var article in affectation.Articles)
             {
                 article.Statut        = StatutArticle.Disponible;
                 article.AffectationId = null;
             }
 
-            // Marquer l'affectation comme Terminée
-            affectation.Etat        = EtatAffectation.Terminee;
-            affectation.DateRetour  = DateTime.UtcNow;
-
-            // Remettre le stock
+            affectation.Etat       = EtatAffectation.Terminee;
+            affectation.DateRetour = DateTime.UtcNow;
             affectation.Materiel.QuantiteStock += affectation.Articles.Count;
 
             await _db.SaveChangesAsync();
+            await _notifier.NotifyAsync();
+            await _notifier.NotifyITAsync();
+
+            // ── MEMORY : notifier matériel ───────────────────────────────────
+            await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+            {
+                Type   = "materiel",
+                NodeId = $"m-{materielId}"
+            });
+
+            // ── MEMORY : notifier utilisateur si affectation liée à un user ──
+            if (utilisateurId.HasValue)
+            {
+                await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+                {
+                    Type   = "utilisateur",
+                    NodeId = $"u-{utilisateurId.Value}"
+                });
+            }
+
+            // ── MEMORY : notifier projet si affectation liée à un projet ─────
+            if (projetId.HasValue)
+            {
+                await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+                {
+                    Type   = "projet",
+                    NodeId = $"p-{projetId.Value}"
+                });
+            }
+            // ─────────────────────────────────────────────────────────────────
+
             await _audit.LogAsync(new CreateAuditLogDto
             {
                 Utilisateur = userName,

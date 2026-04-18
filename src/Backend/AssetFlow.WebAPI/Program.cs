@@ -152,8 +152,10 @@ builder.Services.AddScoped<IDashboardNotifier>(sp =>
 {
     var hub = sp.GetRequiredService<IHubContext<DashboardHub>>();
     return new DashboardNotifier(
-        () => hub.Clients.Group("dashboard").SendAsync("DashboardUpdated"),
-        ()  => hub.Clients.Group("dashboard-it").SendAsync("DashboardITUpdated")
+        () => hub.Clients.Group("DashboardGroup").SendAsync("DashboardUpdated"),
+        () => hub.Clients.Group("ITGroup").SendAsync("ITUpdated"),
+        (eventName, payload) => hub.Clients.Group("MemoryGroup")
+                                    .SendAsync(eventName, payload)
     );
 });
 builder.Services.AddScoped<INotificationService, NotificationService>();

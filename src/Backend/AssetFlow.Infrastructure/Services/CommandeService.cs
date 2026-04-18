@@ -276,6 +276,11 @@ namespace AssetFlow.Infrastructure.Services
                 await _db.SaveChangesAsync();
                 await _notifier.NotifyAsync();
                 await _notifier.NotifyITAsync();
+                await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+                {
+                    Type   = "materiel",
+                    NodeId = $"m-{dto.MaterielId}"
+                });
                 await transaction.CommitAsync();
                 await _audit.LogAsync(new CreateAuditLogDto
                 {
@@ -344,7 +349,12 @@ namespace AssetFlow.Infrastructure.Services
 
             await _db.SaveChangesAsync();
             await _notifier.NotifyAsync();
-            await _notifier.NotifyITAsync();    
+            await _notifier.NotifyITAsync(); 
+            await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+            {
+                Type   = "materiel",
+                NodeId = $"m-{commande.MaterielId}"
+            });   
 
             await _audit.LogAsync(new CreateAuditLogDto
                 {
@@ -395,6 +405,11 @@ namespace AssetFlow.Infrastructure.Services
             _db.ArticlesIndividuels.RemoveRange(commande.Articles);
             _db.Commandes.Remove(commande);
             await _db.SaveChangesAsync();
+            await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+            {
+                Type   = "materiel",
+                NodeId = $"m-{commande.MaterielId}"
+            });
             await _audit.LogAsync(new CreateAuditLogDto
                 {
                     Utilisateur = utilisateur,        // remplacez par l'utilisateur courant si disponible

@@ -9,10 +9,11 @@ namespace AssetFlow.Infrastructure.Services
     public class CommentaireService : ICommentaireService
     {
         private readonly AppDbContext _context;
-
-        public CommentaireService(AppDbContext context)
+        private readonly IDashboardNotifier _notifier;
+        public CommentaireService(AppDbContext context,IDashboardNotifier notifier)
         {
             _context = context;
+            _notifier = notifier;
         }
         public async Task<CommentaireResultDto> AjouterCommentaireAsync(CreerCommentaireDto dto)
         {
@@ -34,6 +35,11 @@ namespace AssetFlow.Infrastructure.Services
 
                 _context.CommentairesMateriel.Add(commentaire);
                 await _context.SaveChangesAsync();
+                await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+                {
+                    Type   = "utilisateur",
+                    NodeId = $"u-{dto.UtilisateurId}"
+                });
 
                 return new CommentaireResultDto { Succes = true, Message = "Commentaire enregistré.", Id = commentaire.Id };
             }
@@ -67,6 +73,11 @@ namespace AssetFlow.Infrastructure.Services
 
                 _context.CommentairesMateriel.Remove(commentaire);
                 await _context.SaveChangesAsync();
+                await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+                {
+                    Type   = "utilisateur",
+                    NodeId = $"u-{utilisateurId}"
+                });
 
                 return new CommentaireResultDto { Succes = true, Message = "Commentaire supprimé." };
             }
@@ -122,9 +133,15 @@ namespace AssetFlow.Infrastructure.Services
         
                 if (commentaire == null)
                     return new CommentaireResultDto { Succes = false, Message = "Commentaire introuvable." };
-        
+
+                var utilisateurId = commentaire.UtilisateurId; 
                 _context.CommentairesMateriel.Remove(commentaire);
                 await _context.SaveChangesAsync();
+                await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+                {
+                    Type   = "utilisateur",
+                    NodeId = $"u-{utilisateurId}"
+                });
         
                 return new CommentaireResultDto { Succes = true, Message = "Commentaire supprimé." };
             }

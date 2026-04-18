@@ -181,8 +181,36 @@ namespace AssetFlow.Infrastructure.Services
 
             materiel.QuantiteStock = Math.Max(0, materiel.QuantiteStock - articles.Count);
             await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync();
             await _notifier.NotifyAsync();
             await _notifier.NotifyITAsync();
+
+            // ── MEMORY : matériel toujours notifié ──────────────────────────────
+            await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+            {
+                Type   = "materiel",
+                NodeId = $"m-{dto.MaterielId}"
+            });
+
+            // ── MEMORY : utilisateur si affectation à un user ───────────────────
+            if (dto.UtilisateurId.HasValue)
+            {
+                await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+                {
+                    Type   = "utilisateur",
+                    NodeId = $"u-{dto.UtilisateurId.Value}"
+                });
+            }
+
+            // ── MEMORY : projet si affectation à un projet ──────────────────────
+            if (dto.ProjetId.HasValue)
+            {
+                await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+                {
+                    Type   = "projet",
+                    NodeId = $"p-{dto.ProjetId.Value}"
+                });
+            }
 
             var beneficiaire = dto.ProjetId.HasValue
                 ? (await _db.Projects.FindAsync(dto.ProjetId.Value))?.Nom ?? "projet"

@@ -9,12 +9,16 @@ namespace AssetFlow.Infrastructure.Services
     public class ProjectService : IProjectService
     {
         private readonly AppDbContext _db;
+        private readonly IDashboardNotifier _notifier; // AJOUTÉ
 
-        public ProjectService(AppDbContext db) => _db = db;
+        public ProjectService(AppDbContext db, IDashboardNotifier notifier) // AJOUTÉ
+        {
+            _db       = db;
+            _notifier = notifier;
+        }
 
         public async Task<List<ProjectDto>> GetAllAsync()
-            => await _db.Projects.OrderByDescending(p => p.CreatedAt)
-                .Select(p => ToDto(p)).ToListAsync();
+            => await _db.Projects.OrderByDescending(p => p.CreatedAt).Select(p => ToDto(p)).ToListAsync();
 
         public async Task<ProjectDto?> GetByIdAsync(int id)
         {
@@ -39,6 +43,13 @@ namespace AssetFlow.Infrastructure.Services
             };
             _db.Projects.Add(p);
             await _db.SaveChangesAsync();
+            // ── MEMORY ──────────────────────────────────────────────────────────
+            await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+            {
+                Type   = "projet",
+                NodeId = $"p-{p.Id}"
+            });
+            // ────────────────────────────────────────────────────────────────────
             return ToDto(p);
         }
 
@@ -58,6 +69,13 @@ namespace AssetFlow.Infrastructure.Services
             p.UpdatedAt   = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
+            // ── MEMORY ──────────────────────────────────────────────────────────
+            await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+            {
+                Type   = "projet",
+                NodeId = $"p-{id}"
+            });
+            // ────────────────────────────────────────────────────────────────────
             return ToDto(p);
         }
 
@@ -67,8 +85,16 @@ namespace AssetFlow.Infrastructure.Services
             if (p == null) return false;
             _db.Projects.Remove(p);
             await _db.SaveChangesAsync();
+            // ── MEMORY ──────────────────────────────────────────────────────────
+            await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+            {
+                Type   = "projet",
+                NodeId = $"p-{id}"
+            });
+            // ────────────────────────────────────────────────────────────────────
             return true;
         }
+
         public async Task<List<AffectationProjetDto>> GetAffectationsAsync(int projetId)
             => await _db.Affectations
                 .AsNoTracking()

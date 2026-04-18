@@ -1,6 +1,9 @@
+// src/Frontend/AssetFlow.BlazorUI/Pages/Admin/MemoireIntelligente.razor.cs
+
 using AssetFlow.BlazorUI.DTOs;
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 
 namespace AssetFlow.BlazorUI.Pages.Admin
@@ -11,24 +14,24 @@ namespace AssetFlow.BlazorUI.Pages.Admin
         [Inject] private IJSRuntime   JS       { get; set; } = default!;
 
         // ── State ──────────────────────────────────────────────────────────────
-        private bool _sidebarOpen = false;
-        private bool _listLoading = true;
-        private bool _graphLoading = false;
-        private string _graphError = string.Empty;
-        private string _tab = "materiel";
-        private string _search = string.Empty;
-        private string? _selectedId = null;
+        private bool   _sidebarOpen  = false;
+        private bool   _listLoading  = true;
+        private bool   _graphLoading = false;
+        private string _graphError   = string.Empty;
+        private string _tab          = "materiel";
+        private string _search       = string.Empty;
+        private string? _selectedId  = null;
         private GraphEntitySummaryDto? _selectedEntity = null;
         private GraphStatsDto? _stats;
-        private DateTime? _lastSync;
-        private int _graphNodeCount = 0;
+        private int _graphNodeCount  = 0;
 
-        private List<GraphEntitySummaryDto> _materiels     = new();
-        private List<GraphEntitySummaryDto> _utilisateurs  = new();
-        private List<GraphEntitySummaryDto> _demandes      = new();
-        private List<GraphEntitySummaryDto> _projets       = new();
+        private List<GraphEntitySummaryDto> _materiels    = new();
+        private List<GraphEntitySummaryDto> _utilisateurs = new();
+        private List<GraphEntitySummaryDto> _demandes     = new();
+        private List<GraphEntitySummaryDto> _projets      = new();
 
         private DotNetObjectReference<MemoireIntelligente>? _dotnetRef;
+        private HubConnection? _hubConnection; // NOUVEAU
 
         // ── Computed ──────────────────────────────────────────────────────────
         private List<GraphEntitySummaryDto> CurrentList => _tab switch
@@ -53,12 +56,108 @@ namespace AssetFlow.BlazorUI.Pages.Admin
                 LoadStats(),
                 LoadList("materiel")
             );
+            await ConnecterSignalR(); // NOUVEAU
         }
 
+        // ── NOUVEAU : SignalR ─────────────────────────────────────────────────
+        private async Task ConnecterSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try
+                        {
+                            return await JS.InvokeAsync<string?>("eval",
+                                "localStorage.getItem('access_token') || localStorage.getItem('token')");
+                        }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            // Stats globales (équipements, incidents, utilisateurs, anomalies)
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                var nouvelles = await GraphSvc.GetStatsAsync();
+                if (nouvelles == null) return;
+                await InvokeAsync(() =>
+                {
+                    _stats = nouvelles;
+                    StateHasChanged();
+                });
+            });
+
+            // Un nœud spécifique a changé → refresh liste + graphe si affiché
+            _hubConnection.On<GraphNodeUpdatedPayload>("GraphNodeUpdated", async payload =>
+            {
+                // 1. Invalider la liste en cache pour forcer un rechargement
+                InvaliderCache(payload.Type);
+
+                // 2. Si le graphe affiché concerne ce nœud, le rafraîchir
+                await InvokeAsync(async () =>
+                {
+                    if (_selectedEntity != null &&
+                        (payload.NodeId == _selectedId ||
+                         _selectedEntity.Type == payload.Type))
+                    {
+                        await RafraichirGrapheActuel();
+                    }
+                    StateHasChanged();
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+                await _hubConnection.InvokeAsync("JoinMemory"); // NOUVEAU groupe
+            }
+            catch { /* SignalR non dispo, reste statique */ }
+        }
+
+        private void InvaliderCache(string type)
+        {
+            switch (type)
+            {
+                case "materiel":    _materiels    = new(); break;
+                case "utilisateur": _utilisateurs = new(); break;
+                case "demande":     _demandes     = new(); break;
+                case "projet":      _projets      = new(); break;
+                case "incident":                          
+                _materiels    = new();                 // un incident impacte les stats matériel
+                _utilisateurs = new();                 // et utilisateur
+                break;
+            }
+        }
+
+        private async Task RafraichirGrapheActuel()
+        {
+            if (_selectedEntity == null) return;
+            if (!int.TryParse(_selectedEntity.Id.Split('-').Last(), out int numId)) return;
+
+            GraphResponseDto? graphData = _selectedEntity.Type switch
+            {
+                "materiel"    => await GraphSvc.GetGraphForMaterielAsync(numId),
+                "utilisateur" => await GraphSvc.GetGraphForUtilisateurAsync(numId),
+                "demande"     => await GraphSvc.GetGraphForDemandeAsync(numId),
+                "projet"      => await GraphSvc.GetGraphForProjetAsync(numId),
+                _             => null
+            };
+
+            if (graphData == null) return;
+
+            _graphNodeCount = graphData.Nodes.Count;
+            await InitGraph(graphData);
+            StateHasChanged();
+        }
+
+        // ── Load ──────────────────────────────────────────────────────────────
         private async Task LoadStats()
         {
             _stats = await GraphSvc.GetStatsAsync();
-            _lastSync = DateTime.UtcNow;
             StateHasChanged();
         }
 
@@ -96,7 +195,7 @@ namespace AssetFlow.BlazorUI.Pages.Admin
             await LoadList(tab);
         }
 
-        private void OnSearch(Microsoft.AspNetCore.Components.ChangeEventArgs e)
+        private void OnSearch(ChangeEventArgs e)
         {
             _search = e.Value?.ToString() ?? string.Empty;
             StateHasChanged();
@@ -115,7 +214,6 @@ namespace AssetFlow.BlazorUI.Pages.Admin
 
             try
             {
-                // Parse numeric id from prefixed id (e.g. "m-5" → 5)
                 if (!int.TryParse(ent.Id.Split('-').Last(), out int numId))
                 {
                     _graphError = "Identifiant invalide.";
@@ -133,7 +231,7 @@ namespace AssetFlow.BlazorUI.Pages.Admin
 
                 if (graphData == null)
                 {
-                    _graphError = "Impossible de charger le graphe. Vérifiez la connexion au backend.";
+                    _graphError = "Impossible de charger le graphe.";
                     return;
                 }
 
@@ -141,7 +239,6 @@ namespace AssetFlow.BlazorUI.Pages.Admin
                 _graphLoading   = false;
                 StateHasChanged();
 
-                // Laisser le DOM se mettre à jour (canvas visible)
                 await Task.Delay(30);
                 await InitGraph(graphData);
             }
@@ -164,7 +261,7 @@ namespace AssetFlow.BlazorUI.Pages.Admin
                 await JS.InvokeVoidAsync("GraphEngine.init", "mi-canvas", _dotnetRef);
                 await JS.InvokeVoidAsync("GraphEngine.setData", data.Nodes, data.Links);
             }
-            catch { /* Canvas pas encore prêt */ }
+            catch { }
         }
 
         // ── UI Helpers ────────────────────────────────────────────────────────
@@ -234,9 +331,21 @@ namespace AssetFlow.BlazorUI.Pages.Admin
         // ── Dispose ───────────────────────────────────────────────────────────
         public async ValueTask DisposeAsync()
         {
-            try { await JS.InvokeVoidAsync("GraphEngine.destroy"); }
-            catch { }
+            if (_hubConnection is not null)
+            {
+                try
+                {
+                    await _hubConnection.InvokeAsync("LeaveMemory");
+                    await _hubConnection.InvokeAsync("LeaveDashboard");
+                }
+                catch { }
+                await _hubConnection.DisposeAsync();
+            }
+            try { await JS.InvokeVoidAsync("GraphEngine.destroy"); } catch { }
             _dotnetRef?.Dispose();
         }
     }
+
+    // ── DTO payload SignalR ────────────────────────────────────────────────────
+    public record GraphNodeUpdatedPayload(string Type, string NodeId);
 }

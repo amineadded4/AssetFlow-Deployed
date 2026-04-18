@@ -14,31 +14,21 @@ namespace AssetFlow.Infrastructure.Services
 
         public DemandeAchatITService(AppDbContext context, IDashboardNotifier notifier, IAuditLogService audit)
         {
-            _context = context;
+            _context  = context;
             _notifier = notifier;
-            _audit = audit;
+            _audit    = audit;
         }
 
         public async Task<IEnumerable<DemandeAchatITDto>> GetAllAsync(int? userId)
         {
-            var query = _context.DemandeAchat
-                .Include(d => d.Lignes)
-                .AsQueryable();
-
-            if (userId.HasValue)
-                query = query.Where(d => d.UserId == userId.Value);
-
-            return await query
-                .OrderByDescending(d => d.DateCreation)
-                .Select(d => ToDto(d))
-                .ToListAsync();
+            var query = _context.DemandeAchat.Include(d => d.Lignes).AsQueryable();
+            if (userId.HasValue) query = query.Where(d => d.UserId == userId.Value);
+            return await query.OrderByDescending(d => d.DateCreation).Select(d => ToDto(d)).ToListAsync();
         }
 
         public async Task<DemandeAchatITDto?> GetByIdAsync(int id)
         {
-            var d = await _context.DemandeAchat
-                .Include(d => d.Lignes)
-                .FirstOrDefaultAsync(d => d.IdDemande == id);
+            var d = await _context.DemandeAchat.Include(d => d.Lignes).FirstOrDefaultAsync(d => d.IdDemande == id);
             return d == null ? null : ToDto(d);
         }
 
@@ -51,7 +41,7 @@ namespace AssetFlow.Infrastructure.Services
 
             var demande = new DemandeAchat
             {
-                UserId = dto.UserId,
+                UserId       = dto.UserId,
                 Reference    = referenceGlobale,
                 NomProduit   = string.IsNullOrWhiteSpace(dto.NomProduit)
                                 ? dto.Lignes.First().NomProduit.Trim()
@@ -74,9 +64,16 @@ namespace AssetFlow.Infrastructure.Services
             await _context.SaveChangesAsync();
             await _notifier.NotifyAsync();
             await _notifier.NotifyITAsync();
+            // ── MEMORY ──────────────────────────────────────────────────────────
+            await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+            {
+                Type   = "demande",
+                NodeId = $"d-{demande.IdDemande}"
+            });
+            // ────────────────────────────────────────────────────────────────────
             await _audit.LogAsync(new CreateAuditLogDto
             {
-                Utilisateur = dto.Utilisateur,        // remplacez par l'utilisateur courant si disponible
+                Utilisateur = dto.Utilisateur,
                 Email       = "system",
                 Action      = IAuditLogService.Actions.Creation,
                 Categorie   = IAuditLogService.Categories.DemandeAchat,
@@ -85,25 +82,20 @@ namespace AssetFlow.Infrastructure.Services
             });
             return ToDto(demande);
         }
+
         public async Task<DemandeAchatITDto?> UpdateAsync(int id, UpdateDemandeAchatDto dto)
         {
             var demande = await _context.DemandeAchat
                 .Include(d => d.Lignes)
                 .FirstOrDefaultAsync(d => d.IdDemande == id);
-
             if (demande == null) return null;
 
-            // Mise à jour des champs globaux
             demande.NomProduit  = dto.NomProduit.Trim();
             demande.Description = dto.Description?.Trim();
 
-            // Remplacement complet des lignes
             if (dto.Lignes != null && dto.Lignes.Any())
             {
-                // Supprimer les anciennes lignes
                 _context.Set<LigneDemande>().RemoveRange(demande.Lignes);
-
-                // Ajouter les nouvelles
                 demande.Lignes = dto.Lignes.Select(l => new LigneDemande
                 {
                     IdDemande   = id,
@@ -112,14 +104,20 @@ namespace AssetFlow.Infrastructure.Services
                     Quantite    = l.Quantite,
                     Description = l.Description?.Trim()
                 }).ToList();
-
                 demande.Quantite = dto.Lignes.Sum(l => l.Quantite);
             }
 
             await _context.SaveChangesAsync();
+            // ── MEMORY ──────────────────────────────────────────────────────────
+            await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+            {
+                Type   = "demande",
+                NodeId = $"d-{id}"
+            });
+            // ────────────────────────────────────────────────────────────────────
             await _audit.LogAsync(new CreateAuditLogDto
             {
-                Utilisateur = dto.Utilisateur,        // remplacez par l'utilisateur courant si disponible
+                Utilisateur = dto.Utilisateur,
                 Email       = "system",
                 Action      = IAuditLogService.Actions.Modification,
                 Categorie   = IAuditLogService.Categories.DemandeAchat,
@@ -128,25 +126,28 @@ namespace AssetFlow.Infrastructure.Services
             });
             return ToDto(demande);
         }
-        public async Task<bool> DeleteAsync(int id,string userName)
+
+        public async Task<bool> DeleteAsync(int id, string userName)
         {
             var demande = await _context.DemandeAchat
                 .Include(d => d.Lignes)
                 .Include(d => d.Offres)
                 .FirstOrDefaultAsync(d => d.IdDemande == id);
-
             if (demande == null) return false;
 
-            // Supprimer les offres associées (avec leur contenu PDF)
-            if (demande.Offres.Any())
-                _context.Set<OffreAchat>().RemoveRange(demande.Offres);
-
-            // Supprimer les lignes
-            if (demande.Lignes.Any())
-                _context.Set<LigneDemande>().RemoveRange(demande.Lignes);
+            if (demande.Offres.Any())  _context.Set<OffreAchat>().RemoveRange(demande.Offres);
+            if (demande.Lignes.Any())  _context.Set<LigneDemande>().RemoveRange(demande.Lignes);
 
             _context.DemandeAchat.Remove(demande);
             await _context.SaveChangesAsync();
+            // ── MEMORY ──────────────────────────────────────────────────────────
+            // On notifie un refresh global des demandes (l'entité n'existe plus)
+            await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+            {
+                Type   = "demande",
+                NodeId = $"d-{id}"
+            });
+            // ────────────────────────────────────────────────────────────────────
             await _audit.LogAsync(new CreateAuditLogDto
             {
                 Utilisateur = userName,
@@ -158,6 +159,7 @@ namespace AssetFlow.Infrastructure.Services
             });
             return true;
         }
+
         private static DemandeAchatITDto ToDto(DemandeAchat d) => new()
         {
             IdDemande    = d.IdDemande,

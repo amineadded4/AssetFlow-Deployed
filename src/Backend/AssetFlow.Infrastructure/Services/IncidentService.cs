@@ -55,6 +55,24 @@ namespace AssetFlow.Infrastructure.Services
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyAsync();
                 await _notifier.NotifyITAsync();
+                // await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+                // {
+                //     Type   = "incident",
+                //     NodeId = $"m-{affectation.MaterielId}"
+                // });
+                await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+                {
+                    Type   = "materiel",                        // ← était "incident"
+                    NodeId = $"m-{affectation.MaterielId}"
+                });
+                if (affectation.UtilisateurId.HasValue)
+                {
+                    await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+                    {
+                        Type   = "utilisateur",
+                        NodeId = $"u-{affectation.UtilisateurId.Value}"
+                    });
+                }
 
                 return new SignalerIncidentResponseDto
                 {
@@ -124,6 +142,7 @@ namespace AssetFlow.Infrastructure.Services
             var counts = await _context.Incidents
                 .Include(i => i.Affectation)
                 .Where(i => (i.Statut == StatutIncident.EnAttente || i.Statut == StatutIncident.EnCours)
+                        && i.Affectation.Etat == EtatAffectation.Courante
                         && users.Select(u => u.Id).Contains(i.Affectation.UtilisateurId.Value))
                 .GroupBy(i => i.Affectation.UtilisateurId.Value)
                 .Select(g => new { UserId = g.Key, Count = g.Count() })
@@ -235,6 +254,25 @@ namespace AssetFlow.Infrastructure.Services
             await _context.SaveChangesAsync();
             await _notifier.NotifyAsync();
             await _notifier.NotifyITAsync();
+            
+            var aff = await _context.Affectations.FindAsync(incident.AffectationId);
+            if (aff != null)
+            {
+                await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+                {
+                    Type   = "materiel",
+                    NodeId = $"m-{aff.MaterielId}"
+                });
+
+                if (aff.UtilisateurId.HasValue)
+                {
+                    await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+                    {
+                        Type   = "utilisateur",
+                        NodeId = $"u-{aff.UtilisateurId.Value}"
+                    });
+                }
+            }
 
             return new SignalerIncidentResponseDto { Success = true, Message = "Statut mis à jour." };
         }

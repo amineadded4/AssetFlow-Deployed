@@ -94,6 +94,13 @@ namespace AssetFlow.Infrastructure.Services
 
             _context.OffreAchat.Add(offre);
             await _context.SaveChangesAsync();
+            await _notifier.NotifyAsync();
+            await _notifier.NotifyITAsync();
+            await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+            {
+                Type   = "demande",
+                NodeId = $"d-{idDemande}"
+            });
 
             return offre;
         }
@@ -105,9 +112,15 @@ namespace AssetFlow.Infrastructure.Services
 
             if (offre == null)
                 throw new KeyNotFoundException($"Offre {idOffre} introuvable.");
-
+            
+            var idDemande = offre.IdDemande;
             _context.OffreAchat.Remove(offre);
             await _context.SaveChangesAsync();
+            await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
+            {
+                Type   = "demande",
+                NodeId = $"d-{idDemande}"
+            });
         }
 
         public async Task<byte[]?> GetContenuPdfAsync(Guid idOffre)

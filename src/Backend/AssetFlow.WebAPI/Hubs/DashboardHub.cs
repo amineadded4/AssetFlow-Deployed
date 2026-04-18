@@ -16,5 +16,10 @@ namespace AssetFlow.WebAPI.Hubs
 
         public async Task LeaveDashboardIT()
             => await Groups.RemoveFromGroupAsync(Context.ConnectionId, "dashboard-it");
+        public async Task JoinMemory()
+            => await Groups.AddToGroupAsync(Context.ConnectionId, "MemoryGroup");
+
+        public async Task LeaveMemory()
+            => await Groups.RemoveFromGroupAsync(Context.ConnectionId, "MemoryGroup");
     }
 }

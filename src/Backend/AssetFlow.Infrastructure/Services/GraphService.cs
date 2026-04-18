@@ -25,9 +25,9 @@ namespace AssetFlow.Infrastructure.Services
             return new GraphStatsDto
             {
                 TotalMateriel   = await _db.Materiels.CountAsync(),
-                TotalIncidents  = await _db.Incidents.CountAsync(i => i.Statut != StatutIncident.Cloture),
+                TotalIncidents  = await _db.Incidents.CountAsync(i => i.Statut != StatutIncident.Resolu),
                 TotalUsers      = await _db.Users.CountAsync(),
-                ActiveAnomalies = await _db.Incidents.CountAsync(i => i.Urgence >= 3 && i.Statut != StatutIncident.Cloture)
+                ActiveAnomalies = await _db.Incidents.CountAsync(i => i.Urgence >= 3 && i.Statut != StatutIncident.Resolu)
             };
         }
 
@@ -44,7 +44,7 @@ namespace AssetFlow.Infrastructure.Services
             foreach (var m in materiels)
             {
                 var incCount = await _db.Incidents
-                    .CountAsync(i => i.Affectation!.MaterielId == m.Id && i.Statut != StatutIncident.Cloture);
+                    .CountAsync(i => i.Affectation!.MaterielId == m.Id && i.Statut != StatutIncident.Resolu);
 
                 result.Add(new GraphEntitySummaryDto
                 {
@@ -71,7 +71,7 @@ namespace AssetFlow.Infrastructure.Services
             foreach (var u in users)
             {
                 var incCount = await _db.Incidents
-                    .CountAsync(i => i.Affectation!.UtilisateurId == u.Id && i.Statut != StatutIncident.Cloture);
+                    .CountAsync(i => i.Affectation!.UtilisateurId == u.Id && i.Statut != StatutIncident.Resolu);
 
                 result.Add(new GraphEntitySummaryDto
                 {
@@ -160,7 +160,8 @@ namespace AssetFlow.Infrastructure.Services
             var incidents = await _db.Incidents
                 .AsNoTracking()
                 .Include(i => i.Affectation)
-                .Where(i => i.Affectation!.MaterielId == materielId && i.Statut != StatutIncident.Cloture)
+                .Where(i => i.Affectation!.MaterielId == materielId && i.Statut != StatutIncident.Resolu)
+                .OrderByDescending(i => i.DateIncident)
                 .Take(10)
                 .ToListAsync();
 
@@ -184,6 +185,7 @@ namespace AssetFlow.Infrastructure.Services
                 .AsNoTracking()
                 .Include(a => a.Utilisateur)
                 .Where(a => a.MaterielId == materielId && a.Etat == EtatAffectation.Courante && a.UtilisateurId.HasValue)
+                .OrderByDescending(a => a.DateAffectation)
                 .Take(8)
                 .ToListAsync();
 
@@ -210,6 +212,7 @@ namespace AssetFlow.Infrastructure.Services
                 .AsNoTracking()
                 .Include(a => a.Projet)
                 .Where(a => a.MaterielId == materielId && a.ProjetId.HasValue && a.Projet != null)
+                .OrderByDescending(a => a.DateAffectation)
                 .Select(a => a.Projet!)
                 .Distinct()
                 .Take(5)
@@ -270,6 +273,7 @@ namespace AssetFlow.Infrastructure.Services
                 .AsNoTracking()
                 .Include(a => a.Materiel)
                 .Where(a => a.UtilisateurId == userId && a.Etat == EtatAffectation.Courante)
+                .OrderByDescending(a => a.DateAffectation)
                 .Take(10)
                 .ToListAsync();
 
@@ -286,8 +290,9 @@ namespace AssetFlow.Infrastructure.Services
                 // Incidents sur ce matériel liés à cet utilisateur
                 var incidents = await _db.Incidents
                     .AsNoTracking()
-                    .Where(i => i.Affectation!.MaterielId == aff.MaterielId && i.Affectation.UtilisateurId == userId && i.Statut != StatutIncident.Cloture)
-                    .Take(4)
+                    .Where(i => i.Affectation!.MaterielId == aff.MaterielId && i.Affectation.UtilisateurId == userId && i.Statut != StatutIncident.Resolu)
+                    .OrderByDescending(i => i.DateIncident)
+                    .Take(10)
                     .ToListAsync();
 
                 foreach (var inc in incidents)
@@ -300,18 +305,33 @@ namespace AssetFlow.Infrastructure.Services
 
                 // Commentaires de cet utilisateur sur ce matériel
                 var comments = await _db.CommentairesMateriel
-                    .AsNoTracking()
-                    .Where(c => c.MaterielId == aff.MaterielId && c.UtilisateurId == userId)
-                    .Take(2)
-                    .ToListAsync();
+                .AsNoTracking()
+                .Where(c => c.MaterielId == aff.MaterielId && c.UtilisateurId == userId)
+                .OrderByDescending(c => c.DateCreation)
+                .Take(5)
+                .ToListAsync();
 
-                if (comments.Any())
+            foreach (var cmt in comments)
+            {
+                var cmtId = $"cmt-{cmt.Id}"; // ← ID unique par commentaire
+                var preview = cmt.Contenu.Length > 40 ? cmt.Contenu[..40] + "…" : cmt.Contenu;
+                nodes.Add(new GraphNodeDto
                 {
-                    var cmtId = $"cmt-{aff.MaterielId}-{user.Id}";
-                    var preview = comments.First().Contenu.Length > 40 ? comments.First().Contenu[..40] + "…" : comments.First().Contenu;
-                    nodes.Add(new GraphNodeDto { Id = cmtId, Type = "commentaire", Label = "Commentaire", Detail = preview, Status = "normal", Weight = 1 });
-                    links.Add(new GraphLinkDto { Source = $"u-{user.Id}", Target = cmtId, Label = "commentaire", Strength = 0.4 });
-                }
+                    Id     = cmtId,
+                    Type   = "commentaire",
+                    Label  = "Commentaire",
+                    Detail = preview,
+                    Status = "normal",
+                    Weight = 1
+                });
+                links.Add(new GraphLinkDto
+                {
+                    Source   = $"u-{user.Id}",
+                    Target   = cmtId,
+                    Label    = "commentaire",
+                    Strength = 0.4
+                });
+            }
             }
 
             return new GraphResponseDto { Nodes = nodes, Links = links, Insights = new(), Stats = new() };
@@ -401,6 +421,7 @@ namespace AssetFlow.Infrastructure.Services
                 .Include(a => a.Materiel)
                 .Include(a => a.Utilisateur)
                 .Where(a => a.ProjetId == projetId && a.Etat == EtatAffectation.Courante)
+                .OrderByDescending(a => a.DateAffectation)
                 .Take(15)
                 .ToListAsync();
 

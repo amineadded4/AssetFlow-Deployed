@@ -9,8 +9,13 @@ namespace AssetFlow.Infrastructure.Services
     public class AuditLogService : IAuditLogService
     {
         private readonly AppDbContext _db;
+        private readonly IDashboardNotifier _notifier;
 
-        public AuditLogService(AppDbContext db) => _db = db;
+        public AuditLogService(AppDbContext db, IDashboardNotifier notifier)
+        {
+            _db = db;
+            _notifier = notifier;
+        }
 
         public async Task LogAsync(CreateAuditLogDto dto)
         {
@@ -27,6 +32,9 @@ namespace AssetFlow.Infrastructure.Services
             };
             _db.AuditLogs.Add(log);
             await _db.SaveChangesAsync();
+            await _notifier.NotifyAsync();
+            await _notifier.NotifyITAsync();
+            
         }
 
         public async Task<AuditLogPagedDto> GetLogsAsync(AuditLogQueryDto query)

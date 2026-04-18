@@ -16,17 +16,19 @@ namespace AssetFlow.Infrastructure.Services
         private readonly AppDbContext    _dbContext;
         private readonly IConfiguration  _config;
         private readonly HttpClient      _httpClient;
+        private readonly IDashboardNotifier _notifier;
 
         private const double SimilarityThreshold = 0.035;
 
         private string KeycloakUrl  => _config["Keycloak:Authority"]!;
         private string JwtSecret    => _config["FaceAuth:JwtSecret"]!;
 
-        public FaceAuthService(AppDbContext dbContext, IConfiguration config, HttpClient httpClient)
+        public FaceAuthService(AppDbContext dbContext, IConfiguration config, HttpClient httpClient, IDashboardNotifier notifier)
         {
             _dbContext  = dbContext;
             _config     = config;
             _httpClient = httpClient;
+            _notifier = notifier;
         }
 
         public async Task<LoginResponseDto?> FaceLoginAsync(FaceLoginRequestDto request)
@@ -75,6 +77,8 @@ namespace AssetFlow.Infrastructure.Services
             var (accessToken, refreshToken, expiresIn) = GenerateFaceAuthTokens(user);
 
             Console.WriteLine($"[FACE] Login réussi pour {user.Email}");
+            await _notifier.NotifyAsync();
+            await _notifier.NotifyITAsync();
 
             return new LoginResponseDto
             {
@@ -152,6 +156,8 @@ namespace AssetFlow.Infrastructure.Services
 
             user.FaceKeypoints = JsonSerializer.Serialize(keypoints);
             await _dbContext.SaveChangesAsync();
+            await _notifier.NotifyAsync();
+            await _notifier.NotifyITAsync();
 
             Console.WriteLine($"[FACE REGISTER] ✅ {user.Email} — {keypoints.Count} points sauvegardés");
             return true;

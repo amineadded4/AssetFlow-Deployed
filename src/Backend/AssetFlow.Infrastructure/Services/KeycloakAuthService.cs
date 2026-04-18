@@ -16,17 +16,20 @@ namespace AssetFlow.Infrastructure.Services
         private readonly AppDbContext _dbContext;
         private readonly IConfiguration _config;
         private readonly IAuditLogService _audit;
+        private readonly IDashboardNotifier _notifier;
 
         private string KeycloakUrl => _config["Keycloak:Authority"]!;
         private string ClientId => _config["Keycloak:ClientId"]!;
         private string ClientSecret => _config["Keycloak:ClientSecret"]!;
 
-        public KeycloakAuthService(HttpClient httpClient, AppDbContext dbContext, IConfiguration config, IAuditLogService audit)
+        public KeycloakAuthService(HttpClient httpClient, AppDbContext dbContext, IConfiguration config, IAuditLogService audit, IDashboardNotifier notifier)
         {
             _httpClient = httpClient;
             _dbContext = dbContext;
             _config = config;
             _audit = audit;
+            _notifier = notifier;
+
         }
 
         // Login : appelle Keycloak avec email+password, récupère le token JWT
@@ -78,6 +81,8 @@ namespace AssetFlow.Infrastructure.Services
                 Details     = "Authentification réussie via Keycloak SSO",
                 UserId      = user.Id
             });
+            await _notifier.NotifyAsync();
+            await _notifier.NotifyITAsync();
 
             return new LoginResponseDto
             {
@@ -169,6 +174,8 @@ namespace AssetFlow.Infrastructure.Services
 
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
+            await _notifier.NotifyAsync();
+            await _notifier.NotifyITAsync();
 
             await _audit.LogAsync(new CreateAuditLogDto
             {

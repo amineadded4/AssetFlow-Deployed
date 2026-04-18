@@ -29,7 +29,7 @@ namespace AssetFlow.BlazorUI.Pages.Admin
         private List<GraphEntitySummaryDto> _projets      = new();
 
         private DotNetObjectReference<MemoireIntelligente>? _dotnetRef;
-        private HubConnection? _hubConnection; // NOUVEAU
+        private HubConnection? _hubConnection;
 
         // ── Computed ──────────────────────────────────────────────────────────
         private List<GraphEntitySummaryDto> CurrentList => _tab switch
@@ -50,14 +50,11 @@ namespace AssetFlow.BlazorUI.Pages.Admin
         // ── Lifecycle ─────────────────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
-            await Task.WhenAll(
-                LoadStats(),
-                LoadList("materiel")
-            );
+            await Task.WhenAll(LoadStats(), LoadList("materiel"));
             await ConnecterSignalR();
         }
 
-        // ── NOUVEAU : SignalR ─────────────────────────────────────────────────
+        // ── SignalR ────────────────────────────────────────────────────────────
         private async Task ConnecterSignalR()
         {
             _hubConnection = new HubConnectionBuilder()
@@ -65,60 +62,29 @@ namespace AssetFlow.BlazorUI.Pages.Admin
                 {
                     options.AccessTokenProvider = async () =>
                     {
-                        try
-                        {
-                            return await JS.InvokeAsync<string?>("eval",
-                                "localStorage.getItem('access_token') || localStorage.getItem('token')");
-                        }
+                        try { return await JS.InvokeAsync<string?>("eval", "localStorage.getItem('access_token') || localStorage.getItem('token')"); }
                         catch { return null; }
                     };
                 })
                 .WithAutomaticReconnect()
                 .Build();
 
-            // Stats globales (équipements, incidents, utilisateurs, anomalies)
             _hubConnection.On("DashboardUpdated", async () =>
             {
                 var nouvelles = await GraphSvc.GetStatsAsync();
                 if (nouvelles == null) return;
-                await InvokeAsync(() =>
-                {
-                    _stats = nouvelles;
-                    StateHasChanged();
-                });
+                await InvokeAsync(() => { _stats = nouvelles; StateHasChanged(); });
             });
 
-            // Un nœud spécifique a changé → refresh liste + graphe si affiché
             _hubConnection.On<GraphNodeUpdatedPayload>("GraphNodeUpdated", async payload =>
             {
                 InvaliderCache(payload.Type);
-
                 await InvokeAsync(async () =>
                 {
-                    // ← Recharger la liste du tab actif si elle a été invalidée
                     await RechargerListeSiInvalidee(payload.Type);
-
                     if (_selectedEntity != null &&
-                        (payload.NodeId == _selectedId ||
-                        _selectedEntity.Type == payload.Type))
-                    {
+                        (payload.NodeId == _selectedId || _selectedEntity.Type == payload.Type))
                         await RafraichirGrapheActuel();
-                    }
-                    StateHasChanged();
-                });
-            });
-            _hubConnection.On("DashboardUpdated", async () =>
-            {
-                var nouvelles = await GraphSvc.GetStatsAsync();
-                if (nouvelles == null) return;
-                await InvokeAsync(async () =>
-                {
-                    _stats = nouvelles;
-
-                    // ← Invalider + recharger le tab actif à chaque update global
-                    InvaliderCache(_tab);
-                    await RechargerListeSiInvalidee(_tab);
-
                     StateHasChanged();
                 });
             });
@@ -127,35 +93,21 @@ namespace AssetFlow.BlazorUI.Pages.Admin
             {
                 await _hubConnection.StartAsync();
                 await _hubConnection.InvokeAsync("JoinDashboard");
-                await _hubConnection.InvokeAsync("JoinMemory"); // NOUVEAU groupe
+                await _hubConnection.InvokeAsync("JoinMemory");
             }
-            catch { /* SignalR non dispo, reste statique */ }
+            catch { /* SignalR non dispo */ }
         }
+
         private async Task RechargerListeSiInvalidee(string type)
         {
-            // Recharger seulement si le type invalidé correspond au tab actif
-            // OU si c'est "incident" qui impacte matériel + utilisateur
             bool doitRecharger = type == _tab || type == "incident";
             if (!doitRecharger) return;
-
             switch (_tab)
             {
-                case "materiel":
-                    if (!_materiels.Any())
-                        _materiels = await GraphSvc.GetMaterielsAsync();
-                    break;
-                case "utilisateur":
-                    if (!_utilisateurs.Any())
-                        _utilisateurs = await GraphSvc.GetUtilisateursAsync();
-                    break;
-                case "demande":
-                    if (!_demandes.Any())
-                        _demandes = await GraphSvc.GetDemandesAsync();
-                    break;
-                case "projet":
-                    if (!_projets.Any())
-                        _projets = await GraphSvc.GetProjetsAsync();
-                    break;
+                case "materiel":    if (!_materiels.Any())    _materiels    = await GraphSvc.GetMaterielsAsync();    break;
+                case "utilisateur": if (!_utilisateurs.Any()) _utilisateurs = await GraphSvc.GetUtilisateursAsync(); break;
+                case "demande":     if (!_demandes.Any())     _demandes     = await GraphSvc.GetDemandesAsync();     break;
+                case "projet":      if (!_projets.Any())      _projets      = await GraphSvc.GetProjetsAsync();      break;
             }
         }
 
@@ -167,10 +119,7 @@ namespace AssetFlow.BlazorUI.Pages.Admin
                 case "utilisateur": _utilisateurs = new(); break;
                 case "demande":     _demandes     = new(); break;
                 case "projet":      _projets      = new(); break;
-                case "incident":                          
-                _materiels    = new();                 // un incident impacte les stats matériel
-                _utilisateurs = new();                 // et utilisateur
-                break;
+                case "incident":    _materiels    = new(); _utilisateurs = new(); break;
             }
         }
 
@@ -178,7 +127,6 @@ namespace AssetFlow.BlazorUI.Pages.Admin
         {
             if (_selectedEntity == null) return;
             if (!int.TryParse(_selectedEntity.Id.Split('-').Last(), out int numId)) return;
-
             GraphResponseDto? graphData = _selectedEntity.Type switch
             {
                 "materiel"    => await GraphSvc.GetGraphForMaterielAsync(numId),
@@ -187,9 +135,7 @@ namespace AssetFlow.BlazorUI.Pages.Admin
                 "projet"      => await GraphSvc.GetGraphForProjetAsync(numId),
                 _             => null
             };
-
             if (graphData == null) return;
-
             _graphNodeCount = graphData.Nodes.Count;
             await InitGraph(graphData);
             StateHasChanged();
@@ -206,23 +152,13 @@ namespace AssetFlow.BlazorUI.Pages.Admin
         {
             _listLoading = true;
             StateHasChanged();
-
             switch (tab)
             {
-                case "materiel":
-                    if (!_materiels.Any()) _materiels = await GraphSvc.GetMaterielsAsync();
-                    break;
-                case "utilisateur":
-                    if (!_utilisateurs.Any()) _utilisateurs = await GraphSvc.GetUtilisateursAsync();
-                    break;
-                case "demande":
-                    if (!_demandes.Any()) _demandes = await GraphSvc.GetDemandesAsync();
-                    break;
-                case "projet":
-                    if (!_projets.Any()) _projets = await GraphSvc.GetProjetsAsync();
-                    break;
+                case "materiel":    if (!_materiels.Any())    _materiels    = await GraphSvc.GetMaterielsAsync();    break;
+                case "utilisateur": if (!_utilisateurs.Any()) _utilisateurs = await GraphSvc.GetUtilisateursAsync(); break;
+                case "demande":     if (!_demandes.Any())     _demandes     = await GraphSvc.GetDemandesAsync();     break;
+                case "projet":      if (!_projets.Any())      _projets      = await GraphSvc.GetProjetsAsync();      break;
             }
-
             _listLoading = false;
             StateHasChanged();
         }
@@ -230,7 +166,7 @@ namespace AssetFlow.BlazorUI.Pages.Admin
         // ── Tab / Search ──────────────────────────────────────────────────────
         private async Task SwitchTab(string tab)
         {
-            _tab = tab;
+            _tab    = tab;
             _search = string.Empty;
             StateHasChanged();
             await LoadList(tab);
@@ -270,11 +206,7 @@ namespace AssetFlow.BlazorUI.Pages.Admin
                     _             => null
                 };
 
-                if (graphData == null)
-                {
-                    _graphError = "Impossible de charger le graphe.";
-                    return;
-                }
+                if (graphData == null) { _graphError = "Impossible de charger le graphe."; return; }
 
                 _graphNodeCount = graphData.Nodes.Count;
                 _graphLoading   = false;
@@ -283,15 +215,8 @@ namespace AssetFlow.BlazorUI.Pages.Admin
                 await Task.Delay(30);
                 await InitGraph(graphData);
             }
-            catch (Exception ex)
-            {
-                _graphError = $"Erreur : {ex.Message}";
-            }
-            finally
-            {
-                _graphLoading = false;
-                StateHasChanged();
-            }
+            catch (Exception ex) { _graphError = $"Erreur : {ex.Message}"; }
+            finally { _graphLoading = false; StateHasChanged(); }
         }
 
         private async Task InitGraph(GraphResponseDto data)
@@ -306,9 +231,48 @@ namespace AssetFlow.BlazorUI.Pages.Admin
         }
 
         // ── UI Helpers ────────────────────────────────────────────────────────
+
+        // SVG mini-icon for left panel list items
+        internal MarkupString GetEntSvgIcon(GraphEntitySummaryDto e)
+        {
+            var col = GetEntColor(e);
+            var bg  = GetEntBg(e);
+            string svg = e.Type switch
+            {
+                "materiel" => $@"<div class=""mi-ent-icon"" style=""background:{bg}"">
+                    <svg width=""16"" height=""16"" viewBox=""0 0 16 16"">
+                        <polygon points=""8,1 14,4.5 14,11.5 8,15 2,11.5 2,4.5""
+                                 fill=""{bg}"" stroke=""{col}"" stroke-width=""1.2""/>
+                        <circle cx=""8"" cy=""8"" r=""2"" fill=""{col}"" opacity=""0.7""/>
+                    </svg></div>",
+
+                "utilisateur" => $@"<div class=""mi-ent-icon"" style=""background:{bg}"">
+                    <svg width=""16"" height=""16"" viewBox=""0 0 16 16"">
+                        <circle cx=""8"" cy=""8"" r=""6"" fill=""{bg}"" stroke=""{col}"" stroke-width=""1.2""/>
+                        <circle cx=""8"" cy=""6"" r=""2"" fill=""{col}"" opacity=""0.8""/>
+                        <path d=""M3,14 Q3,10 8,10 Q13,10 13,14"" fill=""{col}"" opacity=""0.6""/>
+                    </svg></div>",
+
+                "demande" => $@"<div class=""mi-ent-icon"" style=""background:{bg}"">
+                    <svg width=""16"" height=""16"" viewBox=""0 0 16 16"">
+                        <rect x=""1"" y=""4"" width=""14"" height=""10"" rx=""2.5"" fill=""{bg}"" stroke=""{col}"" stroke-width=""1.2""/>
+                        <rect x=""1"" y=""4"" width=""14"" height=""3"" rx=""2"" fill=""{col}"" opacity=""0.5""/>
+                    </svg></div>",
+
+                "projet" => $@"<div class=""mi-ent-icon"" style=""background:{bg}"">
+                    <svg width=""16"" height=""16"" viewBox=""0 0 16 16"">
+                        <polygon points=""8,1 15,8 8,15 1,8"" fill=""{bg}"" stroke=""{col}"" stroke-width=""1.2""/>
+                        <polygon points=""8,5 11,8 8,11 5,8"" fill=""{col}"" opacity=""0.4""/>
+                    </svg></div>",
+
+                _ => $@"<div class=""mi-ent-icon"" style=""background:{bg};color:{col}"">●</div>"
+            };
+            return new MarkupString(svg);
+        }
+
         internal string GetEntColor(GraphEntitySummaryDto e) => e.Type switch
         {
-            "materiel"    => e.Status == "critical" ? "#ef4444" : e.Status == "warning" ? "#f59e0b" : "#3b82f6",
+            "materiel"    => e.Status == "critical" ? "#ef4444" : e.Status == "warning" ? "#f59e0b" : "#4F8EF7",
             "utilisateur" => "#8b5cf6",
             "demande"     => "#14b8a6",
             "projet"      => "#10b981",
@@ -317,20 +281,11 @@ namespace AssetFlow.BlazorUI.Pages.Admin
 
         internal string GetEntBg(GraphEntitySummaryDto e) => e.Type switch
         {
-            "materiel"    => e.Status == "critical" ? "rgba(239,68,68,0.10)" : e.Status == "warning" ? "rgba(245,158,11,0.10)" : "rgba(59,130,246,0.10)",
+            "materiel"    => e.Status == "critical" ? "rgba(239,68,68,0.10)" : e.Status == "warning" ? "rgba(245,158,11,0.10)" : "rgba(79,142,247,0.10)",
             "utilisateur" => "rgba(139,92,246,0.10)",
             "demande"     => "rgba(20,184,166,0.10)",
             "projet"      => "rgba(16,185,129,0.10)",
             _             => "rgba(148,163,184,0.10)"
-        };
-
-        internal string GetEntIcon(GraphEntitySummaryDto e) => e.Type switch
-        {
-            "materiel"    => "◈",
-            "utilisateur" => "◉",
-            "demande"     => "◇",
-            "projet"      => "▣",
-            _             => "●"
         };
 
         internal string GetBadgeText(GraphEntitySummaryDto e) => e.Type switch
@@ -342,31 +297,13 @@ namespace AssetFlow.BlazorUI.Pages.Admin
             _             => $"{e.Count}"
         };
 
-        internal string GetBadgeBg(GraphEntitySummaryDto e) => e.Type switch
+        internal string GetBadgeClass(GraphEntitySummaryDto e) => e.Type switch
         {
-            "materiel"    => "rgba(239,68,68,0.12)",
-            "utilisateur" => "rgba(139,92,246,0.12)",
-            "demande"     => "rgba(20,184,166,0.12)",
-            "projet"      => "rgba(16,185,129,0.12)",
-            _             => "rgba(148,163,184,0.12)"
-        };
-
-        internal string GetBadgeColor(GraphEntitySummaryDto e) => e.Type switch
-        {
-            "materiel"    => "#ef4444",
-            "utilisateur" => "#8b5cf6",
-            "demande"     => "#14b8a6",
-            "projet"      => "#10b981",
-            _             => "#94a3b8"
-        };
-
-        internal string GetBadgeBorder(GraphEntitySummaryDto e) => e.Type switch
-        {
-            "materiel"    => "rgba(239,68,68,0.20)",
-            "utilisateur" => "rgba(139,92,246,0.20)",
-            "demande"     => "rgba(20,184,166,0.20)",
-            "projet"      => "rgba(16,185,129,0.20)",
-            _             => "rgba(148,163,184,0.20)"
+            "materiel"    => "badge-red",
+            "utilisateur" => "badge-purple",
+            "demande"     => "badge-teal",
+            "projet"      => "badge-green",
+            _             => "badge-gray"
         };
 
         // ── Dispose ───────────────────────────────────────────────────────────
@@ -374,11 +311,7 @@ namespace AssetFlow.BlazorUI.Pages.Admin
         {
             if (_hubConnection is not null)
             {
-                try
-                {
-                    await _hubConnection.InvokeAsync("LeaveMemory");
-                    await _hubConnection.InvokeAsync("LeaveDashboard");
-                }
+                try { await _hubConnection.InvokeAsync("LeaveMemory"); await _hubConnection.InvokeAsync("LeaveDashboard"); }
                 catch { }
                 await _hubConnection.DisposeAsync();
             }
@@ -387,6 +320,5 @@ namespace AssetFlow.BlazorUI.Pages.Admin
         }
     }
 
-    // ── DTO payload SignalR ────────────────────────────────────────────────────
     public record GraphNodeUpdatedPayload(string Type, string NodeId);
 }

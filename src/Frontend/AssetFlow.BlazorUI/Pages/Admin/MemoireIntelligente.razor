@@ -11,7 +11,6 @@
 
             @* ══ STATS BAR ════════════════════════════════════════════════════ *@
             <div class="mi-stats">
-                @* Hamburger mobile (remplace l'ancien header) *@
                 <button class="mi-hamburger" @onclick="() => _sidebarOpen = !_sidebarOpen">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                         <line x1="3" y1="6"  x2="21" y2="6"/>
@@ -40,7 +39,6 @@
                     <span class="mi-sv green">@(_graphNodeCount)</span>
                     <span class="mi-sl">Nœuds graphe</span>
                 </div>
-
             </div>
 
             @* ══ BODY ══════════════════════════════════════════════════════════ *@
@@ -60,10 +58,10 @@
                     </div>
 
                     <div class="mi-tabs">
-                        <button class="mi-tab @(_tab == "materiel" ? "active" : "")" @onclick='() => SwitchTab("materiel")'>Matériels</button>
+                        <button class="mi-tab @(_tab == "materiel"    ? "active" : "")" @onclick='() => SwitchTab("materiel")'>Matériels</button>
                         <button class="mi-tab @(_tab == "utilisateur" ? "active" : "")" @onclick='() => SwitchTab("utilisateur")'>Utilisateurs</button>
-                        <button class="mi-tab @(_tab == "demande" ? "active" : "")" @onclick='() => SwitchTab("demande")'>Demandes</button>
-                        <button class="mi-tab @(_tab == "projet" ? "active" : "")" @onclick='() => SwitchTab("projet")'>Projets</button>
+                        <button class="mi-tab @(_tab == "demande"     ? "active" : "")" @onclick='() => SwitchTab("demande")'>Demandes</button>
+                        <button class="mi-tab @(_tab == "projet"      ? "active" : "")" @onclick='() => SwitchTab("projet")'>Projets</button>
                     </div>
 
                     <div class="mi-lp-list">
@@ -80,8 +78,8 @@
                                 var entCopy = ent;
                                 <div class="mi-ent @(_selectedId == ent.Id ? "active" : "")"
                                      @onclick="() => SelectEntity(entCopy)">
-                                    <div class="mi-ent-icon" style="background:@GetEntBg(ent);color:@GetEntColor(ent)">
-                                        @GetEntIcon(ent)
+                                    <div class="mi-ent-icon-wrap">
+                                        @GetEntSvgIcon(ent)
                                     </div>
                                     <div class="mi-ent-info">
                                         <div class="mi-ent-name">@ent.Label</div>
@@ -89,7 +87,7 @@
                                     </div>
                                     @if (ent.Count > 0)
                                     {
-                                        <span class="mi-ent-badge" style="background:@GetBadgeBg(ent);color:@GetBadgeColor(ent);border-color:@GetBadgeBorder(ent)">
+                                        <span class="mi-ent-badge @GetBadgeClass(ent)">
                                             @GetBadgeText(ent)
                                         </span>
                                     }
@@ -110,8 +108,12 @@
                     {
                         <div class="mi-empty">
                             <div class="mi-empty-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+                                <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
+                                    <polygon points="40,8 67,24 67,56 40,72 13,56 13,24"
+                                             fill="none" stroke="rgba(79,142,247,0.35)" stroke-width="1.5"/>
+                                    <polygon points="40,16 59,27 59,53 40,64 21,53 21,27"
+                                             fill="rgba(79,142,247,0.06)" stroke="rgba(79,142,247,0.2)" stroke-width="1"/>
+                                    <circle cx="40" cy="40" r="6" fill="rgba(79,142,247,0.3)"/>
                                 </svg>
                             </div>
                             <h3>Aucune entité sélectionnée</h3>
@@ -121,7 +123,7 @@
                     else if (_graphLoading)
                     {
                         <div class="mi-graph-loading">
-                            <div class="mi-loader-ring"></div>
+                            <div class="mi-loader-hex"></div>
                             <p>Chargement du graphe…</p>
                         </div>
                     }
@@ -129,7 +131,9 @@
                     {
                         <div class="mi-graph-error">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
                             </svg>
                             <p>@_graphError</p>
                             <button @onclick="() => { if(_selectedEntity != null) SelectEntity(_selectedEntity); }">Réessayer</button>
@@ -138,23 +142,51 @@
 
                     <canvas id="mi-canvas" style="@(_selectedId == null || _graphLoading ? "display:none" : "")"></canvas>
 
-                    @if (_selectedEntity != null && !_graphLoading)
+                    @* Context badge *@
+                    @if (_selectedEntity != null && !_graphLoading && string.IsNullOrEmpty(_graphError))
                     {
                         <div class="mi-ctx-badge">
-                            <span class="mi-ctx-dot" style="background:@GetEntColor(_selectedEntity)"></span>
+                            <div class="mi-ctx-shape @_selectedEntity.Type"></div>
                             <strong>@_selectedEntity.Label</strong>
                             <span>@_selectedEntity.Detail</span>
                         </div>
                     }
 
+                    @* Legend *@
+                    @if (_selectedEntity != null && !_graphLoading && string.IsNullOrEmpty(_graphError))
+                    {
                     <div class="mi-legend">
-                        <div class="mi-lg"><div class="mi-ld" style="background:#3b82f6"></div> Matériel</div>
-                        <div class="mi-lg"><div class="mi-ld" style="background:#ef4444"></div> Incident</div>
-                        <div class="mi-lg"><div class="mi-ld" style="background:#8b5cf6"></div> Utilisateur</div>
-                        <div class="mi-lg"><div class="mi-ld" style="background:#f59e0b"></div> Commande</div>
-                        <div class="mi-lg"><div class="mi-ld" style="background:#10b981"></div> Projet</div>
-                        <div class="mi-lg"><div class="mi-ld" style="background:#14b8a6"></div> Demande</div>
+                        <div class="mi-lg">
+                            <svg width="14" height="14" viewBox="0 0 14 14"><polygon points="7,1 13,4.5 13,9.5 7,13 1,9.5 1,4.5" fill="#040C1E" stroke="#4F8EF7" stroke-width="1.2"/></svg>
+                            Matériel
+                        </div>
+                        <div class="mi-lg">
+                            <svg width="14" height="14" viewBox="0 0 14 14"><polygon points="7,1 13,4.5 13,9.5 7,13 1,9.5 1,4.5" fill="#1A0606" stroke="#EF4444" stroke-width="1.2"/></svg>
+                            Incident
+                        </div>
+                        <div class="mi-lg">
+                            <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.5" fill="#0C0714" stroke="#8B5CF6" stroke-width="1.2"/></svg>
+                            Utilisateur
+                        </div>
+                        <div class="mi-lg">
+                            <svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="3" width="12" height="9" rx="2.5" fill="#0D0700" stroke="#D97706" stroke-width="1.2"/></svg>
+                            Commande
+                        </div>
+                        <div class="mi-lg">
+                            <svg width="14" height="14" viewBox="0 0 14 14"><polygon points="7,1 13,7 7,13 1,7" fill="#020F07" stroke="#10B981" stroke-width="1.2"/></svg>
+                            Projet
+                        </div>
+                        <div class="mi-lg">
+                            <svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="3" width="12" height="9" rx="2.5" fill="#020D0D" stroke="#14b8a6" stroke-width="1.2"/></svg>
+                            Demande
+                        </div>
+                        <div class="mi-lg">
+                            <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="6" r="4.5" fill="#140610" stroke="#EC4899" stroke-width="1.2"/><path d="M4,11 L4.5,13.5 L7,11.5 L9.5,13.5 L10,11" fill="#140610" stroke="#EC4899" stroke-width="0.8"/></svg>
+                            Commentaire
+                        </div>
                     </div>
+                    }
+
                 </div>
 
             </div>

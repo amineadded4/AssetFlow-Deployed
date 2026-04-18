@@ -324,13 +324,7 @@ namespace AssetFlow.Infrastructure.Services
                     Status = "normal",
                     Weight = 1
                 });
-                links.Add(new GraphLinkDto
-                {
-                    Source   = $"u-{user.Id}",
-                    Target   = cmtId,
-                    Label    = "commentaire",
-                    Strength = 0.4
-                });
+                links.Add(new GraphLinkDto { Source = mId, Target = cmtId, Label = "commentaire", Strength = 0.4 });
             }
             }
 

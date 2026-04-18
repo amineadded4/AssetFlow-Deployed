@@ -97,12 +97,11 @@ namespace AssetFlow.Infrastructure.Services
             if (affectation.Etat == EtatAffectation.Terminee)
                 return new RetirerAffectationResultDto { Succes = false, Message = "Affectation déjà terminée." };
 
-            // Capturer les IDs AVANT modification pour les notifications
             var materielId    = affectation.MaterielId;
             var utilisateurId = affectation.UtilisateurId;
             var projetId      = affectation.ProjetId;
 
-            // ── Résoudre les incidents non clôturés de cette affectation ────────
+            // ── Résoudre les incidents non clôturés ─────────────────────────────
             var incidents = await _db.Incidents
                 .Include(i => i.Article)
                 .Where(i => i.AffectationId == affectationId &&
@@ -117,7 +116,17 @@ namespace AssetFlow.Infrastructure.Services
                 inc.CommentairesResolution = "Résolu automatiquement lors de la révocation de l'affectation.";
             }
 
-            // ── Remettre les articles en panne à l'état Bon + libérer ───────────
+            // ── Supprimer les commentaires de l'utilisateur sur ce matériel ─────
+            if (utilisateurId.HasValue)
+            {
+                var commentaires = await _db.CommentairesMateriel
+                    .Where(c => c.MaterielId == materielId && c.UtilisateurId == utilisateurId.Value)
+                    .ToListAsync();
+
+                _db.CommentairesMateriel.RemoveRange(commentaires);
+            }
+
+            // ── Libérer les articles ─────────────────────────────────────────────
             foreach (var article in affectation.Articles)
             {
                 article.Statut        = StatutArticle.Disponible;
@@ -133,14 +142,12 @@ namespace AssetFlow.Infrastructure.Services
             await _notifier.NotifyAsync();
             await _notifier.NotifyITAsync();
 
-            // ── MEMORY : notifier matériel ───────────────────────────────────────
             await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
             {
                 Type   = "materiel",
                 NodeId = $"m-{materielId}"
             });
 
-            // ── MEMORY : notifier utilisateur si affectation liée à un user ─────
             if (utilisateurId.HasValue)
             {
                 await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
@@ -150,7 +157,6 @@ namespace AssetFlow.Infrastructure.Services
                 });
             }
 
-            // ── MEMORY : notifier projet si affectation liée à un projet ────────
             if (projetId.HasValue)
             {
                 await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new

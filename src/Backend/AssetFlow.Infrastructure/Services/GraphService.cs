@@ -77,7 +77,7 @@ namespace AssetFlow.Infrastructure.Services
                 {
                     Id     = $"u-{u.Id}",
                     Label  = $"{u.FirstName} {u.LastName[..1]}.",
-                    Detail = $"{u.Department} · {u.Role}",
+                    Detail = $"{u.Role}",
                     Type   = "utilisateur",
                     Status = "normal",
                     Count  = incCount

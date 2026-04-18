@@ -204,6 +204,7 @@
                             <button class="aff-role-btn @(FiltreRole == "Employe"     ? "active" : "")" @onclick='() => FiltreRole = "Employe"'>Employés</button>
                             <button class="aff-role-btn @(FiltreRole == "EquipeAchat" ? "active" : "")" @onclick='() => FiltreRole = "EquipeAchat"'>Achats</button>
                             <button class="aff-role-btn @(FiltreRole == "IT"          ? "active" : "")" @onclick='() => FiltreRole = "IT"'>IT</button>
+                            <button class="aff-role-btn @(FiltreRole == "Admin"          ? "active" : "")" @onclick='() => FiltreRole = "Admin"'>Admin</button>
                         </div>
                         <div class="aff-emp-list">
                             @if (LoadingUtilisateurs)

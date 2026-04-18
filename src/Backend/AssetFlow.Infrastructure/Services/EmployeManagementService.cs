@@ -21,8 +21,7 @@ namespace AssetFlow.Infrastructure.Services
 
         public async Task<List<EmployeListeDto>> GetEmployesAsync(string? search = null)
         {
-            var query = _db.Users.AsNoTracking()
-                .Where(u => u.Role != "Admin");
+            var query = _db.Users.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -99,14 +98,31 @@ namespace AssetFlow.Infrastructure.Services
                 return new RetirerAffectationResultDto { Succes = false, Message = "Affectation déjà terminée." };
 
             // Capturer les IDs AVANT modification pour les notifications
-            var materielId   = affectation.MaterielId;
+            var materielId    = affectation.MaterielId;
             var utilisateurId = affectation.UtilisateurId;
-            var projetId     = affectation.ProjetId;
+            var projetId      = affectation.ProjetId;
 
+            // ── Résoudre les incidents non clôturés de cette affectation ────────
+            var incidents = await _db.Incidents
+                .Include(i => i.Article)
+                .Where(i => i.AffectationId == affectationId &&
+                            i.Statut != StatutIncident.Resolu &&
+                            i.Statut != StatutIncident.Cloture)
+                .ToListAsync();
+
+            foreach (var inc in incidents)
+            {
+                inc.Statut                 = StatutIncident.Resolu;
+                inc.DateResolution         = DateTime.UtcNow;
+                inc.CommentairesResolution = "Résolu automatiquement lors de la révocation de l'affectation.";
+            }
+
+            // ── Remettre les articles en panne à l'état Bon + libérer ───────────
             foreach (var article in affectation.Articles)
             {
                 article.Statut        = StatutArticle.Disponible;
                 article.AffectationId = null;
+                article.Etat          = EtatArticle.Bon;
             }
 
             affectation.Etat       = EtatAffectation.Terminee;
@@ -117,14 +133,14 @@ namespace AssetFlow.Infrastructure.Services
             await _notifier.NotifyAsync();
             await _notifier.NotifyITAsync();
 
-            // ── MEMORY : notifier matériel ───────────────────────────────────
+            // ── MEMORY : notifier matériel ───────────────────────────────────────
             await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
             {
                 Type   = "materiel",
                 NodeId = $"m-{materielId}"
             });
 
-            // ── MEMORY : notifier utilisateur si affectation liée à un user ──
+            // ── MEMORY : notifier utilisateur si affectation liée à un user ─────
             if (utilisateurId.HasValue)
             {
                 await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
@@ -134,7 +150,7 @@ namespace AssetFlow.Infrastructure.Services
                 });
             }
 
-            // ── MEMORY : notifier projet si affectation liée à un projet ─────
+            // ── MEMORY : notifier projet si affectation liée à un projet ────────
             if (projetId.HasValue)
             {
                 await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
@@ -143,7 +159,6 @@ namespace AssetFlow.Infrastructure.Services
                     NodeId = $"p-{projetId.Value}"
                 });
             }
-            // ─────────────────────────────────────────────────────────────────
 
             await _audit.LogAsync(new CreateAuditLogDto
             {
@@ -152,13 +167,15 @@ namespace AssetFlow.Infrastructure.Services
                 Action      = IAuditLogService.Actions.Revocation,
                 Categorie   = IAuditLogService.Categories.Affectation,
                 Entite      = $"Affectation #{affectation.Id}",
-                Details     = $"{affectation.Articles.Count} article(s) de \"{affectation.Materiel.Designation}\" remis en stock"
+                Details     = $"{affectation.Articles.Count} article(s) de \"{affectation.Materiel.Designation}\" remis en stock" +
+                            (incidents.Any() ? $", {incidents.Count} incident(s) auto-résolu(s)" : "")
             });
 
             return new RetirerAffectationResultDto
             {
                 Succes  = true,
-                Message = $"Affectation retirée. {affectation.Articles.Count} article(s) remis en stock."
+                Message = $"Affectation retirée. {affectation.Articles.Count} article(s) remis en stock." +
+                        (incidents.Any() ? $" {incidents.Count} incident(s) auto-résolu(s)." : "")
             };
         }
 

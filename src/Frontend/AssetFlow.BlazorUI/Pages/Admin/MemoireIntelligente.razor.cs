@@ -93,18 +93,34 @@ namespace AssetFlow.BlazorUI.Pages.Admin
             // Un nœud spécifique a changé → refresh liste + graphe si affiché
             _hubConnection.On<GraphNodeUpdatedPayload>("GraphNodeUpdated", async payload =>
             {
-                // 1. Invalider la liste en cache pour forcer un rechargement
                 InvaliderCache(payload.Type);
 
-                // 2. Si le graphe affiché concerne ce nœud, le rafraîchir
                 await InvokeAsync(async () =>
                 {
+                    // ← Recharger la liste du tab actif si elle a été invalidée
+                    await RechargerListeSiInvalidee(payload.Type);
+
                     if (_selectedEntity != null &&
                         (payload.NodeId == _selectedId ||
-                         _selectedEntity.Type == payload.Type))
+                        _selectedEntity.Type == payload.Type))
                     {
                         await RafraichirGrapheActuel();
                     }
+                    StateHasChanged();
+                });
+            });
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                var nouvelles = await GraphSvc.GetStatsAsync();
+                if (nouvelles == null) return;
+                await InvokeAsync(async () =>
+                {
+                    _stats = nouvelles;
+
+                    // ← Invalider + recharger le tab actif à chaque update global
+                    InvaliderCache(_tab);
+                    await RechargerListeSiInvalidee(_tab);
+
                     StateHasChanged();
                 });
             });
@@ -116,6 +132,33 @@ namespace AssetFlow.BlazorUI.Pages.Admin
                 await _hubConnection.InvokeAsync("JoinMemory"); // NOUVEAU groupe
             }
             catch { /* SignalR non dispo, reste statique */ }
+        }
+        private async Task RechargerListeSiInvalidee(string type)
+        {
+            // Recharger seulement si le type invalidé correspond au tab actif
+            // OU si c'est "incident" qui impacte matériel + utilisateur
+            bool doitRecharger = type == _tab || type == "incident";
+            if (!doitRecharger) return;
+
+            switch (_tab)
+            {
+                case "materiel":
+                    if (!_materiels.Any())
+                        _materiels = await GraphSvc.GetMaterielsAsync();
+                    break;
+                case "utilisateur":
+                    if (!_utilisateurs.Any())
+                        _utilisateurs = await GraphSvc.GetUtilisateursAsync();
+                    break;
+                case "demande":
+                    if (!_demandes.Any())
+                        _demandes = await GraphSvc.GetDemandesAsync();
+                    break;
+                case "projet":
+                    if (!_projets.Any())
+                        _projets = await GraphSvc.GetProjetsAsync();
+                    break;
+            }
         }
 
         private void InvaliderCache(string type)

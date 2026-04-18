@@ -18,7 +18,7 @@ namespace AssetFlow.Infrastructure.Services
         // ── Utilisateurs ─────────────────────────────────────
         public async Task<List<UtilisateurDisponibleDto>> GetUtilisateursDisponiblesAsync(string? search = null)
         {
-            var query = _db.Users.AsNoTracking().Where(u => u.Role != "Admin");
+            var query = _db.Users.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(search))
             {

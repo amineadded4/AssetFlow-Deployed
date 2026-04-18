@@ -213,6 +213,7 @@
                         <button class="emp-role-btn @(FiltreRoleEmp == "Employe"     ? "active" : "")" @onclick='() => FiltreRoleEmp = "Employe"'>Employés</button>
                         <button class="emp-role-btn @(FiltreRoleEmp == "EquipeAchat" ? "active" : "")" @onclick='() => FiltreRoleEmp = "EquipeAchat"'>Achats</button>
                         <button class="emp-role-btn @(FiltreRoleEmp == "IT"          ? "active" : "")" @onclick='() => FiltreRoleEmp = "IT"'>IT</button>
+                        <button class="emp-role-btn @(FiltreRoleEmp == "Admin"          ? "active" : "")" @onclick='() => FiltreRoleEmp = "Admin"'>Admin</button>
                     </div>
                     @if (LoadingEmployes)
                     {

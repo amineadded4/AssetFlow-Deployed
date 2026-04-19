@@ -401,6 +401,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                         _erreursCommande["Fournisseur"] = "Obligatoire.";
                     if (_formCommande.QuantiteAchetee <= 0)
                         _erreursCommande["Quantite"] = "Doit être > 0.";
+                    if (_formCommande.DateLivraison.HasValue && _formCommande.DateLivraison.Value <= _formCommande.DateAchat)
+                        _erreursCommande["DateLivraison"] = "La date de livraison doit être supérieure à la date d'achat.";
                 }
             }
             else
@@ -421,6 +423,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     _erreursCommande["Fournisseur"] = "Obligatoire.";
                 if (_formCommande.QuantiteAchetee <= 0)
                     _erreursCommande["Quantite"] = "Doit être > 0.";
+                if (_formCommande.DateLivraison.HasValue && _formCommande.DateLivraison.Value <= _formCommande.DateAchat)
+                    _erreursCommande["DateLivraison"] = "La date de livraison doit être supérieure à la date d'achat.";
             }
 
             if (_erreurs.Any() || _erreursCommande.Any()) return;
@@ -557,6 +561,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 _erreursModifCommande["NumeroCommande"] = "Obligatoire.";
             if (string.IsNullOrWhiteSpace(_formModifCommande.NomFournisseurLibre))
                 _erreursModifCommande["Fournisseur"] = "Obligatoire.";
+            if (_formModifCommande.DateLivraison.HasValue && _formModifCommande.DateLivraison.Value <= _formModifCommande.DateAchat)
+                _erreursModifCommande["DateLivraison"] = "La date de livraison doit être supérieure à la date d'achat.";
 
             if (_erreursModifCommande.Any()) return;
 

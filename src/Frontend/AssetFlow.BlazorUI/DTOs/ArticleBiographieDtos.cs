@@ -14,6 +14,7 @@ namespace AssetFlow.BlazorUI.DTOs
         public int NombrePersonnes { get; set; }
         public int NombreIncidents { get; set; }
         public int NombreReparations { get; set; }
+        public int     NombreProjets       { get; set; } 
         public int JoursEnStock { get; set; }
         public string? AffectationActuelle { get; set; }
         public List<EvenementArticleDto> Historique { get; set; } = new();

@@ -103,20 +103,13 @@
                             <span>Chez <strong>@_bio.AffectationActuelle</strong></span>
                         </div>
                     }
-                    @* else
-                    {
-                        <div class="bio-affectation-stock">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                            </svg>
-                            <span>En stock</span>
-                        </div>
-                    } *@
                 </div>
             </div>
 
-            @* Statistiques *@
+            @* ── Statistiques ── *@
             <div class="bio-stats-grid">
+
+                @* Âge total *@
                 <div class="bio-stat-card">
                     <div class="bio-stat-icon bio-stat-age">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
@@ -127,6 +120,8 @@
                     <div class="bio-stat-label">Âge total</div>
                     <div class="bio-stat-sub">Depuis le @_bio.DateAcquisition.ToString("dd/MM/yyyy")</div>
                 </div>
+
+                @* Personnes *@
                 <div class="bio-stat-card">
                     <div class="bio-stat-icon bio-stat-people">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
@@ -138,6 +133,8 @@
                     <div class="bio-stat-label">Personnes</div>
                     <div class="bio-stat-sub">ayant eu cet article</div>
                 </div>
+
+                @* Incidents *@
                 <div class="bio-stat-card">
                     <div class="bio-stat-icon bio-stat-incident">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
@@ -148,6 +145,8 @@
                     <div class="bio-stat-label">Incidents</div>
                     <div class="bio-stat-sub">pannes déclarées</div>
                 </div>
+
+                @* Réparations *@
                 <div class="bio-stat-card">
                     <div class="bio-stat-icon bio-stat-repair">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
@@ -158,16 +157,19 @@
                     <div class="bio-stat-label">Réparations</div>
                     <div class="bio-stat-sub">effectuées</div>
                 </div>
-                @* <div class="bio-stat-card">
-                    <div class="bio-stat-icon bio-stat-stock">
+
+                @* ── NOUVEAU : Projets ── *@
+                <div class="bio-stat-card">
+                    <div class="bio-stat-icon bio-stat-projet">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
                         </svg>
                     </div>
-                    <div class="bio-stat-value">@_bio.JoursEnStock <span>j</span></div>
-                    <div class="bio-stat-label">En stock</div>
-                    <div class="bio-stat-sub">temps sans affectation</div>
-                </div> *@
+                    <div class="bio-stat-value">@_bio.NombreProjets </div>
+                    <div class="bio-stat-label">Projets</div>
+                    <div class="bio-stat-sub">participations</div>
+                </div>
+
             </div>
 
             @* Timeline *@

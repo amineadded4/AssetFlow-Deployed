@@ -59,6 +59,14 @@ namespace AssetFlow.Infrastructure.Services
             var nbIncidents   = historiques.Count(h => h.TypeEvenement == TypeEvenementArticle.PanneDeclaree);
             var nbReparations = historiques.Count(h => h.TypeEvenement == TypeEvenementArticle.Reparation);
 
+            // ── NOUVEAU : Nombre de projets distincts auxquels l'article a participé ──
+            var nbProjets = await _db.Affectations
+                .Where(a => a.Articles.Any(art => art.Id == articleId) && a.ProjetId != null)
+                .Select(a => a.ProjetId)
+                .Distinct()
+                .CountAsync();
+            // ──────────────────────────────────────────────────────────────────────────
+
             // Jours en stock = durée cumulée des périodes "MiseEnStock"
             int joursEnStock = 0;
             for (int i = 0; i < historiques.Count; i++)
@@ -72,35 +80,47 @@ namespace AssetFlow.Infrastructure.Services
                 }
             }
 
-            // Affectation actuelle = dernier événement de type Affectation
+            // ── CORRIGÉ : Affectation actuelle — utilisateur OU projet ──
             var dernierEvt = historiques.LastOrDefault();
             string? affectationActuelle = null;
-            if (dernierEvt?.TypeEvenement == TypeEvenementArticle.Affectation
-                && dernierEvt.Utilisateur != null)
+            if (dernierEvt?.TypeEvenement == TypeEvenementArticle.Affectation)
             {
-                affectationActuelle = $"{dernierEvt.Utilisateur.FirstName} {dernierEvt.Utilisateur.LastName}";
+                if (dernierEvt.Utilisateur != null)
+                {
+                    // Affecté à un utilisateur
+                    affectationActuelle = $"{dernierEvt.Utilisateur.FirstName} {dernierEvt.Utilisateur.LastName}";
+                }
+                else if (!string.IsNullOrEmpty(dernierEvt.Description))
+                {
+                    // Affecté à un projet (description = "Affecté à NomDuProjet")
+                    affectationActuelle = dernierEvt.Description
+                        .Replace("Affecté à ", "", StringComparison.OrdinalIgnoreCase)
+                        .Trim();
+                }
             }
+            // ─────────────────────────────────────────────────────────────
 
             // Date d'acquisition = date de la commande liée
             var dateAcquisition = article.Commande?.DateAchat ?? DateTime.UtcNow;
 
             return new ArticleBiographieDto
             {
-                ArticleId          = article.Id,
-                NumeroSerie        = article.NumeroSerie ?? $"ART-{article.Id:D4}",
-                MaterielReference  = article.Materiel.Reference,
-                MaterielDesignation= article.Materiel.Designation,
-                MaterielCategorie  = article.Materiel.Categorie,
-                DateAcquisition    = dateAcquisition,
-                Statut             = article.Statut.ToString(),
-                Etat               = article.Etat.ToString(),
-                AgeTotalJours      = (int)(DateTime.UtcNow - dateAcquisition).TotalDays,
-                NombrePersonnes    = personnesDistinctes,
-                NombreIncidents    = nbIncidents,
-                NombreReparations  = nbReparations,
-                JoursEnStock       = joursEnStock,
-                AffectationActuelle= affectationActuelle,
-                Historique         = evenements
+                ArticleId           = article.Id,
+                NumeroSerie         = article.NumeroSerie ?? $"ART-{article.Id:D4}",
+                MaterielReference   = article.Materiel.Reference,
+                MaterielDesignation = article.Materiel.Designation,
+                MaterielCategorie   = article.Materiel.Categorie,
+                DateAcquisition     = dateAcquisition,
+                Statut              = article.Statut.ToString(),
+                Etat                = article.Etat.ToString(),
+                AgeTotalJours       = (int)(DateTime.UtcNow - dateAcquisition).TotalDays,
+                NombrePersonnes     = personnesDistinctes,
+                NombreIncidents     = nbIncidents,
+                NombreReparations   = nbReparations,
+                NombreProjets       = nbProjets,   // ← NOUVEAU
+                JoursEnStock        = joursEnStock,
+                AffectationActuelle = affectationActuelle,
+                Historique          = evenements
             };
         }
 
@@ -111,8 +131,6 @@ namespace AssetFlow.Infrastructure.Services
                 .OrderBy(m => m.Designation)
                 .ToListAsync();
 
-            // Charge les articles séparément pour éviter l'erreur
-            // de OrderBy/Take dans ThenInclude sur certaines versions EF
             var materielIds = materiels.Select(m => m.Id).ToList();
 
             var articles = await _db.ArticlesIndividuels
@@ -138,17 +156,23 @@ namespace AssetFlow.Infrastructure.Services
                     {
                         var dernier = a.Historiques.MaxBy(h => h.DateEvenement);
                         string? affecteA = null;
-                        if (dernier?.TypeEvenement == TypeEvenementArticle.Affectation
-                            && dernier.Utilisateur != null)
-                            affecteA = $"{dernier.Utilisateur.FirstName} {dernier.Utilisateur.LastName}";
+                        if (dernier?.TypeEvenement == TypeEvenementArticle.Affectation)
+                        {
+                            if (dernier.Utilisateur != null)
+                                affecteA = $"{dernier.Utilisateur.FirstName} {dernier.Utilisateur.LastName}";
+                            else if (!string.IsNullOrEmpty(dernier.Description))
+                                affecteA = dernier.Description
+                                    .Replace("Affecté à ", "", StringComparison.OrdinalIgnoreCase)
+                                    .Trim();
+                        }
 
                         return new ArticleResumDto
                         {
-                            ArticleId  = a.Id,
-                            NumeroSerie= a.NumeroSerie ?? $"ART-{a.Id:D4}",
-                            Statut     = a.Statut.ToString(),
-                            Etat       = a.Etat.ToString(),
-                            AffecteA   = affecteA
+                            ArticleId   = a.Id,
+                            NumeroSerie = a.NumeroSerie ?? $"ART-{a.Id:D4}",
+                            Statut      = a.Statut.ToString(),
+                            Etat        = a.Etat.ToString(),
+                            AffecteA    = affecteA
                         };
                     }).ToList()
                 };

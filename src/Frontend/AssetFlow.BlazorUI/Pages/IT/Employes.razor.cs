@@ -3,6 +3,7 @@ using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using AssetFlow.BlazorUI.DTOs;
 using Microsoft.JSInterop;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AssetFlow.BlazorUI.Pages.IT
 {
@@ -73,6 +74,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
         // ── Dark Mode ──
         private bool _isDark = false;
+        private HubConnection?       _hubConnection;
 
         // ── Computed ──
         private List<AffectationEmployeDto> AffectationsCourantes =>
@@ -111,6 +113,80 @@ namespace AssetFlow.BlazorUI.Pages.IT
             };
             _notifTimer.AutoReset = true;
             _notifTimer.Start();
+            await ConnecterSignalR();
+        }
+        private async Task ConnecterSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try
+                        {
+                            return await JS.InvokeAsync<string?>("eval",
+                                "localStorage.getItem('access_token') || localStorage.getItem('token')");
+                        }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            // Après reconnexion → rejoindre le groupe + resynchroniser
+            _hubConnection.Reconnected += async _ =>
+            {
+                try { await _hubConnection.InvokeAsync("JoinDashboard"); } catch { }
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        await LoadEmployesAsync(Search);
+                        if (ModeProjet && Projets.Any())
+                            await LoadProjetsAsync(ProjetSearch);
+                        // Resync affectations de la sélection active
+                        if (!ModeProjet && EmployeSelectionne != null)
+                            Affectations = await Svc.GetAffectationsAsync(EmployeSelectionne.Id);
+                        else if (ModeProjet && ProjetSelectionne != null)
+                            AffectationsProjets = await Svc.GetAffectationsProjetAsync(ProjetSelectionne.Id);
+                        await RefreshCountAsync();
+                    }
+                    catch { }
+                    finally { StateHasChanged(); }
+                });
+            };
+
+            // Affectation créée / retirée / statut changé → recharger
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        await LoadEmployesAsync(Search);
+
+                        if (ModeProjet && Projets.Any())
+                            await LoadProjetsAsync(ProjetSearch);
+
+                        // Resync la liste d'affectations si un employé/projet est sélectionné
+                        if (!ModeProjet && EmployeSelectionne != null)
+                            Affectations = await Svc.GetAffectationsAsync(EmployeSelectionne.Id);
+                        else if (ModeProjet && ProjetSelectionne != null)
+                            AffectationsProjets = await Svc.GetAffectationsProjetAsync(ProjetSelectionne.Id);
+
+                        await RefreshCountAsync();
+                    }
+                    catch { /* silencieux */ }
+                    finally { StateHasChanged(); }
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+            }
+            catch { /* reste statique si SignalR non dispo */ }
         }
 
         public async ValueTask DisposeAsync()

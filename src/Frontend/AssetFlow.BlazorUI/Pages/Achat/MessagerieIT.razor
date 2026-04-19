@@ -168,14 +168,17 @@
                                                             onclick="playVoiceMessage(this, '@msg.AudioData')">
                                                         <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                                     </button>
-                                                    <div class="mai-audio-waveform">
-                                                        <span></span><span></span><span></span><span></span>
-                                                        <span></span><span></span><span></span><span></span>
-                                                        <span></span><span></span><span></span><span></span>
+                                                    <div class="mai-audio-center">
+                                                        <div class="mai-audio-wave">
+                                                            <span></span><span></span><span></span>
+                                                            <span></span><span></span><span></span>
+                                                            <span></span><span></span><span></span>
+                                                            <span></span><span></span><span></span>
+                                                        </div>
+                                                        <span class="mai-audio-dur">
+                                                            @(msg.AudioDurationSeconds > 0 ? FormatRecordTime(msg.AudioDurationSeconds) : "0:00")
+                                                        </span>
                                                     </div>
-                                                    <span class="mai-audio-dur">
-                                                        @(msg.AudioDurationSeconds > 0 ? FormatRecordTime(msg.AudioDurationSeconds) : "0:00")
-                                                    </span>
                                                 </div>
                                             }
                                             else

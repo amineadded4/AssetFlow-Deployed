@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AssetFlow.BlazorUI.Pages.Achat
 {
-    public partial class Materiel : ComponentBase
+    public partial class Materiel : ComponentBase, IAsyncDisposable
     {
         [Inject] private AssetFlow.BlazorUI.Services.MaterielService    MaterielSvc    { get; set; } = default!;
         [Inject] private AssetFlow.BlazorUI.Services.CommandeService    CommandeSvc    { get; set; } = default!;
@@ -123,6 +124,9 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private string _toastMsg  = string.Empty;
         private string _toastType = "toast-success";
 
+        // ── SignalR ────────────────────────────────────────────────
+        private HubConnection? _hubConnection;
+
         // ── User ───────────────────────────────────────────────────
         private string _currentUserName = "Utilisateur";
         private string _currentUserRole = "Équipe Achat";
@@ -152,6 +156,56 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         {
             await ChargerInfosUtilisateur();
             await Task.WhenAll(ChargerDonnees(), ChargerFournisseurs());
+            await ConnecterSignalR();
+        }
+
+        private async Task ConnecterSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try
+                        {
+                            return await JS.InvokeAsync<string?>("eval",
+                                "localStorage.getItem('access_token') || localStorage.getItem('token')");
+                        }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        var liste = await CommandeSvc.GetLignesMaterielsAsync();
+                        _toutesLignes = liste;
+                        _totalCount   = liste.Count;
+                        _categories   = liste
+                            .Select(l => l.Categorie)
+                            .Distinct().OrderBy(c => c).ToList();
+                        AppliquerFiltres();
+                    }
+                    catch { /* silencieux */ }
+                    finally
+                    {
+                        _chargement = false;
+                        StateHasChanged();
+                    }
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+            }
+            catch { /* reste statique si SignalR non dispo */ }
         }
         private async Task OuvrirSelecteurImage()
         {
@@ -347,6 +401,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                         _erreursCommande["Fournisseur"] = "Obligatoire.";
                     if (_formCommande.QuantiteAchetee <= 0)
                         _erreursCommande["Quantite"] = "Doit être > 0.";
+                    if (_formCommande.DateLivraison.HasValue && _formCommande.DateLivraison.Value <= _formCommande.DateAchat)
+                        _erreursCommande["DateLivraison"] = "La date de livraison doit être supérieure à la date d'achat.";
                 }
             }
             else
@@ -367,6 +423,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     _erreursCommande["Fournisseur"] = "Obligatoire.";
                 if (_formCommande.QuantiteAchetee <= 0)
                     _erreursCommande["Quantite"] = "Doit être > 0.";
+                if (_formCommande.DateLivraison.HasValue && _formCommande.DateLivraison.Value <= _formCommande.DateAchat)
+                    _erreursCommande["DateLivraison"] = "La date de livraison doit être supérieure à la date d'achat.";
             }
 
             if (_erreurs.Any() || _erreursCommande.Any()) return;
@@ -503,6 +561,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 _erreursModifCommande["NumeroCommande"] = "Obligatoire.";
             if (string.IsNullOrWhiteSpace(_formModifCommande.NomFournisseurLibre))
                 _erreursModifCommande["Fournisseur"] = "Obligatoire.";
+            if (_formModifCommande.DateLivraison.HasValue && _formModifCommande.DateLivraison.Value <= _formModifCommande.DateAchat)
+                _erreursModifCommande["DateLivraison"] = "La date de livraison doit être supérieure à la date d'achat.";
 
             if (_erreursModifCommande.Any()) return;
 
@@ -821,13 +881,14 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             var total = Math.Max(1, to);
             return Math.Min(100, Math.Max(0, (int)((double)(to - from) / total * 100)));
         }
-        public ValueTask DisposeAsync()
+        public async ValueTask DisposeAsync()
         {
-            return ValueTask.CompletedTask;
+            if (_hubConnection is not null)
+            {
+                try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
+                await _hubConnection.DisposeAsync();
+            }
         }
-
-
-
     }
 
 }

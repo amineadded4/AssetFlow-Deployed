@@ -2,6 +2,8 @@ using AssetFlow.BlazorUI.DTOs;
 using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.JSInterop;
 
 namespace AssetFlow.BlazorUI.Pages.IT
 {
@@ -10,6 +12,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         [Inject] private DemandeAchatITClientService DemandeService { get; set; } = default!;
         [Inject] private NavigationManager           Navigation      { get; set; } = default!;
         [Inject] private ILocalStorageService        LocalStorage    { get; set; } = default!;
+        [Inject] private IJSRuntime JS { get; set; } = default!;
 
         private bool   IsLoading      { get; set; } = true;
         private bool   _menuOpen      = false;
@@ -52,6 +55,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private DemandeAchatITDto? _demandeASupprimer = null;
         private string      _roleUtilisateur = "Service IT";
         private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+        private HubConnection? _hubConnection;
 
         // ── Init ─────────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
@@ -63,6 +67,52 @@ namespace AssetFlow.BlazorUI.Pages.IT
             _userId = int.TryParse(userIdRaw, out var parsedId) ? parsedId : null;
 
             await LoadDemandesAsync();
+            await ConnecterSignalR();
+        }
+        private async Task ConnecterSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try { return await JS.InvokeAsync<string?>("eval",
+                            "localStorage.getItem('access_token') || localStorage.getItem('token')"); }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        Demandes = await DemandeService.GetDemandesAsync(_userId);
+                        AppliquerFiltres();
+                    }
+                    catch { }
+                    finally { StateHasChanged(); }
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+            }
+            catch { }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_hubConnection is not null)
+            {
+                try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
+                await _hubConnection.DisposeAsync();
+            }
         }
 
         private async Task LoadDemandesAsync()

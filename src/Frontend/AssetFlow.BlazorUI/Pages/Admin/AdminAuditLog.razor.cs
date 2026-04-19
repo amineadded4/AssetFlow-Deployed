@@ -1,6 +1,7 @@
 using AssetFlow.BlazorUI.DTOs;
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 
 namespace AssetFlow.BlazorUI.Pages.Admin
@@ -31,6 +32,13 @@ namespace AssetFlow.BlazorUI.Pages.Admin
 
         // ── Debounce ──
         private System.Threading.Timer? _debounceTimer;
+        // ── SignalR ──
+        private HubConnection? _hubConnection;
+        private bool           _hubConnected   = false;
+        private bool           _isSilentRefresh = false;
+        private DateTime       _lastRefreshed   = DateTime.Now;
+        private int            _newEntriesCount = 0;
+        private HashSet<int>   _knownIds        = new();
 
         private bool HasActiveFilters =>
             FilterDateDebut != new DateTime(DateTime.Now.Year, 1, 1) ||
@@ -40,7 +48,115 @@ namespace AssetFlow.BlazorUI.Pages.Admin
             !string.IsNullOrWhiteSpace(FilterSearch);
 
         protected override async Task OnInitializedAsync()
-            => await LoadLogsAsync();
+        {
+            await LoadLogsAsync();
+            await ConnecterSignalR();
+        }
+        // ── SignalR ──
+        private async Task ConnecterSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try
+                        {
+                            return await JS.InvokeAsync<string?>("eval",
+                                "localStorage.getItem('access_token') || localStorage.getItem('token')");
+                        }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+ 
+            _hubConnection.Reconnected += async _ =>
+            {
+                try { await _hubConnection.InvokeAsync("JoinDashboard"); } catch { }
+                await InvokeAsync(async () =>
+                {
+                    try { await LoadLogsAsync(); }
+                    catch { }
+                    finally
+                    {
+                        _hubConnected = true;
+                        StateHasChanged();
+                    }
+                });
+            };
+ 
+            _hubConnection.Closed += _ =>
+            {
+                _hubConnected = false;
+                InvokeAsync(StateHasChanged);
+                return Task.CompletedTask;
+            };
+ 
+            // ← Écoute les mises à jour du dashboard (même event que AdminProjects)
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    try   { await SilentRefreshAsync(); }
+                    catch { /* silencieux */ }
+                    finally { StateHasChanged(); }
+                });
+            });
+ 
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+                _hubConnected = true;
+            }
+            catch { /* reste statique si SignalR non dispo */ }
+ 
+            StateHasChanged();
+        }
+ 
+        // ── Refresh silencieux déclenché par SignalR ──
+        private async Task SilentRefreshAsync()
+        {
+            _isSilentRefresh = true;
+            StateHasChanged();
+ 
+            try
+            {
+                var fresh = await AuditService.GetLogsAsync(
+                    dateDebut:  FilterDateDebut,
+                    dateFin:    FilterDateFin,
+                    action:     FilterAction,
+                    categorie:  FilterCategorie,
+                    search:     FilterSearch,
+                    page:       CurrentPage,
+                    pageSize:   PageSize);
+ 
+                if (fresh != null)
+                {
+                    if (_knownIds.Count > 0)
+                        _newEntriesCount = fresh.Items.Count(i => !_knownIds.Contains(i.Id));
+ 
+                    _knownIds      = fresh.Items.Select(i => i.Id).ToHashSet();
+                    Result         = fresh;
+                    _lastRefreshed = DateTime.Now;
+                }
+            }
+            catch { /* silencieux */ }
+            finally
+            {
+                _isSilentRefresh = false;
+            }
+        }
+        public async ValueTask DisposeAsync()
+        {
+            _debounceTimer?.Dispose();
+            if (_hubConnection is not null)
+            {
+                try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
+                await _hubConnection.DisposeAsync();
+            }
+        }
 
         private async Task LoadLogsAsync()
         {

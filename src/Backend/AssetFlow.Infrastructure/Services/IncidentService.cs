@@ -106,6 +106,13 @@ namespace AssetFlow.Infrastructure.Services
 
         public async Task<List<IncidentEmployeDto>> GetEmployesAvecIncidentsAsync(string? search = null)
         {
+            // Récupérer les utilisateurIds ayant des incidents actifs
+            var userIdsAvecIncidents = await _context.Incidents
+                .Where(i => i.Statut == StatutIncident.EnAttente || i.Statut == StatutIncident.EnCours)
+                .Select(i => i.Affectation.UtilisateurId)
+                .Distinct()
+                .ToListAsync();
+
             var query = _context.Users.AsNoTracking();
             if (!string.IsNullOrWhiteSpace(search))
             {

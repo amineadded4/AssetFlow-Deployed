@@ -6,10 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AssetFlow.Infrastructure.Services
 {
-    /// <summary>
-    /// Construit les graphes contextuels de la mémoire intelligente.
-    /// Chaque entité (matériel, utilisateur, demande, projet) génère son propre graphe de relations.
-    /// </summary>
+    // Construit les graphes contextuels de la mémoire intelligente.
+    // Chaque entité (matériel, utilisateur, demande, projet) génère son propre graphe de relations.
     public class GraphService : IGraphService
     {
         private readonly AppDbContext _db;
@@ -135,7 +133,7 @@ namespace AssetFlow.Infrastructure.Services
 
         // ─── Graphes contextuels ────────────────────────────────────────────────
 
-        /// <summary>Graphe d'un matériel : incidents, utilisateurs affectés, projets, commandes</summary>
+        // Graphe d'un matériel : incidents, utilisateurs affectés, projets, commandes
         public async Task<GraphResponseDto> GetGraphForMaterielAsync(int materielId)
         {
             var materiel = await _db.Materiels.FindAsync(materielId);
@@ -173,7 +171,7 @@ namespace AssetFlow.Infrastructure.Services
                     Id     = iId,
                     Type   = "incident",
                     Label  = inc.TypeIncident,
-                    Detail = $"Urgence {inc.Urgence}/5 · {inc.Statut}",
+                    Detail = $"Urgence {inc.Urgence}/100 · {inc.Statut}",
                     Status = inc.Urgence >= 3 ? "critical" : "warning",
                     Weight = inc.Urgence
                 });
@@ -248,7 +246,7 @@ namespace AssetFlow.Infrastructure.Services
             return new GraphResponseDto { Nodes = nodes, Links = links, Insights = new(), Stats = new() };
         }
 
-        /// <summary>Graphe d'un utilisateur : matériels affectés, incidents par matériel, commentaires</summary>
+        // Graphe d'un utilisateur : matériels affectés, incidents par matériel, commentaires
         public async Task<GraphResponseDto> GetGraphForUtilisateurAsync(int userId)
         {
             var user = await _db.Users.FindAsync(userId);
@@ -299,7 +297,7 @@ namespace AssetFlow.Infrastructure.Services
                 {
                     var iId = $"i-{inc.Id}";
                     if (nodes.Any(n => n.Id == iId)) continue;
-                    nodes.Add(new GraphNodeDto { Id = iId, Type = "incident", Label = inc.TypeIncident, Detail = $"Urgence {inc.Urgence}/5 · {inc.Statut}", Status = inc.Urgence >= 3 ? "critical" : "warning", Weight = inc.Urgence });
+                    nodes.Add(new GraphNodeDto { Id = iId, Type = "incident", Label = inc.TypeIncident, Detail = $"Urgence {inc.Urgence}/100 · {inc.Statut}", Status = inc.Urgence >= 3 ? "critical" : "warning", Weight = inc.Urgence });
                     links.Add(new GraphLinkDto { Source = mId, Target = iId, Label = "incident", Strength = 0.8 });
                 }
 

@@ -399,7 +399,8 @@
                         <div class="sk-field-row">
                             <div class="sk-field">
                                 <label class="sk-label">Date livraison</label>
-                                <input type="date" class="sk-inp" @bind="_formCommande.DateLivraison" />
+                                <input type="date" class="sk-inp @(_erreursCommande.ContainsKey("DateLivraison") ? "inp-err" : "")" @bind="_formCommande.DateLivraison" />
+                                @if (_erreursCommande.TryGetValue("DateLivraison", out var edl)) { <span class="sk-err-msg">@edl</span> }
                             </div>
                             <div class="sk-field">
                                 <label class="sk-label">Date fin garantie</label>
@@ -492,7 +493,8 @@
                 <div class="sk-field-row">
                     <div class="sk-field">
                         <label class="sk-label">Date de livraison</label>
-                        <input type="date" class="sk-inp" @bind="_formModifCommande.DateLivraison" />
+                        <input type="date" class="sk-inp @(_erreursModifCommande.ContainsKey("DateLivraison") ? "inp-err" : "")" @bind="_formModifCommande.DateLivraison" />
+                        @if (_erreursModifCommande.TryGetValue("DateLivraison", out var edlm)) { <span class="sk-err-msg">@edlm</span> }
                     </div>
                     <div class="sk-field">
                         <label class="sk-label">Date fin de garantie</label>

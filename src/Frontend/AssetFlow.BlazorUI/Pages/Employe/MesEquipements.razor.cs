@@ -1,6 +1,8 @@
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 using AssetFlow.BlazorUI.DTOs;
+using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.JSInterop;
 
 namespace AssetFlow.BlazorUI.Pages.Employe
 {
@@ -8,10 +10,12 @@ namespace AssetFlow.BlazorUI.Pages.Employe
     {
         [Inject] private EmployeService    EmployeService { get; set; } = default!;
         [Inject] private NavigationManager Navigation     { get; set; } = default!;
+        [Inject] private IJSRuntime JS { get; set; } = default!;
 
         // ── Données principales ────────────────────────────────
         private List<MaterielAffecteGroupeDto> MaterielsGroupes        { get; set; } = new();
         private List<MaterielAffecteGroupeDto> MaterielsGroupesFiltres { get; set; } = new();
+
 
         private bool   IsLoading    { get; set; } = true;
         private string ErrorMessage { get; set; } = string.Empty;
@@ -38,11 +42,58 @@ namespace AssetFlow.BlazorUI.Pages.Employe
         private string UserName { get; set; } = "Utilisateur";
         private string UserRole { get; set; } = "Employé";
         private bool _menuOpen = false;
+        private HubConnection? _hubConnection;
 
         // ── Initialisation ─────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
             await LoadMaterielsGroupesAsync();
+            await ConnecterSignalR();
+        }
+        private async Task ConnecterSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try
+                        {
+                            return await JS.InvokeAsync<string?>("eval",
+                                "localStorage.getItem('access_token') || localStorage.getItem('token')");
+                        }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            // Toute action (affectation, révocation, incident...) → recharger
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    // Ne pas mettre IsLoading=true pour éviter le flash
+                    try
+                    {
+                        MaterielsGroupes = await EmployeService.GetMaterielsGroupesAsync();
+                        FiltrerMateriels(); // ← réappliquer le filtre actif au lieu de juste =MaterielsGroupes
+                    }
+                    catch { /* silencieux */ }
+                    finally
+                    {
+                        IsLoading = false;
+                        StateHasChanged();
+                    }
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+            }
+            catch { /* reste statique si SignalR non dispo */ }
         }
         private async void AfficherToastVoice(string msg)
         {
@@ -53,9 +104,13 @@ namespace AssetFlow.BlazorUI.Pages.Employe
             StateHasChanged();
         }
 
-        public ValueTask DisposeAsync()
+        public async ValueTask DisposeAsync()
         {
-            return ValueTask.CompletedTask;
+            if (_hubConnection is not null)
+            {
+                try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
+                await _hubConnection.DisposeAsync();
+            }
         }
 
         private async Task LoadMaterielsGroupesAsync()

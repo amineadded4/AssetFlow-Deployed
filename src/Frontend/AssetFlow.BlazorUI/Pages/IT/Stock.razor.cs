@@ -3,10 +3,11 @@ using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using AssetFlow.BlazorUI.DTOs;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AssetFlow.BlazorUI.Pages.IT
 {
-    public partial class Stock
+    public partial class Stock : IAsyncDisposable
     {
         [Inject] private StockClientService   Svc          { get; set; } = default!;
         [Inject] private ILocalStorageService LocalStorage  { get; set; } = default!;
@@ -23,36 +24,84 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private bool   Loading         { get; set; } = true;
         private bool   _menuOpen                    = false;
 
-        // Pagination
         private int Page      { get; set; } = 1;
         private int PageSize  { get; set; } = 8;
         private int TotalFiltres => _tousFiltrés.Count;
         private int TotalPages   => Math.Max(1, (int)Math.Ceiling(TotalFiltres / (double)PageSize));
         private List<MaterielDto> _tousFiltrés = new();
 
-        // Modal seuil
         private MaterielDto? MaterielSeuil   { get; set; }
         private int          SeuilMin        { get; set; }
         private string       SeuilErrorMsg   { get; set; } = string.Empty;
         private bool         IsSaving        { get; set; } = false;
-        // ── Toast ──────────────────────────────────────────────────
         private string _toastMsg  = string.Empty;
         private string _toastType = "toast-success";
 
         private System.Timers.Timer? _debounce;
         private string      _roleUtilisateur = "Service IT";
         private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+        private HubConnection? _hubConnection;
 
         protected override async Task OnInitializedAsync()
         {
-            UserName = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
+            UserName         = await LocalStorage.GetItemAsync<string>("user_name") ?? "IT";
             _roleUtilisateur = await LocalStorage.GetItemAsync<string>("user_role") ?? "IT";
             await ChargerMateriels();
+            await ConnecterSignalR();
         }
-        public ValueTask DisposeAsync()
+
+        private async Task ConnecterSignalR()
         {
-            return ValueTask.CompletedTask;
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try
+                        {
+                            return await JS.InvokeAsync<string?>("eval",
+                                "localStorage.getItem('access_token') || localStorage.getItem('token')");
+                        }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        Tous       = await Svc.GetAllAsync();
+                        Categories = Tous.Select(m => m.Categorie).Distinct().OrderBy(c => c).ToList();
+                        Stats      = new MaterielStatsViewModel
+                        {
+                            TotalArticles   = Tous.Count,
+                            EnStock         = Tous.Count(m => m.QuantiteStock > m.QuantiteMin),
+                            AlerteSeuil     = Tous.Count(m => m.QuantiteStock <= m.QuantiteMin && m.QuantiteStock > 0),
+                            RuptureCritique = Tous.Count(m => m.QuantiteStock == 0)
+                        };
+                        AppliquerFiltres();
+                    }
+                    catch { }
+                    finally
+                    {
+                        Loading = false;
+                        StateHasChanged();
+                    }
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+            }
+            catch { }
         }
+
         private async void AfficherToast(string msg, string type)
         {
             _toastMsg = msg; _toastType = type; StateHasChanged();
@@ -109,7 +158,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             _debounce.AutoReset = false; _debounce.Start();
         }
 
-        // ── Modal seuil ──
         private void OuvrirSeuil(MaterielDto mat)
         {
             MaterielSeuil = mat;
@@ -142,9 +190,9 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
         private (string label, string css) GetStatut(MaterielDto m)
         {
-            if (m.QuantiteStock == 0)                            return ("RUPTURE",    "rupture");
-            if (m.QuantiteStock <= m.QuantiteMin / 2)            return ("CRITIQUE",   "critique");
-            if (m.QuantiteStock <= m.QuantiteMin)                return ("ALERTE",     "alerte");
+            if (m.QuantiteStock == 0)                 return ("RUPTURE",    "rupture");
+            if (m.QuantiteStock <= m.QuantiteMin / 2) return ("CRITIQUE",   "critique");
+            if (m.QuantiteStock <= m.QuantiteMin)     return ("ALERTE",     "alerte");
             return ("DISPONIBLE", "disponible");
         }
 
@@ -167,6 +215,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
             if (p.Length == 1 && p[0].Length >= 2) return p[0][..2].ToUpper();
             return "IT";
         }
+
         private async Task ExporterExcel()
         {
             try
@@ -200,6 +249,16 @@ namespace AssetFlow.BlazorUI.Pages.IT
                 await JS.InvokeVoidAsync("eval", $@"(function(){{var w=window.open('','_blank','width=900,height=700');w.document.write({System.Text.Json.JsonSerializer.Serialize(html)});w.document.close();w.focus();setTimeout(function(){{w.print();}},400);}})();");
             }
             catch (Exception ex) { Console.WriteLine($"Erreur export PDF : {ex.Message}"); }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            _debounce?.Dispose();
+            if (_hubConnection is not null)
+            {
+                try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
+                await _hubConnection.DisposeAsync();
+            }
         }
     }
 

@@ -1,4 +1,3 @@
-// AssetFlow.WebAPI/Hubs/DashboardHub.cs
 using Microsoft.AspNetCore.SignalR;
 
 namespace AssetFlow.WebAPI.Hubs

@@ -1,4 +1,3 @@
-
 /* ── Layout ── */
 .msg-layout { display:flex; height:100vh; overflow:hidden; background:var(--bg); }
 
@@ -312,53 +311,124 @@ html.dark .msg-voice-preview { background: #0d1520; border-color: #1e2d42; }
 .msg-voice-bars span:nth-child(6) { height: 16px; }
 .msg-voice-bars span:nth-child(7) { height: 8px; }
 
-/* ── Player audio dans les bulles ── */
+/* ── Player audio dans les bulles (style Messenger) ── */
 .msg-audio-player {
-    display: flex; align-items: center; gap: 0.625rem;
-    min-width: 190px;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 210px;
+    max-width: 260px;
+    padding: 0.1rem 0;
 }
+
+/* Bouton play/pause rond style Messenger */
 .msg-play-btn {
-    width: 32px; height: 32px; border-radius: 50%;
+    width: 38px; height: 38px;
+    border-radius: 50%;
     border: none; cursor: pointer; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    transition: all 0.18s;
+    transition: transform 0.15s, opacity 0.15s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
 }
-.bubble-me   .msg-play-btn { background: rgba(255,255,255,0.22); color: white; }
-.bubble-them .msg-play-btn { background: rgba(19,109,236,0.14); color: var(--primary); }
-.msg-play-btn:hover { transform: scale(1.12); }
+.bubble-me   .msg-play-btn {
+    background: rgba(255,255,255,0.95);
+    color: var(--primary);
+}
+.bubble-them .msg-play-btn {
+    background: var(--primary);
+    color: white;
+}
+.msg-play-btn:hover { transform: scale(1.08); opacity: 0.9; }
+.msg-play-btn:active { transform: scale(0.95); }
 .msg-play-btn svg {
-    width: 11px; height: 11px;
+    width: 13px; height: 13px;
     stroke: currentColor; fill: currentColor;
     stroke-width: 1; margin-left: 2px;
 }
+
+/* Colonne centrale : waveform + durée */
+.msg-audio-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+/* Waveform — barres statiques style Messenger */
 .msg-audio-wave {
-    flex: 1; display: flex; align-items: center;
-    gap: 2px; height: 20px;
+    display: flex;
+    align-items: center;
+    gap: 2.5px;
+    height: 26px;
 }
 .msg-audio-wave span {
-    width: 3px; border-radius: 9999px;
-    background: currentColor; opacity: 0.45;
+    flex-shrink: 0;
+    width: 3px;
+    border-radius: 9999px;
+    transition: opacity 0.2s;
 }
-.msg-audio-wave span:nth-child(1) { height: 8px; }
-.msg-audio-wave span:nth-child(2) { height: 14px; }
-.msg-audio-wave span:nth-child(3) { height: 18px; }
-.msg-audio-wave span:nth-child(4) { height: 10px; }
-.msg-audio-wave span:nth-child(5) { height: 16px; }
-.msg-audio-wave span:nth-child(6) { height: 12px; }
-.msg-audio-wave span:nth-child(7) { height: 8px; }
-.msg-audio-dur { font-size: 0.65rem; opacity: 0.75; white-space: nowrap; }
+.bubble-me .msg-audio-wave span   { background: rgba(255,255,255,0.9); }
+.bubble-them .msg-audio-wave span { background: var(--primary); }
 
-/* Barre de progression pendant lecture */
-.msg-audio-wave.playing span {
-    animation: audioPlay 0.8s ease-in-out infinite alternate;
+/* Hauteurs variées pour effet waveform naturel */
+.msg-audio-wave span:nth-child(1)  { height: 6px;  opacity: 0.5; }
+.msg-audio-wave span:nth-child(2)  { height: 12px; opacity: 0.65; }
+.msg-audio-wave span:nth-child(3)  { height: 20px; opacity: 0.8; }
+.msg-audio-wave span:nth-child(4)  { height: 14px; opacity: 0.7; }
+.msg-audio-wave span:nth-child(5)  { height: 22px; opacity: 0.9; }
+.msg-audio-wave span:nth-child(6)  { height: 10px; opacity: 0.6; }
+.msg-audio-wave span:nth-child(7)  { height: 18px; opacity: 0.75; }
+.msg-audio-wave span:nth-child(8)  { height: 8px;  opacity: 0.5; }
+.msg-audio-wave span:nth-child(9)  { height: 16px; opacity: 0.7; }
+.msg-audio-wave span:nth-child(10) { height: 10px; opacity: 0.55; }
+.msg-audio-wave span:nth-child(11) { height: 20px; opacity: 0.85; }
+.msg-audio-wave span:nth-child(12) { height: 6px;  opacity: 0.45; }
+
+/* Durée sous la waveform */
+.msg-audio-dur {
+    font-size: 0.68rem;
+    font-weight: 600;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
 }
-.msg-audio-wave.playing span:nth-child(2) { animation-delay: 0.1s; }
-.msg-audio-wave.playing span:nth-child(3) { animation-delay: 0.2s; }
-.msg-audio-wave.playing span:nth-child(4) { animation-delay: 0.3s; }
-.msg-audio-wave.playing span:nth-child(5) { animation-delay: 0.4s; }
-.msg-audio-wave.playing span:nth-child(6) { animation-delay: 0.2s; }
-.msg-audio-wave.playing span:nth-child(7) { animation-delay: 0.1s; }
-@keyframes audioPlay { from{opacity:0.3;transform:scaleY(0.5)} to{opacity:1;transform:scaleY(1)} }
+.bubble-me   .msg-audio-dur { color: rgba(255,255,255,0.8); }
+.bubble-them .msg-audio-dur { color: var(--text-faint); }
+/* Supprimer l'emoji micro — géré par le texte seul */
+.msg-audio-dur::before {
+    content: '';
+    display: inline-block;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.55;
+    margin-right: 1px;
+}
+
+/* Animation pendant la lecture */
+.msg-audio-wave.playing span {
+    animation: audioWavePlay 0.9s ease-in-out infinite alternate;
+}
+.msg-audio-wave.playing span:nth-child(1)  { animation-delay: 0.00s; }
+.msg-audio-wave.playing span:nth-child(2)  { animation-delay: 0.07s; }
+.msg-audio-wave.playing span:nth-child(3)  { animation-delay: 0.14s; }
+.msg-audio-wave.playing span:nth-child(4)  { animation-delay: 0.21s; }
+.msg-audio-wave.playing span:nth-child(5)  { animation-delay: 0.28s; }
+.msg-audio-wave.playing span:nth-child(6)  { animation-delay: 0.21s; }
+.msg-audio-wave.playing span:nth-child(7)  { animation-delay: 0.14s; }
+.msg-audio-wave.playing span:nth-child(8)  { animation-delay: 0.07s; }
+.msg-audio-wave.playing span:nth-child(9)  { animation-delay: 0.14s; }
+.msg-audio-wave.playing span:nth-child(10) { animation-delay: 0.21s; }
+.msg-audio-wave.playing span:nth-child(11) { animation-delay: 0.07s; }
+.msg-audio-wave.playing span:nth-child(12) { animation-delay: 0.00s; }
+@keyframes audioWavePlay {
+    from { opacity: 0.25; transform: scaleY(0.35); }
+    to   { opacity: 1;    transform: scaleY(1); }
+}
 
 /* ── Hamburger ── */
 .msg-hamburger { display:none; flex-direction:column; justify-content:center; gap:5px; width:36px; height:36px; background:transparent; border:none; cursor:pointer; padding:4px; flex-shrink:0; }

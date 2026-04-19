@@ -189,6 +189,7 @@ html.dark .oda-header { background: rgba(16,24,34,0.9); border-bottom-color: rgb
     font-size: 0.72rem; font-weight: 700;
     border: 1.5px solid var(--border); background: var(--surface);
     color: var(--text-muted); white-space: nowrap; margin-right: 50px;
+    margin-bottom: 30px;
 }
 
 /* ══════════════════════════════════════

@@ -1,4 +1,3 @@
-// AssetFlow.Application/Interfaces/IDashboardNotifier.cs
 namespace AssetFlow.Application.Interfaces
 {
     public interface IDashboardNotifier

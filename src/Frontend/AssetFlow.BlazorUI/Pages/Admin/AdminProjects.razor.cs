@@ -1,6 +1,8 @@
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.Components;
 using AssetFlow.BlazorUI.DTOs;
+using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.JSInterop;
 
 namespace AssetFlow.BlazorUI.Pages.Admin
 {
@@ -16,9 +18,10 @@ namespace AssetFlow.BlazorUI.Pages.Admin
         public DateTime? DateFin     { get; set; }
     }
 
-    public partial class AdminProjects : Microsoft.AspNetCore.Components.ComponentBase
+    public partial class AdminProjects : ComponentBase, IAsyncDisposable
     {
         [Inject] private ProjectClientService ProjectService { get; set; } = default!;
+        [Inject] private IJSRuntime JS { get; set; } = default!;
 
         // ── État liste ──
         private List<ProjectDto> Projects     { get; set; } = new();
@@ -41,9 +44,77 @@ namespace AssetFlow.BlazorUI.Pages.Admin
         private int?                        ExpandedProjectId  { get; set; } = null;
         private List<ProjetAffectationDto>  AffectationsOuvertes { get; set; } = new();
         private bool                        LoadingAffectations { get; set; } = false;
+        private HubConnection? _hubConnection;
 
         protected override async Task OnInitializedAsync()
-            => await LoadProjectsAsync();
+        {
+            await LoadProjectsAsync();
+            await ConnecterSignalR();
+        }
+        private async Task ConnecterSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try
+                        {
+                            return await JS.InvokeAsync<string?>("eval",
+                                "localStorage.getItem('access_token') || localStorage.getItem('token')");
+                        }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            _hubConnection.Reconnected += async _ =>
+            {
+                try { await _hubConnection.InvokeAsync("JoinDashboard"); } catch { }
+                await InvokeAsync(async () =>
+                {
+                    try { await LoadProjectsAsync(); }
+                    catch { }
+                    finally { StateHasChanged(); }
+                });
+            };
+
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        await LoadProjectsAsync();
+
+                        // Resync les affectations si un projet est ouvert
+                        if (ExpandedProjectId.HasValue)
+                        {
+                            AffectationsOuvertes = await ProjectService.GetAffectationsAsync(ExpandedProjectId.Value);
+                        }
+                    }
+                    catch { /* silencieux */ }
+                    finally { StateHasChanged(); }
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+            }
+            catch { /* reste statique si SignalR non dispo */ }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_hubConnection is not null)
+            {
+                try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
+                await _hubConnection.DisposeAsync();
+            }
+        }
 
         private async Task LoadProjectsAsync()
         {

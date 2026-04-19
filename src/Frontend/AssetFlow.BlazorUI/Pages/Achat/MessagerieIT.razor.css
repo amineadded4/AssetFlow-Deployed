@@ -135,102 +135,114 @@ html.dark .bubble-them { background:#161f2e; border-color:#1e2d42; }
 .mai-typing-bubble { padding:0.625rem 0.875rem; min-width:56px; }
 .mai-typing-bubble .mai-typing-dots span { background:var(--text-muted); }
 
-<<<<<<< HEAD
-/* ═══════════════════════════════════════════════════════════════
-   ── AUDIO PLAYER dans les bulles (style Messenger) ──
-   ═══════════════════════════════════════════════════════════════ */
+/* ── Player audio dans les bulles (style Messenger) ── */
 .mai-audio-player {
     display: flex;
     align-items: center;
     gap: 0.625rem;
+    min-width: 210px;
+    max-width: 260px;
     padding: 0.1rem 0;
-    min-width: 200px;
 }
 
-/* Bouton play/pause */
 .mai-play-btn {
-    width: 36px;
-    height: 36px;
+    width: 38px; height: 38px;
     border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    border: none; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
     transition: transform 0.15s, opacity 0.15s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
 }
-.bubble-me   .mai-play-btn { background: rgba(255,255,255,0.25); color: white; }
+.bubble-me   .mai-play-btn { background: rgba(255,255,255,0.95); color: var(--primary); }
 .bubble-them .mai-play-btn { background: var(--primary); color: white; }
 .mai-play-btn:hover { transform: scale(1.08); opacity: 0.9; }
-.mai-play-btn svg { width: 14px; height: 14px; fill: currentColor; stroke: none; }
+.mai-play-btn:active { transform: scale(0.95); }
+.mai-play-btn svg {
+    width: 13px; height: 13px;
+    stroke: currentColor; fill: currentColor;
+    stroke-width: 1; margin-left: 2px;
+}
 
-/* Waveform Messenger : barres de hauteur variable */
-.mai-audio-waveform {
+.mai-audio-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.mai-audio-wave {
     display: flex;
     align-items: center;
-    gap: 2px;
-    flex: 1;
-    height: 28px;
+    gap: 2.5px;
+    height: 26px;
 }
-.mai-audio-waveform span {
-    flex: 1;
+.mai-audio-wave span {
+    flex-shrink: 0;
+    width: 3px;
     border-radius: 9999px;
-    transition: height 0.2s;
+    transition: opacity 0.2s;
 }
-.bubble-me   .mai-audio-waveform span { background: rgba(255,255,255,0.55); }
-.bubble-them .mai-audio-waveform span { background: var(--primary); opacity: 0.6; }
+.bubble-me   .mai-audio-wave span { background: rgba(255,255,255,0.9); }
+.bubble-them .mai-audio-wave span { background: var(--primary); }
 
-/* Hauteurs alternées pour simuler une vraie waveform */
-.mai-audio-waveform span:nth-child(1)  { height: 8px; }
-.mai-audio-waveform span:nth-child(2)  { height: 16px; }
-.mai-audio-waveform span:nth-child(3)  { height: 22px; }
-.mai-audio-waveform span:nth-child(4)  { height: 12px; }
-.mai-audio-waveform span:nth-child(5)  { height: 26px; }
-.mai-audio-waveform span:nth-child(6)  { height: 18px; }
-.mai-audio-waveform span:nth-child(7)  { height: 10px; }
-.mai-audio-waveform span:nth-child(8)  { height: 20px; }
-.mai-audio-waveform span:nth-child(9)  { height: 14px; }
-.mai-audio-waveform span:nth-child(10) { height: 24px; }
-.mai-audio-waveform span:nth-child(11) { height: 8px; }
-.mai-audio-waveform span:nth-child(12) { height: 16px; }
+.mai-audio-wave span:nth-child(1)  { height: 6px;  opacity: 0.5; }
+.mai-audio-wave span:nth-child(2)  { height: 12px; opacity: 0.65; }
+.mai-audio-wave span:nth-child(3)  { height: 20px; opacity: 0.8; }
+.mai-audio-wave span:nth-child(4)  { height: 14px; opacity: 0.7; }
+.mai-audio-wave span:nth-child(5)  { height: 22px; opacity: 0.9; }
+.mai-audio-wave span:nth-child(6)  { height: 10px; opacity: 0.6; }
+.mai-audio-wave span:nth-child(7)  { height: 18px; opacity: 0.75; }
+.mai-audio-wave span:nth-child(8)  { height: 8px;  opacity: 0.5; }
+.mai-audio-wave span:nth-child(9)  { height: 16px; opacity: 0.7; }
+.mai-audio-wave span:nth-child(10) { height: 10px; opacity: 0.55; }
+.mai-audio-wave span:nth-child(11) { height: 20px; opacity: 0.85; }
+.mai-audio-wave span:nth-child(12) { height: 6px;  opacity: 0.45; }
 
-/* Animation pendant la lecture */
-.mai-audio-waveform.playing span {
-    animation: maiWavePlay 0.6s ease-in-out infinite alternate;
-}
-.mai-audio-waveform.playing span:nth-child(odd)  { animation-delay: 0s; }
-.mai-audio-waveform.playing span:nth-child(even) { animation-delay: 0.3s; }
-@keyframes maiWavePlay {
-    from { opacity: 0.4; transform: scaleY(0.6); }
-    to   { opacity: 1;   transform: scaleY(1.2); }
-}
-
-/* Durée */
 .mai-audio-dur {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 600;
     white-space: nowrap;
-    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
 }
-.bubble-me   .mai-audio-dur { color: rgba(255,255,255,0.85); }
-.bubble-them .mai-audio-dur { color: var(--text-muted); }
-
-
-/* ═══════════════════════════════════════════════════════════════
-   ── INPUT ZONE ──
-   ═══════════════════════════════════════════════════════════════ */
-.mai-input-zone {
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    padding: 0.75rem 1.25rem 0.625rem;
-    flex-shrink: 0;
-    margin-bottom: 50px;
+.bubble-me   .mai-audio-dur { color: rgba(255,255,255,0.8); }
+.bubble-them .mai-audio-dur { color: var(--text-faint); }
+.mai-audio-dur::before {
+    content: '';
+    display: inline-block;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.55;
+    margin-right: 1px;
 }
-=======
+
+.mai-audio-wave.playing span {
+    animation: maiAudioWavePlay 0.9s ease-in-out infinite alternate;
+}
+.mai-audio-wave.playing span:nth-child(1)  { animation-delay: 0.00s; }
+.mai-audio-wave.playing span:nth-child(2)  { animation-delay: 0.07s; }
+.mai-audio-wave.playing span:nth-child(3)  { animation-delay: 0.14s; }
+.mai-audio-wave.playing span:nth-child(4)  { animation-delay: 0.21s; }
+.mai-audio-wave.playing span:nth-child(5)  { animation-delay: 0.28s; }
+.mai-audio-wave.playing span:nth-child(6)  { animation-delay: 0.21s; }
+.mai-audio-wave.playing span:nth-child(7)  { animation-delay: 0.14s; }
+.mai-audio-wave.playing span:nth-child(8)  { animation-delay: 0.07s; }
+.mai-audio-wave.playing span:nth-child(9)  { animation-delay: 0.14s; }
+.mai-audio-wave.playing span:nth-child(10) { animation-delay: 0.21s; }
+.mai-audio-wave.playing span:nth-child(11) { animation-delay: 0.07s; }
+.mai-audio-wave.playing span:nth-child(12) { animation-delay: 0.00s; }
+@keyframes maiAudioWavePlay {
+    from { opacity: 0.25; transform: scaleY(0.35); }
+    to   { opacity: 1;    transform: scaleY(1); }
+}
+
 /* Input */
 .mai-input-zone { background:var(--surface); border-top:1px solid var(--border); padding:0.875rem 1.25rem 0.75rem; flex-shrink:0; }
->>>>>>> c3b1b439b81f8751dd8a9f058d0c4444fc673743
 html.dark .mai-input-zone { background:#101826; border-top-color:#1e2d42; }
 
 /* Zone de saisie normale */

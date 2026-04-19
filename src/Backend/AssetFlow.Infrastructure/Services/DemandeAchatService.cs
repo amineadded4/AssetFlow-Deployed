@@ -116,6 +116,8 @@ namespace AssetFlow.Infrastructure.Services
             var idDemande = offre.IdDemande;
             _context.OffreAchat.Remove(offre);
             await _context.SaveChangesAsync();
+            await _notifier.NotifyAsync();
+            await _notifier.NotifyITAsync();
             await _notifier.NotifyMemoryAsync("GraphNodeUpdated", new
             {
                 Type   = "demande",
@@ -140,6 +142,8 @@ namespace AssetFlow.Infrastructure.Services
             {
                 demande.VuParAchatLe = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
+                await _notifier.NotifyAsync();
+                await _notifier.NotifyITAsync();
             }
         }
 

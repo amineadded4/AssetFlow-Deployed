@@ -65,6 +65,8 @@
                     <button class="inc-role-btn @(FiltreRole == "Employe"     ? "active" : "")" @onclick='() => FiltreRole = "Employe"'>Employés</button>
                     <button class="inc-role-btn @(FiltreRole == "EquipeAchat" ? "active" : "")" @onclick='() => FiltreRole = "EquipeAchat"'>Achats</button>
                     <button class="inc-role-btn @(FiltreRole == "IT"          ? "active" : "")" @onclick='() => FiltreRole = "IT"'>IT</button>
+                    <button class="inc-role-btn @(FiltreRole == "Admin"          ? "active" : "")" @onclick='() => FiltreRole = "Admin"'>Admin</button>
+
                 </div>
                 @if (LoadingEmployes)
                 {

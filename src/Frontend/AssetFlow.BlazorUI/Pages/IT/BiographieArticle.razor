@@ -5,23 +5,30 @@
 
 
 <div class="bio-layout">
-        @* ══════ SIDEBAR ══════ *@
-        <ITSidebar ActivePage="biographie"/>
 
-    <div class="bio-page">
+    @* ══════ SIDEBAR ══════ *@
+    <ITSidebar ActivePage="biographie" ForceOpen="_menuOpen" />
 
-        @* ── En-tête ── *@
-        <div class="bio-header">
-            <div class="bio-header-title">
+    @* ══════ MAIN ══════ *@
+    <main class="bio-main">
+
+        @* ── Header ── *@
+        <header class="bio-header">
+            <button class="bio-hamburger" @onclick="() => _menuOpen = !_menuOpen" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="bio-header-left">
                 <svg class="bio-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
                 </svg>
                 <div>
-                    <h1>Biographie des articles</h1>
-                    <p>Consultez toute la vie d'un article : affectations, incidents, réparations et durées.</p>
+                    <h1 class="bio-page-title">Biographie des articles</h1>
+                    <p class="bio-page-sub">Consultez toute la vie d'un article : affectations, incidents, réparations et durées.</p>
                 </div>
             </div>
-        </div>
+        </header>
+
+    <div class="bio-page">
 
         @* ── Sélecteur matériel → article ── *@
         <div class="bio-selector-card">
@@ -225,4 +232,5 @@
         }
 
     </div>@* fin bio-page *@
+    </main>@* fin bio-main *@
 </div>@* fin bio-layout *@

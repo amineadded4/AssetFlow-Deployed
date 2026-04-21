@@ -5,9 +5,20 @@
     display: flex;
     height: 100vh;
     overflow: hidden;
+    background: var(--bg);
     width: 100%;
 }
 
+/* ── Main ── */
+.bio-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+}
+
+/* ── Page (scrollable content) ── */
 .bio-page {
     flex: 1;
     display: flex;
@@ -15,49 +26,90 @@
     gap: 1.5rem;
     padding: 2rem 2.5rem;
     overflow-y: auto;
-    background: #f8fafc;
-    min-width: 0; /* évite le débordement flex */
+    background: var(--bg, #f8fafc);
+    min-width: 0;
 }
 
 html.dark .bio-page {
     background: #0b1120;
 }
 
-/* ── Header ── */
+/* ── Header (style Affectation) ── */
 .bio-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.6rem 1.2rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 1.5rem;
+    flex-shrink: 0;
     flex-wrap: wrap;
-    gap: 1rem;
 }
 
-.bio-header-title {
+html.dark .bio-header {
+    background: rgba(16, 24, 34, 0.9);
+    border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+.bio-header-left {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.875rem;
+    flex: 1;
+    min-width: 0;
 }
 
+/* Icône horloge — conservée */
 .bio-header-icon {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
+    padding: 9px;
+    background: rgba(19, 109, 236, 0.12);
+    border: 1px solid rgba(19, 109, 236, 0.2);
+    border-radius: 0.625rem;
     color: #136dec;
     flex-shrink: 0;
+    stroke: #136dec;
 }
 
-.bio-header-title h1 {
-    font-size: 1.45rem;
-    font-weight: 700;
-    color: #0f172a;
+.bio-page-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 0.15rem;
+    letter-spacing: -0.025em;
+}
+
+html.dark .bio-page-title { color: #e2e8f0; }
+
+.bio-page-sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
     margin: 0;
 }
 
-html.dark .bio-header-title h1 { color: #e2e8f0; }
+/* ── Hamburger ── */
+.bio-hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    flex-shrink: 0;
+}
 
-.bio-header-title p {
-    font-size: 0.82rem;
-    color: #64748b;
-    margin: 0.2rem 0 0;
+.bio-hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: all 0.2s;
 }
 
 /* ── Selector card ── */
@@ -482,6 +534,8 @@ html.dark .bio-evt-type { color: #e2e8f0; }
         overflow-y: visible;
     }
 
+    .bio-hamburger { display: flex; }
+    .bio-header-icon { display: none; }
     .bio-identity-card  { flex-direction: column; }
     .bio-identity-affectation { text-align: left; }
     .bio-stats-grid     { grid-template-columns: repeat(2, 1fr); }

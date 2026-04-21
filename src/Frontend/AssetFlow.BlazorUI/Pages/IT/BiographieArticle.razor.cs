@@ -13,6 +13,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private ArticleBiographieDto?          _bio;
         private bool _loading    = true;
         private bool _loadingBio = false;
+        private bool _menuOpen = false;
 
         protected override async Task OnInitializedAsync()
         {

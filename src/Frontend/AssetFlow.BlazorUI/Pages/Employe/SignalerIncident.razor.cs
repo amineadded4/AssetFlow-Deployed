@@ -25,6 +25,10 @@ namespace AssetFlow.BlazorUI.Pages.Employe
         private bool   IsSubmitting { get; set; } = false;
         private string ErrorMessage { get; set; } = string.Empty;
         private bool _menuOpen = false;
+        private string CurrentDesignation =>
+        SelectedArticleId > 0
+           ? GetDesignation(Articles.FirstOrDefault(a => a.ArticleId == SelectedArticleId)?.AffectationId ?? 0)
+           : string.Empty;
 
         protected override async Task OnInitializedAsync()
         {

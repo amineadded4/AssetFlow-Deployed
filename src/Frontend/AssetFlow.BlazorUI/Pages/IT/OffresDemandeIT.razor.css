@@ -1022,3 +1022,74 @@ html.dark .offre-cb-strip-close:hover {
         min-width: 0;
     }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   PATCH — Placeholders visiblement distincts des vraies valeurs
+   À ajouter à la fin de OffresDemandeIT.razor.css
+══════════════════════════════════════════════════════════════ */
+
+/* Placeholder général pour tous les inputs du formulaire OCR */
+.oda-tbl-input::placeholder,
+.oda-totaux-input::placeholder {
+    color: #94a3b8;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 0.72rem;
+    opacity: 1; /* Firefox réduit l'opacité par défaut */
+}
+
+html.dark .oda-tbl-input::placeholder,
+html.dark .oda-totaux-input::placeholder {
+    color: #475569;
+}
+
+/* Champ vide = fond légèrement teinté pour signaler l'absence de donnée */
+.oda-tbl-input:placeholder-shown:not(:focus),
+.oda-totaux-input:placeholder-shown:not(:focus) {
+    background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 4px,
+        rgba(148, 163, 184, 0.06) 4px,
+        rgba(148, 163, 184, 0.06) 8px
+    );
+    border-color: rgba(148, 163, 184, 0.25) !important;
+    color: #94a3b8;
+}
+
+html.dark .oda-tbl-input:placeholder-shown:not(:focus),
+html.dark .oda-totaux-input:placeholder-shown:not(:focus) {
+    background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 4px,
+        rgba(71, 85, 105, 0.12) 4px,
+        rgba(71, 85, 105, 0.12) 8px
+    );
+    border-color: rgba(71, 85, 105, 0.3) !important;
+    color: #475569;
+}
+
+/* Champ rempli = style normal accentué pour bien le distinguer */
+.oda-tbl-input:not(:placeholder-shown),
+.oda-totaux-input:not(:placeholder-shown) {
+    color: var(--text);
+    font-weight: 500;
+    background: transparent;
+}
+
+/* Le champ TTC rempli garde sa couleur bleue */
+.oda-tbl-ttc:not(:placeholder-shown),
+.oda-totaux-input.ttc:not(:placeholder-shown) {
+    color: var(--primary);
+    font-weight: 800;
+}
+
+/* Badge "vide" visible dans la cellule — optionnel, géré par le hachure ci-dessus */
+/* Focus : retour au style normal d'édition */
+.oda-tbl-input:focus,
+.oda-totaux-input:focus {
+    background: rgba(19, 109, 236, 0.04) !important;
+    border-color: var(--primary) !important;
+    color: var(--text) !important;
+}

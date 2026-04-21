@@ -503,9 +503,9 @@
                                                             </thead>
                                                             <tbody>
                                                                 <tr>
-                                                                    <td><input class="oda-tbl-input" type="text" placeholder="0.00" @bind="fs.FraisLivraison" @bind:event="oninput" disabled="@locked" /></td>
-                                                                    <td><input class="oda-tbl-input" type="text" placeholder="5" @bind="fs.DelaiLivraison" @bind:event="oninput" disabled="@locked" /></td>
-                                                                    <td><input class="oda-tbl-input" type="text" placeholder="12 mois" @bind="fs.Garantie" @bind:event="oninput" disabled="@locked" /></td>
+                                                                    <td><input class="oda-tbl-input" type="text" placeholder="— Non extrait" @bind="fs.FraisLivraison" @bind:event="oninput" disabled="@locked" /></td>
+                                                                    <td><input class="oda-tbl-input" type="text" placeholder="— Non extrait" @bind="fs.DelaiLivraison" @bind:event="oninput" disabled="@locked" /></td>
+                                                                    <td><input class="oda-tbl-input" type="text" placeholder="— Non extrait" @bind="fs.Garantie" @bind:event="oninput" disabled="@locked" /></td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
@@ -529,13 +529,13 @@
                                                                     @foreach (var ligne in fs.Lignes)
                                                                     {
                                                                         <tr>
-                                                                            <td><input class="oda-tbl-input" type="text" @bind="ligne.Description" @bind:event="oninput" disabled="@locked" /></td>
-                                                                            <td><input class="oda-tbl-input oda-tbl-sm" type="text" @bind="ligne.Quantite" @bind:event="oninput" disabled="@locked" /></td>
-                                                                            <td><input class="oda-tbl-input oda-tbl-sm" type="text" @bind="ligne.Unite" @bind:event="oninput" disabled="@locked" /></td>
-                                                                            <td><input class="oda-tbl-input oda-tbl-sm" type="text" @bind="ligne.PrixUnitaireHt" @bind:event="oninput" disabled="@locked" /></td>
-                                                                            <td><input class="oda-tbl-input oda-tbl-sm" type="text" @bind="ligne.TvaPct" @bind:event="oninput" disabled="@locked" /></td>
-                                                                            <td><input class="oda-tbl-input oda-tbl-sm" type="text" @bind="ligne.TotalTva" @bind:event="oninput" disabled="@locked" /></td>
-                                                                            <td><input class="oda-tbl-input oda-tbl-sm oda-tbl-ttc" type="text" @bind="ligne.TotalTtc" @bind:event="oninput" disabled="@locked" /></td>
+                                                                            <td><input class="oda-tbl-input" type="text" placeholder="— Non extrait"@bind="ligne.Description" @bind:event="oninput" disabled="@locked" /></td>
+                                                                            <td><input class="oda-tbl-input oda-tbl-sm" type="text" placeholder="—" @bind="ligne.Quantite" @bind:event="oninput" disabled="@locked" /></td>
+                                                                            <td><input class="oda-tbl-input oda-tbl-sm" type="text" placeholder="—" @bind="ligne.Unite" @bind:event="oninput" disabled="@locked" /></td>
+                                                                            <td><input class="oda-tbl-input oda-tbl-sm" type="text" placeholder="—" @bind="ligne.PrixUnitaireHt" @bind:event="oninput" disabled="@locked" /></td>
+                                                                            <td><input class="oda-tbl-input oda-tbl-sm" type="text" placeholder="—" @bind="ligne.TvaPct" @bind:event="oninput" disabled="@locked" /></td>
+                                                                            <td><input class="oda-tbl-input oda-tbl-sm" type="text" placeholder="—" @bind="ligne.TotalTva" @bind:event="oninput" disabled="@locked" /></td>
+                                                                            <td><input class="oda-tbl-input oda-tbl-sm oda-tbl-ttc" type="text" placeholder="—" @bind="ligne.TotalTtc" @bind:event="oninput" disabled="@locked" /></td>
                                                                         </tr>
                                                                     }
                                                                 </tbody>
@@ -545,15 +545,15 @@
                                                         <div class="oda-totaux">
                                                             <div class="oda-totaux-row">
                                                                 <span class="oda-totaux-lbl">Total HT</span>
-                                                                <input class="oda-totaux-input" type="text" @bind="fs.TotalHt" @bind:event="oninput" placeholder="0,00" disabled="@locked" />
+                                                                <input class="oda-totaux-input" type="text" @bind="fs.TotalHt" @bind:event="oninput" placeholder="— Non extrait" disabled="@locked" />
                                                             </div>
                                                             <div class="oda-totaux-row">
                                                                 <span class="oda-totaux-lbl">Total TVA</span>
-                                                                <input class="oda-totaux-input" type="text" @bind="fs.TotalTva" @bind:event="oninput" placeholder="0,00" disabled="@locked" />
+                                                                <input class="oda-totaux-input" type="text" @bind="fs.TotalTva" @bind:event="oninput" placeholder="— Non extrait" disabled="@locked" />
                                                             </div>
                                                             <div class="oda-totaux-row oda-totaux-ttc">
                                                                 <span class="oda-totaux-lbl">Total TTC</span>
-                                                                <input class="oda-totaux-input ttc" type="text" @bind="fs.TotalTtc" @bind:event="oninput" placeholder="0,00" disabled="@locked" />
+                                                                <input class="oda-totaux-input ttc" type="text" @bind="fs.TotalTtc" @bind:event="oninput" placeholder="— Non extrait" disabled="@locked" />
                                                             </div>
                                                         </div>
                                                     }

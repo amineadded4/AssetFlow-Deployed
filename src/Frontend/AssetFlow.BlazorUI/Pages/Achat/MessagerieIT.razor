@@ -158,27 +158,40 @@
                                     var isMe = msg.SenderId == CurrentUserId;
                                     <div class="mai-bubble-wrap @(isMe ? "me" : "them")">
                                         @if (!isMe) { <div class="mai-bubble-avatar">@SelectedUser.Initials</div> }
-                                        <div class="mai-bubble @(isMe ? "bubble-me" : "bubble-them")">
+                                        <div class="mai-bubble @(isMe ? "bubble-me" : "bubble-them") @(msg.IsVoice ? "is-voice" : "")">
 
                                             @* ── Vocal ou texte ── *@
                                             @if (msg.IsVoice)
                                             {
-                                                <div class="mai-audio-player">
-                                                    <button class="mai-play-btn"
-                                                            onclick="playVoiceMessage(this, '@msg.AudioData')">
-                                                        <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                                var audioId = $"audio-{msg.Id}";
+                                                <div class="mai-voice" id="@($"voice-{msg.Id}")">
+                                                    <button type="button"
+                                                            class="mai-voice-play"
+                                                            onclick="@($"toggleVoice('{audioId}', this)")"
+                                                            aria-label="Lire le message vocal">
+                                                        <svg class="ico-play"  viewBox="0 0 24 24" aria-hidden="true">
+                                                            <path d="M8 5.5v13a1 1 0 0 0 1.55.83l10-6.5a1 1 0 0 0 0-1.66l-10-6.5A1 1 0 0 0 8 5.5z"/>
+                                                        </svg>
+                                                        <svg class="ico-pause" viewBox="0 0 24 24" aria-hidden="true">
+                                                            <rect x="6"  y="5" width="4" height="14" rx="1.5"/>
+                                                            <rect x="14" y="5" width="4" height="14" rx="1.5"/>
+                                                        </svg>
                                                     </button>
-                                                    <div class="mai-audio-center">
-                                                        <div class="mai-audio-wave">
-                                                            <span></span><span></span><span></span>
-                                                            <span></span><span></span><span></span>
-                                                            <span></span><span></span><span></span>
-                                                            <span></span><span></span><span></span>
+
+                                                    <div class="mai-voice-track">
+                                                        <div class="mai-voice-wave" data-progress="0">
+                                                            @for (int i = 0; i < 32; i++)
+                                                            {
+                                                                <span style="height:@(GetBarHeight(msg.Id, i))%"></span>
+                                                            }
                                                         </div>
-                                                        <span class="mai-audio-dur">
+                                                        <span class="mai-voice-time">
                                                             @(msg.AudioDurationSeconds > 0 ? FormatRecordTime(msg.AudioDurationSeconds) : "0:00")
                                                         </span>
                                                     </div>
+
+                                                    <audio id="@audioId" preload="metadata"
+                                                           src="data:audio/webm;base64,@msg.AudioData"></audio>
                                                 </div>
                                             }
                                             else
@@ -193,32 +206,21 @@
                                                     <span class="mai-read-status">
                                                         @if (msg.IsRead)
                                                         {
-                                                            @* ── Double tick bleu = Lu ── *@
-                                                            <span class="mai-ticks mai-tick-double animate">
-                                                                <span class="tick-first">
-                                                                    <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-                                                                        <polyline points="1 8.5 5.5 13 10 6"/>
-                                                                    </svg>
-                                                                </span>
-                                                                <span class="tick-second">
-                                                                    <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-                                                                        <polyline points="5 8.5 9.5 13 14 6"/>
-                                                                    </svg>
-                                                                </span>
-                                                            </span>
+                                                            @* ── Double tick : LU (style WhatsApp pro) ── *@
+                                                            <svg class="mai-ticks ticks-read animate" viewBox="0 0 18 12" aria-label="Lu">
+                                                                <path d="M1 6.5 L4.5 10 L10.5 2"  stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                                                <path d="M6 6.5 L9.5 10 L17  2"  stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                                            </svg>
                                                         }
                                                         else
                                                         {
-                                                            @* ── Un seul tick blanc/gris = Envoyé ── *@
-                                                            <span class="mai-ticks mai-tick-single">
-                                                                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-                                                                    <polyline points="2 8.5 6.5 13 14 5"/>
-                                                                </svg>
-                                                            </span>
+                                                            @* ── Simple tick : ENVOYÉ ── *@
+                                                            <svg class="mai-ticks ticks-sent" viewBox="0 0 14 12" aria-label="Envoyé">
+                                                                <path d="M1 6.5 L5 10.5 L13 2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                                            </svg>
                                                         }
                                                     </span>
                                                 }
-
                                             </div>
                                         </div>
                                     </div>
@@ -241,7 +243,6 @@
 
                         @if (_isRecording)
                         {
-                            @* ── Barre d'enregistrement style Messenger ── *@
                             <div class="mai-voice-recording-bar">
                                 <div class="mai-rec-left">
                                     <span class="mai-rec-pulse"></span>
@@ -265,7 +266,6 @@
                         }
                         else if (_hasVoiceBlob)
                         {
-                            @* ── Prévisualisation avant envoi style Messenger ── *@
                             <div class="mai-voice-preview-bar">
                                 <div class="mai-preview-icon">
                                     <svg viewBox="0 0 24 24">
@@ -295,7 +295,6 @@
                         }
                         else
                         {
-                            @* ── Zone de saisie normale ── *@
                             <div class="mai-input-wrap">
                                 <textarea class="mai-textarea"
                                           placeholder="Écrire un message..."

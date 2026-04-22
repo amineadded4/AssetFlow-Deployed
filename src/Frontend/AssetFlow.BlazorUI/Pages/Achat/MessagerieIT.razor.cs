@@ -79,7 +79,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     .WithAutomaticReconnect()
                     .Build();
 
-                // ── Réception d'un message (texte ou vocal) ──────────────────
                 _hub.On<ChatMessageDto>("ReceiveMessage", async msg =>
                 {
                     await InvokeAsync(async () =>
@@ -93,7 +92,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                             }
                             else
                             {
-                                // Mise à jour du message optimiste (texte ou vocal)
                                 var opt = Messages.LastOrDefault(m => m.SenderId == CurrentUserId && m.Id < 0);
                                 if (opt != null)
                                 {
@@ -322,7 +320,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             var receiverId = SelectedUser.Id;
             var duration   = (int)Math.Min(_recordingSeconds, MaxVoiceSeconds);
 
-            // Message optimiste affiché immédiatement
             var optimistic = new ChatMessageDto
             {
                 Id                   = -(Messages.Count + 1),
@@ -342,7 +339,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             StateHasChanged();
             await ScrollToBottomAsync();
 
-            // Envoi via Hub
             try
             {
                 await _hub.SendAsync("SendVoiceMessage", CurrentUserId, receiverId, base64, duration);
@@ -355,6 +351,20 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             var m = (int)secs / 60;
             var s = (int)secs % 60;
             return $"{m}:{s:D2}";
+        }
+
+        // ── Génération déterministe des hauteurs de la waveform ───────────────
+        // Donne un profil "naturel" stable par message, identique à chaque rendu.
+        private int GetBarHeight(int msgId, int index)
+        {
+            unchecked
+            {
+                var seed = (msgId * 9176 + index * 31337) ^ 0x5A5A5A5A;
+                var v = (Math.Abs(seed) % 80) + 20; // 20..100
+                // Légère atténuation aux extrémités pour un look pro
+                if (index < 2 || index > 29) v = Math.Min(v, 35);
+                return v;
+            }
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────
@@ -394,7 +404,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             var otherId = msg.SenderId == CurrentUserId ? msg.ReceiverId : msg.SenderId;
             var u = ITUsers.FirstOrDefault(x => x.Id == otherId);
             if (u == null) return;
-            // Prévisualisation : vocal → emoji, texte → contenu
             u.LastMessage     = msg.IsVoice ? "🎤 Message vocal" : msg.Content;
             u.LastMessageTime = msg.SentAt;
             if (msg.SenderId != CurrentUserId && SelectedUser?.Id != otherId)
@@ -437,7 +446,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         public async ValueTask DisposeAsync()
         {
-            
             _typingTimer?.Dispose();
             _recordTimer?.Dispose();
             if (_hub != null)

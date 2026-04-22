@@ -60,6 +60,10 @@
                 <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </span>
             <span class="achat-nav-text">Messagerie IT</span>
+            @if (_unreadMessages > 0)
+            {
+                <span class="sidebar-badge-rouge">@(_unreadMessages > 99 ? "99+" : _unreadMessages.ToString())</span>
+            }
         </a>
     </nav>
 

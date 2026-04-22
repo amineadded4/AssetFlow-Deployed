@@ -2,27 +2,43 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using AssetFlow.BlazorUI.Services;
 using Microsoft.AspNetCore.SignalR.Client;
+using Blazored.LocalStorage;
+using AssetFlow.BlazorUI.DTOs;
 
 namespace AssetFlow.BlazorUI.Components
 {
     public partial class AchatSidebar : ComponentBase, IAsyncDisposable
     {
-        [Inject] private IJSRuntime JS { get; set; } = default!;
-        [Inject] private DemandeAchatService DemandeAchatSvc { get; set; } = default!;
+        [Inject] private IJSRuntime            JS             { get; set; } = default!;
+        [Inject] private DemandeAchatService   DemandeAchatSvc { get; set; } = default!;
+        [Inject] private UnreadMessagesService UnreadSvc      { get; set; } = default!;
+        [Inject] private MessagerieService     MsgSvc         { get; set; } = default!;
+        [Inject] private ILocalStorageService  LocalStorage   { get; set; } = default!;
+        [Inject] private HttpClient            Http           { get; set; } = default!;
 
         [Parameter] public string ActivePage { get; set; } = string.Empty;
         [Parameter] public bool   ForceOpen  { get; set; } = false;
 
-        // ── NombreNonVus géré entièrement en interne (plus de [Parameter]) ──
+        // ── Demandes d'achat non vues ──
         private int    _nombreNonVus   = 0;
+
+        // ── Messagerie IT non lus ──
+        private int    _unreadMessages => UnreadSvc.UnreadCount;
+
         private bool   _drawerOpen      = false;
         private string _nomUtilisateur  = "Agent Achat";
         private string _roleUtilisateur = "Service Achat";
         private string _initiales       = "AA";
-        private HubConnection? _hubConnection;
+        private int    _currentUserId   = 0;
+
+        // Hub pour les demandes d'achat (dashboardhub)
+        private HubConnection? _hubDashboard;
+        // Hub pour la messagerie (chathub)
+        private HubConnection? _hubChat;
 
         protected override async Task OnInitializedAsync()
         {
+            // ── Infos utilisateur ──
             try
             {
                 var nom = await JS.InvokeAsync<string?>("eval",
@@ -43,13 +59,42 @@ namespace AssetFlow.BlazorUI.Components
             }
             catch { }
 
+            // ── Lecture userId depuis LocalStorage ──
+            _currentUserId = await LocalStorage.GetItemAsync<int>("user_id");
+
+            // ── Compteurs initiaux ──
             _nombreNonVus = await DemandeAchatSvc.GetCountNonVusAsync();
-            await ConnecterSignalR();
+            await RefreshUnreadMessagesAsync();
+
+            // ── Abonnement au service singleton (changements déclenchés par MessagerieIT) ──
+            UnreadSvc.OnChanged += OnUnreadChanged;
+
+            // ── Connexions SignalR ──
+            await ConnecterDashboardHubAsync();
+            await ConnecterChatHubAsync();
         }
 
-        private async Task ConnecterSignalR()
+        protected override void OnParametersSet()
         {
-            _hubConnection = new HubConnectionBuilder()
+            if (ForceOpen) _drawerOpen = true;
+        }
+
+        // ── Chargement initial du compteur de messages non lus ────────────────
+        private async Task RefreshUnreadMessagesAsync()
+        {
+            try
+            {
+                var summaries = await MsgSvc.GetConversationsAsync(_currentUserId);
+                var total = summaries.Sum(s => s.UnreadCount);
+                UnreadSvc.Set(total);
+            }
+            catch { }
+        }
+
+        // ── SignalR : hub des demandes d'achat ────────────────────────────────
+        private async Task ConnecterDashboardHubAsync()
+        {
+            _hubDashboard = new HubConnectionBuilder()
                 .WithUrl("http://localhost:5235/dashboardhub", options =>
                 {
                     options.AccessTokenProvider = async () =>
@@ -65,10 +110,9 @@ namespace AssetFlow.BlazorUI.Components
                 .WithAutomaticReconnect()
                 .Build();
 
-            // Après reconnexion → rejoindre le groupe + resynchroniser le badge
-            _hubConnection.Reconnected += async _ =>
+            _hubDashboard.Reconnected += async _ =>
             {
-                try { await _hubConnection.InvokeAsync("JoinDashboard"); } catch { }
+                try { await _hubDashboard.InvokeAsync("JoinDashboard"); } catch { }
                 await InvokeAsync(async () =>
                 {
                     try { _nombreNonVus = await DemandeAchatSvc.GetCountNonVusAsync(); }
@@ -77,8 +121,7 @@ namespace AssetFlow.BlazorUI.Components
                 });
             };
 
-            // Nouvelle demande créée/modifiée → resynchroniser le badge
-            _hubConnection.On("DashboardUpdated", async () =>
+            _hubDashboard.On("DashboardUpdated", async () =>
             {
                 await InvokeAsync(async () =>
                 {
@@ -90,23 +133,77 @@ namespace AssetFlow.BlazorUI.Components
 
             try
             {
-                await _hubConnection.StartAsync();
-                await _hubConnection.InvokeAsync("JoinDashboard");
+                await _hubDashboard.StartAsync();
+                await _hubDashboard.InvokeAsync("JoinDashboard");
             }
             catch { }
         }
 
-        protected override void OnParametersSet()
+        // ── SignalR : hub de messagerie ───────────────────────────────────────
+        private async Task ConnecterChatHubAsync()
         {
-            if (ForceOpen) _drawerOpen = true;
+            try
+            {
+                var token  = await LocalStorage.GetItemAsync<string>("access_token") ?? "";
+                var hubUrl = Http.BaseAddress!.ToString().TrimEnd('/') + "/chathub";
+
+                _hubChat = new HubConnectionBuilder()
+                    .WithUrl(hubUrl, opts =>
+                        opts.AccessTokenProvider = () => Task.FromResult<string?>(token))
+                    .WithAutomaticReconnect()
+                    .Build();
+
+                // Nouveau message reçu → recalculer le compteur
+                _hubChat.On<ChatMessageDto>("ReceiveMessage", async msg =>
+                {
+                    await InvokeAsync(async () =>
+                    {
+                        if (msg.ReceiverId == _currentUserId && msg.SenderId != _currentUserId)
+                        {
+                            await RefreshUnreadMessagesAsync();
+                        }
+                    });
+                });
+
+                _hubChat.Reconnected += async _ =>
+                {
+                    await InvokeAsync(async () =>
+                    {
+                        try
+                        {
+                            await _hubChat.SendAsync("UserConnected", _currentUserId);
+                            await RefreshUnreadMessagesAsync();
+                        }
+                        catch { }
+                    });
+                };
+
+                await _hubChat.StartAsync();
+                await _hubChat.SendAsync("UserConnected", _currentUserId);
+            }
+            catch { }
+        }
+
+        // ── Callback du service singleton ─────────────────────────────────────
+        private void OnUnreadChanged()
+        {
+            InvokeAsync(StateHasChanged);
         }
 
         public async ValueTask DisposeAsync()
         {
-            if (_hubConnection is not null)
+            UnreadSvc.OnChanged -= OnUnreadChanged;
+
+            if (_hubDashboard is not null)
             {
-                try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
-                await _hubConnection.DisposeAsync();
+                try { await _hubDashboard.InvokeAsync("LeaveDashboard"); } catch { }
+                await _hubDashboard.DisposeAsync();
+            }
+
+            if (_hubChat is not null)
+            {
+                try { await _hubChat.SendAsync("UserDisconnected", _currentUserId); } catch { }
+                await _hubChat.DisposeAsync();
             }
         }
 

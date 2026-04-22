@@ -1,10 +1,7 @@
 namespace AssetFlow.BlazorUI.Services
 {
-    /// <summary>
     /// Service singleton partagé entre toutes les pages et sidebars.
     /// Maintient le compteur de messages non lus en temps réel.
-    /// Fonctionne exactement comme le badge "Demandes d'achat" dans AchatSidebar.
-    /// </summary>
     public class UnreadMessagesService
     {
         private int _unreadCount = 0;
@@ -12,10 +9,8 @@ namespace AssetFlow.BlazorUI.Services
         /// <summary>Nombre total de messages non lus pour l'utilisateur courant.</summary>
         public int UnreadCount => _unreadCount;
 
-        /// <summary>
         /// Déclenché à chaque changement du compteur.
         /// Les sidebars et composants s'y abonnent pour se re-rendre.
-        /// </summary>
         public event Action? OnChanged;
 
         /// <summary>Initialise le compteur depuis l'API (appelé au démarrage de chaque sidebar).</summary>

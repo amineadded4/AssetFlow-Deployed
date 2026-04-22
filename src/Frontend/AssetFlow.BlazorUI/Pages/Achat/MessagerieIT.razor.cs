@@ -15,6 +15,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         [Inject] private ILocalStorageService LocalStorage { get; set; } = default!;
         [Inject] private HttpClient           Http         { get; set; } = default!;
         [Inject] private IJSRuntime           JS           { get; set; } = default!;
+        [Inject] private UnreadMessagesService UnreadSvc   { get; set; } = default!;
+
         private string UserName       { get; set; } = "Agent Achat";
         private int    CurrentUserId                = 0;
         private bool   _conversationOpen            = false;
@@ -58,8 +60,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         protected override async Task OnInitializedAsync()
         {
-            UserName      = await LocalStorage.GetItemAsync<string>("user_name") ?? "Agent Achat";
-            CurrentUserId = await LocalStorage.GetItemAsync<int>("user_id");
+            UserName         = await LocalStorage.GetItemAsync<string>("user_name") ?? "Agent Achat";
+            CurrentUserId    = await LocalStorage.GetItemAsync<int>("user_id");
             _roleUtilisateur = await LocalStorage.GetItemAsync<string>("user_role");
 
             await LoadITUsersAsync();
@@ -89,6 +91,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                             if (msg.SenderId != CurrentUserId)
                             {
                                 Messages.Add(msg);
+                                // Lu immédiatement car conversation ouverte
+                                await MarkMessagesAsReadAsync(msg.SenderId);
                             }
                             else
                             {
@@ -100,9 +104,13 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                                     opt.AudioDurationSeconds = msg.AudioDurationSeconds;
                                 }
                             }
-                            if (msg.SenderId != CurrentUserId)
-                                await MarkMessagesAsReadAsync(msg.SenderId);
                         }
+                        else if (msg.ReceiverId == CurrentUserId && msg.SenderId != CurrentUserId)
+                        {
+                            // Conversation non ouverte → incrémenter le badge sidebar
+                            UnreadSvc.Increment();
+                        }
+
                         UpdateUserWithMessage(msg);
                         StateHasChanged();
                         await ScrollToBottomAsync();
@@ -111,43 +119,47 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
                 _hub.On<int, int>("MessagesRead", async (readerId, senderId) =>
                 {
-                    await InvokeAsync(() =>
+                    await InvokeAsync(async () =>
                     {
                         foreach (var m in Messages.Where(m => !m.IsRead && m.SenderId == CurrentUserId))
                             m.IsRead = true;
                         StateHasChanged();
+                        await Task.CompletedTask;
                     });
                 });
 
                 _hub.On<int, bool>("UserOnlineStatus", async (userId, isOnline) =>
                 {
-                    await InvokeAsync(() =>
+                    await InvokeAsync(async () =>
                     {
                         var u = ITUsers.FirstOrDefault(x => x.Id == userId);
                         if (u != null) u.IsOnline = isOnline;
                         if (SelectedUser?.Id == userId) SelectedUser.IsOnline = isOnline;
                         StateHasChanged();
+                        await Task.CompletedTask;
                     });
                 });
 
                 _hub.On<int, bool>("UserTyping", async (userId, isTyping) =>
                 {
-                    await InvokeAsync(() =>
+                    await InvokeAsync(async () =>
                     {
                         if (SelectedUser?.Id == userId) SelectedUser.IsTyping = isTyping;
                         StateHasChanged();
+                        await Task.CompletedTask;
                     });
                 });
 
                 _hub.On<List<int>>("OnlineUsers", async (onlineIds) =>
                 {
-                    await InvokeAsync(() =>
+                    await InvokeAsync(async () =>
                     {
                         foreach (var u in ITUsers)
                             u.IsOnline = onlineIds.Contains(u.Id);
                         if (SelectedUser != null)
                             SelectedUser.IsOnline = onlineIds.Contains(SelectedUser.Id);
                         StateHasChanged();
+                        await Task.CompletedTask;
                     });
                 });
 
@@ -191,6 +203,10 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                         u.UnreadCount     = s.UnreadCount;
                     }
                 }
+
+                // Synchroniser le service singleton avec le total réel
+                var totalUnread = ITUsers.Sum(u => u.UnreadCount);
+                UnreadSvc.Set(totalUnread);
             }
             catch { }
 
@@ -203,8 +219,15 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         {
             SelectedUser      = user;
             _conversationOpen = true;
-            user.UnreadCount  = 0;
-            LoadingMessages   = true;
+
+            // Décrémenter le badge sidebar du nombre de non-lus de cet agent
+            if (user.UnreadCount > 0)
+            {
+                UnreadSvc.Decrement(user.UnreadCount);
+                user.UnreadCount = 0;
+            }
+
+            LoadingMessages = true;
             StateHasChanged();
 
             Messages = await MsgSvc.GetHistoryAsync(CurrentUserId, user.Id);
@@ -354,14 +377,12 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         }
 
         // ── Génération déterministe des hauteurs de la waveform ───────────────
-        // Donne un profil "naturel" stable par message, identique à chaque rendu.
         private int GetBarHeight(int msgId, int index)
         {
             unchecked
             {
                 var seed = (msgId * 9176 + index * 31337) ^ 0x5A5A5A5A;
                 var v = (Math.Abs(seed) % 80) + 20; // 20..100
-                // Légère atténuation aux extrémités pour un look pro
                 if (index < 2 || index > 29) v = Math.Min(v, 35);
                 return v;
             }

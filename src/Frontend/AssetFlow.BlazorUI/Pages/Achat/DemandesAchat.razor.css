@@ -53,15 +53,18 @@ html.dark .layout-shell {
 /* ============================================================
    5. TOPBAR
    ============================================================ */
-.topbar { flex-direction: column !important; align-items: stretch !important; height: auto !important; padding: 0 !important; border-bottom: 1px solid var(--border); background: var(--bg-header); backdrop-filter: blur(12px); position: sticky; top: 0; flex-shrink: 0; }
-.topbar-row1 { display: flex; align-items: center; gap: 12px; padding: 0 20px; height: 60px; flex-shrink: 0; }
-.topbar-row2 { display: none; justify-content: center; align-items: center; padding: 8px 16px; background: var(--bg-header); border-bottom: 1px solid var(--border); }
+.topbar { flex-direction: column !important; align-items: stretch !important; height: auto !important; padding: 0 !important; border-bottom: 1px solid var(--border); background: var(--bg-panel); position: sticky; top: 0; flex-shrink: 0; }
+html.dark .topbar { background: rgba(16, 24, 34, 0.9); }
+.topbar-row1 { display: flex; align-items: center; gap: 12px; padding: 0.75rem 1.5rem; min-height: 64px; flex-shrink: 0; }
+.topbar-row2 { display: none; justify-content: center; align-items: center; padding: 8px 16px; background: var(--bg-panel); border-bottom: 1px solid var(--border); }
+html.dark .topbar-row2 { background: rgba(16, 24, 34, 0.9); }
+
 .topbar-search-desktop { display: flex; }
 .topbar-search-mobile  { display: flex; width: 100%; max-width: 480px; margin: 0 auto; }
-.topbar-menu-btn { display: none; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--radius-md); color: var(--text-secondary); border: 1px solid var(--border); }
+.topbar-menu-btn { display: none; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--radius-md); color: var(--text-secondary); border: 1px solid transparent; }
 .topbar-menu-btn:hover { background: var(--bg-row-hover); }
 .topbar-brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.topbar-brand h1 { font-size: 18px; font-weight: 900; color: var(--text-primary); letter-spacing: -0.3px; }
+.topbar-brand h1 { font-size: 1.3rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.025em; }
 .topbar-role-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-full); background: rgba(19,109,236,0.12); color: #136dec; text-transform: uppercase; letter-spacing: 0.06em; }
 .topbar-export-btns { display: flex; gap: 6px; margin-left: auto; flex-shrink: 0; }
 .btn-export { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-panel); color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer; transition: all var(--t); white-space: nowrap; }

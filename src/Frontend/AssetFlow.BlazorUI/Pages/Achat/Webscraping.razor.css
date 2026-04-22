@@ -78,18 +78,18 @@ html.dark .ws-shell {
    5. TOPBAR
    ============================================================ */
 .ws-topbar {
-    height:          60px;
+    height:          64px;
     border-bottom:   1px solid var(--border);
-    background:      var(--bg-header);
-    backdrop-filter: blur(12px);
+    background:      var(--bg-panel);
     position:        sticky;
     top:             0;
-    padding:         0 70px 0 24px;
+    padding:         0 70px 0 1.5rem;
     display:         flex;
     align-items:     center;
     flex-shrink:     0;
     transition:      background var(--t), border-color var(--t);
 }
+html.dark .ws-topbar { background: rgba(16, 24, 34, 0.9); }
 .ws-topbar-inner {
     display: flex; align-items: center; gap: 12px; width: 100%;
 }
@@ -108,8 +108,8 @@ html.dark .ws-shell {
 
 .ws-topbar-brand { display: flex; align-items: center; gap: 10px; }
 .ws-topbar-brand h1 {
-    font-size: 18px; font-weight: 900;
-    color: var(--text-primary); letter-spacing: -0.3px; margin: 0;
+    font-size: 1.3rem; font-weight: 800;
+    color: var(--text-primary); letter-spacing: -0.025em; margin: 0;
 }
 .ws-role-badge {
     font-size: 10px; font-weight: 700;

@@ -8,8 +8,6 @@ namespace AssetFlow.BlazorUI.DTOs
         public string? Mail { get; set; }
 
         public int CommandesTotales { get; set; }
-        public decimal TauxLivraisonATemps { get; set; }
-        public decimal ScoreFiabilite { get; set; }
         public DateTime? DerniereCommande { get; set; }
     }
 }

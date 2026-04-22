@@ -22,8 +22,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             public string? Adresse { get; set; }
             public string? Mail { get; set; }
             public int CommandesTotales { get; set; }
-            public decimal TauxLivraisonATemps { get; set; }
-            public decimal ScoreFiabilite { get; set; }
             public DateTime? DerniereCommande { get; set; }
             public bool Expanded { get; set; }
         }
@@ -35,8 +33,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             public string Telephone { get; set; } = string.Empty;
             public string Adresse { get; set; } = string.Empty;
             public string Mail { get; set; } = string.Empty;
-            public decimal TauxLivraisonATemps { get; set; }
-            public decimal ScoreFiabilite { get; set; }
             public DateTime? DerniereCommande { get; set; }
         }
 
@@ -45,10 +41,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private bool    _chargement        = true;
         private string  _erreurGlobale     = string.Empty;
         private int     _totalFournisseurs = 0;
-        private decimal _meilleurScore     = 0;
-        private decimal _scoreMoyen        = 0;
+        private int     _totalCommandes    = 0;
         private string  _termeRecherche    = string.Empty;
-        private string  _filtreScore       = "all";
         private bool    _sidebarOpen       = false;
         private bool    _panneauOuvert     = false;
         private bool    _modeModif         = false;
@@ -75,26 +69,23 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         protected override async Task OnInitializedAsync()
         {
-
             await ChargerInfosUtilisateur();
             await ChargerFournisseurs();
         }
+
         public ValueTask DisposeAsync()
         {
             return ValueTask.CompletedTask;
         }
 
-        // ✅ Retourne FournisseurVm (pas FournisseurDto)
         private FournisseurVm? TrouverFournisseur(string? designation)
         {
             if (string.IsNullOrWhiteSpace(designation)) return null;
 
-            // Correspondance exacte d'abord
             var exact = _tousLesFournisseurs.FirstOrDefault(f =>
                 f.Nom.Equals(designation, StringComparison.OrdinalIgnoreCase));
             if (exact != null) return exact;
 
-            // Sinon score par termes
             var terms = designation.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
             return _tousLesFournisseurs
                 .Select(f => new
@@ -108,7 +99,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 .FirstOrDefault();
         }
 
-        // ✅ "Voir détails" = expand la ligne du fournisseur
         private void OuvrirDetails(FournisseurVm f)
         {
             _tousLesFournisseurs.ForEach(x => x.Expanded = false);
@@ -116,11 +106,9 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             AppliquerFiltres();
         }
 
-        // ✅ "Ajouter" = ouvrir formulaire vide
         private void OuvrirFormulaireAjout() => OuvrirFormulaire(null);
-
-        // ✅ "Modifier" = ouvrir formulaire pré-rempli
         private void OuvrirFormulaireModification(FournisseurVm f) => OuvrirFormulaire(f);
+
         private async Task ChargerInfosUtilisateur()
         {
             try
@@ -155,15 +143,13 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 var dtos = await FournisseurSvc.GetAllAsync();
                 _tousLesFournisseurs = dtos.Select(d => new FournisseurVm
                 {
-                    Id                  = d.IdFournisseur,
-                    Nom                 = d.Nom,
-                    Telephone           = d.Telephone,
-                    Adresse             = d.Adresse,
-                    Mail                = d.Mail,
-                    CommandesTotales    = d.CommandesTotales,
-                    TauxLivraisonATemps = d.TauxLivraisonATemps,
-                    ScoreFiabilite      = d.ScoreFiabilite,
-                    DerniereCommande    = d.DerniereCommande
+                    Id               = d.IdFournisseur,
+                    Nom              = d.Nom,
+                    Telephone        = d.Telephone,
+                    Adresse          = d.Adresse,
+                    Mail             = d.Mail,
+                    CommandesTotales = d.CommandesTotales,
+                    DerniereCommande = d.DerniereCommande
                 }).ToList();
                 RecalculerStats();
                 AppliquerFiltres();
@@ -175,8 +161,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private void RecalculerStats()
         {
             _totalFournisseurs = _tousLesFournisseurs.Count;
-            _meilleurScore = _tousLesFournisseurs.Any() ? _tousLesFournisseurs.Max(f => f.ScoreFiabilite) : 0;
-            _scoreMoyen    = _tousLesFournisseurs.Any() ? _tousLesFournisseurs.Average(f => f.ScoreFiabilite) : 0;
+            _totalCommandes    = _tousLesFournisseurs.Sum(f => f.CommandesTotales);
         }
 
         private void OnRecherche(ChangeEventArgs e)
@@ -185,23 +170,9 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             AppliquerFiltres();
         }
 
-        private void AppliquerFiltreScore(string filtre)
-        {
-            _filtreScore = filtre;
-            _tousLesFournisseurs.ForEach(f => f.Expanded = false);
-            AppliquerFiltres();
-        }
-
         private void AppliquerFiltres()
         {
             var q = _tousLesFournisseurs.AsEnumerable();
-            q = _filtreScore switch
-            {
-                "excellent" => q.Where(f => f.ScoreFiabilite > 80),
-                "moyen"     => q.Where(f => f.ScoreFiabilite >= 50 && f.ScoreFiabilite <= 80),
-                "critique"  => q.Where(f => f.ScoreFiabilite < 50),
-                _           => q
-            };
             if (!string.IsNullOrWhiteSpace(_termeRecherche))
             {
                 var t = _termeRecherche.Trim().ToLower();
@@ -231,14 +202,12 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             _form = vm is not null
                 ? new FormulaireVm
                 {
-                    Id                  = vm.Id,
-                    Nom                 = vm.Nom,
-                    Telephone           = vm.Telephone ?? string.Empty,
-                    Adresse             = vm.Adresse   ?? string.Empty,
-                    Mail                = vm.Mail      ?? string.Empty,
-                    TauxLivraisonATemps = vm.TauxLivraisonATemps,
-                    ScoreFiabilite      = vm.ScoreFiabilite,
-                    DerniereCommande    = vm.DerniereCommande
+                    Id               = vm.Id,
+                    Nom              = vm.Nom,
+                    Telephone        = vm.Telephone ?? string.Empty,
+                    Adresse          = vm.Adresse   ?? string.Empty,
+                    Mail             = vm.Mail      ?? string.Empty,
+                    DerniereCommande = vm.DerniereCommande
                 }
                 : new FormulaireVm();
         }
@@ -251,8 +220,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             if (string.IsNullOrWhiteSpace(_form.Nom)) _erreurs["Nom"] = "Le nom est obligatoire.";
             if (!string.IsNullOrWhiteSpace(_form.Mail) && !_form.Mail.Contains('@'))
                 _erreurs["Mail"] = "E-mail invalide.";
-            if (_form.ScoreFiabilite      < 0 || _form.ScoreFiabilite      > 100) _erreurs["Score"] = "Entre 0 et 100.";
-            if (_form.TauxLivraisonATemps < 0 || _form.TauxLivraisonATemps > 100) _erreurs["Taux"]  = "Entre 0 et 100.";
             if (_erreurs.Any()) return;
 
             _sauvegarde = true;
@@ -262,14 +229,12 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 {
                     var dto = new ModifierFournisseurDto
                     {
-                        IdFournisseur       = _form.Id,
-                        Nom                 = _form.Nom.Trim(),
-                        Telephone           = Vide(_form.Telephone),
-                        Adresse             = Vide(_form.Adresse),
-                        Mail                = Vide(_form.Mail),
-                        TauxLivraisonATemps = _form.TauxLivraisonATemps,
-                        ScoreFiabilite      = _form.ScoreFiabilite,
-                        DerniereCommande    = _form.DerniereCommande
+                        IdFournisseur    = _form.Id,
+                        Nom              = _form.Nom.Trim(),
+                        Telephone        = Vide(_form.Telephone),
+                        Adresse          = Vide(_form.Adresse),
+                        Mail             = Vide(_form.Mail),
+                        DerniereCommande = _form.DerniereCommande
                     };
                     var r = await FournisseurSvc.ModifierAsync(dto);
                     if (r.Succes)
@@ -277,11 +242,11 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                         var vm = _tousLesFournisseurs.FirstOrDefault(f => f.Id == _form.Id);
                         if (vm != null)
                         {
-                            vm.Nom = _form.Nom.Trim(); vm.Telephone = Vide(_form.Telephone);
-                            vm.Adresse = Vide(_form.Adresse); vm.Mail = Vide(_form.Mail);
-                            vm.TauxLivraisonATemps = _form.TauxLivraisonATemps;
-                            vm.ScoreFiabilite      = _form.ScoreFiabilite;
-                            vm.DerniereCommande    = _form.DerniereCommande;
+                            vm.Nom              = _form.Nom.Trim();
+                            vm.Telephone        = Vide(_form.Telephone);
+                            vm.Adresse          = Vide(_form.Adresse);
+                            vm.Mail             = Vide(_form.Mail);
+                            vm.DerniereCommande = _form.DerniereCommande;
                         }
                         RecalculerStats(); AppliquerFiltres(); FermerFormulaire();
                         AfficherToast($"« {_form.Nom} » mis à jour.", "toast-success");
@@ -292,28 +257,24 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 {
                     var dto = new CreerFournisseurDto
                     {
-                        Nom                 = _form.Nom.Trim(),
-                        Telephone           = Vide(_form.Telephone),
-                        Adresse             = Vide(_form.Adresse),
-                        Mail                = Vide(_form.Mail),
-                        CommandesTotales    = 0,
-                        TauxLivraisonATemps = _form.TauxLivraisonATemps,
-                        ScoreFiabilite      = _form.ScoreFiabilite,
-                        DerniereCommande    = _form.DerniereCommande
+                        Nom              = _form.Nom.Trim(),
+                        Telephone        = Vide(_form.Telephone),
+                        Adresse          = Vide(_form.Adresse),
+                        Mail             = Vide(_form.Mail),
+                        CommandesTotales = 0,
+                        DerniereCommande = _form.DerniereCommande
                     };
                     var r = await FournisseurSvc.AjouterAsync(dto);
                     if (r.Succes)
                     {
                         _tousLesFournisseurs.Insert(0, new FournisseurVm
                         {
-                            Id                  = r.IdFournisseur ?? 0,
-                            Nom                 = _form.Nom.Trim(),
-                            Telephone           = Vide(_form.Telephone),
-                            Adresse             = Vide(_form.Adresse),
-                            Mail                = Vide(_form.Mail),
-                            TauxLivraisonATemps = _form.TauxLivraisonATemps,
-                            ScoreFiabilite      = _form.ScoreFiabilite,
-                            DerniereCommande    = _form.DerniereCommande
+                            Id               = r.IdFournisseur ?? 0,
+                            Nom              = _form.Nom.Trim(),
+                            Telephone        = Vide(_form.Telephone),
+                            Adresse          = Vide(_form.Adresse),
+                            Mail             = Vide(_form.Mail),
+                            DerniereCommande = _form.DerniereCommande
                         });
                         RecalculerStats(); AppliquerFiltres(); FermerFormulaire();
                         AfficherToast($"« {_form.Nom} » ajouté.", "toast-success");
@@ -346,17 +307,13 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         private void ToggleSidebar() => _sidebarOpen = !_sidebarOpen;
 
-        private string RateClass(decimal r)      => r >= 80 ? "good" : r >= 60 ? "avg" : "bad";
-        private string ScoreFillClass(decimal s) => s >= 80 ? "green" : s >= 50 ? "amber" : "red";
-        private string ScoreTextClass(decimal s) => s >= 80 ? "good"  : s >= 50 ? "avg"   : "bad";
-
         // ── Export Excel (CSV UTF-8 BOM) ──────────────────────────
         private async Task ExporterExcel()
         {
             try
             {
                 var sb = new System.Text.StringBuilder();
-                sb.AppendLine("Nom;Téléphone;Adresse;Email;Commandes totales;Taux livraison (%);Score fiabilité (%);Dernière commande");
+                sb.AppendLine("Nom;Téléphone;Adresse;Email;Commandes totales;Dernière commande");
 
                 foreach (var f in _tousLesFournisseurs)
                 {
@@ -366,8 +323,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                         $"{Csv(f.Adresse   ?? "")};" +
                         $"{Csv(f.Mail      ?? "")};" +
                         $"{f.CommandesTotales};" +
-                        $"{f.TauxLivraisonATemps.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)};" +
-                        $"{f.ScoreFiabilite.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)};" +
                         $"{(f.DerniereCommande.HasValue ? f.DerniereCommande.Value.ToString("dd/MM/yyyy") : "")}");
                 }
 
@@ -396,10 +351,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         }
 
         // ── Export PDF ────────────────────────────────────────────
-        // Même technique que Materiel.razor :
-        // JsonSerializer.Serialize(html) produit une chaîne JSON valide
-        // (guillemets, apostrophes, caractères spéciaux tous échappés)
-        // qu'on injecte directement dans l'eval — aucun problème d'échappement.
         private async Task ExporterPdf()
         {
             try
@@ -417,8 +368,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                         $"<tr>" +
                         $"<td>{HE(f.Nom)}</td>" +
                         $"<td>{f.CommandesTotales}</td>" +
-                        $"<td class=\"{RateClass(f.TauxLivraisonATemps)}\">{f.TauxLivraisonATemps:0.0}%</td>" +
-                        $"<td class=\"{ScoreTextClass(f.ScoreFiabilite)}\">{f.ScoreFiabilite:0.0}%</td>" +
                         $"<td>{dc}</td>" +
                         $"<td>{contact}</td>" +
                         $"</tr>");
@@ -434,12 +383,11 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     "th{background:#1e293b;color:#fff;padding:7px 8px;font-size:10px;text-transform:uppercase}" +
                     "td{padding:6px 8px;border-bottom:1px solid #eee;font-size:10px}" +
                     "tr:nth-child(even) td{background:#f8fafc}" +
-                    ".good{color:#10b981;font-weight:600}.avg{color:#f59e0b;font-weight:600}.bad{color:#f43f5e;font-weight:600}" +
                     "</style></head><body>" +
                     "<h2>Liste des fournisseurs</h2>" +
                     $"<p>Exporté le {DateTime.Now:dd/MM/yyyy HH:mm} — {_tousLesFournisseurs.Count} fournisseur(s)</p>" +
                     "<table><thead><tr>" +
-                    "<th>Nom</th><th>Commandes</th><th>Taux livraison</th><th>Score fiabilité</th><th>Dernière commande</th><th>Contact</th>" +
+                    "<th>Nom</th><th>Commandes</th><th>Dernière commande</th><th>Contact</th>" +
                     "</tr></thead><tbody>" +
                     rows +
                     "</tbody></table></body></html>";

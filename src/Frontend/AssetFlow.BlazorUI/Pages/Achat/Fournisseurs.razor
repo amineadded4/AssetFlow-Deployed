@@ -81,45 +81,32 @@
                 @* ── STATS ── *@
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-top">
-                            <div class="stat-icon blue">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                    <circle cx="9" cy="7" r="4"/>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                                </svg>
-                            </div>
-                            <span class="badge badge-up">@_totalFournisseurs total</span>
+                        <div class="stat-icon blue">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
                         </div>
-                        <p class="stat-label">Total Fournisseurs</p>
-                        <p class="stat-value">@_totalFournisseurs</p>
+                        <div class="stat-body">
+                            <p class="stat-label">Total fournisseurs</p>
+                            <p class="stat-value">@_totalFournisseurs</p>
+                        </div>
+                        <span class="badge badge-up">@_totalFournisseurs total</span>
                     </div>
 
                     <div class="stat-card">
-                        <div class="stat-top">
-                            <div class="stat-icon green">
-                                <svg viewBox="0 0 24 24">
-                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                                </svg>
-                            </div>
-                            <span class="badge badge-info">Top tier</span>
+                        <div class="stat-icon green">
+                            <svg viewBox="0 0 24 24">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                            </svg>
                         </div>
-                        <p class="stat-label">Meilleur Score</p>
-                        <p class="stat-value">@(_meilleurScore.ToString("0.0"))%</p>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-top">
-                            <div class="stat-icon amber">
-                                <svg viewBox="0 0 24 24">
-                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                                </svg>
-                            </div>
-                            <span class="badge badge-neutral">Moyenne</span>
+                        <div class="stat-body">
+                            <p class="stat-label">Commandes totales</p>
+                            <p class="stat-value">@_totalCommandes</p>
                         </div>
-                        <p class="stat-label">Score Moyen</p>
-                        <p class="stat-value">@(_scoreMoyen.ToString("0.0"))%</p>
+                        <span class="badge badge-info">Total</span>
                     </div>
                 </div>
 
@@ -128,24 +115,6 @@
                     <div class="table-toolbar-left">
                         <h4>Liste des Fournisseurs</h4>
                         <span class="tag-count">@_fournisseursAffiches.Count résultat(s)</span>
-                    </div>
-
-                    <div class="filter-pills">
-                        <span class="filter-pills-label">Score :</span>
-                        <button class="pill @(_filtreScore == "all"       ? "pill-active" : "")"
-                                @onclick='() => AppliquerFiltreScore("all")'>Tous</button>
-                        <button class="pill @(_filtreScore == "excellent" ? "pill-active" : "")"
-                                @onclick='() => AppliquerFiltreScore("excellent")'>
-                            <span class="pdot pdot-green"></span>&gt;&nbsp;80%
-                        </button>
-                        <button class="pill @(_filtreScore == "moyen"     ? "pill-active" : "")"
-                                @onclick='() => AppliquerFiltreScore("moyen")'>
-                            <span class="pdot pdot-amber"></span>50–80%
-                        </button>
-                        <button class="pill @(_filtreScore == "critique"  ? "pill-active" : "")"
-                                @onclick='() => AppliquerFiltreScore("critique")'>
-                            <span class="pdot pdot-rose"></span>&lt;&nbsp;50%
-                        </button>
                     </div>
                 </div>
 
@@ -162,8 +131,6 @@
                                 <tr>
                                     <th>Fournisseur</th>
                                     <th>Commandes</th>
-                                    <th>Taux livraison</th>
-                                    <th>Score fiabilité</th>
                                     <th>Dernière commande</th>
                                     <th>Contact</th>
                                     <th>Actions</th>
@@ -172,12 +139,12 @@
                             <tbody>
                                 @if (_chargement)
                                 {
-                                    <tr><td colspan="7" class="td-center">Chargement…</td></tr>
+                                    <tr><td colspan="5" class="td-center">Chargement…</td></tr>
                                 }
                                 else if (!_fournisseursAffiches.Any())
                                 {
                                     <tr>
-                                        <td colspan="7" class="td-empty">
+                                        <td colspan="5" class="td-empty">
                                             <svg viewBox="0 0 24 24">
                                                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                                                 <circle cx="9" cy="7" r="4"/>
@@ -208,25 +175,6 @@
                                             </td>
 
                                             <td class="td-num">@f.CommandesTotales</td>
-
-                                            <td>
-                                                <span class="rate-badge rate-@RateClass(f.TauxLivraisonATemps)">
-                                                    @f.TauxLivraisonATemps.ToString("0.0")%
-                                                </span>
-                                            </td>
-
-                                            <td>
-                                                <div class="score-cell">
-                                                    <div class="score-bar">
-                                                        <div class="score-fill fill-@ScoreFillClass(f.ScoreFiabilite)"
-                                                            style="width:@(Math.Min(f.ScoreFiabilite,100))%">
-                                                        </div>
-                                                    </div>
-                                                    <span class="score-num score-@ScoreTextClass(f.ScoreFiabilite)">
-                                                        @f.ScoreFiabilite.ToString("0.0")
-                                                    </span>
-                                                </div>
-                                            </td>
 
                                             <td class="td-muted td-date">
                                                 @(f.DerniereCommande.HasValue
@@ -285,7 +233,7 @@
                                         @if (f.Expanded)
                                         {
                                             <tr class="detail-row">
-                                                <td colspan="7">
+                                                <td colspan="5">
                                                     <div class="detail-inner">
                                                         <div class="detail-info-section">
                                                             <p class="detail-section-label">INFORMATIONS COMPLÈTES</p>
@@ -307,12 +255,6 @@
                                                                     <span class="d-val">@f.CommandesTotales</span>
                                                                 </div>
                                                                 <div class="detail-info-item">
-                                                                    <span class="d-lbl">Taux livraison</span>
-                                                                    <span class="d-val rate-@RateClass(f.TauxLivraisonATemps)">
-                                                                        @f.TauxLivraisonATemps.ToString("0.0")%
-                                                                    </span>
-                                                                </div>
-                                                                <div class="detail-info-item">
                                                                     <span class="d-lbl">Dernière commande</span>
                                                                     <span class="d-val">
                                                                         @(f.DerniereCommande.HasValue
@@ -324,15 +266,9 @@
                                                         </div>
                                                         <div class="detail-side">
                                                             <div class="detail-metric">
-                                                                <p class="dm-label">Score fiabilité</p>
-                                                                <p class="dm-value score-@ScoreTextClass(f.ScoreFiabilite)">
-                                                                    @f.ScoreFiabilite.ToString("0.0")<span class="dm-unit">/100</span>
-                                                                </p>
-                                                            </div>
-                                                            <div class="detail-metric">
-                                                                <p class="dm-label">Taux livraison</p>
-                                                                <p class="dm-value rate-@RateClass(f.TauxLivraisonATemps)">
-                                                                    @f.TauxLivraisonATemps.ToString("0.0")<span class="dm-unit">%</span>
+                                                                <p class="dm-label">Commandes</p>
+                                                                <p class="dm-value">
+                                                                    @f.CommandesTotales<span class="dm-unit"> cmd(s)</span>
                                                                 </p>
                                                             </div>
                                                             <button class="btn-detail-edit"
@@ -445,25 +381,7 @@
                                 @bind="_form.Adresse" @bind:event="oninput"></textarea>
                     </div>
 
-                    <p class="form-section-label" style="margin-top:8px">Performance</p>
-
-                    <div class="form-group">
-                        <label class="form-lbl">Score fiabilité (0–100) <span class="req">*</span></label>
-                        <input class="form-inp @(_erreurs.ContainsKey("Score") ? "inp-invalid" : "")"
-                            type="number" min="0" max="100" step="0.1" placeholder="ex : 85.5"
-                            @bind="_form.ScoreFiabilite" @bind:event="oninput" />
-                        @if (_erreurs.ContainsKey("Score"))
-                        { <span class="inp-error">@_erreurs["Score"]</span> }
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-lbl">Taux livraison à temps (%) <span class="req">*</span></label>
-                        <input class="form-inp @(_erreurs.ContainsKey("Taux") ? "inp-invalid" : "")"
-                            type="number" min="0" max="100" step="0.1" placeholder="ex : 92.5"
-                            @bind="_form.TauxLivraisonATemps" @bind:event="oninput" />
-                        @if (_erreurs.ContainsKey("Taux"))
-                        { <span class="inp-error">@_erreurs["Taux"]</span> }
-                    </div>
+                    <p class="form-section-label" style="margin-top:8px">Commande</p>
 
                     <div class="form-group">
                         <label class="form-lbl">Date de la dernière commande</label>

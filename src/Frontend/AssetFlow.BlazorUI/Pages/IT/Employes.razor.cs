@@ -233,12 +233,12 @@ namespace AssetFlow.BlazorUI.Pages.IT
             StateHasChanged();
         }
 
-        private static string GetNiveauClass(string niveau) => niveau switch
-        {
-            "Critique"      => "critique",
-            "Avertissement" => "avertissement",
-            _               => "info"
-        };
+        // private static string GetNiveauClass(string niveau) => niveau switch
+        // {
+        //     "Critique"      => "critique",
+        //     "Avertissement" => "avertissement",
+        //     _               => "info"
+        // };
 
         // ── Mode toggle ──
         private async Task SetMode(bool projet)
@@ -342,27 +342,32 @@ namespace AssetFlow.BlazorUI.Pages.IT
             StateHasChanged();
         }
 
-        private static string GetStatutClass(string statut) => statut switch
+        /* ═══════════════════════════════════════
+           CSS HELPERS
+        ═══════════════════════════════════════ */
+        private static string GetStatutClass(string? statut) => (statut ?? "").ToLower() switch
         {
-            "EnCours"  => "statut-encours",
-            "Planifie" => "statut-planifie",
-            "Suspendu" => "statut-suspendu",
-            _          => ""
+            "encours"  or "en cours" => "statut-encours",
+            "planifié" or "planifie" => "statut-planifie",
+            "terminé"  or "termine"  => "statut-termine",
+            _                        => "statut-encours",
         };
-        private static string GetPrioriteClass(string priorite) => priorite switch
+ 
+        private static string GetPrioriteClass(string? priorite) => (priorite ?? "").ToLower() switch
         {
-            "Critique" => "priorite-critique",
-            "Haute"    => "priorite-haute",
-            "Moyenne"  => "priorite-moyenne",
-            "Faible"   => "priorite-faible",
-            _          => ""
+            "haute"    => "priorite-haute",
+            "critique" => "priorite-critique",
+            "normale"  => "priorite-normale",
+            "faible"   => "priorite-faible",
+            _          => "priorite-normale",
         };
-        private string GetInitials()
+ 
+        private static string GetNiveauClass(string? niveau) => (niveau ?? "").ToLower() switch
         {
-            var parts = UserName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length >= 2) return $"{parts[0][0]}{parts[1][0]}".ToUpper();
-            if (parts.Length == 1 && parts[0].Length >= 2) return parts[0][..2].ToUpper();
-            return "IT";
-        }
+            "critique" => "niveau-critique",
+            "error"    => "niveau-error",
+            "warning"  => "niveau-warning",
+            _          => "niveau-info",
+        };
     }
 }

@@ -3,49 +3,47 @@
 @using AssetFlow.BlazorUI.Services
 @using AssetFlow.BlazorUI.Components
 
-
 <div class="bio-layout">
-
-    @* ══════ SIDEBAR ══════ *@
     <ITSidebar ActivePage="biographie" ForceOpen="_menuOpen" />
 
-    @* ══════ MAIN ══════ *@
     <main class="bio-main">
-
-        @* ── Header ── *@
-        <header class="bio-header">
+        @* ── Header DNA ── *@
+        <header class="dna-header-bar">
             <button class="bio-hamburger" @onclick="() => _menuOpen = !_menuOpen" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
-            <div class="bio-header-left">
-                <svg class="bio-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+            <div class="dna-header-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 8v4l3 3"/>
                 </svg>
-                <div>
-                    <h1 class="bio-page-title">Biographie des articles</h1>
-                    <p class="bio-page-sub">Consultez toute la vie d'un article : affectations, incidents, réparations et durées.</p>
-                </div>
+            </div>
+            <div>
+                <div class="dna-title">Biographie des articles</div>
+                <div class="dna-sub">Consultez toute la vie d'un article : affectations, incidents, réparations et durées.</div>
             </div>
         </header>
 
-    <div class="bio-page">
+        <div class="bio-page">
 
-        @* ── Sélecteur matériel → article ── *@
-        <div class="bio-selector-card">
-            @if (_loading)
-            {
-                <div class="bio-spinner-wrap"><span class="bio-spinner"></span><span>Chargement des matériels…</span></div>
-            }
-            else if (_materiels == null || !_materiels.Any())
-            {
-                <p class="bio-empty">Aucun matériel disponible.</p>
-            }
-            else
-            {
-                <div class="bio-selector-row">
-                    <div class="bio-selector-group">
-                        <label>Matériel</label>
-                        <select @onchange="OnMaterielChanged">
+            @* ── Sélecteurs ── *@
+            <div class="device-row">
+                @if (_loading)
+                {
+                    <div class="device-card" style="grid-column:1/-1;">
+                        <div class="bio-spinner-wrap"><span class="bio-spinner"></span><span>Chargement des matériels…</span></div>
+                    </div>
+                }
+                else if (_materiels == null || !_materiels.Any())
+                {
+                    <div class="device-card" style="grid-column:1/-1;">
+                        <p class="bio-empty">Aucun matériel disponible.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="device-card selector-card">
+                        <div class="dc-label">Matériel</div>
+                        <select class="dna-select" @onchange="OnMaterielChanged">
                             <option value="">— Choisir un matériel —</option>
                             @foreach (var m in _materiels)
                             {
@@ -57,12 +55,12 @@
                         </select>
                     </div>
 
-                    @if (_materielSelectionne != null)
-                    {
-                        <div class="bio-selector-group">
-                            <label>Article (unité physique)</label>
-                            <select @onchange="OnArticleChanged">
-                                <option value="">— Choisir un article —</option>
+                    <div class="device-card selector-card @(_materielSelectionne != null ? "active" : "")">
+                        <div class="dc-label">Article (unité physique)</div>
+                        <select class="dna-select" @onchange="OnArticleChanged" disabled="@(_materielSelectionne == null)">
+                            <option value="">— Choisir un article —</option>
+                            @if (_materielSelectionne != null)
+                            {
                                 @foreach (var a in _materielSelectionne.Articles)
                                 {
                                     <option value="@a.ArticleId">
@@ -70,167 +68,212 @@
                                         @(a.AffecteA != null ? $" → {a.AffecteA}" : " (en stock)")
                                     </option>
                                 }
-                            </select>
+                            }
+                        </select>
+                    </div>
+                }
+            </div>
+
+            @* ── Biographie ── *@
+            @if (_loadingBio)
+            {
+                <div class="bio-spinner-wrap" style="padding:2rem 0;"><span class="bio-spinner"></span><span>Chargement de la biographie…</span></div>
+            }
+            else if (_bio != null)
+            {
+                @* Carte d'identité principale *@
+                <div class="main-card identity-main">
+                    <div class="score-ring">
+                        <div class="ring-wrap">
+                            <svg viewBox="0 0 148 148" fill="none">
+                                <circle cx="74" cy="74" r="60" stroke="var(--color-border-tertiary)" stroke-width="12"/>
+                                <circle cx="74" cy="74" r="60" stroke="url(#bioGrad)" stroke-width="12" stroke-linecap="round"
+                                    stroke-dasharray="377" stroke-dashoffset="94" transform="rotate(-90 74 74)"/>
+                                <defs>
+                                    <linearGradient id="bioGrad" x1="0" y1="0" x2="148" y2="148" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#1D9E75"/>
+                                        <stop offset="100%" stop-color="#378ADD"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <div class="ring-center">
+                                <span class="ring-num">@_bio.AgeTotalJours</span>
+                                <span class="ring-max">jours</span>
+                            </div>
+                        </div>
+                        <div class="ring-label">Âge total</div>
+                    </div>
+
+                    <div class="identity-content">
+                        <div class="identity-header">
+                            <div>
+                                <div class="identity-title">@_bio.MaterielDesignation</div>
+                                <div class="identity-ref">Réf. @_bio.MaterielReference — @_bio.MaterielCategorie</div>
+                                <div class="identity-serial">N° série : <strong>@_bio.NumeroSerie</strong></div>
+                            </div>
+                            <div class="dna-badge @(_bio.Etat.ToLower() == "bon" ? "badge-good" : _bio.Etat.ToLower() == "panne" ? "badge-bad" : "badge-warn")">
+                                @_bio.Etat
+                            </div>
+                        </div>
+
+                        <div class="identity-meta">
+                            @if (_bio.AffectationActuelle != null)
+                            {
+                                <div class="meta-chip">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                    Chez <strong>@_bio.AffectationActuelle</strong>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="meta-chip meta-stock">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                                    En stock
+                                </div>
+                            }
+                            <div class="meta-chip">
+                                <span class="dot @(_bio.Statut.ToLower() == "disponible" ? "dot-green" : _bio.Statut.ToLower() == "affecte" ? "dot-blue" : "dot-orange")"></span>
+                                @_bio.Statut
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* Statistiques grid-4 *@
+                <div class="grid-4">
+                    <div class="stat-card">
+                        <div class="stat-card-icon" style="background:#E1F5EE;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                        <div class="stat-card-val">@_bio.AgeTotalJours <span style="font-size:13px;color:var(--color-text-secondary);font-weight:400;">j</span></div>
+                        <div class="stat-card-label">Âge total</div>
+                        <div class="stat-card-sub">Depuis le @_bio.DateAcquisition.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon" style="background:#E6F1FB;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                        <div class="stat-card-val">@_bio.NombrePersonnes</div>
+                        <div class="stat-card-label">Personnes</div>
+                        <div class="stat-card-sub">ayant eu cet article</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon" style="background:#FCEBEB;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A32D2D" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.73-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        </div>
+                        <div class="stat-card-val">@_bio.NombreIncidents</div>
+                        <div class="stat-card-label">Incidents</div>
+                        <div class="stat-card-sub">pannes déclarées</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon" style="background:#EEEDFE;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                        </div>
+                        <div class="stat-card-val">@_bio.NombreReparations</div>
+                        <div class="stat-card-label">Réparations</div>
+                        <div class="stat-card-sub">effectuées</div>
+                    </div>
+                </div>
+
+                @* Analyse des risques *@
+                <div class="risk-section">
+                    <div class="section-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Analyse des risques
+                    </div>
+                    <div class="risk-grid">
+                        @{
+                            var incidentClass = _bio.NombreIncidents == 0 ? "risk-ok" : _bio.NombreIncidents <= 2 ? "risk-warn" : "risk-bad";
+                            var incidentText = _bio.NombreIncidents == 0 ? "Aucun incident" : _bio.NombreIncidents + " incident" + (_bio.NombreIncidents > 1 ? "s" : "");
+
+                            var etatClass = _bio.Etat.ToLower() == "bon" ? "risk-ok" : _bio.Etat.ToLower() == "moyen" ? "risk-warn" : "risk-bad";
+
+                            var reparClass = _bio.NombreReparations == 0 ? "risk-ok" : _bio.NombreReparations <= 2 ? "risk-warn" : "risk-bad";
+                            var reparText = _bio.NombreReparations == 0 ? "Non réparé" : _bio.NombreReparations + " réparation" + (_bio.NombreReparations > 1 ? "s" : "");
+
+                            var ageClass = _bio.AgeTotalJours < 365 ? "risk-ok" : _bio.AgeTotalJours < 730 ? "risk-warn" : "risk-bad";
+                            var ageText = _bio.AgeTotalJours < 365 ? "Récent (" + _bio.AgeTotalJours + " j)" : "Ancien (" + (_bio.AgeTotalJours / 365) + " an" + (_bio.AgeTotalJours >= 730 ? "s" : "") + ")";
+
+                            var dispoClass = _bio.Statut.ToLower() == "disponible" ? "risk-ok" : _bio.Statut.ToLower() == "affecte" ? "risk-ok" : "risk-warn";
+                            var dispoText = _bio.Statut.ToLower() == "disponible" ? "Disponible" : _bio.Statut.ToLower() == "affecte" ? "Affecté" : _bio.Statut;
+                        }
+                        <div class="risk-chip @incidentClass"><div class="risk-dot"></div>@incidentText</div>
+                        <div class="risk-chip @etatClass"><div class="risk-dot"></div>État @_bio.Etat.ToLower()</div>
+                        <div class="risk-chip @dispoClass"><div class="risk-dot"></div>@dispoText</div>
+                        <div class="risk-chip @reparClass"><div class="risk-dot"></div>@reparText</div>
+                        <div class="risk-chip @ageClass"><div class="risk-dot"></div>@ageText</div>
+                        <div class="risk-chip risk-ok"><div class="risk-dot"></div>@_bio.NombrePersonnes affectation@(_bio.NombrePersonnes > 1 ? "s" : "")</div>
+                    </div>
+                </div>
+
+                @* Timeline *@
+                <div class="timeline-section">
+                    <div class="section-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                        Chronologie de vie
+                    </div>
+
+                    @if (!_bio.Historique.Any())
+                    {
+                        <p class="bio-empty">Aucun événement enregistré pour cet article.</p>
+                    }
+                    else
+                    {
+                        <div class="tl-list">
+                            @foreach (var evt in _bio.Historique)
+                            {
+                                var evtColor = evt.TypeEvenement.ToLower() switch
+                                {
+                                    "acquisition" => "#378ADD",
+                                    "affectation" => "#1D9E75",
+                                    "retrait" => "#BA7517",
+                                    "pannedeclaree" => "#E24B4A",
+                                    "reparation" => "#534AB7",
+                                    "miseenstock" => "#378ADD",
+                                    "reforme" => "#94a3b8",
+                                    _ => "#64748b"
+                                };
+                                var evtBg = evt.TypeEvenement.ToLower() switch
+                                {
+                                    "acquisition" => "#E6F1FB",
+                                    "affectation" => "#E1F5EE",
+                                    "retrait" => "#FAEEDA",
+                                    "pannedeclaree" => "#FCEBEB",
+                                    "reparation" => "#EEEDFE",
+                                    "miseenstock" => "#E6F1FB",
+                                    "reforme" => "#f1f5f9",
+                                    _ => "#f8fafc"
+                                };
+
+                                <div class="tl-item">
+                                    <div class="tl-dot" style="background:@evtBg;border-color:@evtColor;"></div>
+                                    <div class="tl-body">
+                                        <div class="tl-header">
+                                            <span class="tl-type" style="color:@evtColor;">@GetEvenementLabel(evt.TypeEvenement)</span>
+                                            <span class="tl-date">@evt.DateEvenement.ToString("dd/MM/yyyy")</span>
+                                        </div>
+                                        @if (evt.UtilisateurNom != null)
+                                        {
+                                            <div class="tl-emp">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                                @evt.UtilisateurNom
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(evt.Description))
+                                        {
+                                            <div class="tl-desc">@evt.Description</div>
+                                        }
+                                        @if (evt.DureeDepuisPrecedent.HasValue)
+                                        {
+                                            <div class="tl-duree">⏱ @evt.DureeDepuisPrecedent j depuis l'événement précédent</div>
+                                        }
+                                    </div>
+                                </div>
+                            }
                         </div>
                     }
                 </div>
             }
         </div>
-
-        @* ── Biographie ── *@
-        @if (_loadingBio)
-        {
-            <div class="bio-spinner-wrap"><span class="bio-spinner"></span><span>Chargement de la biographie…</span></div>
-        }
-        else if (_bio != null)
-        {
-            @* Carte d'identité *@
-            <div class="bio-identity-card">
-                <div class="bio-identity-avatar">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
-                    </svg>
-                </div>
-                <div class="bio-identity-info">
-                    <h2>@_bio.MaterielDesignation</h2>
-                    <p class="bio-identity-model">Réf. @_bio.MaterielReference — @_bio.MaterielCategorie</p>
-                    <p class="bio-identity-serial">N° série : <strong>@_bio.NumeroSerie</strong></p>
-                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.4rem;">
-                        <span class="bio-etat-badge bio-statut-@_bio.Statut.ToLower()">@_bio.Statut</span>
-                        <span class="bio-etat-badge bio-etat-@_bio.Etat.ToLower()">@_bio.Etat</span>
-                    </div>
-                </div>
-                <div class="bio-identity-affectation">
-                    @if (_bio.AffectationActuelle != null)
-                    {
-                        <div class="bio-affectation-current">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                            </svg>
-                            <span>Chez <strong>@_bio.AffectationActuelle</strong></span>
-                        </div>
-                    }
-                    @* else
-                    {
-                        <div class="bio-affectation-stock">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                            </svg>
-                            <span>En stock</span>
-                        </div>
-                    } *@
-                </div>
-            </div>
-
-            @* Statistiques *@
-            <div class="bio-stats-grid">
-                <div class="bio-stat-card">
-                    <div class="bio-stat-icon bio-stat-age">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-                        </svg>
-                    </div>
-                    <div class="bio-stat-value">@_bio.AgeTotalJours <span>j</span></div>
-                    <div class="bio-stat-label">Âge total</div>
-                    <div class="bio-stat-sub">Depuis le @_bio.DateAcquisition.ToString("dd/MM/yyyy")</div>
-                </div>
-                <div class="bio-stat-card">
-                    <div class="bio-stat-icon bio-stat-people">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                        </svg>
-                    </div>
-                    <div class="bio-stat-value">@_bio.NombrePersonnes</div>
-                    <div class="bio-stat-label">Personnes</div>
-                    <div class="bio-stat-sub">ayant eu cet article</div>
-                </div>
-                <div class="bio-stat-card">
-                    <div class="bio-stat-icon bio-stat-incident">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/>
-                        </svg>
-                    </div>
-                    <div class="bio-stat-value">@_bio.NombreIncidents</div>
-                    <div class="bio-stat-label">Incidents</div>
-                    <div class="bio-stat-sub">pannes déclarées</div>
-                </div>
-                <div class="bio-stat-card">
-                    <div class="bio-stat-icon bio-stat-repair">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-                        </svg>
-                    </div>
-                    <div class="bio-stat-value">@_bio.NombreReparations</div>
-                    <div class="bio-stat-label">Réparations</div>
-                    <div class="bio-stat-sub">effectuées</div>
-                </div>
-                @* <div class="bio-stat-card">
-                    <div class="bio-stat-icon bio-stat-stock">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                        </svg>
-                    </div>
-                    <div class="bio-stat-value">@_bio.JoursEnStock <span>j</span></div>
-                    <div class="bio-stat-label">En stock</div>
-                    <div class="bio-stat-sub">temps sans affectation</div>
-                </div> *@
-            </div>
-
-            @* Timeline *@
-            <div class="bio-timeline-section">
-                <h3 class="bio-timeline-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
-                        <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
-                        <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
-                    </svg>
-                    Chronologie de vie
-                </h3>
-
-                @if (!_bio.Historique.Any())
-                {
-                    <p class="bio-empty">Aucun événement enregistré pour cet article.</p>
-                }
-                else
-                {
-                    <div class="bio-timeline">
-                        @foreach (var evt in _bio.Historique)
-                        {
-                            <div class="bio-timeline-item bio-evt-@evt.TypeEvenement.ToLower()">
-                                <div class="bio-timeline-dot">
-                                    @GetEvenementIcon(evt.TypeEvenement)
-                                </div>
-                                <div class="bio-timeline-content">
-                                    <div class="bio-timeline-header">
-                                        <span class="bio-evt-type">@GetEvenementLabel(evt.TypeEvenement)</span>
-                                        <span class="bio-evt-date">@evt.DateEvenement.ToString("dd/MM/yyyy")</span>
-                                    </div>
-                                    @if (evt.UtilisateurNom != null)
-                                    {
-                                        <div class="bio-evt-employe">
-                                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                                            </svg>
-                                            @evt.UtilisateurNom
-                                        </div>
-                                    }
-                                    @if (!string.IsNullOrEmpty(evt.Description))
-                                    {
-                                        <div class="bio-evt-desc">@evt.Description</div>
-                                    }
-                                    @if (evt.DureeDepuisPrecedent.HasValue)
-                                    {
-                                        <div class="bio-evt-duree">⏱ @evt.DureeDepuisPrecedent j depuis l'événement précédent</div>
-                                    }
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
-        }
-
-    </div>@* fin bio-page *@
-    </main>@* fin bio-main *@
-</div>@* fin bio-layout *@
+    </main>
+</div>

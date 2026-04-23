@@ -5,38 +5,40 @@
 <RoleAuthGuard AllowedRoles="@(new[]{"IT","Admin"})">
 <div class="it-layout" data-theme="@_theme">
 
-     @if (_sidebarOpen)
-    { <div  @onclick="ToggleSidebar"></div> } 
+    @if (_sidebarOpen)
+    { <div class="it-sidebar-overlay" @onclick="ToggleSidebar"></div> }
 
     @* ══════ SIDEBAR ══════ *@
     @if (_estAdmin)
-        {
-            <AdminSidebar ForceOpen="_sidebarOpen" />
-        }
-        else
-        {
-            <ITSidebar ActivePage="dashboard" ForceOpen="_sidebarOpen" />
-        }
+    {
+        <AdminSidebar ForceOpen="_sidebarOpen" />
+    }
+    else
+    {
+        <ITSidebar ActivePage="dashboard" ForceOpen="_sidebarOpen" />
+    }
 
     @* ══════ ZONE PRINCIPALE ══════ *@
     <main class="it-main">
 
         <header class="it-topbar">
-            @* <button class="it-topbar-menu-btn" @onclick="ToggleSidebar">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                    <line x1="3" y1="6"  x2="21" y2="6"/>
-                    <line x1="3" y1="12" x2="21" y2="12"/>
-                    <line x1="3" y1="18" x2="21" y2="18"/>
-                </svg>
-            </button> *@
             <button class="emp-hamburger" @onclick="() => _sidebarOpen = !_sidebarOpen" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
+
             <div class="it-topbar-brand">
+                <div class="it-top-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                </div>
                 <h1>Tableau de bord IT</h1>
                 <span class="it-topbar-role-badge">Statistiques</span>
             </div>
+
             <div class="it-topbar-actions">
                 <span class="it-last-update">Mis à jour à @_lastUpdate</span>
                 <button class="it-btn-refresh" @onclick="ChargerDonnees" title="Actualiser">
@@ -126,7 +128,7 @@
                     </div>
                 </div>
 
-                @* ── AJOUTER ICI : Heatmap incidents par jour ── *@
+                @* ── Heatmap incidents par jour ── *@
                 <div class="it-charts-grid it-grid-1">
                     <div class="it-chart-card it-heatmap-card">
                         <div class="it-chart-header">
@@ -144,12 +146,11 @@
                                         }
                                     </select>
                                     <label class="it-mini-label">Matériel</label>
-                                    @* REMPLACER le select matériel *@
                                     <select class="it-mini-select it-mini-select-wide" @onchange="OnHeatmapMaterielChange">
                                         <option value="0">Tous les matériels</option>
                                         @foreach (var m in _stats.MaterielsDisponibles)
                                         {
-                                            <option value="@m.MaterielId" 
+                                            <option value="@m.MaterielId"
                                                     selected="@(_heatmapMaterielId == m.MaterielId)">
                                                 @m.Designation
                                             </option>
@@ -206,7 +207,7 @@
                     </div>
                 </div>
 
-                @* ── Row 2 : Évolution incidents (pleine largeur) ── *@
+                @* ── Row 2 : Évolution incidents ── *@
                 <div class="it-charts-grid it-grid-1">
                     <div class="it-chart-card">
                         <div class="it-chart-header">

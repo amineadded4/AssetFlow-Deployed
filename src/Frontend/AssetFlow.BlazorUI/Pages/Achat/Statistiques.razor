@@ -9,13 +9,13 @@
     { <div class="sidebar-overlay" @onclick="ToggleSidebar"></div> }
 
     @if (_estAdmin)
-        {
-            <AdminSidebar ForceOpen="_sidebarOpen" />
-        }
-        else
-        {
-            <AchatSidebar ActivePage="statistiques" ForceOpen="_sidebarOpen" />
-        }
+    {
+        <AdminSidebar ForceOpen="_sidebarOpen" />
+    }
+    else
+    {
+        <AchatSidebar ActivePage="statistiques" ForceOpen="_sidebarOpen" />
+    }
 
     @* ══════ ZONE PRINCIPALE ══════ *@
     <main class="main-zone">
@@ -30,6 +30,13 @@
                 </svg>
             </button>
             <div class="topbar-brand">
+                <div class="topbar-brand-icon">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                </div>
                 <h1>Tableau de bord</h1>
                 <span class="topbar-role-badge">Statistiques</span>
             </div>

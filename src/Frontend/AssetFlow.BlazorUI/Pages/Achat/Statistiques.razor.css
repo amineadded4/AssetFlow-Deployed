@@ -1,51 +1,90 @@
 /* ============================================================
-   1. VARIABLES
+   1. VARIABLES — palette IT appliquée au dashboard Achat
    ============================================================ */
 .layout-shell {
-    --primary:        #136dec;
-    --primary-glow:   rgba(19, 109, 236, 0.18);
-    --emerald:        #10b981;
-    --amber:          #f59e0b;
-    --rose:           #f43f5e;
-    --indigo:         #6366f1;
-    --cyan:           #06b6d4;
+    /* Brand */
+    --primary:        #185FA5;
+    --primary-soft:   #E6F1FB;
+    --primary-deep:   #0C447C;
+    --primary-glow:   rgba(24, 95, 165, 0.16);
 
-    --bg:             #f0f4f8;
-    --bg-panel:       #ffffff;
-    --bg-header:      rgba(240, 244, 248, 0.95);
-    --bg-row-hover:   #e8f0fe;
+    /* Status palette */
+    --c-blue:    #378ADD;
+    --c-blue-bg: #E6F1FB;
+    --c-blue-tx: #0C447C;
 
-    --text-primary:   #0f172a;
-    --text-secondary: #475569;
-    --border:         #cbd5e1;
-    --shadow-card:    0 1px 8px rgba(0,0,0,0.07);
+    --c-green:    #1D9E75;
+    --c-green-bg: #E1F5EE;
+    --c-green-tx: #0F6E56;
+
+    --c-amber:    #BA7517;
+    --c-amber-bg: #FAEEDA;
+    --c-amber-tx: #854F0B;
+
+    --c-red:    #E24B4A;
+    --c-red-bg: #FCEBEB;
+    --c-red-tx: #A32D2D;
+
+    --c-indigo:    #534AB7;
+    --c-indigo-bg: #EEEDFE;
+
+    --emerald: var(--c-green);
+    --amber:   var(--c-amber);
+    --rose:    var(--c-red);
+    --indigo:  var(--c-indigo);
+    --purple:  #a855f7;
+    --cyan:    #06b6d4;
+
+    /* Surfaces */
+    --bg:             #F7F8FA;
+    --bg-panel:       #FFFFFF;
+    --bg-secondary:   #F2F4F7;
+    --bg-header:      rgba(247, 248, 250, 0.92);
+    --bg-row-hover:   rgba(24, 95, 165, 0.06);
+
+    --text-primary:   #14202E;
+    --text-secondary: #5A6573;
+
+    --border:              #E4E7EC;
+    --border-tertiary:     rgba(20, 32, 46, 0.08);
+    --shadow-card:         0 1px 2px rgba(16, 24, 40, 0.04);
+    --shadow-card-hover:   0 4px 14px rgba(16, 24, 40, 0.06);
 
     --radius-sm:   6px;
     --radius-md:   10px;
     --radius-lg:   14px;
-    --radius-xl:   18px;
+    --radius-xl:   16px;
     --radius-full: 9999px;
     --t:           0.2s ease;
 
-    /* Layout principal */
     display:    flex;
     height:     100vh;
     overflow:   hidden;
     background: var(--bg);
     color:      var(--text-primary);
-    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-family:'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
     position:   relative;
 }
 
 html.dark .layout-shell {
-    --bg:             #101822;
-    --bg-panel:       #1a232e;
-    --bg-header:      rgba(16, 24, 34, 0.95);
-    --bg-row-hover:   rgba(255,255,255,0.05);
-    --text-primary:   #f1f5f9;
-    --text-secondary: #94a3b8;
-    --border:         #2d3f55;
-    --shadow-card:    0 2px 12px rgba(0,0,0,0.4);
+    --primary-soft:    rgba(55, 138, 221, 0.14);
+    --bg:              #0E1620;
+    --bg-panel:        #161F2C;
+    --bg-secondary:    #1B2533;
+    --bg-header:       rgba(14, 22, 32, 0.92);
+    --bg-row-hover:    rgba(255,255,255,0.05);
+    --text-primary:    #E8EDF3;
+    --text-secondary:  #94A3B8;
+    --border:          #25303F;
+    --border-tertiary: rgba(255, 255, 255, 0.06);
+    --shadow-card:     0 1px 2px rgba(0,0,0,0.4);
+    --shadow-card-hover: 0 4px 18px rgba(0,0,0,0.5);
+
+    --c-blue-bg:   rgba(55, 138, 221, 0.16);
+    --c-green-bg:  rgba(29, 158, 117, 0.16);
+    --c-amber-bg:  rgba(186, 117, 23, 0.18);
+    --c-red-bg:    rgba(226, 75, 74, 0.16);
+    --c-indigo-bg: rgba(83, 74, 183, 0.18);
 }
 
 
@@ -58,13 +97,13 @@ html.dark .layout-shell {
 .layout-shell a      { text-decoration: none; color: inherit; }
 .layout-shell button { font-family: inherit; cursor: pointer; border: none; background: none; }
 .layout-shell svg    { display: block; }
-.layout-shell ::-webkit-scrollbar       { width: 5px; height: 5px; }
+.layout-shell ::-webkit-scrollbar       { width: 6px; height: 6px; }
 .layout-shell ::-webkit-scrollbar-track { background: transparent; }
 .layout-shell ::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--radius-full); }
 
 
 /* ============================================================
-   3. SIDEBAR
+   3. SIDEBAR (styles partagés — sidebar composant externe)
    ============================================================ */
 .sidebar {
     width:          220px;
@@ -80,271 +119,302 @@ html.dark .layout-shell {
     border-right:   1px solid rgba(255,255,255,0.05);
 }
 .sidebar-header {
-    padding:1.5rem 1rem;
-    display:flex; align-items:center; justify-content:center;
+    padding: 1.5rem 1rem;
+    display: flex; align-items: center; justify-content: center;
 }
 .sidebar-logo-img {
-    width:140px; height:auto; object-fit:contain;
-    filter:drop-shadow(0 0 12px rgba(19,109,236,0.5));
+    width: 140px; height: auto; object-fit: contain;
+    filter: drop-shadow(0 0 12px rgba(24,95,165,0.5));
 }
 .sidebar-nav {
-    flex:1; margin-top:0.5rem;
-    display:flex; flex-direction:column; gap:0.15rem; overflow-y:auto;
+    flex: 1; margin-top: 0.5rem;
+    display: flex; flex-direction: column; gap: 0.15rem; overflow-y: auto;
 }
 .nav-link {
-    display:flex; align-items:center; gap:0.75rem;
-    padding:0.75rem 1.5rem;
-    color:rgba(255,255,255,0.55) !important;
-    font-size:0.875rem; font-weight:500;
-    transition:all 0.2s ease; border-left:4px solid transparent;
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    color: rgba(255,255,255,0.55) !important;
+    font-size: 0.875rem; font-weight: 500;
+    transition: all 0.2s ease; border-left: 3px solid transparent;
 }
-.nav-link:hover  { color:#fff !important; background:rgba(255,255,255,0.06); }
-.nav-link.active { color:#fff !important; background:rgba(19,109,236,0.22); border-left:4px solid #136dec; font-weight:700; }
-.nav-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.nav-icon svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-.nav-text { font-size:0.875rem; line-height:1.3; }
-.sidebar-profile { padding:1rem 1.25rem; border-top:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; gap:0.75rem; }
-.profile-avatar  { width:36px; height:36px; border-radius:50%; background:#136dec; color:#fff; font-weight:700; font-size:0.72rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.profile-info    { overflow:hidden; }
-.profile-name    { font-size:0.8rem; font-weight:600; color:#fff; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.profile-role    { font-size:0.7rem; color:#94a3b8; margin:0.1rem 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nav-link:hover  { color: #fff !important; background: rgba(255,255,255,0.06); }
+.nav-link.active { color: #fff !important; background: rgba(55,138,221,0.18); border-left: 3px solid var(--c-blue); font-weight: 600; }
+.nav-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.nav-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav-text { font-size: 0.875rem; line-height: 1.3; }
+.sidebar-profile { padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 0.75rem; }
+.profile-avatar  { width: 36px; height: 36px; border-radius: 50%; background: var(--c-blue); color: #fff; font-weight: 600; font-size: 0.72rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.profile-info    { overflow: hidden; }
+.profile-name    { font-size: 0.8rem; font-weight: 600; color: #fff; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.profile-role    { font-size: 0.7rem; color: #94a3b8; margin: 0.1rem 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 
 /* ============================================================
    4. ZONE PRINCIPALE
    ============================================================ */
 .main-zone {
-    flex:1; min-width:0;
-    display:flex; flex-direction:column;
-    overflow:hidden;
-    background:var(--bg);
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
 }
 
 
 /* ============================================================
-   5. TOPBAR
+   5. TOPBAR — style IT
    ============================================================ */
 .topbar {
-    height:56px; flex-shrink:0;
-    display:flex; align-items:center; gap:12px; padding:0 20px;
-    border-bottom:1px solid var(--border);
-    background:var(--bg-header); backdrop-filter:blur(12px);
+    height: 60px; flex-shrink: 0;
+    display: flex; align-items: center; gap: 12px; padding: 0 22px;
+    border-bottom: 0.5px solid var(--border-tertiary);
+    background: var(--bg-header); backdrop-filter: blur(12px);
 }
 .topbar-menu-btn {
-    display:none; align-items:center; justify-content:center;
-    width:36px; height:36px; border-radius:var(--radius-md);
-    color:var(--text-secondary); border:1px solid var(--border); flex-shrink:0;
+    display: none; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: var(--radius-md);
+    color: var(--text-secondary); border: 0.5px solid var(--border);
+    flex-shrink: 0; transition: all var(--t);
 }
-.topbar-menu-btn:hover { background:var(--bg-row-hover); }
-.topbar-brand { display:flex; align-items:center; gap:10px; }
-.topbar-brand h1 { font-size:18px; font-weight:900; color:var(--text-primary); letter-spacing:-0.3px; }
-.topbar-role-badge { font-size:10px; font-weight:700; padding:3px 8px; border-radius:var(--radius-full); background:rgba(19,109,236,0.12); color:#136dec; text-transform:uppercase; letter-spacing:0.06em; }
+.topbar-menu-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+.topbar-brand {
+    display: flex; align-items: center; gap: 10px; flex: 1;
+}
+/* Icône dans la topbar */
+.topbar-brand-icon {
+    width: 36px; height: 36px; border-radius: var(--radius-md);
+    background: var(--primary-soft); color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.topbar-brand-icon svg {
+    width: 18px; height: 18px; fill: none; stroke: currentColor;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.topbar-brand h1 {
+    font-size: 17px; font-weight: 500; color: var(--text-primary);
+    letter-spacing: -0.2px;
+}
+.topbar-role-badge {
+    font-size: 11px; font-weight: 500; padding: 3px 10px;
+    border-radius: var(--radius-full);
+    background: var(--primary-soft); color: var(--primary-deep);
+    text-transform: none; letter-spacing: 0;
+}
 
 
 /* ============================================================
-   6. DASHBOARD SCROLL — seul élément scrollable
+   6. DASHBOARD SCROLL
    ============================================================ */
 .dashboard-scroll {
-    flex:1; min-height:0;
-    overflow-y:auto; overflow-x:hidden;
-    padding:16px 18px 40px;
-    display:flex; flex-direction:column; gap:14px;
+    flex: 1; min-height: 0;
+    overflow-y: auto; overflow-x: hidden;
+    padding: 20px 22px 40px;
+    display: flex; flex-direction: column; gap: 16px;
 }
-
 
 /* ── Loading / Error ── */
 .loading-overlay {
-    display:flex; flex-direction:column; align-items:center;
-    justify-content:center; gap:16px; color:var(--text-secondary); min-height:300px;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 16px; color: var(--text-secondary); min-height: 300px;
 }
 .loading-spinner {
-    width:36px; height:36px;
-    border:3px solid var(--border); border-top:3px solid #136dec;
-    border-radius:50%; animation:spin 0.75s linear infinite;
+    width: 36px; height: 36px;
+    border: 3px solid var(--border); border-top: 3px solid var(--primary);
+    border-radius: 50%; animation: spin 0.75s linear infinite;
 }
-@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .error-state {
-    display:flex; flex-direction:column; align-items:center;
-    justify-content:center; gap:14px; color:var(--text-secondary); min-height:300px;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 14px; color: var(--text-secondary); min-height: 300px;
 }
-.error-state svg { width:40px; height:40px; fill:none; stroke:#f43f5e; stroke-width:1.5; }
-.error-state p   { font-size:14px; }
-.btn-retry { padding:8px 20px; background:#136dec; color:#fff; border-radius:var(--radius-md); font-size:13px; font-weight:600; }
+.error-state svg { width: 40px; height: 40px; fill: none; stroke: var(--c-red); stroke-width: 1.5; }
+.error-state p   { font-size: 14px; }
+.btn-retry { padding: 8px 20px; background: var(--primary); color: #fff; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; }
 
 
 /* ============================================================
-   7. KPI CARDS
+   7. KPI CARDS — style IT (compact, fond secondaire)
    ============================================================ */
 .kpi-row {
-    display:grid; grid-template-columns:repeat(4,1fr); gap:12px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
 }
 .kpi-card {
-    display:flex; align-items:center; gap:12px; padding:14px 16px;
-    background:var(--bg-panel); border:1px solid var(--border);
-    border-radius:var(--radius-xl); box-shadow:var(--shadow-card);
-    transition:background var(--t), transform 0.15s;
-    animation:fadeUp 0.35s ease both;
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    background: var(--bg-secondary);
+    border: 0.5px solid var(--border-tertiary);
+    border-radius: var(--radius-md);
+    box-shadow: none;
+    transition: background var(--t), transform 0.15s, box-shadow var(--t);
+    animation: fadeUp 0.35s ease both;
+    position: relative;
 }
-.kpi-card:hover { transform:translateY(-2px); }
+.kpi-card:hover {
+    transform: translateY(-1px);
+    background: var(--bg-panel);
+    box-shadow: var(--shadow-card);
+}
 .kpi-ico {
-    width:42px; height:42px; border-radius:var(--radius-lg);
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    width: 30px; height: 30px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.kpi-ico svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
-.kpi-blue    .kpi-ico { background:rgba(19,109,236,0.12);  color:#136dec; }
-.kpi-indigo  .kpi-ico { background:rgba(99,102,241,0.12);  color:#6366f1; }
-.kpi-emerald .kpi-ico { background:rgba(16,185,129,0.12);  color:#10b981; }
-.kpi-amber   .kpi-ico { background:rgba(245,158,11,0.12);  color:#f59e0b; }
-.kpi-blue    { border-left:3px solid #136dec; }
-.kpi-indigo  { border-left:3px solid #6366f1; }
-.kpi-emerald { border-left:3px solid #10b981; }
-.kpi-amber   { border-left:3px solid #f59e0b; }
-.kpi-info { display:flex; flex-direction:column; gap:2px; min-width:0; }
-.kpi-val  { font-size:24px; font-weight:900; color:var(--text-primary); line-height:1; letter-spacing:-0.5px; }
-.kpi-lbl  { font-size:10px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.06em; }
+.kpi-ico svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+
+.kpi-blue    .kpi-ico { background: var(--c-blue-bg);   color: var(--primary); }
+.kpi-indigo  .kpi-ico { background: var(--c-indigo-bg); color: var(--c-indigo); }
+.kpi-emerald .kpi-ico { background: var(--c-green-bg);  color: var(--c-green-tx); }
+.kpi-amber   .kpi-ico { background: var(--c-amber-bg);  color: var(--c-amber-tx); }
+
+/* Suppression des border-left colorées du design original, remplacées par fond ico */
+.kpi-blue, .kpi-indigo, .kpi-emerald, .kpi-amber { border-left: none; }
+
+.kpi-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kpi-val  {
+    font-size: 22px; font-weight: 500;
+    color: var(--text-primary); line-height: 1.1; letter-spacing: -0.3px;
+}
+.kpi-lbl  {
+    font-size: 10px; font-weight: 500; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.05em;
+}
 
 
 /* ============================================================
    8. GRILLES DE GRAPHES
    ============================================================ */
-.charts-grid   { display:grid; gap:14px; }
-.charts-grid-1 { grid-template-columns:1fr; }
-.charts-grid-2 { grid-template-columns:1fr 1fr; }
+.charts-grid   { display: grid; gap: 12px; }
+.charts-grid-1 { grid-template-columns: 1fr; }
+.charts-grid-2 { grid-template-columns: 1fr 1fr; }
 
 
 /* ============================================================
-   9. CHART CARD + CHART BODY
-   ──────────────────────────────────────────────────────────
-   RÈGLE CLÉ :
-   · .chart-card  → display:flex, flex-direction:column, NO fixed height
-                    La carte s'adapte à son contenu.
-   · .chart-header → hauteur auto (contenu)
-   · .chart-body  → hauteur FIXE EN PIXELS (ex: 280px)
-                    ApexCharts lit cette hauteur et se dessine dedans.
-   · JAMAIS height:'100%' passé à ApexCharts (voir JS aussi)
+   9. CHART CARD — style IT (bords fins, ombres douces)
    ============================================================ */
 .chart-card {
-    background:    var(--bg-panel);
-    border:        1px solid var(--border);
-    border-radius: var(--radius-xl);
-    box-shadow:    var(--shadow-card);
-    display:       flex;
-    flex-direction:column;
-    overflow:      hidden;
-    transition:    background var(--t), border-color var(--t);
-    animation:     fadeUp 0.35s ease both;
-    /* PAS de height ici — la carte s'adapte au chart-body */
+    background:     var(--bg-panel);
+    border:         0.5px solid var(--border-tertiary);
+    border-radius:  var(--radius-lg);
+    box-shadow:     var(--shadow-card);
+    display:        flex;
+    flex-direction: column;
+    overflow:       hidden;
+    transition:     background var(--t), border-color var(--t), box-shadow var(--t);
+    animation:      fadeUp 0.35s ease both;
 }
+.chart-card:hover { box-shadow: var(--shadow-card-hover); }
 
 /* ── En-tête ── */
 .chart-header {
-    padding:    13px 16px 10px;
-    border-bottom:1px solid var(--border);
-    flex-shrink:0;
-    display:    flex; flex-direction:column; gap:5px;
+    padding:       14px 18px 10px;
+    border-bottom: 0.5px solid var(--border-tertiary);
+    flex-shrink:   0;
+    display:       flex; flex-direction: column; gap: 4px;
 }
 .chart-title-row {
-    display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-height:26px;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 26px;
 }
-.chart-title-row .chart-title { flex:1; min-width:0; }
+.chart-title-row .chart-title { flex: 1; min-width: 0; }
 .chart-title {
-    display:flex; align-items:center; gap:7px;
-    font-size:13px; font-weight:800; color:var(--text-primary);
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13px; font-weight: 500; color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .chart-title svg {
-    width:14px; height:14px; flex-shrink:0;
-    fill:none; stroke:#136dec; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
+    width: 14px; height: 14px; flex-shrink: 0;
+    fill: none; stroke: var(--primary); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
 }
-.chart-sub { font-size:11px; color:var(--text-secondary); font-weight:500; }
+.chart-sub { font-size: 11px; color: var(--text-secondary); font-weight: 400; }
 
-/* ── Corps graphe : HAUTEUR FIXE EN PIXELS ── */
-/* C'est la seule chose qu'ApexCharts sait lire correctement */
+/* ── Corps graphe ── */
 .chart-body {
-    width:   100%;
-    height:  280px;   /* ← valeur par défaut pour les 2col */
-    flex-shrink: 0;   /* ← NE PAS laisser flex réduire la hauteur */
-    padding: 4px 2px 2px;
-    overflow:hidden;
-    position:relative;
+    width:    100%;
+    height:   280px;
+    flex-shrink: 0;
+    padding:  6px 4px 4px;
+    overflow: hidden;
+    position: relative;
 }
-
-/* Graphes pleine largeur : un peu plus hauts */
-.charts-grid-1 .chart-body {
-    height: 260px;
-}
+.charts-grid-1 .chart-body { height: 260px; }
 
 
 /* ============================================================
-   10. FILTRES INLINE
+   10. FILTRES INLINE — style IT
    ============================================================ */
-.filter-chips { display:flex; gap:4px; flex-wrap:wrap; }
+.filter-chips { display: flex; gap: 4px; flex-wrap: wrap; }
 .chip {
-    padding:3px 9px; border-radius:var(--radius-full);
-    font-size:10px; font-weight:600;
-    border:1px solid var(--border); color:var(--text-secondary);
-    background:var(--bg); transition:all var(--t); cursor:pointer; white-space:nowrap;
+    padding: 3px 9px; border-radius: var(--radius-full);
+    font-size: 10px; font-weight: 600;
+    border: 0.5px solid var(--border); color: var(--text-secondary);
+    background: var(--bg-secondary); transition: all var(--t); cursor: pointer; white-space: nowrap;
 }
-.chip:hover  { border-color:#136dec; color:#136dec; }
-.chip-active { background:rgba(19,109,236,0.12) !important; border-color:#136dec !important; color:#136dec !important; }
+.chip:hover  { border-color: var(--primary); color: var(--primary); }
+.chip-active { background: var(--primary-soft) !important; border-color: var(--primary) !important; color: var(--primary-deep) !important; }
 
 .inline-filters {
-    display:flex; align-items:center; gap:5px; flex-wrap:wrap; flex-shrink:0;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex-shrink: 0;
 }
 .mini-label {
-    font-size:10px; font-weight:700; color:var(--text-secondary);
-    text-transform:uppercase; letter-spacing:0.05em; white-space:nowrap;
+    font-size: 10px; font-weight: 600; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;
 }
 .mini-select {
-    padding:4px 8px; background:var(--bg-panel);
-    border:1px solid var(--border); border-radius:var(--radius-sm);
-    font-size:11px; color:var(--text-primary); outline:none; cursor:pointer;
-    transition:border-color var(--t); max-width:130px;
+    padding: 4px 8px; background: var(--bg-panel);
+    border: 0.5px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 11px; color: var(--text-primary); outline: none; cursor: pointer;
+    transition: border-color var(--t); max-width: 130px;
 }
-.mini-select:focus { border-color:#136dec; }
-html.dark .mini-select { background:#1e2d3f; }
+.mini-select:focus,
+.mini-select:hover { border-color: var(--primary); }
+html.dark .mini-select { background: #1B2533; color: var(--text-primary); }
 
 .mini-date {
-    padding:4px 8px; background:var(--bg-panel);
-    border:1px solid var(--border); border-radius:var(--radius-sm);
-    font-size:11px; color:var(--text-primary); outline:none; cursor:pointer;
-    transition:border-color var(--t);
+    padding: 4px 8px; background: var(--bg-panel);
+    border: 0.5px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 11px; color: var(--text-primary); outline: none; cursor: pointer;
+    transition: border-color var(--t);
 }
-.mini-date:focus { border-color:#136dec; }
-html.dark .mini-date { background:#1e2d3f; color:var(--text-primary); }
+.mini-date:focus,
+.mini-date:hover { border-color: var(--primary); }
+html.dark .mini-date { background: #1B2533; color: var(--text-primary); }
 
 .btn-apply {
-    padding:4px 10px; background:rgba(19,109,236,0.1);
-    border:1px solid rgba(19,109,236,0.3); border-radius:var(--radius-sm);
-    color:#136dec; font-size:11px; font-weight:700; white-space:nowrap;
-    transition:all var(--t);
+    padding: 5px 12px;
+    background: var(--primary);
+    border: 0.5px solid var(--primary);
+    border-radius: var(--radius-sm);
+    color: #fff; font-size: 11px; font-weight: 500; white-space: nowrap;
+    transition: all var(--t);
 }
-.btn-apply:hover { background:rgba(19,109,236,0.2); }
+.btn-apply:hover { background: var(--primary-deep); border-color: var(--primary-deep); }
 
 
 /* ============================================================
    11. TOAST
    ============================================================ */
 .toast {
-    position:fixed; bottom:24px; right:24px; z-index:999;
-    padding:12px 18px; border-radius:var(--radius-md);
-    font-size:13px; font-weight:600; max-width:300px;
-    box-shadow:0 8px 32px rgba(0,0,0,0.3); animation:toastSlide 0.3s ease;
+    position: fixed; bottom: 24px; right: 24px; z-index: 999;
+    padding: 12px 18px; border-radius: var(--radius-md);
+    font-size: 13px; font-weight: 600; max-width: 300px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18); animation: toastSlide 0.3s ease;
 }
-.toast-success { background:#10b981; color:#fff; }
-.toast-error   { background:#f43f5e; color:#fff; }
+.toast-success { background: var(--c-green); color: #fff; }
+.toast-error   { background: var(--c-red);   color: #fff; }
 
 
 /* ============================================================
    12. ANIMATIONS
    ============================================================ */
 @keyframes fadeUp {
-    from { opacity:0; transform:translateY(10px); }
-    to   { opacity:1; transform:translateY(0); }
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes toastSlide {
-    from { opacity:0; transform:translateX(14px); }
-    to   { opacity:1; transform:translateX(0); }
+    from { opacity: 0; transform: translateX(14px); }
+    to   { opacity: 1; transform: translateX(0); }
 }
 
 
@@ -352,34 +422,34 @@ html.dark .mini-date { background:#1e2d3f; color:var(--text-primary); }
    13. RESPONSIVE
    ============================================================ */
 @media (max-width: 1280px) {
-    .chart-body { height:270px; }
-    .charts-grid-1 .chart-body { height:250px; }
+    .chart-body { height: 270px; }
+    .charts-grid-1 .chart-body { height: 250px; }
 }
 
 @media (max-width: 1024px) {
-    .kpi-row        { grid-template-columns:repeat(2,1fr); }
-    .charts-grid-2  { grid-template-columns:1fr; }
-    .chart-body { height:260px; }
-    .charts-grid-1 .chart-body { height:240px; }
+    .kpi-row       { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid-2 { grid-template-columns: 1fr; }
+    .chart-body { height: 260px; }
+    .charts-grid-1 .chart-body { height: 240px; }
 }
 
 @media (max-width: 768px) {
-    .sidebar { position:fixed; left:0; top:0; transform:translateX(-100%); z-index:150; }
-    .sidebar.open { transform:translateX(0); }
-    .topbar-menu-btn { display:flex; }
-    .dashboard-scroll { padding:12px 10px 30px; gap:10px; }
-    .kpi-row { grid-template-columns:repeat(2,1fr); gap:8px; }
-    .kpi-val { font-size:20px; }
-    .chart-body { height:230px; }
-    .charts-grid-1 .chart-body { height:220px; }
-    .inline-filters { gap:4px; }
-    .mini-date { max-width:120px; }
+    .sidebar { position: fixed; left: 0; top: 0; transform: translateX(-100%); z-index: 150; }
+    .sidebar.open { transform: translateX(0); }
+    .topbar-menu-btn { display: flex; }
+    .dashboard-scroll { padding: 14px 12px 30px; gap: 12px; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .kpi-val { font-size: 18px; }
+    .chart-body { height: 230px; }
+    .charts-grid-1 .chart-body { height: 220px; }
+    .inline-filters { gap: 4px; }
+    .mini-date { max-width: 120px; }
 }
 
 @media (max-width: 480px) {
-    .kpi-row { grid-template-columns:1fr 1fr; }
-    .chart-body { height:200px; }
-    .charts-grid-1 .chart-body { height:190px; }
-    .chart-title  { font-size:11px; }
-    .mini-label   { display:none; }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .chart-body { height: 200px; }
+    .charts-grid-1 .chart-body { height: 190px; }
+    .chart-title { font-size: 11px; }
+    .mini-label  { display: none; }
 }

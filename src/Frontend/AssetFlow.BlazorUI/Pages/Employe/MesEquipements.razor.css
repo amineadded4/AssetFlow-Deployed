@@ -40,10 +40,11 @@ html.dark .employe-header {
 }
 
 .header-title-group {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-shrink: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text, #0f172a);
+    margin: 0 0 2px;
+    letter-spacing: -0.025em;
 }
 .header-title {
     font-size: 1.25rem;

@@ -130,10 +130,10 @@ html.dark .employe-header {
     flex-shrink: 0;
 }
 .header-title {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: var(--text);
-    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text, #0f172a);
+    margin: 0 0 2px;
     letter-spacing: -0.025em;
 }
 .header-badge {

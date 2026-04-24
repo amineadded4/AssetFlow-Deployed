@@ -126,8 +126,11 @@ html.dark .iteq-header { background: rgba(16,24,34,0.9); border-bottom-color: rg
 
 .iteq-header-left { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
 .iteq-page-title {
-    font-size: 1.25rem; font-weight: 800; color: var(--text);
-    margin: 0; letter-spacing: -0.025em;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text, #0f172a);
+    margin: 0 0 2px;
+    letter-spacing: -0.025em;
 }
 .iteq-header-badge {
     padding: 0.2rem 0.625rem;

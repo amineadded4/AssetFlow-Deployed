@@ -11,22 +11,30 @@
 
         <main class="inc-sig-main">
 
-            <button class="aff-hamburger" @onclick="() => _menuOpen = !_menuOpen" aria-label="Menu">
-                <span></span><span></span><span></span>
-            </button>
+            @* ── Header sticky ── *@
+            <header class="inc-sig-header">
+                <button class="aff-hamburger" @onclick="() => _menuOpen = !_menuOpen" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
+                <nav class="inc-sig-breadcrumb">
+                    <a href="/employe/equipements" class="breadcrumb-back" title="Retour">
+                        <svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6" /></svg>
+                    </a>
+                    <span class="breadcrumb-sep">Équipements</span>
+                    @if (!string.IsNullOrEmpty(CurrentDesignation))
+                    {
+                        <svg class="breadcrumb-chevron" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6" /></svg>
+                        <a href="/employe/equipements" class="breadcrumb-link">@CurrentDesignation</a>
+                    }
+                    <svg class="breadcrumb-chevron" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6" /></svg>
+                    <span class="breadcrumb-current">Signalement</span>
+                </nav>
+            </header>
 
-            <nav class="inc-sig-breadcrumb">
-                <a href="/employe/equipements" class="bc-link">Équipements</a>
-                <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
-                @if (!string.IsNullOrEmpty(CurrentDesignation))
-                {
-                    <a href="/employe/equipements" class="bc-link">@CurrentDesignation</a>
-                    <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
-                }
-                <span class="bc-current">Signalement</span>
-            </nav>
+            @* ── Contenu scrollable ── *@
+            <div class="inc-sig-content">
 
-            <div class="incident-card-wrap">
+                <div class="incident-card-wrap">
 
                     <div class="card-header">
                         <div class="header-icon-wrapper">
@@ -37,7 +45,7 @@
                             </svg>
                         </div>
                         <div class="header-text">
-                            <h2 class="header-title-card">Signaler un incident</h2>
+                            <h2 class="header-title">Signaler un incident</h2>
                             <p class="header-subtitle">Veuillez détailler le problème pour une prise en charge rapide.</p>
                         </div>
                     </div>
@@ -172,7 +180,11 @@
                         </div>
                     }
 
+                </div>
+                @* fin incident-card-wrap *@
+
             </div>
+            @* fin inc-sig-content *@
 
         </main>
 

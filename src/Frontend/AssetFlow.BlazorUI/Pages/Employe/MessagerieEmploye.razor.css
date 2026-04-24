@@ -5,7 +5,11 @@
 .employe-header { height:4rem; border-bottom:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:space-between; padding:0 2rem; flex-shrink:0; gap:1.5rem; }
 html.dark .employe-header { background:rgba(16,24,34,0.8); border-bottom-color:rgba(255,255,255,0.08); }
 .header-title-group { display:flex; flex-direction:column; align-items:flex-start; gap:0.1rem; flex-shrink:0; }
-.header-title { font-size:1.25rem; font-weight:800; color:var(--text); margin:0; letter-spacing:-0.025em; }
+.header-title { font-size: 20px;
+    font-weight: 700;
+    color: var(--text, #0f172a);
+    margin: 0 0 2px;
+    letter-spacing: -0.025em; }
 .emp-page-sub { font-size:0.78rem; color:var(--text-muted); margin:0; }
 
 /* ── Body chat ── */

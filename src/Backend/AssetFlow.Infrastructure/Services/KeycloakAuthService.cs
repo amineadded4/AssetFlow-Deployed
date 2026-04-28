@@ -203,8 +203,8 @@ namespace AssetFlow.Infrastructure.Services
             {
                 { "grant_type", "password"    },
                 { "client_id",  "admin-cli"   },
-                { "username",   "maddeh" },
-                { "password",   "maddeh2004" }
+                { "username",   "Amine" },
+                { "password",   "Password123" }
             };
 
             using var freshClient = new HttpClient();

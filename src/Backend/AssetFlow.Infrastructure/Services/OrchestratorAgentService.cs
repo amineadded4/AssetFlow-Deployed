@@ -210,7 +210,7 @@ Réponds UNIQUEMENT avec ce JSON (sans markdown):
                 Description   = $"Réapprovisionnement automatique pour {alerte.Designation}",
                 Commande = new AgentCommandeProposal
                 {
-                    NumeroCommande  = $"CMD-{DateTime.UtcNow:yyyy}-{alerte.Reference}",
+                    NumeroCommande  = $"CMD-{DateTime.UtcNow:yyyy}-REAPRO-{alerte.Reference}-{DateTime.UtcNow:MMdd}",
                     MaterielId      = alerte.MaterielId,
                     NomMateriel     = alerte.Designation,
                     QuantiteAchetee = alerte.QuantiteMin * 3,
@@ -242,7 +242,7 @@ Réponds UNIQUEMENT avec ce JSON (sans markdown):
   ""quantiteMin"": {alerte.QuantiteMin},
   ""unite"": ""pièce"",
   ""commande"": {{
-    ""numeroCommande"": ""CMD-{DateTime.UtcNow:yyyy}-REAPRO"",
+    ""numeroCommande"": ""CMD-{DateTime.UtcNow:yyyy}-REAPRO-{alerte.Reference}-{DateTime.UtcNow:MMdd}"",
     ""materielId"": {alerte.MaterielId},
     ""nomMateriel"": ""{alerte.Designation}"",
     ""nomFournisseur"": """",

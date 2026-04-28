@@ -201,6 +201,7 @@ namespace AssetFlow.Infrastructure.Services
                                 NumeroCommande  = p.Commande.NumeroCommande,
                                 MaterielId      = materielId,
                                 FournisseurId   = fournisseurId,
+                                NomFournisseurLibre = p.Commande.NomFournisseur,
                                 QuantiteAchetee = p.Commande.QuantiteAchetee,
                                 DateAchat       = p.Commande.DateAchat,
                                 DateLivraison   = p.Commande.DateLivraison,

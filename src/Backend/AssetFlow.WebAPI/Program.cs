@@ -159,7 +159,9 @@ builder.Services.AddScoped<IDashboardNotifier>(sp =>
         () => hub.Clients.Group("dashboard").SendAsync("DashboardUpdated"),
         () => hub.Clients.Group("dashboard-it").SendAsync("DashboardITUpdated"),
         (eventName, payload) => hub.Clients.Group("MemoryGroup")
-                                    .SendAsync(eventName, payload)
+                                    .SendAsync(eventName, payload),
+        (articleId) => hub.Clients.Group($"bio-{articleId}")
+                            .SendAsync("DashboardUpdated", new { ArticleId = articleId })
     );
 });
 builder.Services.AddScoped<INotificationService, NotificationService>();

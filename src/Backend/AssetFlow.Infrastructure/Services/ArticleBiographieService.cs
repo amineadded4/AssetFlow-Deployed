@@ -9,10 +9,12 @@ namespace AssetFlow.Infrastructure.Services
     public class ArticleBiographieService : IArticleBiographieService
     {
         private readonly AppDbContext _db;
+        private readonly IDashboardNotifier _notifier;
 
-        public ArticleBiographieService(AppDbContext db)
+        public ArticleBiographieService(AppDbContext db,IDashboardNotifier notifier)
         {
             _db = db;
+            _notifier = notifier;
         }
 
         public async Task<ArticleBiographieDto?> GetBiographieAsync(int articleId)
@@ -196,6 +198,7 @@ namespace AssetFlow.Infrastructure.Services
 
             _db.ArticleHistoriques.Add(evenement);
             await _db.SaveChangesAsync();
+            await _notifier.NotifyBiographieAsync(articleId);
         }
     }
 }

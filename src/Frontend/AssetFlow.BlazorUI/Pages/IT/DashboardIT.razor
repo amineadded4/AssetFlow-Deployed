@@ -5,9 +5,6 @@
 <RoleAuthGuard AllowedRoles="@(new[]{"IT","Admin"})">
 <div class="it-layout" data-theme="@_theme">
 
-    @if (_sidebarOpen)
-    { <div class="it-sidebar-overlay" @onclick="ToggleSidebar"></div> }
-
     @* ══════ SIDEBAR ══════ *@
     @if (_estAdmin)
     {

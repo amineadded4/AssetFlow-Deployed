@@ -1,26 +1,108 @@
+// src/Frontend/AssetFlow.BlazorUI/Pages/IT/BiographieArticle.razor.cs
 using AssetFlow.BlazorUI.DTOs;
 using AssetFlow.BlazorUI.Services;
+using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AssetFlow.BlazorUI.Pages.IT
 {
-    public partial class BiographieArticle : ComponentBase
+    public partial class BiographieArticle : ComponentBase, IAsyncDisposable
     {
         [Inject] private ArticleBiographieClientService BiographieService { get; set; } = default!;
+        [Inject] private ILocalStorageService           LocalStorage      { get; set; } = default!;
+        [Inject] private HttpClient                     Http              { get; set; } = default!;
 
         private List<MaterielAvecArticlesDto>? _materiels;
         private MaterielAvecArticlesDto?       _materielSelectionne;
         private ArticleBiographieDto?          _bio;
         private bool _loading    = true;
         private bool _loadingBio = false;
-        private bool _menuOpen = false;
+        private bool _menuOpen   = false;
+
+        // ── SignalR ────────────────────────────────────────────────────────
+        private HubConnection? _hub;
+        private int?           _articleIdActuel;   // article actuellement affiché
+        private bool           _refreshing = false; // badge "en cours de mise à jour"
 
         protected override async Task OnInitializedAsync()
         {
             _materiels = await BiographieService.GetMaterielsAsync();
-            _loading = false;
+            _loading   = false;
+
+            await ConnecterHubAsync();
         }
 
+        // ── Connexion au DashboardHub ──────────────────────────────────────
+        private async Task ConnecterHubAsync()
+        {
+            try
+            {
+                var token  = await LocalStorage.GetItemAsync<string>("access_token") ?? "";
+                var hubUrl = Http.BaseAddress!.ToString().TrimEnd('/') + "/dashboardhub";
+
+                _hub = new HubConnectionBuilder()
+                    .WithUrl(hubUrl, opts =>
+                        opts.AccessTokenProvider = () => Task.FromResult<string?>(token))
+                    .WithAutomaticReconnect()
+                    .Build();
+
+                // ── Écouter BiographieUpdated ──────────────────────────────
+                _hub.On<object>("DashboardUpdated", async payload =>
+                {
+                    // Ne rafraîchir que si l'article affiché est celui qui a changé.
+                    // Le payload contient { ArticleId, TypeEvenement, EvenementId }.
+                    // On recharge quoi qu'il arrive : on est dans le bon groupe bio-{id}.
+                    await InvokeAsync(async () =>
+                    {
+                        if (_articleIdActuel.HasValue)
+                        {
+                            _refreshing = true;
+                            StateHasChanged();
+
+                            _bio = await BiographieService.GetBiographieAsync(_articleIdActuel.Value);
+
+                            _refreshing = false;
+                            StateHasChanged();
+                        }
+                    });
+                });
+
+                _hub.Reconnected += async _ =>
+                {
+                    // Re-rejoindre le groupe après reconnexion
+                    if (_articleIdActuel.HasValue)
+                        await RejoindreGroupeArticleAsync(_articleIdActuel.Value);
+                };
+
+                await _hub.StartAsync();
+            }
+            catch { /* SignalR optionnel — la page fonctionne sans */ }
+        }
+
+        // ── S'abonner au groupe de l'article ──────────────────────────────
+        private async Task RejoindreGroupeArticleAsync(int articleId)
+        {
+            if (_hub?.State != HubConnectionState.Connected) return;
+            try
+            {
+                await _hub.InvokeAsync("JoinBiographie", articleId);
+            }
+            catch { }
+        }
+
+        // ── Se désabonner de l'ancien groupe ──────────────────────────────
+        private async Task QuitterGroupeArticleAsync(int articleId)
+        {
+            if (_hub?.State != HubConnectionState.Connected) return;
+            try
+            {
+                await _hub.InvokeAsync("LeaveBiographie", articleId);
+            }
+            catch { }
+        }
+
+        // ── Sélection du matériel ──────────────────────────────────────────
         private void OnMaterielChanged(ChangeEventArgs e)
         {
             _bio = null;
@@ -30,17 +112,30 @@ namespace AssetFlow.BlazorUI.Pages.IT
                 _materielSelectionne = null;
         }
 
+        // ── Sélection de l'article — s'abonner au groupe temps réel ───────
         private async Task OnArticleChanged(ChangeEventArgs e)
         {
+            // Quitter le groupe de l'article précédent
+            if (_articleIdActuel.HasValue)
+                await QuitterGroupeArticleAsync(_articleIdActuel.Value);
+
             _bio = null;
+            _articleIdActuel = null;
+
             if (!int.TryParse(e.Value?.ToString(), out var id)) return;
 
             _loadingBio = true;
             StateHasChanged();
-            _bio = await BiographieService.GetBiographieAsync(id);
-            _loadingBio = false;
+
+            _bio             = await BiographieService.GetBiographieAsync(id);
+            _articleIdActuel = id;
+            _loadingBio      = false;
+
+            // Rejoindre le groupe SignalR pour cet article
+            await RejoindreGroupeArticleAsync(id);
         }
 
+        // ── Helpers UI (inchangés) ─────────────────────────────────────────
         private static string GetEvenementLabel(string type) => type switch
         {
             "Acquisition"   => "Acquisition",
@@ -67,6 +162,18 @@ namespace AssetFlow.BlazorUI.Pages.IT
                 _               => "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='10'/></svg>"
             };
             return new MarkupString(svg);
+        }
+
+        // ── Dispose : quitter le groupe + déconnecter le hub ──────────────
+        public async ValueTask DisposeAsync()
+        {
+            if (_hub != null)
+            {
+                if (_articleIdActuel.HasValue)
+                    await QuitterGroupeArticleAsync(_articleIdActuel.Value);
+
+                await _hub.DisposeAsync();
+            }
         }
     }
 }

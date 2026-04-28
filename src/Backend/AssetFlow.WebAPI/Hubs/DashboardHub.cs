@@ -20,5 +20,10 @@ namespace AssetFlow.WebAPI.Hubs
 
         public async Task LeaveMemory()
             => await Groups.RemoveFromGroupAsync(Context.ConnectionId, "MemoryGroup");
+        public async Task JoinBiographie(int articleId)
+            => await Groups.AddToGroupAsync(Context.ConnectionId, $"bio-{articleId}");
+
+        public async Task LeaveBiographie(int articleId)
+            => await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"bio-{articleId}");
     }
 }

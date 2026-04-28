@@ -5,5 +5,6 @@ namespace AssetFlow.Application.Interfaces
         Task NotifyAsync();
         Task NotifyITAsync();
         Task NotifyMemoryAsync(string eventName, object? payload = null);
+        Task NotifyBiographieAsync(int articleId);
     }
 }

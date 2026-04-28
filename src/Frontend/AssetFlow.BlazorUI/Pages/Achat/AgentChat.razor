@@ -56,16 +56,16 @@
             </div>
         </header>
 
-        @* ── Alertes stock ── *@
+        @* ── Alertes stock — STICKY, visibles en permanence ── *@
         @if (_alertes.Count > 0 && _showAlertes)
         {
-            <div class="ai-alertes-bar">
+            <div class="ai-alertes-bar ai-alertes-sticky">
                 <div class="ai-alertes-header">
                     <div class="ai-alertes-title">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                         @_alertes.Count alerte(s) de stock détectée(s)
                     </div>
-                    <button class="ai-alertes-close" @onclick="() => _showAlertes = false">
+                    <button class="ai-alertes-close" @onclick="() => _showAlertes = false" title="Ignorer les alertes">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                 </div>
@@ -95,9 +95,10 @@
         }
 
         @* ── Zone de messages ── *@
-        <div class="ai-messages-wrap" id="ai-messages-container">
+        <div class="ai-messages-wrap @(_alertes.Count > 0 && _showAlertes ? "has-alertes" : "")" id="ai-messages-container">
 
-            @if (_messages.Count == 0 && !_isLoading)
+            @* ── Welcome — visible uniquement si aucun message envoyé par l'user ── *@
+            @if (!_chatStarted && !_isLoading)
             {
                 <div class="ai-welcome">
                     <div class="ai-welcome-icon">
@@ -155,93 +156,201 @@
                                     Vérifier et approuver la proposition
                                 </div>
 
-                                @* ── Formulaire Matériel ── *@
+                                @* ── Erreurs de validation ── *@
+                                @if (msg.ValidationErrors.Count > 0)
+                                {
+                                    <div class="ai-form-errors">
+                                        @foreach (var err in msg.ValidationErrors)
+                                        {
+                                            <div class="ai-form-error-item">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                                @err
+                                            </div>
+                                        }
+                                    </div>
+                                }
+
+                                @* ════════════════════════════════════════════
+                                   FORMULAIRE MATÉRIEL (nouveau ou existant)
+                                   ════════════════════════════════════════════ *@
                                 @if (msg.Action.Type == "add_materiel" && msg.Action.MaterielProposal != null)
                                 {
+                                    var isExisting = msg.Action.Label?.StartsWith("exists:") == true;
+
+                                    @* Info matériel (lecture seule si existant) *@
+                                    <div class="ai-form-section-title">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                                        Informations matériel @(isExisting ? "(matériel existant)" : "")
+                                    </div>
+
                                     <div class="ai-form-grid">
                                         <div class="ai-form-field">
                                             <label>Référence *</label>
-                                            <input class="ai-inp" @bind="msg.Action.MaterielProposal.Reference" />
+                                            @if (isExisting)
+                                            {
+                                                <div class="ai-readonly-val">@msg.Action.MaterielProposal.Reference</div>
+                                            }
+                                            else
+                                            {
+                                                <input class="ai-inp @(msg.FieldErrors.ContainsKey("Reference") ? "ai-inp-err" : "")"
+                                                       @bind="msg.Action.MaterielProposal.Reference" />
+                                                @if (msg.FieldErrors.TryGetValue("Reference", out var er))
+                                                { <span class="ai-field-err">@er</span> }
+                                            }
                                         </div>
                                         <div class="ai-form-field">
                                             <label>Désignation *</label>
-                                            <input class="ai-inp" @bind="msg.Action.MaterielProposal.Designation" />
+                                            @if (isExisting)
+                                            {
+                                                <div class="ai-readonly-val">@msg.Action.MaterielProposal.Designation</div>
+                                            }
+                                            else
+                                            {
+                                                <input class="ai-inp @(msg.FieldErrors.ContainsKey("Designation") ? "ai-inp-err" : "")"
+                                                       @bind="msg.Action.MaterielProposal.Designation" />
+                                                @if (msg.FieldErrors.TryGetValue("Designation", out var ed))
+                                                { <span class="ai-field-err">@ed</span> }
+                                            }
                                         </div>
                                         <div class="ai-form-field ai-form-field-full">
                                             <label>Description</label>
-                                            <input class="ai-inp" @bind="msg.Action.MaterielProposal.Description" />
+                                            @if (isExisting)
+                                            {
+                                                <div class="ai-readonly-val">@(msg.Action.MaterielProposal.Description ?? "—")</div>
+                                            }
+                                            else
+                                            {
+                                                <input class="ai-inp" @bind="msg.Action.MaterielProposal.Description" />
+                                            }
                                         </div>
                                         <div class="ai-form-field">
                                             <label>Catégorie *</label>
-                                            <select class="ai-inp" @bind="msg.Action.MaterielProposal.Categorie">
-                                                <option value="Infrastructure">Infrastructure</option>
-                                                <option value="Normal">Normal</option>
-                                            </select>
+                                            @if (isExisting)
+                                            {
+                                                <div class="ai-readonly-val">@msg.Action.MaterielProposal.Categorie</div>
+                                            }
+                                            else
+                                            {
+                                                <select class="ai-inp @(msg.FieldErrors.ContainsKey("Categorie") ? "ai-inp-err" : "")"
+                                                        @bind="msg.Action.MaterielProposal.Categorie">
+                                                    <option value="Infrastructure">Infrastructure</option>
+                                                    <option value="Normal">Normal</option>
+                                                </select>
+                                                @if (msg.FieldErrors.TryGetValue("Categorie", out var ec))
+                                                { <span class="ai-field-err">@ec</span> }
+                                            }
                                         </div>
                                         <div class="ai-form-field">
-                                            <label>Stock initial</label>
-                                            <input type="number" min="0" class="ai-inp" @bind="msg.Action.MaterielProposal.QuantiteStock" />
+                                            <label>Stock actuel</label>
+                                            <div class="ai-readonly-val">@msg.Action.MaterielProposal.QuantiteStock @msg.Action.MaterielProposal.Unite</div>
+                                        </div>
+                                        @if (!isExisting)
+                                        {
+                                            <div class="ai-form-field">
+                                                <label>Stock minimum</label>
+                                                <input type="number" min="0" class="ai-inp" @bind="msg.Action.MaterielProposal.QuantiteMin" />
+                                            </div>
+                                            <div class="ai-form-field">
+                                                <label>Unité</label>
+                                                <input class="ai-inp" @bind="msg.Action.MaterielProposal.Unite" />
+                                            </div>
+                                            <div class="ai-form-field">
+                                                <label>Emplacement</label>
+                                                <input class="ai-inp" @bind="msg.Action.MaterielProposal.Emplacement" />
+                                            </div>
+                                        }
+                                    </div>
+
+                                    @* Commande associée *@
+                                    @if (msg.Action.MaterielProposal.Commande == null)
+                                    {
+                                        msg.Action.MaterielProposal.Commande = new AgentCommandeProposal();
+                                    }
+                                    <div class="ai-form-section-title">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+                                        Commande associée *
+                                    </div>
+                                    <div class="ai-form-grid">
+                                        <div class="ai-form-field">
+                                            <label>N° Commande *</label>
+                                            <input class="ai-inp @(msg.FieldErrors.ContainsKey("NumeroCommande") ? "ai-inp-err" : "")"
+                                                   @bind="msg.Action.MaterielProposal.Commande.NumeroCommande"
+                                                   placeholder="Ex: CMD-2026-005" />
+                                            @if (msg.FieldErrors.TryGetValue("NumeroCommande", out var enc))
+                                            { <span class="ai-field-err">@enc</span> }
                                         </div>
                                         <div class="ai-form-field">
-                                            <label>Stock minimum</label>
-                                            <input type="number" min="0" class="ai-inp" @bind="msg.Action.MaterielProposal.QuantiteMin" />
+                                            <label>Fournisseur</label>
+                                            <input class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.NomFournisseur"
+                                                   placeholder="Nom du fournisseur" />
                                         </div>
                                         <div class="ai-form-field">
-                                            <label>Unité</label>
-                                            <input class="ai-inp" @bind="msg.Action.MaterielProposal.Unite" />
+                                            <label>Quantité *</label>
+                                            <input type="number" min="1" class="ai-inp @(msg.FieldErrors.ContainsKey("Quantite") ? "ai-inp-err" : "")"
+                                                   @bind="msg.Action.MaterielProposal.Commande.QuantiteAchetee"
+                                                   @bind:after="() => AjusterArticlesMsg(msg)" />
+                                            @if (msg.FieldErrors.TryGetValue("Quantite", out var eq))
+                                            { <span class="ai-field-err">@eq</span> }
                                         </div>
                                         <div class="ai-form-field">
-                                            <label>Emplacement</label>
-                                            <input class="ai-inp" @bind="msg.Action.MaterielProposal.Emplacement" />
+                                            <label>Date d'achat</label>
+                                            <input type="date" class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.DateAchat" />
+                                        </div>
+                                        <div class="ai-form-field">
+                                            <label>Date livraison</label>
+                                            <input type="date" class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.DateLivraison" />
+                                        </div>
+                                        <div class="ai-form-field">
+                                            <label>Fin de garantie</label>
+                                            <input type="date" class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.DateFinGarantie" />
                                         </div>
                                     </div>
 
-                                    @if (msg.Action.MaterielProposal.Commande != null)
+                                    @* Articles / numéros de série *@
+                                    @if (msg.Action.MaterielProposal.Commande.QuantiteAchetee > 0)
                                     {
-                                        <div class="ai-form-section-title">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
-                                            Commande associée
-                                        </div>
-                                        <div class="ai-form-grid">
-                                            <div class="ai-form-field">
-                                                <label>N° Commande *</label>
-                                                <input class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.NumeroCommande" />
+                                        <div class="ai-articles-section">
+                                            <div class="ai-articles-title">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                                                @msg.Action.MaterielProposal.Commande.QuantiteAchetee art. — N° Série <span class="ai-articles-opt">(optionnel)</span>
                                             </div>
-                                            <div class="ai-form-field">
-                                                <label>Fournisseur</label>
-                                                <input class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.NomFournisseur" placeholder="Nom du fournisseur" />
-                                            </div>
-                                            <div class="ai-form-field">
-                                                <label>Quantité *</label>
-                                                <input type="number" min="1" class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.QuantiteAchetee" />
-                                            </div>
-                                            <div class="ai-form-field">
-                                                <label>Date achat</label>
-                                                <input type="date" class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.DateAchat" />
-                                            </div>
-                                            <div class="ai-form-field">
-                                                <label>Date livraison</label>
-                                                <input type="date" class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.DateLivraison" />
-                                            </div>
-                                            <div class="ai-form-field">
-                                                <label>Fin de garantie</label>
-                                                <input type="date" class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.DateFinGarantie" />
+                                            <div class="ai-articles-list">
+                                                @for (int i = 0; i < msg.Action.MaterielProposal.Commande.NumerosSerie.Count; i++)
+                                                {
+                                                    var idx = i;
+                                                    <div class="ai-article-row">
+                                                        <span class="ai-article-num">@(idx + 1)</span>
+                                                        <input class="ai-inp"
+                                                               placeholder="N° SÉRIE (OPTIONNEL)"
+                                                               value="@msg.Action.MaterielProposal.Commande.NumerosSerie[idx]"
+                                                               @onchange="e => msg.Action.MaterielProposal.Commande.NumerosSerie[idx] = e.Value?.ToString()" />
+                                                        <span class="ai-article-statut">Disponible</span>
+                                                    </div>
+                                                }
                                             </div>
                                         </div>
                                     }
                                 }
 
-                                @* ── Formulaire Commande seule ── *@
+                                @* ════════════════════════════════════════════
+                                   FORMULAIRE COMMANDE SEULE
+                                   ════════════════════════════════════════════ *@
                                 @if (msg.Action.Type == "add_commande" && msg.Action.CommandeProposal != null)
                                 {
                                     <div class="ai-form-grid">
                                         <div class="ai-form-field">
                                             <label>N° Commande *</label>
-                                            <input class="ai-inp" @bind="msg.Action.CommandeProposal.NumeroCommande" />
+                                            <input class="ai-inp @(msg.FieldErrors.ContainsKey("NumeroCommande") ? "ai-inp-err" : "")"
+                                                   @bind="msg.Action.CommandeProposal.NumeroCommande" />
+                                            @if (msg.FieldErrors.TryGetValue("NumeroCommande", out var enc))
+                                            { <span class="ai-field-err">@enc</span> }
                                         </div>
                                         <div class="ai-form-field">
                                             <label>ID Matériel *</label>
-                                            <input type="number" class="ai-inp" @bind="msg.Action.CommandeProposal.MaterielId" />
+                                            <input type="number" class="ai-inp @(msg.FieldErrors.ContainsKey("MaterielId") ? "ai-inp-err" : "")"
+                                                   @bind="msg.Action.CommandeProposal.MaterielId" />
+                                            @if (msg.FieldErrors.TryGetValue("MaterielId", out var em))
+                                            { <span class="ai-field-err">@em</span> }
                                         </div>
                                         <div class="ai-form-field">
                                             <label>Fournisseur</label>
@@ -249,34 +358,97 @@
                                         </div>
                                         <div class="ai-form-field">
                                             <label>Quantité *</label>
-                                            <input type="number" min="1" class="ai-inp" @bind="msg.Action.CommandeProposal.QuantiteAchetee" />
+                                            <input type="number" min="1" class="ai-inp @(msg.FieldErrors.ContainsKey("Quantite") ? "ai-inp-err" : "")"
+                                                   @bind="msg.Action.CommandeProposal.QuantiteAchetee"
+                                                   @bind:after="() => AjusterArticlesCmdMsg(msg)" />
+                                            @if (msg.FieldErrors.TryGetValue("Quantite", out var eq))
+                                            { <span class="ai-field-err">@eq</span> }
                                         </div>
                                         <div class="ai-form-field">
-                                            <label>Date achat</label>
+                                            <label>Date d'achat</label>
                                             <input type="date" class="ai-inp" @bind="msg.Action.CommandeProposal.DateAchat" />
                                         </div>
                                         <div class="ai-form-field">
                                             <label>Date livraison</label>
                                             <input type="date" class="ai-inp" @bind="msg.Action.CommandeProposal.DateLivraison" />
                                         </div>
+                                        <div class="ai-form-field">
+                                            <label>Fin de garantie</label>
+                                            <input type="date" class="ai-inp" @bind="msg.Action.CommandeProposal.DateFinGarantie" />
+                                        </div>
                                     </div>
+
+                                    @* Articles numéros de série *@
+                                    @if (msg.Action.CommandeProposal.QuantiteAchetee > 0)
+                                    {
+                                        <div class="ai-articles-section">
+                                            <div class="ai-articles-title">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                                                @msg.Action.CommandeProposal.QuantiteAchetee art. — N° Série <span class="ai-articles-opt">(optionnel)</span>
+                                            </div>
+                                            <div class="ai-articles-list">
+                                                @for (int i = 0; i < msg.Action.CommandeProposal.NumerosSerie.Count; i++)
+                                                {
+                                                    var idx = i;
+                                                    <div class="ai-article-row">
+                                                        <span class="ai-article-num">@(idx + 1)</span>
+                                                        <input class="ai-inp"
+                                                               placeholder="N° SÉRIE (OPTIONNEL)"
+                                                               value="@msg.Action.CommandeProposal.NumerosSerie[idx]"
+                                                               @onchange="e => msg.Action.CommandeProposal.NumerosSerie[idx] = e.Value?.ToString()" />
+                                                        <span class="ai-article-statut">Disponible</span>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
                                 }
 
-                                @* ── Formulaire Article ── *@
+                                @* ════════════════════════════════════════════
+                                   FORMULAIRE ARTICLE
+                                   ════════════════════════════════════════════ *@
                                 @if (msg.Action.Type == "add_article" && msg.Action.ArticleProposal != null)
                                 {
+                                    @* Infos du matériel associé (lecture seule) *@
+                                    @if (msg.MaterielInfo != null)
+                                    {
+                                        <div class="ai-form-section-title">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                                            Matériel concerné
+                                        </div>
+                                        <div class="ai-readonly-card">
+                                            <div class="ai-readonly-row"><span class="ai-readonly-lbl">Référence</span><span class="ai-readonly-val">@msg.MaterielInfo.Reference</span></div>
+                                            <div class="ai-readonly-row"><span class="ai-readonly-lbl">Désignation</span><span class="ai-readonly-val">@msg.MaterielInfo.Designation</span></div>
+                                            @if (!string.IsNullOrEmpty(msg.MaterielInfo.Description))
+                                            { <div class="ai-readonly-row"><span class="ai-readonly-lbl">Description</span><span class="ai-readonly-val">@msg.MaterielInfo.Description</span></div> }
+                                            <div class="ai-readonly-row"><span class="ai-readonly-lbl">Catégorie</span><span class="ai-readonly-val">@msg.MaterielInfo.Categorie</span></div>
+                                            <div class="ai-readonly-row"><span class="ai-readonly-lbl">Stock actuel</span><span class="ai-readonly-val">@msg.MaterielInfo.QuantiteStock @msg.MaterielInfo.Unite</span></div>
+                                        </div>
+                                    }
+
+                                    <div class="ai-form-section-title">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                                        Nouvel article
+                                    </div>
                                     <div class="ai-form-grid">
                                         <div class="ai-form-field">
                                             <label>ID Matériel *</label>
-                                            <input type="number" class="ai-inp" @bind="msg.Action.ArticleProposal.MaterielId" />
+                                            <input type="number" class="ai-inp @(msg.FieldErrors.ContainsKey("MaterielId") ? "ai-inp-err" : "")"
+                                                   @bind="msg.Action.ArticleProposal.MaterielId" />
+                                            @if (msg.FieldErrors.TryGetValue("MaterielId", out var em))
+                                            { <span class="ai-field-err">@em</span> }
                                         </div>
                                         <div class="ai-form-field">
                                             <label>ID Commande *</label>
-                                            <input type="number" class="ai-inp" @bind="msg.Action.ArticleProposal.CommandeId" />
+                                            <input type="number" class="ai-inp @(msg.FieldErrors.ContainsKey("CommandeId") ? "ai-inp-err" : "")"
+                                                   @bind="msg.Action.ArticleProposal.CommandeId" />
+                                            @if (msg.FieldErrors.TryGetValue("CommandeId", out var ecid))
+                                            { <span class="ai-field-err">@ecid</span> }
                                         </div>
                                         <div class="ai-form-field ai-form-field-full">
                                             <label>Numéro de série</label>
-                                            <input class="ai-inp" @bind="msg.Action.ArticleProposal.NumeroSerie" placeholder="Optionnel" />
+                                            <input class="ai-inp" @bind="msg.Action.ArticleProposal.NumeroSerie"
+                                                   placeholder="Optionnel" />
                                         </div>
                                     </div>
                                 }

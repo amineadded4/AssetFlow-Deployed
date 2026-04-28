@@ -51,13 +51,41 @@ namespace AssetFlow.Infrastructure.Services
             }
             else if (agentType.StartsWith("action_"))
             {
-                // Extraire la proposition
                 var action = await _orchestrator.ExtractActionAsync(request.Message);
                 response.AgentUsed = "action";
                 response.Action    = action;
-                response.Message   = action?.Type switch
+
+                // ── Si add_materiel : vérifier si référence existe déjà ──
+                if (action?.Type == "add_materiel" && action.MaterielProposal != null)
                 {
-                    "add_materiel"  => $"J'ai préparé une proposition pour créer le matériel **{action.MaterielProposal?.Designation}**. Veuillez vérifier et approuver ou modifier les informations ci-dessous.",
+                    var ref_ = action.MaterielProposal.Reference?.Trim();
+                    if (!string.IsNullOrWhiteSpace(ref_))
+                    {
+                        var existant = await _db.Materiels
+                            .FirstOrDefaultAsync(m => m.Reference.ToLower() == ref_.ToLower());
+
+                        if (existant != null)
+                        {
+                            // Pré-remplir le proposal avec les infos du matériel existant
+                            action.MaterielProposal.Reference     = existant.Reference;
+                            action.MaterielProposal.Designation   = existant.Designation;
+                            action.MaterielProposal.Description   = existant.Description;
+                            action.MaterielProposal.Categorie     = existant.Categorie;
+                            action.MaterielProposal.QuantiteStock = existant.QuantiteStock;
+                            action.MaterielProposal.QuantiteMin   = existant.QuantiteMin;
+                            action.MaterielProposal.Unite         = existant.Unite;
+                            action.MaterielProposal.Emplacement   = existant.Emplacement;
+                            // Marquer comme matériel existant
+                            action.Label = $"exists:{existant.Id}";
+                        }
+                    }
+                }
+
+                response.Message = action?.Type switch
+                {
+                    "add_materiel"  => action.Label.StartsWith("exists:")
+                        ? $"Le matériel **{action.MaterielProposal?.Designation}** existe déjà. Voici le formulaire pour ajouter une commande à ce matériel."
+                        : $"J'ai préparé une proposition pour créer le matériel **{action.MaterielProposal?.Designation}**. Veuillez vérifier et approuver les informations ci-dessous.",
                     "add_commande"  => $"J'ai préparé une proposition de commande **{action.CommandeProposal?.NumeroCommande}**. Veuillez vérifier et approuver les informations.",
                     "add_article"   => $"J'ai préparé une proposition pour ajouter un article. Veuillez vérifier les informations.",
                     _               => "Voici la proposition générée. Veuillez l'approuver ou la modifier."
@@ -88,7 +116,6 @@ namespace AssetFlow.Infrastructure.Services
                 return response;
             }
 
-            // Générer propositions pour chaque alerte
             var tasks = alertes.Select(async a =>
             {
                 a.Proposition = await _orchestrator.GenerateMaterielProposalAsync(a);
@@ -119,24 +146,38 @@ namespace AssetFlow.Infrastructure.Services
                             return Fail("Données matériel manquantes.");
 
                         var p = request.MaterielProposal;
-                        var result = await _materielService.CreerAsync(new CreerMaterielDto
+
+                        // ── Vérifier si référence existe déjà ────────────
+                        var existant = await _db.Materiels
+                            .FirstOrDefaultAsync(m => m.Reference.ToLower() == p.Reference.Trim().ToLower());
+
+                        int materielId;
+
+                        if (existant != null)
                         {
-                            Utilisateur   = request.Utilisateur,
-                            Reference     = p.Reference,
-                            Designation   = p.Designation,
-                            Description   = p.Description,
-                            Categorie     = p.Categorie,
-                            QuantiteStock = p.QuantiteStock,
-                            QuantiteMin   = p.QuantiteMin,
-                            Unite         = p.Unite,
-                            Emplacement   = p.Emplacement
-                        });
+                            // Matériel existant → réutiliser sans re-créer
+                            materielId = existant.Id;
+                        }
+                        else
+                        {
+                            // Nouveau matériel → créer
+                            var result = await _materielService.CreerAsync(new CreerMaterielDto
+                            {
+                                Utilisateur   = request.Utilisateur,
+                                Reference     = p.Reference,
+                                Designation   = p.Designation,
+                                Description   = p.Description,
+                                Categorie     = p.Categorie,
+                                QuantiteStock = p.QuantiteStock,
+                                QuantiteMin   = p.QuantiteMin,
+                                Unite         = p.Unite,
+                                Emplacement   = p.Emplacement
+                            });
+                            if (!result.Succes) return Fail(result.Message);
+                            materielId = result.IdMateriel!.Value;
+                        }
 
-                        if (!result.Succes) return Fail(result.Message);
-
-                        var materielId = result.IdMateriel!.Value;
-
-                        // Créer la commande associée si présente
+                        // ── Commande associée ─────────────────────────────
                         if (p.Commande != null && !string.IsNullOrWhiteSpace(p.Commande.NumeroCommande))
                         {
                             var fournisseurId = p.Commande.FournisseurId;
@@ -168,10 +209,15 @@ namespace AssetFlow.Infrastructure.Services
                             });
                         }
 
+                        var nomAffiche = existant != null ? existant.Designation : p.Designation;
+                        var prefixe    = existant != null
+                            ? "✅ Commande ajoutée au matériel existant"
+                            : "✅ Matériel créé avec succès";
+
                         return new AgentApprovalResponse
                         {
                             Succes  = true,
-                            Message = $"✅ Matériel **{p.Designation}** créé avec succès !",
+                            Message = $"{prefixe} **{nomAffiche}** !",
                             Id      = materielId
                         };
                     }
@@ -242,7 +288,6 @@ namespace AssetFlow.Infrastructure.Services
                         };
                         _db.ArticlesIndividuels.Add(article);
 
-                        // Mettre à jour le stock
                         if (commande.Materiel != null) commande.Materiel.QuantiteStock++;
 
                         _db.ArticleHistoriques.Add(new Domain.Entities.ArticleHistorique

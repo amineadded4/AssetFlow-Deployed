@@ -39,6 +39,7 @@
     background: var(--surface);
     flex-shrink: 0;
     gap: 1rem;
+    z-index: 30;
 }
 
 .ai-topbar-left { display: flex; align-items: center; gap: .75rem; min-width: 0; }
@@ -125,17 +126,31 @@
     cursor: pointer;
     transition: all .2s;
 }
-.ai-clear-btn:hover { color: var(--text); border-color: var(--primary); }
+.ai-clear-btn:hover { color: var(--text); border-color: #136dec; }
 .ai-clear-btn svg { width: 14px; height: 14px; }
 
 /* ══════════════════════════════════════════
-   ALERTES BAR
+   ALERTES BAR — STICKY (toujours visible)
 ══════════════════════════════════════════ */
 .ai-alertes-bar {
     background: rgba(239,68,68,.07);
     border-bottom: 1px solid rgba(239,68,68,.2);
     padding: .75rem 1.25rem;
     flex-shrink: 0;
+}
+
+/* Version sticky : reste collée en haut même au scroll des messages */
+.ai-alertes-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(255,250,250,.97);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(239,68,68,.12);
+}
+html.dark .ai-alertes-sticky {
+    background: rgba(20,10,10,.97);
 }
 html.dark .ai-alertes-bar {
     background: rgba(239,68,68,.1);
@@ -159,8 +174,10 @@ html.dark .ai-alertes-bar {
     background: none; border: none; cursor: pointer;
     color: #ef4444; opacity: .6;
     display: flex; align-items: center; justify-content: center;
+    border-radius: .25rem;
+    transition: all .2s;
 }
-.ai-alertes-close:hover { opacity: 1; }
+.ai-alertes-close:hover { opacity: 1; background: rgba(239,68,68,.1); }
 .ai-alertes-close svg { width: 14px; height: 14px; }
 
 .ai-alertes-list {
@@ -371,7 +388,7 @@ html.dark .ai-alertes-bar {
     border-radius: .75rem;
     padding: 1rem;
     margin-top: .4rem;
-    max-width: 620px;
+    max-width: 640px;
     width: 100%;
 }
 
@@ -385,6 +402,25 @@ html.dark .ai-alertes-bar {
 }
 .ai-approval-header svg { width: 15px; height: 15px; flex-shrink: 0; }
 
+/* ── Erreurs de validation ── */
+.ai-form-errors {
+    background: rgba(239,68,68,.07);
+    border: 1px solid rgba(239,68,68,.25);
+    border-radius: .5rem;
+    padding: .65rem .85rem;
+    margin-bottom: .75rem;
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+.ai-form-error-item {
+    display: flex; align-items: center; gap: .4rem;
+    font-size: .78rem; font-weight: 600;
+    color: #ef4444;
+}
+.ai-form-error-item svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+/* ── Section title ── */
 .ai-form-section-title {
     display: flex; align-items: center; gap: .4rem;
     font-size: .72rem; font-weight: 800;
@@ -394,8 +430,10 @@ html.dark .ai-alertes-bar {
     padding-top: .75rem;
     border-top: 1px solid var(--border);
 }
+.ai-form-section-title:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
 .ai-form-section-title svg { width: 13px; height: 13px; }
 
+/* ── Grille ── */
 .ai-form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -405,6 +443,7 @@ html.dark .ai-alertes-bar {
 .ai-form-field-full { grid-column: 1 / -1; }
 .ai-form-field label { font-size: .7rem; font-weight: 700; color: var(--text-muted); }
 
+/* ── Input ── */
 .ai-inp {
     width: 100%;
     padding: .45rem .65rem;
@@ -420,6 +459,107 @@ html.dark .ai-alertes-bar {
 .ai-inp:focus { border-color: #136dec; box-shadow: 0 0 0 2px rgba(19,109,236,.15); }
 .ai-inp option { color: var(--text); background: var(--surface); }
 
+/* Input en erreur */
+.ai-inp-err {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 2px rgba(239,68,68,.15) !important;
+}
+.ai-field-err {
+    font-size: .68rem;
+    color: #ef4444;
+    font-weight: 600;
+}
+
+/* ── Lecture seule ── */
+.ai-readonly-val {
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--text);
+    padding: .45rem .65rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: .4rem;
+    min-height: 32px;
+}
+
+.ai-readonly-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: .6rem;
+    padding: .75rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    margin-bottom: .5rem;
+}
+.ai-readonly-row {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+}
+.ai-readonly-lbl {
+    flex-shrink: 0;
+    min-width: 90px;
+    font-size: .68rem;
+    font-weight: 700;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    padding-top: 2px;
+}
+.ai-readonly-val-txt {
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* ── Articles / numéros de série ── */
+.ai-articles-section {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    margin-top: .6rem;
+    padding: .75rem;
+    background: rgba(19,109,236,.04);
+    border: 1px solid rgba(19,109,236,.15);
+    border-radius: .5rem;
+}
+.ai-articles-title {
+    display: flex; align-items: center; gap: .5rem;
+    font-size: .75rem; font-weight: 700;
+    color: var(--text-muted);
+}
+.ai-articles-title svg { width: 13px; height: 13px; }
+.ai-articles-opt { font-size: .68rem; color: var(--text-faint); font-weight: 400; }
+.ai-articles-list {
+    display: flex; flex-direction: column; gap: .4rem;
+    max-height: 200px; overflow-y: auto;
+}
+.ai-article-row {
+    display: grid;
+    grid-template-columns: 24px 1fr auto;
+    align-items: center;
+    gap: .5rem;
+}
+.ai-article-num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: rgba(19,109,236,.1);
+    color: #136dec;
+    font-size: .68rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.ai-article-statut {
+    font-size: .65rem; font-weight: 700;
+    color: #10b981;
+    background: rgba(16,185,129,.1);
+    padding: .15rem .45rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+/* ── Boutons d'approbation ── */
 .ai-approval-actions {
     display: flex;
     gap: .6rem;

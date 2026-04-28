@@ -67,5 +67,6 @@ builder.Services.AddScoped<AgentChatService>();
 builder.Services.AddSingleton<StockAlertService>();
 // Singleton : une seule instance partagée pour toute la durée de vie de l'app
 builder.Services.AddSingleton<UnreadMessagesService>();
+builder.Services.AddScoped<ConversationService>();
 
 await builder.Build().RunAsync();

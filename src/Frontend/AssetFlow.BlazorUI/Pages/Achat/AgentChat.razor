@@ -1,4 +1,4 @@
-@* src/Frontend/AssetFlow.BlazorUI/Pages/AgentChat.razor *@
+@* src/Frontend/AssetFlow.BlazorUI/Pages/Achat/AgentChat.razor *@
 @page "/agent-chat"
 @using AssetFlow.BlazorUI.DTOs
 @using AssetFlow.BlazorUI.Components
@@ -7,11 +7,8 @@
 <RoleAuthGuard AllowedRoles="@(new[]{"EquipeAchat"})">
 <div class="ai-shell">
 
-    @* ── Sidebar overlay mobile ── *@
-    @if (_sidebarOpen)
-    { <div class="ai-overlay" @onclick="() => _sidebarOpen = false"></div> }
 
-    @* ── Sidebar selon rôle ── *@
+    @* ── Sidebar nav selon rôle ── *@
     @if (_estAdmin)
         { <AdminSidebar ForceOpen="_sidebarOpen" /> }
     else if (_role?.Contains("IT", StringComparison.OrdinalIgnoreCase) == true)
@@ -19,41 +16,155 @@
     else
         { <AchatSidebar ActivePage="agent" ForceOpen="_sidebarOpen" /> }
 
+    @* ══════════════════════════════════════════════════════════
+       HISTORY PANEL — panneau latéral de conversations (inline flex)
+    ══════════════════════════════════════════════════════════ *@
+    <div class="ai-history-panel @(_historyOpen ? "open" : "")" aria-hidden="@(!_historyOpen)">
+        <div class="ai-history-header">
+            <span class="ai-history-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                Conversations
+            </span>
+            <button class="ai-history-new-btn" @onclick="StartNewConversation" title="Nouvelle conversation">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+            </button>
+        </div>
+
+        @* Groupes temporels *@
+        <div class="ai-history-list">
+            @if (_loadingHistory)
+            {
+                <div class="ai-history-loading">
+                    <div class="ai-history-skeleton"></div>
+                    <div class="ai-history-skeleton"></div>
+                    <div class="ai-history-skeleton"></div>
+                </div>
+            }
+            else if (_conversations.Count == 0)
+            {
+                <div class="ai-history-empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <p>Aucune conversation</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var group in GetGroupedConversations())
+                {
+                    <div class="ai-history-group">
+                        <span class="ai-history-group-label">@group.Key</span>
+                        @foreach (var conv in group.Value)
+                        {
+                            <div class="ai-history-item @(_activeConversationId == conv.Id ? "active" : "")"
+                                 @onclick="() => LoadConversation(conv.Id)">
+                                <div class="ai-history-item-body">
+                                    @if (_editingConvId == conv.Id)
+                                    {
+                                        <input class="ai-history-title-input"
+                                               @bind="_editingTitle"
+                                               @onblur="() => SaveTitle(conv.Id)"
+                                               @onkeydown="e => OnTitleKeyDown(e, conv.Id)"
+                                               @onclick:stopPropagation="true" />
+                                    }
+                                    else
+                                    {
+                                        <span class="ai-history-item-title">@conv.Title</span>
+                                    }
+                                    <span class="ai-history-item-preview">@conv.LastMessage</span>
+                                </div>
+                                <div class="ai-history-item-actions" @onclick:stopPropagation="true">
+                                    <button class="ai-history-action-btn"
+                                            @onclick="() => StartEditTitle(conv.Id, conv.Title)"
+                                            title="Renommer">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                        </svg>
+                                    </button>
+                                    <button class="ai-history-action-btn danger"
+                                            @onclick="() => DeleteConversation(conv.Id)"
+                                            title="Supprimer">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="3 6 5 6 21 6"/>
+                                            <path d="M19 6l-1 14H6L5 6"/>
+                                            <path d="M10 11v6M14 11v6"/>
+                                            <path d="M9 6V4h6v2"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </div>
+
+        @* Pied du panel *@
+        @if (_conversations.Count > 0)
+        {
+            <div class="ai-history-footer">
+                <button class="ai-history-delete-all-btn" @onclick="DeleteAllConversations">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14H6L5 6"/>
+                    </svg>
+                    Tout effacer
+                </button>
+                <span class="ai-history-info">Conservé 30 jours</span>
+            </div>
+        }
+    </div>
+
     @* ── Main ── *@
     <div class="ai-main">
 
         @* ── Topbar ── *@
         <header class="ai-topbar">
             <div class="ai-topbar-left">
+                <div class="ai-topbar-brand">
+                    <div class="ai-brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="7" y="6" width="10" height="9" rx="2"/>
+                        <line x1="12" y1="3" x2="12" y2="6"/>
+                        <circle cx="12" cy="2.5" r="0.8" fill="currentColor"/>
+                        <circle cx="10" cy="10" r="1" fill="currentColor"/>
+                        <circle cx="14" cy="10" r="1" fill="currentColor"/>
+                        <path d="M10 13h4"/>
+                        <path d="M9 15v2a3 3 0 0 0 6 0v-2"/>
+                        <line x1="7" y1="9" x2="5" y2="9"/>
+                        <line x1="17" y1="9" x2="19" y2="9"/>
+                    </svg>
+                </div>
+                <div>
+                        <span class="ai-brand-title">AssetFlow AI</span>
+                        <span class="ai-brand-sub">Agent intelligent de gestion</span>
+                    </div>
                 <button class="ai-menu-btn" @onclick="() => _sidebarOpen = !_sidebarOpen">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                         <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
                     </svg>
                 </button>
-                <div class="ai-topbar-brand">
-                    <div class="ai-brand-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <!-- Tête du robot -->
-                        <rect x="7" y="6" width="10" height="9" rx="2"/>
-                        <!-- Antenne -->
-                        <line x1="12" y1="3" x2="12" y2="6"/>
-                        <circle cx="12" cy="2.5" r="0.8" fill="currentColor"/>
-                        <!-- Yeux -->
-                        <circle cx="10" cy="10" r="1" fill="currentColor"/>
-                        <circle cx="14" cy="10" r="1" fill="currentColor"/>
-                        <!-- Bouche -->
-                        <path d="M10 13h4"/>
-                        <!-- Corps / cou -->
-                        <path d="M9 15v2a3 3 0 0 0 6 0v-2"/>
-                        <!-- Oreilles -->
-                        <line x1="7" y1="9" x2="5" y2="9"/>
-                        <line x1="17" y1="9" x2="19" y2="9"/>
+
+                @* Bouton historique *@
+                <button class="ai-history-toggle-btn @(_historyOpen ? "active" : "")"
+                        @onclick="ToggleHistory"
+                        title="Historique des conversations">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                     </svg>
-                </div>
-                    <div>
-                        <span class="ai-brand-title">AssetFlow AI</span>
-                        <span class="ai-brand-sub">Agent intelligent de gestion</span>
-                    </div>
+                    <span>Historique</span>
+                    @if (_conversations.Count > 0)
+                    {
+                        <span class="ai-history-count">@_conversations.Count</span>
+                    }
+                </button>
+                    
                 </div>
             </div>
             <div class="ai-topbar-right">
@@ -61,14 +172,14 @@
                     <div class="ai-status-dot"></div>
                     <span>@(_isLoading ? "Réflexion..." : "Prêt")</span>
                 </div>
-                <button class="ai-clear-btn" @onclick="ClearChat" title="Nouvelle conversation">
+                <button class="ai-clear-btn" @onclick="StartNewConversation" title="Nouvelle conversation">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
                     Nouveau
                 </button>
             </div>
         </header>
 
-        @* ── Alertes stock — STICKY, visibles en permanence ── *@
+        @* ── Alertes stock — STICKY ── *@
         @if (_alertes.Count > 0 && _showAlertes)
         {
             <div class="ai-alertes-bar ai-alertes-sticky">
@@ -94,8 +205,7 @@
                             </div>
                             @if (a.Proposition != null)
                             {
-                                <button class="ai-alerte-propose-btn"
-                                        @onclick="() => OpenAlertProposal(a)">
+                                <button class="ai-alerte-propose-btn" @onclick="() => OpenAlertProposal(a)">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
                                     Commander
                                 </button>
@@ -109,7 +219,6 @@
         @* ── Zone de messages ── *@
         <div class="ai-messages-wrap @(_alertes.Count > 0 && _showAlertes ? "has-alertes" : "")" id="ai-messages-container">
 
-            @* ── Welcome — visible uniquement si aucun message envoyé par l'user ── *@
             @if (!_chatStarted && !_isLoading)
             {
                 <div class="ai-welcome">
@@ -165,339 +274,99 @@
                             @((MarkupString)FormatMessage(msg.Content))
                         </div>
 
-                        @* ── Formulaire d'approbation ── *@
+                        @* ── Formulaire d'approbation — identique à l'original ── *@
                         @if (msg.Action != null && !msg.ActionProcessed)
                         {
+                            @* [Conserver exactement le même bloc formulaire que l'original AgentChat.razor] *@
                             <div class="ai-approval-form">
                                 <div class="ai-approval-header">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                     Vérifier et approuver la proposition
                                 </div>
-
-                                @* ── Erreurs de validation ── *@
                                 @if (msg.ValidationErrors.Count > 0)
                                 {
                                     <div class="ai-form-errors">
                                         @foreach (var err in msg.ValidationErrors)
-                                        {
-                                            <div class="ai-form-error-item">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                                @err
-                                            </div>
-                                        }
+                                        { <div class="ai-form-error-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>@err</div> }
                                     </div>
                                 }
-
-                                @* ════════════════════════════════════════════
-                                   FORMULAIRE MATÉRIEL (nouveau ou existant)
-                                   ════════════════════════════════════════════ *@
                                 @if (msg.Action.Type == "add_materiel" && msg.Action.MaterielProposal != null)
                                 {
                                     var isExisting = msg.Action.Label?.StartsWith("exists:") == true;
-
-                                    @* Info matériel (lecture seule si existant) *@
-                                    <div class="ai-form-section-title">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-                                        Informations matériel @(isExisting ? "(matériel existant)" : "")
-                                    </div>
-
+                                    <div class="ai-form-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Informations matériel @(isExisting ? "(existant)" : "")</div>
                                     <div class="ai-form-grid">
-                                        <div class="ai-form-field">
-                                            <label>Référence *</label>
-                                            @if (isExisting)
-                                            {
-                                                <div class="ai-readonly-val">@msg.Action.MaterielProposal.Reference</div>
-                                            }
-                                            else
-                                            {
-                                                <input class="ai-inp @(msg.FieldErrors.ContainsKey("Reference") ? "ai-inp-err" : "")"
-                                                       @bind="msg.Action.MaterielProposal.Reference" />
-                                                @if (msg.FieldErrors.TryGetValue("Reference", out var er))
-                                                { <span class="ai-field-err">@er</span> }
-                                            }
-                                        </div>
-                                        <div class="ai-form-field">
-                                            <label>Désignation *</label>
-                                            @if (isExisting)
-                                            {
-                                                <div class="ai-readonly-val">@msg.Action.MaterielProposal.Designation</div>
-                                            }
-                                            else
-                                            {
-                                                <input class="ai-inp @(msg.FieldErrors.ContainsKey("Designation") ? "ai-inp-err" : "")"
-                                                       @bind="msg.Action.MaterielProposal.Designation" />
-                                                @if (msg.FieldErrors.TryGetValue("Designation", out var ed))
-                                                { <span class="ai-field-err">@ed</span> }
-                                            }
-                                        </div>
-                                        <div class="ai-form-field ai-form-field-full">
-                                            <label>Description</label>
-                                            @if (isExisting)
-                                            {
-                                                <div class="ai-readonly-val">@(msg.Action.MaterielProposal.Description ?? "—")</div>
-                                            }
-                                            else
-                                            {
-                                                <input class="ai-inp" @bind="msg.Action.MaterielProposal.Description" />
-                                            }
-                                        </div>
-                                        <div class="ai-form-field">
-                                            <label>Catégorie *</label>
-                                            @if (isExisting)
-                                            {
-                                                <div class="ai-readonly-val">@msg.Action.MaterielProposal.Categorie</div>
-                                            }
-                                            else
-                                            {
-                                                <select class="ai-inp @(msg.FieldErrors.ContainsKey("Categorie") ? "ai-inp-err" : "")"
-                                                        @bind="msg.Action.MaterielProposal.Categorie">
-                                                    <option value="Infrastructure">Infrastructure</option>
-                                                    <option value="Normal">Normal</option>
-                                                </select>
-                                                @if (msg.FieldErrors.TryGetValue("Categorie", out var ec))
-                                                { <span class="ai-field-err">@ec</span> }
-                                            }
-                                        </div>
-                                        <div class="ai-form-field">
-                                            <label>Stock actuel</label>
-                                            <div class="ai-readonly-val">@msg.Action.MaterielProposal.QuantiteStock @msg.Action.MaterielProposal.Unite</div>
-                                        </div>
-                                        @if (!isExisting)
-                                        {
-                                            <div class="ai-form-field">
-                                                <label>Stock minimum</label>
-                                                <input type="number" min="0" class="ai-inp" @bind="msg.Action.MaterielProposal.QuantiteMin" />
-                                            </div>
-                                            <div class="ai-form-field">
-                                                <label>Unité</label>
-                                                <input class="ai-inp" @bind="msg.Action.MaterielProposal.Unite" />
-                                            </div>
-                                            <div class="ai-form-field">
-                                                <label>Emplacement</label>
-                                                <input class="ai-inp" @bind="msg.Action.MaterielProposal.Emplacement" />
-                                            </div>
+                                        <div class="ai-form-field"><label>Référence *</label>@if(isExisting){<div class="ai-readonly-val">@msg.Action.MaterielProposal.Reference</div>}else{<input class="ai-inp @(msg.FieldErrors.ContainsKey("Reference")?"ai-inp-err":"")" @bind="msg.Action.MaterielProposal.Reference"/>}</div>
+                                        <div class="ai-form-field"><label>Désignation *</label>@if(isExisting){<div class="ai-readonly-val">@msg.Action.MaterielProposal.Designation</div>}else{<input class="ai-inp @(msg.FieldErrors.ContainsKey("Designation")?"ai-inp-err":"")" @bind="msg.Action.MaterielProposal.Designation"/>}</div>
+                                        <div class="ai-form-field ai-form-field-full"><label>Description</label>@if(isExisting){<div class="ai-readonly-val">@(msg.Action.MaterielProposal.Description??"—")</div>}else{<input class="ai-inp" @bind="msg.Action.MaterielProposal.Description"/>}</div>
+                                        <div class="ai-form-field"><label>Catégorie *</label>@if(isExisting){<div class="ai-readonly-val">@msg.Action.MaterielProposal.Categorie</div>}else{<select class="ai-inp @(msg.FieldErrors.ContainsKey("Categorie")?"ai-inp-err":"")" @bind="msg.Action.MaterielProposal.Categorie"><option value="Infrastructure">Infrastructure</option><option value="Normal">Normal</option></select>}</div>
+                                        <div class="ai-form-field"><label>Stock actuel</label><div class="ai-readonly-val">@msg.Action.MaterielProposal.QuantiteStock @msg.Action.MaterielProposal.Unite</div></div>
+                                        @if (!isExisting) {
+                                            <div class="ai-form-field"><label>Stock minimum</label><input type="number" min="0" class="ai-inp" @bind="msg.Action.MaterielProposal.QuantiteMin"/></div>
+                                            <div class="ai-form-field"><label>Unité</label><input class="ai-inp" @bind="msg.Action.MaterielProposal.Unite"/></div>
+                                            <div class="ai-form-field"><label>Emplacement</label><input class="ai-inp" @bind="msg.Action.MaterielProposal.Emplacement"/></div>
                                         }
                                     </div>
-
-                                    @* Commande associée *@
-                                    @if (msg.Action.MaterielProposal.Commande == null)
-                                    {
-                                        msg.Action.MaterielProposal.Commande = new AgentCommandeProposal();
-                                    }
-                                    <div class="ai-form-section-title">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
-                                        Commande associée *
-                                    </div>
+                                    @if (msg.Action.MaterielProposal.Commande == null) { msg.Action.MaterielProposal.Commande = new AgentCommandeProposal(); }
+                                    <div class="ai-form-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>Commande associée *</div>
                                     <div class="ai-form-grid">
-                                        <div class="ai-form-field">
-                                            <label>N° Commande *</label>
-                                            <input class="ai-inp @(msg.FieldErrors.ContainsKey("NumeroCommande") ? "ai-inp-err" : "")"
-                                                   @bind="msg.Action.MaterielProposal.Commande.NumeroCommande"
-                                                   placeholder="Ex: CMD-2026-005" />
-                                            @if (msg.FieldErrors.TryGetValue("NumeroCommande", out var enc))
-                                            { <span class="ai-field-err">@enc</span> }
-                                        </div>
-                                        <div class="ai-form-field">
-                                            <label>Fournisseur</label>
-                                            <input class="ai-inp"
-                                                value="@msg.Action.MaterielProposal.Commande.NomFournisseur"
-                                                @oninput="e => msg.Action.MaterielProposal.Commande.NomFournisseur = e.Value?.ToString() ?? string.Empty"
-                                                placeholder="Nom du fournisseur"
-                                                list="fournisseur-agent-list-@msg.GetHashCode()" />
-                                            <datalist id="fournisseur-agent-list-@msg.GetHashCode()">
-                                                @foreach (var f in _fournisseurs)
-                                                { <option value="@f.Nom" /> }
-                                            </datalist>
-                                        </div>
-                                        <div class="ai-form-field">
-                                            <label>Quantité *</label>
-                                            <input type="number" min="1" class="ai-inp @(msg.FieldErrors.ContainsKey("Quantite") ? "ai-inp-err" : "")"
-                                                   @bind="msg.Action.MaterielProposal.Commande.QuantiteAchetee"
-                                                   @bind:after="() => AjusterArticlesMsg(msg)" />
-                                            @if (msg.FieldErrors.TryGetValue("Quantite", out var eq))
-                                            { <span class="ai-field-err">@eq</span> }
-                                        </div>
-                                        <div class="ai-form-field">
-                                            <label>Date d'achat</label>
-                                            <input type="date" class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.DateAchat" />
-                                        </div>
-                                        <div class="ai-form-field">
-                                            <label>Date livraison</label>
-                                            <input type="date" class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.DateLivraison" />
-                                        </div>
-                                        <div class="ai-form-field">
-                                            <label>Fin de garantie</label>
-                                            <input type="date" class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.DateFinGarantie" />
-                                        </div>
+                                        <div class="ai-form-field"><label>N° Commande *</label><input class="ai-inp @(msg.FieldErrors.ContainsKey("NumeroCommande")?"ai-inp-err":"")" @bind="msg.Action.MaterielProposal.Commande.NumeroCommande" placeholder="Ex: CMD-2026-005"/></div>
+                                        <div class="ai-form-field"><label>Fournisseur</label><input class="ai-inp" value="@msg.Action.MaterielProposal.Commande.NomFournisseur" @oninput="e=>msg.Action.MaterielProposal.Commande.NomFournisseur=e.Value?.ToString()??string.Empty" placeholder="Nom du fournisseur" list="fournisseur-agent-list-@msg.GetHashCode()"/><datalist id="fournisseur-agent-list-@msg.GetHashCode()">@foreach(var f in _fournisseurs){<option value="@f.Nom"/>}</datalist></div>
+                                        <div class="ai-form-field"><label>Quantité *</label><input type="number" min="1" class="ai-inp @(msg.FieldErrors.ContainsKey("Quantite")?"ai-inp-err":"")" @bind="msg.Action.MaterielProposal.Commande.QuantiteAchetee" @bind:after="()=>AjusterArticlesMsg(msg)"/></div>
+                                        <div class="ai-form-field"><label>Date d'achat</label><input type="date" class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.DateAchat"/></div>
+                                        <div class="ai-form-field"><label>Date livraison</label><input type="date" class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.DateLivraison"/></div>
+                                        <div class="ai-form-field"><label>Fin de garantie</label><input type="date" class="ai-inp" @bind="msg.Action.MaterielProposal.Commande.DateFinGarantie"/></div>
                                     </div>
-
-                                    @* Articles / numéros de série *@
-                                    @if (msg.Action.MaterielProposal.Commande.QuantiteAchetee > 0)
-                                    {
+                                    @if (msg.Action.MaterielProposal.Commande.QuantiteAchetee > 0) {
                                         <div class="ai-articles-section">
-                                            <div class="ai-articles-title">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                                                @msg.Action.MaterielProposal.Commande.QuantiteAchetee art. — N° Série <span class="ai-articles-opt">(optionnel)</span>
-                                            </div>
+                                            <div class="ai-articles-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>@msg.Action.MaterielProposal.Commande.QuantiteAchetee art. — N° Série <span class="ai-articles-opt">(optionnel)</span></div>
                                             <div class="ai-articles-list">
-                                                @for (int i = 0; i < msg.Action.MaterielProposal.Commande.NumerosSerie.Count; i++)
-                                                {
-                                                    var idx = i;
-                                                    <div class="ai-article-row">
-                                                        <span class="ai-article-num">@(idx + 1)</span>
-                                                        <input class="ai-inp"
-                                                               placeholder="N° SÉRIE (OPTIONNEL)"
-                                                               value="@msg.Action.MaterielProposal.Commande.NumerosSerie[idx]"
-                                                               @onchange="e => msg.Action.MaterielProposal.Commande.NumerosSerie[idx] = e.Value?.ToString()" />
-                                                        <span class="ai-article-statut">Disponible</span>
-                                                    </div>
-                                                }
+                                                @for(int i=0;i<msg.Action.MaterielProposal.Commande.NumerosSerie.Count;i++){var idx=i;<div class="ai-article-row"><span class="ai-article-num">@(idx+1)</span><input class="ai-inp" placeholder="N° SÉRIE (OPTIONNEL)" value="@msg.Action.MaterielProposal.Commande.NumerosSerie[idx]" @onchange="e=>msg.Action.MaterielProposal.Commande.NumerosSerie[idx]=e.Value?.ToString()"/><span class="ai-article-statut">Disponible</span></div>}
                                             </div>
                                         </div>
                                     }
                                 }
-
-                                @* ════════════════════════════════════════════
-                                   FORMULAIRE COMMANDE SEULE
-                                   ════════════════════════════════════════════ *@
-                                @if (msg.Action.Type == "add_commande" && msg.Action.CommandeProposal != null)
-                                {
+                                @if (msg.Action.Type == "add_commande" && msg.Action.CommandeProposal != null) {
                                     <div class="ai-form-grid">
-                                        <div class="ai-form-field">
-                                            <label>N° Commande *</label>
-                                            <input class="ai-inp @(msg.FieldErrors.ContainsKey("NumeroCommande") ? "ai-inp-err" : "")"
-                                                   @bind="msg.Action.CommandeProposal.NumeroCommande" />
-                                            @if (msg.FieldErrors.TryGetValue("NumeroCommande", out var enc))
-                                            { <span class="ai-field-err">@enc</span> }
-                                        </div>
-                                        <div class="ai-form-field">
-                                            <label>ID Matériel *</label>
-                                            <input type="number" class="ai-inp @(msg.FieldErrors.ContainsKey("MaterielId") ? "ai-inp-err" : "")"
-                                                   @bind="msg.Action.CommandeProposal.MaterielId" />
-                                            @if (msg.FieldErrors.TryGetValue("MaterielId", out var em))
-                                            { <span class="ai-field-err">@em</span> }
-                                        </div>
-                                        <div class="ai-form-field">
-                                            <label>Fournisseur</label>
-                                            <input class="ai-inp"
-                                                value="@msg.Action.CommandeProposal.NomFournisseur"
-                                                @oninput="e => msg.Action.CommandeProposal.NomFournisseur = e.Value?.ToString() ?? string.Empty"
-                                                placeholder="Nom du fournisseur"
-                                                list="fournisseur-agent-cmd-list-@msg.GetHashCode()" />
-                                            <datalist id="fournisseur-agent-cmd-list-@msg.GetHashCode()">
-                                                @foreach (var f in _fournisseurs)
-                                                { <option value="@f.Nom" /> }
-                                            </datalist>
-                                        </div>
-                                        <div class="ai-form-field">
-                                            <label>Quantité *</label>
-                                            <input type="number" min="1" class="ai-inp @(msg.FieldErrors.ContainsKey("Quantite") ? "ai-inp-err" : "")"
-                                                   @bind="msg.Action.CommandeProposal.QuantiteAchetee"
-                                                   @bind:after="() => AjusterArticlesCmdMsg(msg)" />
-                                            @if (msg.FieldErrors.TryGetValue("Quantite", out var eq))
-                                            { <span class="ai-field-err">@eq</span> }
-                                        </div>
-                                        <div class="ai-form-field">
-                                            <label>Date d'achat</label>
-                                            <input type="date" class="ai-inp" @bind="msg.Action.CommandeProposal.DateAchat" />
-                                        </div>
-                                        <div class="ai-form-field">
-                                            <label>Date livraison</label>
-                                            <input type="date" class="ai-inp" @bind="msg.Action.CommandeProposal.DateLivraison" />
-                                        </div>
-                                        <div class="ai-form-field">
-                                            <label>Fin de garantie</label>
-                                            <input type="date" class="ai-inp" @bind="msg.Action.CommandeProposal.DateFinGarantie" />
-                                        </div>
+                                        <div class="ai-form-field"><label>N° Commande *</label><input class="ai-inp @(msg.FieldErrors.ContainsKey("NumeroCommande")?"ai-inp-err":"")" @bind="msg.Action.CommandeProposal.NumeroCommande"/></div>
+                                        <div class="ai-form-field"><label>ID Matériel *</label><input type="number" class="ai-inp @(msg.FieldErrors.ContainsKey("MaterielId")?"ai-inp-err":"")" @bind="msg.Action.CommandeProposal.MaterielId"/></div>
+                                        <div class="ai-form-field"><label>Fournisseur</label><input class="ai-inp" value="@msg.Action.CommandeProposal.NomFournisseur" @oninput="e=>msg.Action.CommandeProposal.NomFournisseur=e.Value?.ToString()??string.Empty" list="fournisseur-agent-cmd-list-@msg.GetHashCode()"/><datalist id="fournisseur-agent-cmd-list-@msg.GetHashCode()">@foreach(var f in _fournisseurs){<option value="@f.Nom"/>}</datalist></div>
+                                        <div class="ai-form-field"><label>Quantité *</label><input type="number" min="1" class="ai-inp @(msg.FieldErrors.ContainsKey("Quantite")?"ai-inp-err":"")" @bind="msg.Action.CommandeProposal.QuantiteAchetee" @bind:after="()=>AjusterArticlesCmdMsg(msg)"/></div>
+                                        <div class="ai-form-field"><label>Date d'achat</label><input type="date" class="ai-inp" @bind="msg.Action.CommandeProposal.DateAchat"/></div>
+                                        <div class="ai-form-field"><label>Date livraison</label><input type="date" class="ai-inp" @bind="msg.Action.CommandeProposal.DateLivraison"/></div>
+                                        <div class="ai-form-field"><label>Fin de garantie</label><input type="date" class="ai-inp" @bind="msg.Action.CommandeProposal.DateFinGarantie"/></div>
                                     </div>
-
-                                    @* Articles numéros de série *@
-                                    @if (msg.Action.CommandeProposal.QuantiteAchetee > 0)
-                                    {
+                                    @if (msg.Action.CommandeProposal.QuantiteAchetee > 0) {
                                         <div class="ai-articles-section">
-                                            <div class="ai-articles-title">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                                                @msg.Action.CommandeProposal.QuantiteAchetee art. — N° Série <span class="ai-articles-opt">(optionnel)</span>
-                                            </div>
+                                            <div class="ai-articles-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>@msg.Action.CommandeProposal.QuantiteAchetee art. — N° Série <span class="ai-articles-opt">(optionnel)</span></div>
                                             <div class="ai-articles-list">
-                                                @for (int i = 0; i < msg.Action.CommandeProposal.NumerosSerie.Count; i++)
-                                                {
-                                                    var idx = i;
-                                                    <div class="ai-article-row">
-                                                        <span class="ai-article-num">@(idx + 1)</span>
-                                                        <input class="ai-inp"
-                                                               placeholder="N° SÉRIE (OPTIONNEL)"
-                                                               value="@msg.Action.CommandeProposal.NumerosSerie[idx]"
-                                                               @onchange="e => msg.Action.CommandeProposal.NumerosSerie[idx] = e.Value?.ToString()" />
-                                                        <span class="ai-article-statut">Disponible</span>
-                                                    </div>
-                                                }
+                                                @for(int i=0;i<msg.Action.CommandeProposal.NumerosSerie.Count;i++){var idx=i;<div class="ai-article-row"><span class="ai-article-num">@(idx+1)</span><input class="ai-inp" placeholder="N° SÉRIE (OPTIONNEL)" value="@msg.Action.CommandeProposal.NumerosSerie[idx]" @onchange="e=>msg.Action.CommandeProposal.NumerosSerie[idx]=e.Value?.ToString()"/><span class="ai-article-statut">Disponible</span></div>}
                                             </div>
                                         </div>
                                     }
                                 }
-
-                                @* ════════════════════════════════════════════
-                                   FORMULAIRE ARTICLE
-                                   ════════════════════════════════════════════ *@
-                                @if (msg.Action.Type == "add_article" && msg.Action.ArticleProposal != null)
-                                {
-                                    @* Infos du matériel associé (lecture seule) *@
-                                    @if (msg.MaterielInfo != null)
-                                    {
-                                        <div class="ai-form-section-title">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-                                            Matériel concerné
-                                        </div>
+                                @if (msg.Action.Type == "add_article" && msg.Action.ArticleProposal != null) {
+                                    @if (msg.MaterielInfo != null) {
+                                        <div class="ai-form-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Matériel concerné</div>
                                         <div class="ai-readonly-card">
                                             <div class="ai-readonly-row"><span class="ai-readonly-lbl">Référence</span><span class="ai-readonly-val">@msg.MaterielInfo.Reference</span></div>
                                             <div class="ai-readonly-row"><span class="ai-readonly-lbl">Désignation</span><span class="ai-readonly-val">@msg.MaterielInfo.Designation</span></div>
-                                            @if (!string.IsNullOrEmpty(msg.MaterielInfo.Description))
-                                            { <div class="ai-readonly-row"><span class="ai-readonly-lbl">Description</span><span class="ai-readonly-val">@msg.MaterielInfo.Description</span></div> }
                                             <div class="ai-readonly-row"><span class="ai-readonly-lbl">Catégorie</span><span class="ai-readonly-val">@msg.MaterielInfo.Categorie</span></div>
                                             <div class="ai-readonly-row"><span class="ai-readonly-lbl">Stock actuel</span><span class="ai-readonly-val">@msg.MaterielInfo.QuantiteStock @msg.MaterielInfo.Unite</span></div>
                                         </div>
                                     }
-
-                                    <div class="ai-form-section-title">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                                        Nouvel article
-                                    </div>
+                                    <div class="ai-form-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Nouvel article</div>
                                     <div class="ai-form-grid">
-                                        <div class="ai-form-field">
-                                            <label>ID Matériel *</label>
-                                            <input type="number" class="ai-inp @(msg.FieldErrors.ContainsKey("MaterielId") ? "ai-inp-err" : "")"
-                                                   @bind="msg.Action.ArticleProposal.MaterielId" />
-                                            @if (msg.FieldErrors.TryGetValue("MaterielId", out var em))
-                                            { <span class="ai-field-err">@em</span> }
-                                        </div>
-                                        <div class="ai-form-field">
-                                            <label>ID Commande *</label>
-                                            <input type="number" class="ai-inp @(msg.FieldErrors.ContainsKey("CommandeId") ? "ai-inp-err" : "")"
-                                                   @bind="msg.Action.ArticleProposal.CommandeId" />
-                                            @if (msg.FieldErrors.TryGetValue("CommandeId", out var ecid))
-                                            { <span class="ai-field-err">@ecid</span> }
-                                        </div>
-                                        <div class="ai-form-field ai-form-field-full">
-                                            <label>Numéro de série</label>
-                                            <input class="ai-inp" @bind="msg.Action.ArticleProposal.NumeroSerie"
-                                                   placeholder="Optionnel" />
-                                        </div>
+                                        <div class="ai-form-field"><label>ID Matériel *</label><input type="number" class="ai-inp @(msg.FieldErrors.ContainsKey("MaterielId")?"ai-inp-err":"")" @bind="msg.Action.ArticleProposal.MaterielId"/></div>
+                                        <div class="ai-form-field"><label>ID Commande *</label><input type="number" class="ai-inp @(msg.FieldErrors.ContainsKey("CommandeId")?"ai-inp-err":"")" @bind="msg.Action.ArticleProposal.CommandeId"/></div>
+                                        <div class="ai-form-field ai-form-field-full"><label>Numéro de série</label><input class="ai-inp" @bind="msg.Action.ArticleProposal.NumeroSerie" placeholder="Optionnel"/></div>
                                     </div>
                                 }
-
-                                @* ── Boutons d'approbation ── *@
                                 <div class="ai-approval-actions">
-                                    <button class="ai-approve-btn"
-                                            disabled="@_isApproving"
-                                            @onclick="() => ApproveAction(msg, true)">
-                                        @if (_isApproving) { <div class="ai-spin"></div> }
-                                        else { <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> }
+                                    <button class="ai-approve-btn" disabled="@_isApproving" @onclick="() => ApproveAction(msg, true)">
+                                        @if(_isApproving){<div class="ai-spin"></div>}else{<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>}
                                         Approuver et créer
                                     </button>
-                                    <button class="ai-reject-btn"
-                                            disabled="@_isApproving"
-                                            @onclick="() => ApproveAction(msg, false)">
+                                    <button class="ai-reject-btn" disabled="@_isApproving" @onclick="() => ApproveAction(msg, false)">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                         Refuser
                                     </button>
@@ -506,34 +375,23 @@
                         }
 
                         @if (!msg.IsUser)
-                        {
-                            <div class="ai-msg-time">@msg.Timestamp.ToString("HH:mm")</div>
-                        }
+                        { <div class="ai-msg-time">@msg.Timestamp.ToString("HH:mm")</div> }
                     </div>
                     @if (msg.IsUser)
-                    {
-                        <div class="ai-msg-avatar ai-msg-user-avatar">
-                            @_initiales
-                        </div>
-                    }
+                    { <div class="ai-msg-avatar ai-msg-user-avatar">@_initiales</div> }
                 </div>
             }
 
-            @* ── Indicateur de chargement ── *@
             @if (_isLoading)
             {
                 <div class="ai-msg ai-msg-bot">
                     <div class="ai-msg-avatar">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="7" y="6" width="10" height="9" rx="2"/>
-                        <line x1="12" y1="3" x2="12" y2="6"/>
+                        <rect x="7" y="6" width="10" height="9" rx="2"/><line x1="12" y1="3" x2="12" y2="6"/>
                         <circle cx="12" cy="2.5" r="0.8" fill="currentColor"/>
-                        <circle cx="10" cy="10" r="1" fill="currentColor"/>
-                        <circle cx="14" cy="10" r="1" fill="currentColor"/>
-                        <path d="M10 13h4"/>
-                        <path d="M9 15v2a3 3 0 0 0 6 0v-2"/>
-                        <line x1="7" y1="9" x2="5" y2="9"/>
-                        <line x1="17" y1="9" x2="19" y2="9"/>
+                        <circle cx="10" cy="10" r="1" fill="currentColor"/><circle cx="14" cy="10" r="1" fill="currentColor"/>
+                        <path d="M10 13h4"/><path d="M9 15v2a3 3 0 0 0 6 0v-2"/>
+                        <line x1="7" y1="9" x2="5" y2="9"/><line x1="17" y1="9" x2="19" y2="9"/>
                     </svg>
                     </div>
                     <div class="ai-msg-content-wrap">

@@ -1,4 +1,4 @@
-// src/Frontend/AssetFlow.BlazorUI/Pages/AgentChat.razor.cs
+// src/Frontend/AssetFlow.BlazorUI/Pages/Achat/AgentChat.razor.cs
 using AssetFlow.BlazorUI.DTOs;
 using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;
@@ -12,13 +12,15 @@ namespace AssetFlow.BlazorUI.Pages.Achat
     public partial class AgentChat : ComponentBase
     {
         [Inject] private AgentChatService     AgentSvc      { get; set; } = default!;
+        [Inject] private ConversationService  ConvSvc       { get; set; } = default!;
         [Inject] private IJSRuntime           JS            { get; set; } = default!;
         [Inject] private ILocalStorageService LocalStorage  { get; set; } = default!;
         [Inject] private StockAlertService    StockAlertSvc { get; set; } = default!;
-        [Inject] private FournisseurService FournisseurSvc { get; set; } = default!;
+        [Inject] private FournisseurService   FournisseurSvc { get; set; } = default!;
+
         private List<FournisseurDto> _fournisseurs = new();
 
-        // ── ChatMessage ─────────────────────────────────────────────
+        // ── ChatMessage local ────────────────────────────────────────────────
         private class ChatMessage
         {
             public bool          IsUser          { get; set; }
@@ -27,9 +29,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             public AgentAction?  Action          { get; set; }
             public bool          ActionProcessed { get; set; }
             public DateTime      Timestamp       { get; set; } = DateTime.Now;
-
             public AgentMaterielInfo? MaterielInfo { get; set; }
-
             public List<string>              ValidationErrors { get; set; } = new();
             public Dictionary<string,string> FieldErrors      { get; set; } = new();
         }
@@ -44,7 +44,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             public string  Unite         { get; set; } = "pièce";
         }
 
-        // ── State ──────────────────────────────────────────────────
+        // ── State chat ───────────────────────────────────────────────────────
         private List<ChatMessage>       _messages        = new();
         private List<AlerteStock>       _alertes         = new();
         private List<AgentChatHistory>  _history         = new();
@@ -58,6 +58,15 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private string  _initiales    = "U";
         private string? _username     = "Utilisateur";
         private string? _role         = "EquipeAchat";
+        private int     _userId       = 0;
+
+        // ── State historique ─────────────────────────────────────────────────
+        private bool   _historyOpen          = false;
+        private bool   _loadingHistory       = false;
+        private string? _activeConversationId = null;
+        private string  _editingConvId        = string.Empty;
+        private string  _editingTitle         = string.Empty;
+        private List<ConversationSummary> _conversations = new();
 
         private readonly List<string> _suggestions = new()
         {
@@ -69,15 +78,19 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             "⚠️ Quels incidents sont en attente ?"
         };
 
-        // ── Init ───────────────────────────────────────────────────
+        // ── Init ─────────────────────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
             try
             {
-                var nom  = await JS.InvokeAsync<string?>("eval", "localStorage.getItem('user_name')");
-                var role = await JS.InvokeAsync<string?>("eval", "localStorage.getItem('user_role')");
+                var nom    = await JS.InvokeAsync<string?>("eval", "localStorage.getItem('user_name')");
+                var role   = await JS.InvokeAsync<string?>("eval", "localStorage.getItem('user_role')");
+                var userIdStr = await JS.InvokeAsync<string?>("eval", "localStorage.getItem('user_id')");
+
                 if (!string.IsNullOrWhiteSpace(nom))  _username = Clean(nom);
                 if (!string.IsNullOrWhiteSpace(role)) _role     = Clean(role);
+                if (!string.IsNullOrWhiteSpace(userIdStr))
+                    int.TryParse(Clean(userIdStr), out _userId);
 
                 var parts = (_username ?? "U").Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 _initiales = parts.Length >= 2
@@ -87,8 +100,13 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             catch { }
 
             await LoadInitialAlerts();
+
             try { _fournisseurs = await FournisseurSvc.GetAllAsync(); }
             catch { }
+
+            // Charger la liste des conversations depuis Redis
+            if (_userId > 0)
+                await LoadConversationList();
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -96,6 +114,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             await ScrollToBottom();
         }
 
+        // ── Alertes stock ────────────────────────────────────────────────────
         private async Task LoadInitialAlerts()
         {
             var resp = await AgentSvc.GetInitialAlertsAsync();
@@ -103,36 +122,198 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
             _alertes     = resp.Alertes;
             _showAlertes = _alertes.Count > 0;
-
-            // Mettre à jour le service singleton
             StockAlertSvc.Set(_alertes.Count);
+        }
 
-            if (_chatStarted && !string.IsNullOrEmpty(resp.Message))
+        // ════════════════════════════════════════════════════════════════════
+        //  HISTORIQUE — méthodes
+        // ════════════════════════════════════════════════════════════════════
+
+        private void ToggleHistory()
+        {
+            _historyOpen = !_historyOpen;
+        }
+
+        private void CloseAllOverlays()
+        {
+            _sidebarOpen = false;
+            _historyOpen = false;
+        }
+
+        private async Task LoadConversationList()
+        {
+            if (_userId == 0) return;
+            _loadingHistory = true;
+            StateHasChanged();
+
+            _conversations = await ConvSvc.GetListAsync(_userId);
+            _loadingHistory = false;
+            StateHasChanged();
+        }
+
+        private async Task LoadConversation(string convId)
+        {
+            _activeConversationId = convId;
+            _historyOpen          = false;
+            _isLoading            = true;
+            StateHasChanged();
+
+            // Récupérer les messages depuis Redis
+            var msgs = await ConvSvc.GetMessagesAsync(convId);
+
+            _messages.Clear();
+            _history.Clear();
+
+            foreach (var m in msgs)
             {
                 _messages.Add(new ChatMessage
                 {
-                    IsUser     = false,
-                    Content    = resp.Message,
-                    AgentBadge = "db",
-                    Timestamp  = DateTime.Now
+                    IsUser          = m.Role == "user",
+                    Content         = m.Content,
+                    AgentBadge      = m.AgentUsed,
+                    ActionProcessed = true, // les actions déjà traitées ne sont plus actives
+                    Timestamp       = m.Timestamp
                 });
+                _history.Add(new AgentChatHistory { Role = m.Role, Content = m.Content });
             }
+
+            _chatStarted = _messages.Count > 0;
+            _isLoading   = false;
+            StateHasChanged();
+            await ScrollToBottom();
         }
 
-        // ── Envoi message ──────────────────────────────────────────
+        private async Task StartNewConversation()
+        {
+            _messages.Clear();
+            _history.Clear();
+            _chatStarted          = false;
+            _activeConversationId = null;
+            _historyOpen          = false;
+            StateHasChanged();
+        }
+
+        // ── Groupement temporel des conversations (comme Claude) ─────────────
+        private Dictionary<string, List<ConversationSummary>> GetGroupedConversations()
+        {
+            var now    = DateTime.UtcNow;
+            var result = new Dictionary<string, List<ConversationSummary>>();
+
+            foreach (var conv in _conversations)
+            {
+                var diff = now - conv.UpdatedAt;
+                string group;
+
+                if (diff.TotalHours < 24)
+                    group = "Aujourd'hui";
+                else if (diff.TotalDays < 2)
+                    group = "Hier";
+                else if (diff.TotalDays <= 7)
+                    group = "Cette semaine";
+                else if (diff.TotalDays <= 30)
+                    group = "Ce mois-ci";
+                else
+                    group = conv.UpdatedAt.ToString("MMMM yyyy");
+
+                if (!result.ContainsKey(group))
+                    result[group] = new List<ConversationSummary>();
+                result[group].Add(conv);
+            }
+
+            return result;
+        }
+
+        // ── Titre ────────────────────────────────────────────────────────────
+        private void StartEditTitle(string convId, string currentTitle)
+        {
+            _editingConvId = convId;
+            _editingTitle  = currentTitle;
+        }
+
+        private async Task SaveTitle(string convId)
+        {
+            if (!string.IsNullOrWhiteSpace(_editingTitle))
+            {
+                await ConvSvc.UpdateTitleAsync(convId, _editingTitle);
+                var conv = _conversations.FirstOrDefault(c => c.Id == convId);
+                if (conv != null) conv.Title = _editingTitle;
+            }
+            _editingConvId = string.Empty;
+            StateHasChanged();
+        }
+
+        private async Task OnTitleKeyDown(KeyboardEventArgs e, string convId)
+        {
+            if (e.Key == "Enter")  await SaveTitle(convId);
+            if (e.Key == "Escape") _editingConvId = string.Empty;
+        }
+
+        // ── Supprimer ────────────────────────────────────────────────────────
+        private async Task DeleteConversation(string convId)
+        {
+            await ConvSvc.DeleteAsync(convId, _userId);
+            _conversations.RemoveAll(c => c.Id == convId);
+
+            if (_activeConversationId == convId)
+                await StartNewConversation();
+
+            StateHasChanged();
+        }
+
+        private async Task DeleteAllConversations()
+        {
+            await ConvSvc.DeleteAllAsync(_userId);
+            _conversations.Clear();
+            await StartNewConversation();
+        }
+
+        // ── Générer un titre automatique depuis le premier message ───────────
+        private static string GenerateTitleFromMessage(string msg)
+        {
+            var cleaned = msg.Replace("📦", "").Replace("📊", "").Replace("🔍", "")
+                            .Replace("➕", "").Replace("📋", "").Replace("⚠️", "").Trim();
+            return cleaned.Length > 40 ? cleaned[..37] + "..." : cleaned;
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        //  ENVOI DE MESSAGE
+        // ════════════════════════════════════════════════════════════════════
+
         private async Task SendMessage()
         {
             var text = _inputText.Trim();
             if (string.IsNullOrEmpty(text) || _isLoading) return;
 
+            // Créer la conversation dans Redis au premier message
+            if (!_chatStarted && _userId > 0)
+            {
+                var title  = GenerateTitleFromMessage(text);
+                var created = await ConvSvc.CreateAsync(_userId, title);
+                if (created != null)
+                {
+                    _activeConversationId = created.ConversationId;
+                    _conversations.Insert(0, new ConversationSummary
+                    {
+                        Id        = created.ConversationId,
+                        Title     = title,
+                        CreatedAt = created.CreatedAt,
+                        UpdatedAt = created.CreatedAt
+                    });
+                }
+            }
+
             _chatStarted = true;
 
-            _messages.Add(new ChatMessage { IsUser = true, Content = text });
+            _messages.Add(new ChatMessage { IsUser = true, Content = text, Timestamp = DateTime.Now });
             _history.Add(new AgentChatHistory { Role = "user", Content = text });
             _inputText = string.Empty;
             _isLoading = true;
             StateHasChanged();
             await ScrollToBottom();
+
+            // Persister le message user dans Redis
+            if (_activeConversationId != null)
+                await ConvSvc.AddMessageAsync(_activeConversationId, "user", text);
 
             var request = new AgentChatRequest
             {
@@ -163,6 +344,21 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 _messages.Add(botMsg);
                 _history.Add(new AgentChatHistory { Role = "assistant", Content = resp.Message });
 
+                // Persister la réponse assistant dans Redis
+                if (_activeConversationId != null)
+                    await ConvSvc.AddMessageAsync(_activeConversationId, "assistant",
+                        resp.Message, agentUsed: resp.AgentUsed);
+
+                // Mettre à jour la preview dans la liste locale
+                var convItem = _conversations.FirstOrDefault(c => c.Id == _activeConversationId);
+                if (convItem != null)
+                {
+                    convItem.UpdatedAt   = DateTime.UtcNow;
+                    convItem.LastMessage = resp.Message.Length > 60
+                        ? resp.Message[..57] + "..." : resp.Message;
+                    convItem.MessageCount += 2;
+                }
+
                 if (_history.Count > 20) _history = _history.TakeLast(20).ToList();
             }
             else
@@ -185,7 +381,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             await SendMessage();
         }
 
-        // ── Approbation d'action ───────────────────────────────────
+        // ── Approbation d'action ─────────────────────────────────────────────
         private async Task ApproveAction(ChatMessage msg, bool approved)
         {
             if (msg.Action == null) return;
@@ -194,12 +390,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             {
                 msg.ValidationErrors.Clear();
                 msg.FieldErrors.Clear();
-
-                if (!ValidateAction(msg))
-                {
-                    StateHasChanged();
-                    return;
-                }
+                if (!ValidateAction(msg)) { StateHasChanged(); return; }
             }
 
             _isApproving = true;
@@ -216,7 +407,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             };
 
             var resp = await AgentSvc.ApproveAsync(request, _username ?? "Utilisateur");
-            _isApproving     = false;
+            _isApproving        = false;
             msg.ActionProcessed = true;
 
             var resultMsg = resp?.Message ?? (approved ? "✅ Action effectuée." : "❌ Action annulée.");
@@ -228,7 +419,12 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 Timestamp  = DateTime.Now
             });
 
-            // Si succès → recharger les alertes et mettre à jour le compteur global
+            // Persister le résultat dans Redis
+            if (_activeConversationId != null)
+                await ConvSvc.AddMessageAsync(_activeConversationId, "assistant", resultMsg,
+                    agentUsed: resp?.Succes == true ? "action_success" : "action_error",
+                    actionProcessed: true);
+
             if (resp?.Succes == true)
             {
                 var refConcernee = msg.Action.MaterielProposal?.Reference;
@@ -245,7 +441,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             await ScrollToBottom();
         }
 
-        // ── Validation inline ──────────────────────────────────────
+        // ── Validation ───────────────────────────────────────────────────────
         private bool ValidateAction(ChatMessage msg)
         {
             if (msg.Action == null) return true;
@@ -255,7 +451,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             {
                 var p          = msg.Action.MaterielProposal;
                 var isExisting = msg.Action.Label?.StartsWith("exists:") == true;
-
                 if (!isExisting)
                 {
                     if (string.IsNullOrWhiteSpace(p.Reference))
@@ -265,7 +460,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     if (string.IsNullOrWhiteSpace(p.Categorie))
                     { msg.FieldErrors["Categorie"] = "Obligatoire."; ok = false; }
                 }
-
                 if (p.Commande != null)
                 {
                     if (string.IsNullOrWhiteSpace(p.Commande.NumeroCommande))
@@ -273,11 +467,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     if (p.Commande.QuantiteAchetee <= 0)
                     { msg.FieldErrors["Quantite"] = "Doit être > 0."; ok = false; }
                 }
-                else
-                {
-                    msg.ValidationErrors.Add("Une commande associée est requise.");
-                    ok = false;
-                }
+                else { msg.ValidationErrors.Add("Une commande associée est requise."); ok = false; }
             }
             else if (msg.Action.Type == "add_commande" && msg.Action.CommandeProposal != null)
             {
@@ -300,11 +490,10 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
             if (!ok && msg.FieldErrors.Count > 0)
                 msg.ValidationErrors.Add("Veuillez corriger les erreurs ci-dessous.");
-
             return ok;
         }
 
-        // ── Ajuster les numéros de série ───────────────────────────
+        // ── Helpers articles ─────────────────────────────────────────────────
         private void AjusterArticlesMsg(ChatMessage msg)
         {
             if (msg.Action?.MaterielProposal?.Commande == null) return;
@@ -333,26 +522,16 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             var alerte = _alertes.FirstOrDefault(a =>
                 a.Designation.Equals(nomMateriel, StringComparison.OrdinalIgnoreCase) ||
                 a.Reference.Equals(nomMateriel, StringComparison.OrdinalIgnoreCase));
-            if (alerte != null)
-            {
-                return new AgentMaterielInfo
-                {
-                    Reference     = alerte.Reference,
-                    Designation   = alerte.Designation,
-                    Categorie     = alerte.Categorie,
-                    QuantiteStock = alerte.QuantiteStock,
-                    Unite         = "pièce"
-                };
-            }
-            return new AgentMaterielInfo { Designation = nomMateriel };
+            return alerte != null
+                ? new AgentMaterielInfo { Reference = alerte.Reference, Designation = alerte.Designation,
+                    Categorie = alerte.Categorie, QuantiteStock = alerte.QuantiteStock, Unite = "pièce" }
+                : new AgentMaterielInfo { Designation = nomMateriel };
         }
 
         private void OpenAlertProposal(AlerteStock alerte)
         {
             if (alerte.Proposition == null) return;
-
             _chatStarted = true;
-
             if (alerte.Proposition.Commande == null)
                 alerte.Proposition.Commande = new AgentCommandeProposal();
             AjusterArticlesCommande(alerte.Proposition.Commande);
@@ -370,27 +549,15 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 },
                 Timestamp = DateTime.Now
             });
-
             StateHasChanged();
         }
 
-        // ── Keyboard ───────────────────────────────────────────────
+        // ── Keyboard / scroll ────────────────────────────────────────────────
         private async Task OnKeyDown(KeyboardEventArgs e)
         {
-            if (e.Key == "Enter" && !e.ShiftKey)
-                await SendMessage();
+            if (e.Key == "Enter" && !e.ShiftKey) await SendMessage();
         }
 
-        // ── Clear ──────────────────────────────────────────────────
-        private async Task ClearChat()
-        {
-            _messages.Clear();
-            _history.Clear();
-            _chatStarted = false;
-            _showAlertes = _alertes.Count > 0;
-        }
-
-        // ── Scroll ─────────────────────────────────────────────────
         private async Task ScrollToBottom()
         {
             try
@@ -401,7 +568,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             catch { }
         }
 
-        // ── Helpers UI ─────────────────────────────────────────────
+        // ── Helpers UI ───────────────────────────────────────────────────────
         private bool _estAdmin => _role?.Equals("Admin", StringComparison.OrdinalIgnoreCase) == true;
 
         private static string GetAgentBadgeClass(string badge) => badge switch
@@ -434,37 +601,17 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             _                => "Agent IA"
         };
 
-        /// <summary>
-        /// Transforme le Markdown en HTML, y compris les liens cliquables.
-        /// </summary>
         private static string FormatMessage(string text)
         {
             if (string.IsNullOrEmpty(text)) return string.Empty;
-
-            // Liens Markdown [texte](url) → <a href="url" target="_blank">texte</a>
             text = Regex.Replace(text,
                 @"\[([^\]]+)\]\((https?://[^\)]+)\)",
                 "<a href=\"$2\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"ai-link\">$1</a>");
-
-            // Gras
             text = Regex.Replace(text, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
-            // Italique
             text = Regex.Replace(text, @"\*(.+?)\*", "<em>$1</em>");
-            // Code inline
             text = Regex.Replace(text, @"`(.+?)`", "<code>$1</code>");
-
-            // Titres ## Sources → section mise en valeur
-            text = Regex.Replace(text,
-                @"^## (.+)$",
-                "<div class=\"ai-sources-title\">$1</div>",
-                RegexOptions.Multiline);
-
-            // Listes à puce (- item)
-            text = Regex.Replace(text,
-                @"^- (.+)$",
-                "<div class=\"ai-list-item\">$1</div>",
-                RegexOptions.Multiline);
-
+            text = Regex.Replace(text, @"^## (.+)$", "<div class=\"ai-sources-title\">$1</div>", RegexOptions.Multiline);
+            text = Regex.Replace(text, @"^- (.+)$", "<div class=\"ai-list-item\">$1</div>", RegexOptions.Multiline);
             text = text.Replace("\n", "<br/>");
             return text;
         }

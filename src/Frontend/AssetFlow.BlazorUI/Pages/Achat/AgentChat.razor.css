@@ -793,3 +793,302 @@ html.dark .ai-alertes-bar {
         margin-right: 48px;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   AJOUTS À src/Frontend/AssetFlow.BlazorUI/Pages/Achat/AgentChat.razor.css
+   Ajouter à la fin du fichier existant
+═══════════════════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════
+   BOUTON HISTORIQUE dans la topbar
+══════════════════════════════════════════ */
+.ai-history-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem .85rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: .5rem;
+    cursor: pointer;
+    transition: all .2s;
+    flex-shrink: 0;
+}
+.ai-history-toggle-btn:hover,
+.ai-history-toggle-btn.active {
+    color: #136dec;
+    border-color: #136dec;
+    background: rgba(19,109,236,.07);
+}
+.ai-history-toggle-btn svg { width: 14px; height: 14px; }
+
+.ai-history-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: #136dec;
+    color: white;
+    border-radius: 999px;
+    font-size: .62rem;
+    font-weight: 800;
+}
+
+/* ══════════════════════════════════════════
+   PANNEAU HISTORIQUE LATÉRAL — inline flex
+   (pas de position:fixed → ne chevauche rien)
+══════════════════════════════════════════ */
+.ai-history-panel {
+    width: 0;
+    min-width: 0;
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+    transition: width .3s cubic-bezier(.4,0,.2,1),
+                min-width .3s cubic-bezier(.4,0,.2,1);
+}
+.ai-history-panel.open {
+    width: 280px;
+    min-width: 280px;
+}
+
+/* Header du panel */
+.ai-history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1rem .75rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.ai-history-title {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .85rem;
+    font-weight: 800;
+    color: var(--text);
+}
+.ai-history-title svg { width: 16px; height: 16px; color: #136dec; }
+
+.ai-history-new-btn {
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(19,109,236,.1);
+    color: #136dec;
+    border: 1px solid rgba(19,109,236,.3);
+    border-radius: .4rem;
+    cursor: pointer;
+    transition: all .2s;
+}
+.ai-history-new-btn:hover { background: rgba(19,109,236,.2); }
+.ai-history-new-btn svg { width: 14px; height: 14px; }
+
+/* Liste scrollable */
+.ai-history-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: .5rem .5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+}
+.ai-history-list::-webkit-scrollbar { width: 4px; }
+.ai-history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* Groupes temporels */
+.ai-history-group {
+    margin-bottom: .5rem;
+}
+.ai-history-group-label {
+    display: block;
+    font-size: .62rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-faint);
+    padding: .35rem .5rem .25rem;
+}
+
+/* Item de conversation */
+.ai-history-item {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .55rem .65rem;
+    border-radius: .5rem;
+    cursor: pointer;
+    transition: background .15s;
+    min-width: 0;
+    position: relative;
+}
+.ai-history-item:hover {
+    background: var(--surface-2);
+}
+.ai-history-item.active {
+    background: rgba(19,109,236,.1);
+    border: 1px solid rgba(19,109,236,.2);
+}
+.ai-history-item:hover .ai-history-item-actions,
+.ai-history-item.active .ai-history-item-actions {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.ai-history-item-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .1rem;
+}
+.ai-history-item-title {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ai-history-item.active .ai-history-item-title { color: #136dec; }
+
+.ai-history-item-preview {
+    font-size: .68rem;
+    color: var(--text-faint);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Actions (renommer / supprimer) */
+.ai-history-item-actions {
+    display: flex;
+    align-items: center;
+    gap: .2rem;
+    flex-shrink: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s;
+}
+.ai-history-action-btn {
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    background: none;
+    border: none;
+    border-radius: .3rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all .15s;
+}
+.ai-history-action-btn:hover { background: var(--surface); color: var(--text); }
+.ai-history-action-btn.danger:hover { background: rgba(239,68,68,.1); color: #ef4444; }
+.ai-history-action-btn svg { width: 11px; height: 11px; }
+
+/* Input renommer */
+.ai-history-title-input {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid #136dec;
+    border-radius: .3rem;
+    padding: .2rem .4rem;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--text);
+    outline: none;
+    font-family: inherit;
+}
+
+/* Squelettes de chargement */
+.ai-history-loading {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    padding: .5rem;
+}
+.ai-history-skeleton {
+    height: 48px;
+    background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+    background-size: 200% 100%;
+    border-radius: .5rem;
+    animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* État vide */
+.ai-history-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .5rem;
+    padding: 2rem 1rem;
+    color: var(--text-faint);
+    text-align: center;
+}
+.ai-history-empty svg { width: 32px; height: 32px; opacity: .4; }
+.ai-history-empty p { font-size: .8rem; }
+
+/* Footer */
+.ai-history-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .65rem 1rem;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.ai-history-delete-all-btn {
+    display: flex; align-items: center; gap: .35rem;
+    font-size: .72rem; font-weight: 600;
+    color: var(--text-faint);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color .2s;
+    padding: 0;
+}
+.ai-history-delete-all-btn:hover { color: #ef4444; }
+.ai-history-delete-all-btn svg { width: 12px; height: 12px; }
+.ai-history-info {
+    font-size: .62rem;
+    color: var(--text-faint);
+    font-style: italic;
+}
+
+/* ── Le main prend tout l'espace restant (flex) ─────────────── */
+/* Plus besoin de margin-left : le panel historique est dans le flux flex */
+
+/* ══════════════════════════════════════════
+   RESPONSIVE — panel en overlay sur mobile
+══════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .ai-history-panel {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 85vw !important;
+        max-width: 320px !important;
+        min-width: 0 !important;
+        height: 100vh;
+        z-index: 45;
+        transform: translateX(-110vw);
+        transition: transform .3s cubic-bezier(.4,0,.2,1);
+    }
+    .ai-history-panel.open {
+        transform: translateX(0);
+        width: 85vw !important;
+        min-width: unset !important;
+    }
+    .ai-history-toggle-btn span { display: none; }
+}

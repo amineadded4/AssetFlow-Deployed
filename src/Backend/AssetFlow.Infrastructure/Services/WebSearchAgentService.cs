@@ -137,7 +137,7 @@ Termine par une section '## Sources' avec les liens.";
         }
 
         // ════════════════════════════════════════════════════════════════════
-        //  ── NOUVEAU : SearchOffersAsync — recherche structurée 5 offres ──
+        //  ── MODIFIÉ : SearchOffersAsync — recherche structurée 4 offres ──
         // ════════════════════════════════════════════════════════════════════
         public async Task<List<OffreSearchResultDto>> SearchOffersAsync(
             string nomProduit, int quantite, string? description = null)
@@ -145,7 +145,7 @@ Termine par une section '## Sources' avec les liens.";
             var tavilyKey = _config["Tavily:ApiKey"];
             var groqKey   = _config["GroqApiKey"];
 
-            // Si aucune clé : renvoie 5 offres "placeholder" claires (jamais d'erreur silencieuse)
+            // Si aucune clé : renvoie 4 offres "placeholder" claires (jamais d'erreur silencieuse)
             if (string.IsNullOrWhiteSpace(tavilyKey) || string.IsNullOrWhiteSpace(groqKey))
             {
                 return BuildFallbackOffers(nomProduit, quantite,
@@ -200,14 +200,14 @@ Termine par une section '## Sources' avec les liens.";
                     return BuildFallbackOffers(nomProduit, quantite,
                         "⚠️ Aucun résultat web pertinent — offres exemples.");
 
-                // 2) Groq : extrait 5 offres structurées en JSON strict
+                // 2) Groq : extrait 4 offres structurées en JSON strict
                 var llmHttp = _factory.CreateClient();
                 llmHttp.DefaultRequestHeaders.Add("Authorization", $"Bearer {groqKey}");
 
                 var sourcesJson = JsonSerializer.Serialize(sources);
 
                 var prompt = $@"Tu es un acheteur professionnel. À partir des résultats web ci-dessous,
-extrait EXACTEMENT 5 offres pour le produit suivant :
+extrait EXACTEMENT 4 offres pour le produit suivant :
 
 Produit : {nomProduit}
 Quantité demandée : {quantite}
@@ -216,7 +216,7 @@ Quantité demandée : {quantite}
 Résultats web (JSON) :
 {sourcesJson}
 
-Réponds UNIQUEMENT avec un tableau JSON de 5 objets (sans markdown, sans texte autour) :
+Réponds UNIQUEMENT avec un tableau JSON de 4 objets (sans markdown, sans texte autour) :
 [
   {{
     ""fournisseur"":     ""Nom fournisseur (déduit du domaine ou du titre)"",
@@ -231,7 +231,7 @@ Réponds UNIQUEMENT avec un tableau JSON de 5 objets (sans markdown, sans texte 
     ""devise"":          ""MAD"",
     ""pointsForts"":     [""Atout 1 court"", ""Atout 2 court"", ""Atout 3 court""]
   }},
-  ... (5 au total)
+  ... (4 au total)
 ]
 
 Si une info n'est PAS trouvée, mets ""N/A"" plutôt qu'inventer. Pour pointsForts, déduis du contexte
@@ -274,7 +274,7 @@ Si une info n'est PAS trouvée, mets ""N/A"" plutôt qu'inventer. Pour pointsFor
                 var offres = JsonSerializer.Deserialize<List<OffreSearchResultDto>>(raw, opts)
                              ?? new List<OffreSearchResultDto>();
 
-                // garantir un id stable + max 5
+                // garantir un id stable + max 4
                 foreach (var o in offres)
                     if (string.IsNullOrWhiteSpace(o.Id))
                         o.Id = Guid.NewGuid().ToString("N")[..8];
@@ -283,7 +283,7 @@ Si une info n'est PAS trouvée, mets ""N/A"" plutôt qu'inventer. Pour pointsFor
                     return BuildFallbackOffers(nomProduit, quantite,
                         "⚠️ Le LLM n'a renvoyé aucune offre — offres exemples.");
 
-                return offres.Take(5).ToList();
+                return offres.Take(4).ToList();
             }
             catch (Exception ex)
             {
@@ -296,7 +296,7 @@ Si une info n'est PAS trouvée, mets ""N/A"" plutôt qu'inventer. Pour pointsFor
         private static List<OffreSearchResultDto> BuildFallbackOffers(
             string nomProduit, int quantite, string raison)
         {
-            var fournisseurs = new[] { "Fournisseur A", "Fournisseur B", "Fournisseur C", "Fournisseur D", "Fournisseur E" };
+            var fournisseurs = new[] { "Fournisseur A", "Fournisseur B", "Fournisseur C", "Fournisseur D" };
             return fournisseurs.Select((f, i) => new OffreSearchResultDto
             {
                 Id              = Guid.NewGuid().ToString("N")[..8],

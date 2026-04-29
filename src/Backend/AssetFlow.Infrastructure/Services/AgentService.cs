@@ -164,7 +164,7 @@ namespace AssetFlow.Infrastructure.Services
                 .ToList();
         }
 
-        // ── Étape 1 : Recherche web → 5 offres ─────────────────────────────
+        // ── Recherche web → 4 offres (lecture seule, plus d'étape 2) ───────
         public async Task<AgentChatResponse> StartDemandeWorkflowAsync(int idDemande)
         {
             var demande = await _demandeService.GetByIdAsync(idDemande);
@@ -190,12 +190,12 @@ namespace AssetFlow.Infrastructure.Services
             var description = demande.Description
                 ?? (demande.Lignes.FirstOrDefault()?.Description);
 
-            // Étape 1 : appel WebSearch agent qui retourne 5 offres structurées
+            // Appel WebSearch agent qui retourne 4 offres structurées
             var offres = await _webSearch.SearchOffersAsync(nomProduit, quantite, description);
 
             var introMsg = $"📋 **Demande d'achat {demande.Reference}** — {nomProduit} (×{quantite})\n\n" +
-                           $"🔎 **Étape 1 — Recherche Web** : j'ai trouvé **{offres.Count} offre(s)** correspondant à votre besoin. " +
-                           "Cliquez sur une carte pour la sélectionner. L'**Agent Base de données** prendra ensuite le relais pour préparer la commande.";
+                           $"🔎 **Recherche Web** : j'ai trouvé **{offres.Count} offre(s)** correspondant à votre besoin. " +
+                           "Voici les meilleures propositions du marché.";
 
             return new AgentChatResponse
             {

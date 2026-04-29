@@ -33,11 +33,9 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             public List<string>              ValidationErrors { get; set; } = new();
             public Dictionary<string,string> FieldErrors      { get; set; } = new();
 
-            // ── NOUVEAU : 5 cartes d'offres (Étape 1) + contexte demande ──
-            public List<OffreSearchResultDto>? OfferCards      { get; set; }
+            // ── 4 cartes d'offres (lecture seule) + contexte demande ──
+            public List<OffreSearchResultDto>? OfferCards       { get; set; }
             public int?                        IdDemandeContext { get; set; }
-            public string?                     SelectedOfferId  { get; set; }
-            public bool                        OfferLoading     { get; set; }
         }
 
         private class AgentMaterielInfo
@@ -217,7 +215,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             StateHasChanged();
             await ScrollToBottom();
 
-            // Étape 1 : recherche web → 5 offres
+            // Recherche web → 4 offres (lecture seule, plus d'étape 2)
             var resp = await AgentSvc.StartDemandeWorkflowAsync(demande.IdDemande);
             _isLoading = false;
 
@@ -253,55 +251,11 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             await ScrollToBottom();
         }
 
-        /// <summary>L'utilisateur a cliqué une carte d'offre — Étape 2.</summary>
-        private async Task SelectOffer(ChatMessage cardsMsg, OffreSearchResultDto offre)
+        /// <summary>Ferme le panneau Demandes (clic sur le backdrop).</summary>
+        private void CloseDemandes()
         {
-            if (cardsMsg.IdDemandeContext == null) return;
-
-            cardsMsg.SelectedOfferId = offre.Id;
-            cardsMsg.OfferLoading    = true;
+            _demandesOpen = false;
             StateHasChanged();
-
-            var resp = await AgentSvc.SelectOfferAsync(cardsMsg.IdDemandeContext.Value, offre);
-            cardsMsg.OfferLoading = false;
-
-            if (resp == null)
-            {
-                _messages.Add(new ChatMessage
-                {
-                    IsUser     = false,
-                    Content    = "❌ Erreur lors de la sélection de l'offre.",
-                    AgentBadge = "action_error",
-                    Timestamp  = DateTime.Now
-                });
-            }
-            else
-            {
-                // Synchronise le contexte demande sur le message d'action pour
-                // le transmettre à ApproveAction plus tard.
-                _currentDemandeId = resp.IdDemande ?? cardsMsg.IdDemandeContext;
-
-                if (resp.Action?.MaterielProposal?.Commande != null)
-                    AjusterArticlesCommande(resp.Action.MaterielProposal.Commande);
-
-                _messages.Add(new ChatMessage
-                {
-                    IsUser           = false,
-                    Content          = resp.Message,
-                    AgentBadge       = "action",
-                    Action           = resp.Action,
-                    IdDemandeContext = _currentDemandeId,
-                    Timestamp        = DateTime.Now
-                });
-                _history.Add(new AgentChatHistory { Role = "assistant", Content = resp.Message });
-
-                if (_activeConversationId != null)
-                    await ConvSvc.AddMessageAsync(_activeConversationId, "assistant",
-                        resp.Message, agentUsed: "action");
-            }
-
-            StateHasChanged();
-            await ScrollToBottom();
         }
 
         // ════════════════════════════════════════════════════════════════════

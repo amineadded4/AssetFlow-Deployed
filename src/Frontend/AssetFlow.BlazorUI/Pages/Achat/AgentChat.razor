@@ -1,10 +1,3 @@
-@* src/Frontend/AssetFlow.BlazorUI/Pages/Achat/AgentChat.razor *@
-@* ─────────────────────────────────────────────────────────────────────── *@
-@* MODIFIÉ — Ajouts :                                                     *@
-@*   1) Bouton « Demandes » + panneau dropdown en haut à droite            *@
-@*   2) Affichage des 5 cartes d'offres dans un message bot               *@
-@*   3) Sélection d'une carte → Étape 2 (formulaire matériel pré-rempli)  *@
-@* ─────────────────────────────────────────────────────────────────────── *@
 @page "/agent-chat"
 @using AssetFlow.BlazorUI.DTOs
 @using AssetFlow.BlazorUI.Components
@@ -126,8 +119,15 @@
 
     @* ══════════════════════════════════════════════════════════
        NOUVEAU — DEMANDES D'ACHAT PANEL (top-right dropdown)
+       + backdrop : un clic en dehors ferme le panneau
     ══════════════════════════════════════════════════════════ *@
-    <div class="ai-demandes-panel @(_demandesOpen ? "open" : "")" aria-hidden="@(!_demandesOpen)">
+    @if (_demandesOpen)
+    {
+        <div class="ai-demandes-backdrop" @onclick="CloseDemandes"></div>
+    }
+    <div class="ai-demandes-panel @(_demandesOpen ? "open" : "")"
+         aria-hidden="@(!_demandesOpen)"
+         @onclick:stopPropagation="true">
         <div class="ai-demandes-header">
             <span class="ai-demandes-title">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -392,22 +392,15 @@
                         </div>
 
                         @* ══════════════════════════════════════════════════
-                           NOUVEAU — 5 cartes d'offres (Étape 1)
+                           MODIFIÉ — 4 cartes d'offres en LECTURE SEULE
+                           (plus d'Étape 2, plus de sélection)
                         ══════════════════════════════════════════════════ *@
                         @if (msg.OfferCards != null && msg.OfferCards.Count > 0)
                         {
-                            <div class="ai-step-banner">
-                                <span class="ai-step-num">1</span>
-                                <span class="ai-step-label">Recherche Web — choisissez une offre</span>
-                            </div>
                             <div class="ai-offers-grid">
                                 @foreach (var offre in msg.OfferCards)
                                 {
-                                    var isSelected = msg.SelectedOfferId == offre.Id;
-                                    var isDisabled = msg.OfferLoading || (msg.SelectedOfferId != null && !isSelected);
-
-                                    <div class="ai-offer-card @(isSelected ? "selected" : "") @(isDisabled ? "disabled" : "")"
-                                         @onclick="() => isDisabled ? Task.CompletedTask : SelectOffer(msg, offre)">
+                                    <div class="ai-offer-card readonly">
                                         <div class="ai-offer-head">
                                             <div class="ai-offer-fournisseur">
                                                 <div class="ai-offer-icon">
@@ -418,21 +411,6 @@
                                                 </div>
                                                 <div class="ai-offer-fournisseur-name">@offre.Fournisseur</div>
                                             </div>
-                                            @if (isSelected)
-                                            {
-                                                <div class="ai-offer-selected-badge">
-                                                    @if (msg.OfferLoading)
-                                                    {
-                                                        <div class="ai-spin"></div>
-                                                    }
-                                                    else
-                                                    {
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                                            <polyline points="20 6 9 17 4 12"/>
-                                                        </svg>
-                                                    }
-                                                </div>
-                                            }
                                         </div>
 
                                         <div class="ai-offer-product">@offre.NomProduit</div>
@@ -516,23 +494,6 @@
                                             </a>
                                         }
 
-                                        <button class="ai-offer-select-btn"
-                                                disabled="@isDisabled"
-                                                @onclick:stopPropagation="true"
-                                                @onclick="() => SelectOffer(msg, offre)">
-                                            @if (isSelected && msg.OfferLoading)
-                                            {
-                                                <div class="ai-spin"></div>
-                                                <span>Étape 2 en cours…</span>
-                                            }
-                                            else
-                                            {
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                                                    <polyline points="20 6 9 17 4 12"/>
-                                                </svg>
-                                                <span>Choisir cette offre</span>
-                                            }
-                                        </button>
                                     </div>
                                 }
                             </div>
@@ -543,13 +504,6 @@
                         {
                             <div class="ai-approval-form">
                                 <div class="ai-approval-header">
-                                    @if (msg.IdDemandeContext != null)
-                                    {
-                                        <div class="ai-step-banner inline">
-                                            <span class="ai-step-num">2</span>
-                                            <span class="ai-step-label">Agent Base de données — vérifier &amp; valider</span>
-                                        </div>
-                                    }
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>

@@ -1,0 +1,65 @@
+/* ScrapingToastGlobal.razor.css */
+.sgt-container {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    min-width: 280px;
+    max-width: 360px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    animation: sgtSlideIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(12px);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.sgt-loading { background: rgba(15, 30, 60, 0.95); color: #fff; border-color: #136dec44; }
+.sgt-success { background: rgba(16, 185, 129, 0.92); color: #fff; }
+.sgt-error   { background: rgba(244, 63, 94, 0.92);  color: #fff; }
+
+@keyframes sgtSlideIn {
+    from { opacity: 0; transform: translateX(30px) scale(0.95); }
+    to   { opacity: 1; transform: translateX(0)    scale(1); }
+}
+
+.sgt-spinner {
+    width: 22px; height: 22px; flex-shrink: 0;
+    border: 2.5px solid rgba(255,255,255,0.2);
+    border-top-color: #136dec;
+    border-radius: 50%;
+    animation: sgtSpin 0.8s linear infinite;
+}
+@keyframes sgtSpin { to { transform: rotate(360deg); } }
+
+.sgt-icon {
+    width: 28px; height: 28px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    font-weight: 900; font-size: 14px;
+}
+
+.sgt-body { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.sgt-title { font-weight: 700; font-size: 0.88rem; }
+.sgt-sub   { font-size: 0.75rem; opacity: 0.75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+
+.sgt-action {
+    padding: 5px 12px; border-radius: 8px;
+    background: rgba(255,255,255,0.2);
+    color: #fff; font-size: 0.8rem; font-weight: 700;
+    text-decoration: none; white-space: nowrap;
+    transition: background 0.15s;
+}
+.sgt-action:hover { background: rgba(255,255,255,0.35); }
+
+.sgt-close {
+    background: none; border: none; color: rgba(255,255,255,0.7);
+    font-size: 18px; cursor: pointer; padding: 0 2px; line-height: 1;
+    transition: color 0.15s;
+}
+.sgt-close:hover { color: #fff; }

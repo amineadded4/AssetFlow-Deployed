@@ -1,30 +1,32 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using AssetFlow.BlazorUI.DTOs;
 using AssetFlow.BlazorUI.Services;
 
 namespace AssetFlow.BlazorUI.Pages.Achat
 {
-    public partial class WebScraping : ComponentBase
+    public partial class WebScraping : ComponentBase, IAsyncDisposable
     {
         [Inject] private IJSRuntime JS { get; set; } = default!;
         [Inject] private NavigationManager Nav { get; set; } = default!;
-        [Inject] private NavigationManager Navigation    { get; set; } = default!;
         [Inject] private IHttpClientFactory HttpFactory { get; set; } = default!;
-        // ── AJOUTER l'injection
         [Inject] private ScraperCircuitBreakerService _circuitBreaker { get; set; } = default!;
+        [Inject] private ScrapingBackgroundService ScrapingBg { get; set; } = default!;
+        [Inject] private Blazored.LocalStorage.ILocalStorageService LocalStorage { get; set; } = default!;
 
-        // ── Countdown circuit breaker ────────────────────────────
+        // ── Countdown circuit breaker
         private int _countdownSecondes = 0;
         private System.Threading.Timer? _countdownTimer;
 
-        // ── État ────────────────────────────────────────────────
+        // ── État
         private string _theme = "dark";
         private bool _sidebarOpen = false;
-        private string _nomUtilisateur = "Adem Added";
+        private string _nomUtilisateur = "Agent Achat";
         private string _initiales = "AA";
+        private string _roleUtilisateur = "Service Achat";
+        private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
         private string _recherche = string.Empty;
         private string? _nomRecherche = null;
@@ -34,7 +36,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private List<ResultatScraping> _resultats = new();
         private string _filtreActif = "prix";
 
-        // ── Filtres avancés ─────────────────────────────────────
+        // ── Filtres avancés
         private HashSet<string> _filtresSites = new();
         private decimal _prixMin = 0;
         private decimal _prixMax = 9999;
@@ -44,11 +46,9 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         // Toast
         private string _toastMsg = string.Empty;
         private string _toastType = "ws-toast-success";
-        private string      _roleUtilisateur = "Service Achat";
-        private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
-        // ── AJOUTER avec les autres variables d'état ───────────
-        private string? _filtreDisponibilite = null; // "stock", "rupture", ou null = tous
+        // ── Filtre disponibilité
+        private string? _filtreDisponibilite = null;
 
         protected override async Task OnInitializedAsync()
         {
@@ -63,8 +63,144 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             await ChargerInfosUtilisateur();
             LireQueryString();
             DemarrerCountdown();
+
+            // ── Init SignalR scraping background
+            var token = await LocalStorage.GetItemAsync<string>("access_token") ?? "";
+            await ScrapingBg.InitAsync(token);
+
+            // ── S'abonner aux résultats
+            ScrapingBg.OnTermine += OnScrapingTermine;
+            ScrapingBg.OnChanged += OnScrapingChanged;
+
+            // ── Demander permission notification navigateur
+            try
+            {
+                await JS.InvokeAsync<string>("requestNotificationPermission");
+            }
+            catch { }
+
+            // ── Si résultat en cache Redis, le charger
+            await ChargerDepuisCache();
         }
 
+        // ── Charger le cache Redis au démarrage
+        private async Task ChargerDepuisCache()
+        {
+            try
+            {
+                var http = HttpFactory.CreateClient("ApiClient");
+                var response = await http.GetAsync("api/scraping/cache");
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    AppliquerResultats(json, "(cache)");
+                }
+            }
+            catch { }
+        }
+
+        // ── Callback quand scraping termine
+        private void OnScrapingTermine(ScrapingResultatDto res)
+        {
+            InvokeAsync(() =>
+            {
+                _chargement = false;
+
+                if (res.Succes && !string.IsNullOrEmpty(res.JsonResultat))
+                {
+                    AppliquerResultats(res.JsonResultat, res.Query);
+                    AfficherToast($"{res.NombreResultats} résultat(s) trouvé(s)", "ws-toast-success");
+                }
+                else
+                {
+                    _resultats = new();
+                    AfficherToast(res.Erreur ?? "Échec du scraping", "ws-toast-error");
+                }
+
+                StateHasChanged();
+            });
+        }
+
+        private void OnScrapingChanged()
+        {
+            InvokeAsync(StateHasChanged);
+        }
+
+        // ── Parser et appliquer les résultats JSON
+        private void AppliquerResultats(string json, string query)
+        {
+            try
+            {
+                var reponse = JsonSerializer.Deserialize<ReponseScraping>(json,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (reponse?.resultats != null && reponse.resultats.Any())
+                {
+                    _nomRecherche = query;
+                    _derniereRecherche = query;
+                    _resultats = reponse.resultats.Select(r => new ResultatScraping
+                    {
+                        Site = r.site,
+                        NomProduit = r.nom_produit,
+                        Prix = r.prix,
+                        EnStock = r.stock?.Contains("stock", StringComparison.OrdinalIgnoreCase) == true,
+                        Livraison = "Non précisé",
+                        Garantie = "Non précisée",
+                        Url = r.url
+                    }).ToList();
+
+                    _prixAbsoluMin = _resultats.Min(r => r.Prix);
+                    _prixAbsoluMax = _resultats.Max(r => r.Prix);
+                    _prixMin = _prixAbsoluMin;
+                    _prixMax = _prixAbsoluMax;
+                    _filtresSites = new();
+                }
+            }
+            catch { }
+        }
+
+        // ── Lancement recherche — Fire & Forget via background service
+        private async Task LancerRecherche()
+        {
+            if (string.IsNullOrWhiteSpace(_recherche)) return;
+
+            // Circuit breaker
+            if (_circuitBreaker.VerifierTransitionHalfOpen())
+            {
+                StateHasChanged();
+                await Task.Delay(4200);
+            }
+
+            if (!_circuitBreaker.PeutEnvoyerRequete())
+            {
+                AfficherToast(_circuitBreaker.MessageUtilisateur, "ws-toast-error");
+                return;
+            }
+
+            _nomRecherche = _recherche.Trim();
+            _derniereRecherche = _nomRecherche;
+            _chargement = true;
+            _resultats = new();
+            _filtresSites = new();
+            _filtreActif = "prix";
+            StateHasChanged();
+
+            try
+            {
+                // Lance en background — répond immédiatement
+                // L'utilisateur peut naviguer librement
+                await ScrapingBg.LancerAsync(_nomRecherche);
+                // _chargement reste true jusqu'à OnScrapingTermine
+            }
+            catch (Exception ex)
+            {
+                _chargement = false;
+                AfficherToast($"Erreur : {ex.Message}", "ws-toast-error");
+                StateHasChanged();
+            }
+        }
+
+        // ── Countdown circuit breaker
         private void DemarrerCountdown()
         {
             _countdownTimer = new System.Threading.Timer(async _ =>
@@ -76,94 +212,14 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         public async ValueTask DisposeAsync()
         {
+            ScrapingBg.OnTermine -= OnScrapingTermine;
+            ScrapingBg.OnChanged -= OnScrapingChanged;
+
             if (_countdownTimer != null)
                 await _countdownTimer.DisposeAsync();
         }
 
-        // Normalise la disponibilité vocale — insensible à la casse et aux accents
-        private static string? NormaliserDisponibilite(string? input)
-        {
-            if (string.IsNullOrWhiteSpace(input)) return null;
-
-            var v = input.ToLower().Trim()
-                .Replace("é", "e").Replace("è", "e").Replace("ê", "e");
-
-            if (v.Contains("stock") || v.Contains("dispo") || v.Contains("disponible"))
-                return "stock";
-            if (v.Contains("rupture") || v.Contains("indispo") || v.Contains("epuise"))
-                return "rupture";
-
-            return null;
-        }
-
-        // Parse "500" → (500, null) ou "500 à 1000" → (500, 1000)
-        private static (decimal? min, decimal? max) ParsePrix(string input)
-        {
-            // Nettoyer : enlever "DT", "dinars", espaces insécables
-            var clean = input.ToLower()
-                .Replace("dt", "").Replace("dinar", "").Replace("à", "a")
-                .Replace("a", " ").Trim();
-
-            var parts = clean.Split(new[] { ' ', '-' },
-                StringSplitOptions.RemoveEmptyEntries);
-
-            var numbers = parts
-                .Select(p => decimal.TryParse(
-                    p.Replace(",", "."),
-                    System.Globalization.NumberStyles.Any,
-                    System.Globalization.CultureInfo.InvariantCulture,
-                    out var n) ? n : (decimal?)null)
-                .Where(n => n.HasValue)
-                .Select(n => n!.Value)
-                .ToList();
-
-            return numbers.Count switch
-            {
-                0 => (null, null),
-                1 => (numbers[0], null),      // "500" → prix max = 500
-                _ => (numbers[0], numbers[1]) // "500 à 1000"
-            };
-        }
-
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (!firstRender) return;
-
-            try
-            {
-                await JS.InvokeVoidAsync("eval", @"
-                    window.__wsThemeRef = null;
-                    window.__wsSetTheme = function(ref) {
-                        window.__wsThemeRef = ref;
-                        if (window.__wsThemeObs) window.__wsThemeObs.disconnect();
-                        window.__wsThemeObs = new MutationObserver(function() {
-                            var dark = document.documentElement.classList.contains('dark');
-                            window.__wsThemeRef &&
-                                window.__wsThemeRef.invokeMethodAsync('OnThemeChanged', dark);
-                        });
-                        window.__wsThemeObs.observe(document.documentElement, {
-                            attributes: true, attributeFilter: ['class']
-                        });
-                    };
-                ");
-                var dotNetRef = DotNetObjectReference.Create(this);
-                await JS.InvokeVoidAsync("__wsSetTheme", dotNetRef);
-            }
-            catch { }
-
-            if (!string.IsNullOrWhiteSpace(_recherche))
-                await LancerRecherche();
-        }
-
-        [JSInvokable("OnThemeChanged")]
-        public void OnThemeChanged(bool isDark)
-        {
-            _theme = isDark ? "dark" : "light";
-            InvokeAsync(StateHasChanged);
-        }
-
-        // ── Query string ────────────────────────────────────────
-
+        // ── Query string
         private void LireQueryString()
         {
             var uri = new Uri(Nav.Uri);
@@ -181,8 +237,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             }
         }
 
-        // ── Utilisateur ─────────────────────────────────────────
-
+        // ── Utilisateur
         private async Task ChargerInfosUtilisateur()
         {
             try
@@ -210,8 +265,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             catch { }
         }
 
-        // ── Actions ─────────────────────────────────────────────
-
+        // ── Actions UI
         private void ToggleSidebar() => _sidebarOpen = !_sidebarOpen;
 
         private void ViderRecherche()
@@ -229,14 +283,11 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 await LancerRecherche();
         }
 
-        // ── Filtres avancés ─────────────────────────────────────
-
+        // ── Filtres avancés
         private void ToggleSite(string site)
         {
-            if (_filtresSites.Contains(site))
-                _filtresSites.Remove(site);
-            else
-                _filtresSites.Add(site);
+            if (_filtresSites.Contains(site)) _filtresSites.Remove(site);
+            else _filtresSites.Add(site);
         }
 
         private void OnPrixMinChange(ChangeEventArgs e)
@@ -258,91 +309,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             _prixMax = _prixAbsoluMax;
         }
 
-        // ── Recherche principale ────────────────────────────────
-
-        private async Task LancerRecherche()
-        {
-            if (string.IsNullOrWhiteSpace(_recherche)) return;
-
-            // ── Circuit breaker check ──────────────────────────
-            // Étape 1 : tenter la transition Open → HalfOpen si le timeout est expiré
-            // et re-render immédiatement pour afficher la banière ambre
-            if (_circuitBreaker.VerifierTransitionHalfOpen())
-            {
-                StateHasChanged();            // peint la banière ambre
-                await Task.Delay(4200);        // laisse le temps à l'utilisateur de la voir
-            }
-
-            // Étape 2 : vérifier si on peut envoyer (bloqué si encore Open)
-            if (!_circuitBreaker.PeutEnvoyerRequete())
-            {
-                AfficherToast(_circuitBreaker.MessageUtilisateur, "ws-toast-error");
-                return;
-            }
-
-            _nomRecherche = _recherche.Trim();
-            _derniereRecherche = _nomRecherche;
-            _chargement = true;
-            _resultats = new();
-            _filtresSites = new();
-            _filtreActif = "prix";
-            StateHasChanged();
-
-            try
-            {
-                var http = HttpFactory.CreateClient("PythonScraper");
-                var reponse = await http.GetFromJsonAsync<ReponseScraping>(
-                    $"scrape?q={Uri.EscapeDataString(_nomRecherche)}"
-                );
-
-                if (reponse?.succes == true && reponse.resultats != null && reponse.resultats.Any())
-                {
-                    _circuitBreaker.EnregistrerSucces();
-                    _resultats = reponse.resultats.Select(r => new ResultatScraping
-                    {
-                        Site = r.site,
-                        NomProduit = r.nom_produit,
-                        Prix = r.prix,
-                        EnStock = r.stock?.Contains("stock", StringComparison.OrdinalIgnoreCase) == true ||
-                                  r.stock?.Contains("En stock", StringComparison.OrdinalIgnoreCase) == true,
-                        Livraison = "Non précisé",
-                        Garantie = "Non précisée",
-                        Url = r.url
-                    }).ToList();
-
-                    // Initialiser la plage de prix avec les données réelles
-                    _prixAbsoluMin = _resultats.Min(r => r.Prix);
-                    _prixAbsoluMax = _resultats.Max(r => r.Prix);
-                    _prixMin = _prixAbsoluMin;
-                    _prixMax = _prixAbsoluMax;
-
-                    AfficherToast($"{_resultats.Count} résultat(s) trouvé(s)", "ws-toast-success");
-                }
-                else
-                {
-                    _resultats = new();
-                    AfficherToast("Aucun résultat trouvé", "ws-toast-warning");
-                }
-            }
-            catch (HttpRequestException)
-            {
-                _circuitBreaker.EnregistrerEchec();
-                AfficherToast("Impossible de contacter le service de scraping.", "ws-toast-error");
-            }
-            catch (Exception ex)
-            {
-                _circuitBreaker.EnregistrerEchec();
-                AfficherToast($"Erreur : {ex.Message}", "ws-toast-error");
-            }
-            finally
-            {
-                _chargement = false;
-                StateHasChanged();
-            }
-        }
-
-        // ── Export CSV ──────────────────────────────────────────
-
+        // ── Export CSV
         private async Task ExporterCsv()
         {
             if (!_resultats.Any()) return;
@@ -354,8 +321,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     sb.AppendLine($"{r.Site};{r.NomProduit.Replace(";", ",")};{r.Prix:N3};{(r.EnStock ? "En stock" : "Rupture")};{r.Url}");
 
                 var bytes = System.Text.Encoding.UTF8.GetPreamble()
-                             .Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString()))
-                             .ToArray();
+                    .Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
                 var base64 = Convert.ToBase64String(bytes);
                 var nom = $"scraping-{_nomRecherche?.Replace(" ", "-")}-{DateTime.Now:yyyyMMdd}.csv";
 
@@ -395,6 +361,43 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             await Task.Delay(3500);
             _toastMsg = string.Empty;
             StateHasChanged();
+        }
+
+        // ── Méthodes JS (theme)
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (!firstRender) return;
+            try
+            {
+                await JS.InvokeVoidAsync("eval", @"
+                    window.__wsThemeRef = null;
+                    window.__wsSetTheme = function(ref) {
+                        window.__wsThemeRef = ref;
+                        if (window.__wsThemeObs) window.__wsThemeObs.disconnect();
+                        window.__wsThemeObs = new MutationObserver(function() {
+                            var dark = document.documentElement.classList.contains('dark');
+                            window.__wsThemeRef &&
+                                window.__wsThemeRef.invokeMethodAsync('OnThemeChanged', dark);
+                        });
+                        window.__wsThemeObs.observe(document.documentElement, {
+                            attributes: true, attributeFilter: ['class']
+                        });
+                    };
+                ");
+                var dotNetRef = DotNetObjectReference.Create(this);
+                await JS.InvokeVoidAsync("__wsSetTheme", dotNetRef);
+            }
+            catch { }
+
+            if (!string.IsNullOrWhiteSpace(_recherche))
+                await LancerRecherche();
+        }
+
+        [JSInvokable("OnThemeChanged")]
+        public void OnThemeChanged(bool isDark)
+        {
+            _theme = isDark ? "dark" : "light";
+            InvokeAsync(StateHasChanged);
         }
     }
 }

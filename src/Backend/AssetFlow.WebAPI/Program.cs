@@ -170,6 +170,16 @@ builder.Services.AddScoped<IArticleBiographieService, ArticleBiographieService>(
 builder.Services.AddScoped<IGraphService, GraphService>();
 builder.Services.AddScoped<IConversationHistoryService, ConversationHistoryService>();
 builder.Services.AddHostedService<ConversationPurgeJob>();
+builder.Services.AddSingleton<IScrapingNotifier>(sp =>
+{
+    var hub = sp.GetRequiredService<IHubContext<ScrapingHub>>();
+    return new ScrapingNotifier(
+        async (groupId, notification) =>
+            await hub.Clients.Group(groupId).SendAsync("ScrapingTermine", notification)
+    );
+});
+builder.Services.AddScoped<IRedisScrapingService, RedisScrapingService>();
+builder.Services.AddScoped<IScrapingService, ScrapingService>();
 
 // === SIGNALR — limite augmentée pour les messages vocaux (base64 audio) ===
 builder.Services.AddSignalR(options =>
@@ -207,6 +217,12 @@ builder.Services.AddHttpClient("MistralClient", client =>
     client.BaseAddress = new Uri("https://api.mistral.ai");
     client.Timeout     = TimeSpan.FromSeconds(30);
 });
+// HTTP Client Python
+builder.Services.AddHttpClient("PythonScraper", c =>
+{
+    c.BaseAddress = new Uri("http://localhost:5000/");
+    c.Timeout = TimeSpan.FromMinutes(5);
+});
 
 var app = builder.Build();
 
@@ -223,6 +239,7 @@ app.UseAuthorization();          // ← UseAuthorization AVANT MapHub
 app.MapControllers();
 app.MapHub<ChatHub>("/chathub"); // ← après UseAuthorization
 app.MapHub<DashboardHub>("/dashboardhub");
+app.MapHub<ScrapingHub>("/scrapinghub");
 
 // === MIGRATION AUTOMATIQUE ===
 using (var scope = app.Services.CreateScope())

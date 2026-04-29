@@ -1,0 +1,81 @@
+@* src/Frontend/AssetFlow.BlazorUI/Components/ScrapingToastGlobal.razor *@
+@implements IAsyncDisposable
+@inject ScrapingBackgroundService ScrapingSvc
+@inject IJSRuntime JS
+@using AssetFlow.BlazorUI.DTOs
+
+@if (ScrapingSvc.EnCours || _showResult)
+{
+    <div class="sgt-container @(_showResult ? (_isSuccess ? "sgt-success" : "sgt-error") : "sgt-loading")">
+        @if (ScrapingSvc.EnCours)
+        {
+            <div class="sgt-spinner"></div>
+            <div class="sgt-body">
+                <span class="sgt-title">Recherche en cours…</span>
+                <span class="sgt-sub">@ScrapingSvc.QueryEnCours</span>
+            </div>
+        }
+        else if (_showResult && _lastResultat != null)
+        {
+            <div class="sgt-icon">@(_isSuccess ? "✓" : "✗")</div>
+            <div class="sgt-body">
+                <span class="sgt-title">
+                    @(_isSuccess
+                        ? $"Terminé ! {_lastResultat.NombreResultats} résultat(s)"
+                        : "Échec de la recherche")
+                </span>
+                <span class="sgt-sub">@_lastResultat.Query</span>
+            </div>
+            @if (_isSuccess)
+            {
+                <a href="/achat/web-scraping" class="sgt-action">Voir →</a>
+            }
+            <button class="sgt-close" @onclick="Fermer">×</button>
+        }
+    </div>
+}
+@code {
+    private bool _showResult = false;
+    private bool _isSuccess = false;
+    private ScrapingResultatDto? _lastResultat;
+
+    protected override void OnInitialized()
+    {
+        ScrapingSvc.OnChanged += OnChanged;
+        ScrapingSvc.OnTermine += OnTermine;
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private async void OnTermine(ScrapingResultatDto res)
+    {
+        _showResult = true;
+        _isSuccess = res.Succes;
+        _lastResultat = res;
+        await InvokeAsync(StateHasChanged);
+
+        // Notification navigateur avec son
+        await JS.InvokeVoidAsync("scrapingNotifyBrowser",
+            res.Succes,
+            res.Query,
+            res.NombreResultats);
+
+        // Auto-masquer après 8s
+        await Task.Delay(8000);
+        _showResult = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void Fermer()
+    {
+        _showResult = false;
+        StateHasChanged();
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        ScrapingSvc.OnChanged -= OnChanged;
+        ScrapingSvc.OnTermine -= OnTermine;
+        return ValueTask.CompletedTask;
+    }
+}

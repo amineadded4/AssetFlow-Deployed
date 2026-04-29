@@ -18,6 +18,7 @@ namespace AssetFlow.BlazorUI.Components
         [Inject] private HttpClient            Http            { get; set; } = default!;
         [Inject] private StockAlertService     StockAlertSvc   { get; set; } = default!;
         [Inject] private AgentChatService      AgentSvc        { get; set; } = default!;
+        [Inject] private ScrapingBackgroundService ScrapingBg { get; set; } = default!;
 
         [Parameter] public string ActivePage { get; set; } = string.Empty;
         [Parameter] public bool   ForceOpen  { get; set; } = false;
@@ -79,9 +80,15 @@ namespace AssetFlow.BlazorUI.Components
             UnreadSvc.OnChanged    += OnUnreadChanged;
             StockAlertSvc.OnChanged += OnStockAlertChanged;
 
+            var token = await LocalStorage.GetItemAsync<string>("access_token") ?? "";
+            await ScrapingBg.InitAsync(token);
+            // Demander permission notification
+            await JS.InvokeAsync<string>("requestNotificationPermission");
+
             // ── Connexions SignalR ──
             await ConnecterDashboardHubAsync();
             await ConnecterChatHubAsync();
+
         }
 
         protected override void OnParametersSet()

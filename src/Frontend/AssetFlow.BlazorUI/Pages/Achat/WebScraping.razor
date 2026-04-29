@@ -11,32 +11,6 @@
             <div class="sidebar-overlay" @onclick="ToggleSidebar"></div>
         }
 
-        @* ══════ MODAL D'ATTENTE SCRAPING ══════ *@
-        @if (_chargement)
-        {
-            <div class="ws-modal-overlay">
-                <div class="ws-modal-box">
-                    <div class="ws-modal-ring"></div>
-                    <h3 class="ws-modal-title">Recherche en cours…</h3>
-                    <p class="ws-modal-desc">
-                        Nous interrogeons <strong>MyTek</strong>, <strong>Tunisianet</strong> et <strong>SpaceNet</strong>
-                        simultanément.<br />Cette opération peut prendre <strong>1.5 à 2 minutes</strong>.
-                    </p>
-                    <div class="ws-modal-sites">
-                        <span class="ws-modal-site">
-                            <span class="ws-modal-dot dot-pulse1"></span>MyTek
-                        </span>
-                        <span class="ws-modal-site">
-                            <span class="ws-modal-dot dot-pulse2"></span>Tunisianet
-                        </span>
-                        <span class="ws-modal-site">
-                            <span class="ws-modal-dot dot-pulse3"></span>SpaceNet
-                        </span>
-                    </div>
-                    <p class="ws-modal-hint">Merci de patienter, ne fermez pas la page.</p>
-                </div>
-            </div>
-        }
         @if (_estAdmin)
         {
             <AdminSidebar ForceOpen="_sidebarOpen" />
@@ -360,4 +334,5 @@
             <div class="ws-toast @_toastType">@_toastMsg</div>
         }
     </div>
+<ScrapingToastGlobal />
 </RoleAuthGuard>    

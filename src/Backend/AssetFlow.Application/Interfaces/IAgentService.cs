@@ -1,13 +1,22 @@
-// src/Backend/AssetFlow.Application/Interfaces/IAgentService.cs
 using AssetFlow.Application.DTOs.AgentDtos;
 
 namespace AssetFlow.Application.Interfaces
 {
     public interface IAgentService
     {
-        Task<AgentChatResponse> ProcessMessageAsync(AgentChatRequest request);
-        Task<AgentChatResponse> GetInitialAlertsAsync();
+        Task<AgentChatResponse>     ProcessMessageAsync(AgentChatRequest request);
+        Task<AgentChatResponse>     GetInitialAlertsAsync();
         Task<AgentApprovalResponse> ApproveActionAsync(AgentApprovalRequest request);
+
+        // ── NOUVEAU : workflow Demande d'achat ──────────────────────────────
+        /// <summary>Liste des demandes d'achat en attente (statut ≠ traite / commande / refuse).</summary>
+        Task<List<DemandePendingDto>> GetPendingDemandesAsync();
+
+        /// <summary>Étape 1 : récupère la demande, lance la recherche web et renvoie 5 offres.</summary>
+        Task<AgentChatResponse> StartDemandeWorkflowAsync(int idDemande);
+
+        /// <summary>Étape 2 : à partir de l'offre choisie, pré-remplit la proposition matériel + commande.</summary>
+        Task<AgentChatResponse> SelectOfferAsync(int idDemande, OffreSearchResultDto offre);
     }
 
     public interface IWebSearchAgentService
@@ -15,30 +24,30 @@ namespace AssetFlow.Application.Interfaces
         /// <param name="query">Requête de l'utilisateur</param>
         /// <param name="history">Historique de la conversation (optionnel)</param>
         Task<string> SearchAsync(string query,
-            List<AssetFlow.Application.DTOs.AgentDtos.AgentChatHistory>? history = null);
+            List<AgentChatHistory>? history = null);
+
+        // ── NOUVEAU : recherche structurée de 5 offres pour une demande d'achat ──
+        Task<List<OffreSearchResultDto>> SearchOffersAsync(string nomProduit, int quantite, string? description = null);
     }
 
     public interface IDatabaseAgentService
     {
-        Task<List<AssetFlow.Application.DTOs.AgentDtos.AlerteStock>> GetStockAlertsAsync();
- 
+        Task<List<AlerteStock>> GetStockAlertsAsync();
+
         /// <param name="question">Question de l'utilisateur</param>
         /// <param name="history">Historique de la conversation (optionnel)</param>
         Task<string> QueryAsync(string question,
-            List<AssetFlow.Application.DTOs.AgentDtos.AgentChatHistory>? history = null);
+            List<AgentChatHistory>? history = null);
     }
 
     public interface IOrchestratorAgentService
     {
-        /// <param name="userMessage">Message actuel</param>
-        /// <param name="history">Historique de la conversation (optionnel)</param>
         Task<string> DetermineAgentAsync(string userMessage,
-            List<AssetFlow.Application.DTOs.AgentDtos.AgentChatHistory>? history = null);
- 
-        Task<AssetFlow.Application.DTOs.AgentDtos.AgentAction?> ExtractActionAsync(string userMessage,
-            List<AssetFlow.Application.DTOs.AgentDtos.AgentChatHistory>? history = null);
- 
-        Task<AssetFlow.Application.DTOs.AgentDtos.AgentMaterielProposal> GenerateMaterielProposalAsync(
-            AssetFlow.Application.DTOs.AgentDtos.AlerteStock alerte);
+            List<AgentChatHistory>? history = null);
+
+        Task<AgentAction?> ExtractActionAsync(string userMessage,
+            List<AgentChatHistory>? history = null);
+
+        Task<AgentMaterielProposal> GenerateMaterielProposalAsync(AlerteStock alerte);
     }
 }

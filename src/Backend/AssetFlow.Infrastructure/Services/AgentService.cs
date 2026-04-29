@@ -1,7 +1,7 @@
-// src/Backend/AssetFlow.Infrastructure/Services/AgentService.cs
 using AssetFlow.Application.DTOs;
 using AssetFlow.Application.DTOs.AgentDtos;
 using AssetFlow.Application.Interfaces;
+using AssetFlow.Domain.Entities;
 using AssetFlow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +14,7 @@ namespace AssetFlow.Infrastructure.Services
         private readonly IDatabaseAgentService     _dbAgent;
         private readonly ICommandeService          _commandeService;
         private readonly IMaterielService          _materielService;
+        private readonly IDemandeAchatService      _demandeService; // ← NOUVEAU
         private readonly AppDbContext              _db;
 
         public AgentService(
@@ -22,6 +23,7 @@ namespace AssetFlow.Infrastructure.Services
             IDatabaseAgentService     dbAgent,
             ICommandeService          commandeService,
             IMaterielService          materielService,
+            IDemandeAchatService      demandeService, // ← NOUVEAU
             AppDbContext              db)
         {
             _orchestrator    = orchestrator;
@@ -29,13 +31,13 @@ namespace AssetFlow.Infrastructure.Services
             _dbAgent         = dbAgent;
             _commandeService = commandeService;
             _materielService = materielService;
+            _demandeService  = demandeService;
             _db              = db;
         }
 
         // ── Traitement principal d'un message ─────────────────────────────
         public async Task<AgentChatResponse> ProcessMessageAsync(AgentChatRequest request)
         {
-            // L'historique est passé à tous les agents pour maintenir le contexte
             var history   = request.History;
             var agentType = await _orchestrator.DetermineAgentAsync(request.Message, history);
             var response  = new AgentChatResponse { AgentUsed = agentType };
@@ -47,7 +49,6 @@ namespace AssetFlow.Infrastructure.Services
             }
             else if (agentType == "db")
             {
-                // Détecter si l'utilisateur essaie de créer un nouveau matériel (action non autorisée)
                 var msg = request.Message.ToLower();
                 var isCreationAttempt = (msg.Contains("ajoute") || msg.Contains("crée") || msg.Contains("créer") || msg.Contains("nouveau") || msg.Contains("nouvelle") || msg.Contains("add") || msg.Contains("insert"))
                     && (msg.Contains("matériel") || msg.Contains("materiel") || msg.Contains("équipement") || msg.Contains("equipement"));
@@ -68,7 +69,6 @@ namespace AssetFlow.Infrastructure.Services
                 response.AgentUsed = "action";
                 response.Action    = action;
 
-                // ── Si add_materiel : vérifier si référence existe déjà ──
                 if (action?.Type == "add_materiel" && action.MaterielProposal != null)
                 {
                     var ref_ = action.MaterielProposal.Reference?.Trim();
@@ -79,7 +79,6 @@ namespace AssetFlow.Infrastructure.Services
 
                         if (existant != null)
                         {
-                            // Matériel existant → autoriser la commande
                             action.MaterielProposal.Reference     = existant.Reference;
                             action.MaterielProposal.Designation   = existant.Designation;
                             action.MaterielProposal.Description   = existant.Description;
@@ -92,7 +91,6 @@ namespace AssetFlow.Infrastructure.Services
                         }
                         else
                         {
-                            // ← NOUVEAU : bloquer la création d'un nouveau matériel
                             response.AgentUsed = "db";
                             response.Action    = null;
                             response.Message   = "❌ La création de nouveaux matériels n'est pas autorisée. Seuls les matériels existants peuvent recevoir une commande. Vérifiez la référence ou contactez un administrateur.";
@@ -101,7 +99,6 @@ namespace AssetFlow.Infrastructure.Services
                     }
                     else
                     {
-                        // Référence vide → on ne peut pas vérifier
                         response.AgentUsed = "db";
                         response.Action    = null;
                         response.Message   = "❌ Impossible de créer un matériel sans référence. Précisez la référence du matériel existant.";
@@ -126,6 +123,205 @@ namespace AssetFlow.Infrastructure.Services
             }
 
             return response;
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        //  ── NOUVEAU : Workflow Demande d'achat ─────────────────────────────
+        // ════════════════════════════════════════════════════════════════════
+
+        // Statuts considérés comme "terminés" et qu'on n'affiche pas dans le dropdown
+        private static readonly HashSet<string> StatutsTermines = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "traite", "traitee", "traité", "traitée",
+            "commande", "commandée", "commandé",
+            "refuse",  "refusée", "refusé"
+        };
+
+        public async Task<List<DemandePendingDto>> GetPendingDemandesAsync()
+        {
+            var demandes = await _demandeService.GetAllAsync();
+
+            return demandes
+                .Where(d => !StatutsTermines.Contains(d.Statut?.Trim() ?? ""))
+                .Select(d => new DemandePendingDto
+                {
+                    IdDemande    = d.IdDemande,
+                    Reference    = d.Reference,
+                    NomProduit   = d.NomProduit,
+                    Quantite     = d.Lignes.Any() ? d.Lignes.Sum(l => l.Quantite) : d.Quantite,
+                    Description  = d.Description,
+                    Statut       = d.Statut,
+                    DateCreation = d.DateCreation,
+                    DemandeurNom = d.DemandeurNom,
+                    Lignes       = d.Lignes.Select(l => new LigneDemandeMini
+                    {
+                        Reference   = l.Reference,
+                        NomProduit  = l.NomProduit,
+                        Quantite    = l.Quantite,
+                        Description = l.Description
+                    }).ToList()
+                })
+                .ToList();
+        }
+
+        // ── Étape 1 : Recherche web → 5 offres ─────────────────────────────
+        public async Task<AgentChatResponse> StartDemandeWorkflowAsync(int idDemande)
+        {
+            var demande = await _demandeService.GetByIdAsync(idDemande);
+            if (demande == null)
+            {
+                return new AgentChatResponse
+                {
+                    AgentUsed = "db",
+                    Message   = $"❌ Demande d'achat #{idDemande} introuvable."
+                };
+            }
+
+            // Si la demande contient des lignes multiples, on prend la première comme produit principal.
+            // Pour une recherche plus complète, on pourra étendre à toutes les lignes.
+            var nomProduit = demande.Lignes.Any()
+                ? demande.Lignes.First().NomProduit
+                : demande.NomProduit;
+
+            var quantite = demande.Lignes.Any()
+                ? demande.Lignes.Sum(l => l.Quantite)
+                : demande.Quantite;
+
+            var description = demande.Description
+                ?? (demande.Lignes.FirstOrDefault()?.Description);
+
+            // Étape 1 : appel WebSearch agent qui retourne 5 offres structurées
+            var offres = await _webSearch.SearchOffersAsync(nomProduit, quantite, description);
+
+            var introMsg = $"📋 **Demande d'achat {demande.Reference}** — {nomProduit} (×{quantite})\n\n" +
+                           $"🔎 **Étape 1 — Recherche Web** : j'ai trouvé **{offres.Count} offre(s)** correspondant à votre besoin. " +
+                           "Cliquez sur une carte pour la sélectionner. L'**Agent Base de données** prendra ensuite le relais pour préparer la commande.";
+
+            return new AgentChatResponse
+            {
+                AgentUsed     = "web",
+                Message       = introMsg,
+                OffresWeb     = offres,
+                IdDemande     = demande.IdDemande,
+                ReferenceDemande = demande.Reference,
+                Etape         = 1
+            };
+        }
+
+        // ── Étape 2 : Offre choisie → pré-remplit le formulaire matériel + commande ──
+        public async Task<AgentChatResponse> SelectOfferAsync(int idDemande, OffreSearchResultDto offre)
+        {
+            var demande = await _demandeService.GetByIdAsync(idDemande);
+            if (demande == null)
+            {
+                return new AgentChatResponse
+                {
+                    AgentUsed = "db",
+                    Message   = $"❌ Demande d'achat #{idDemande} introuvable."
+                };
+            }
+
+            // On essaie d'identifier le matériel concerné depuis la première ligne (référence)
+            var ligne   = demande.Lignes.FirstOrDefault();
+            var refMat  = ligne?.Reference?.Trim();
+            var qte     = demande.Lignes.Any()
+                ? demande.Lignes.Sum(l => l.Quantite)
+                : demande.Quantite;
+
+            Materiel? materiel = null;
+            if (!string.IsNullOrWhiteSpace(refMat))
+            {
+                materiel = await _db.Materiels
+                    .FirstOrDefaultAsync(m => m.Reference.ToLower() == refMat.ToLower());
+            }
+
+            // Si la référence ne correspond à aucun matériel : refuser la création
+            if (materiel == null)
+            {
+                return new AgentChatResponse
+                {
+                    AgentUsed = "db",
+                    Message   = $"❌ La référence **{refMat ?? "(vide)"}** de la demande {demande.Reference} ne correspond à aucun matériel existant. " +
+                                "Seules les commandes sur des matériels existants sont autorisées."
+                };
+            }
+
+            // Construire la proposition matériel (read-only) + commande (éditable)
+            var numCommande = $"CMD-{DateTime.UtcNow:yyyy}-{demande.Reference.Replace("SN-", "")}-{DateTime.UtcNow:HHmmss}";
+
+            var proposal = new AgentMaterielProposal
+            {
+                Reference     = materiel.Reference,
+                Designation   = materiel.Designation,
+                Description   = materiel.Description,
+                Categorie     = materiel.Categorie,
+                QuantiteStock = materiel.QuantiteStock,
+                QuantiteMin   = materiel.QuantiteMin,
+                Unite         = materiel.Unite,
+                Emplacement   = materiel.Emplacement,
+                Commande = new AgentCommandeProposal
+                {
+                    NumeroCommande  = numCommande,
+                    MaterielId      = materiel.Id,
+                    NomMateriel     = materiel.Designation,
+                    NomFournisseur  = offre.Fournisseur,
+                    QuantiteAchetee = qte,
+                    DateAchat       = DateTime.UtcNow,
+                    DateLivraison   = TryParseDelai(offre.DelaiLivraison),
+                    DateFinGarantie = TryParseGarantie(offre.Garantie)
+                }
+            };
+
+            var action = new AgentAction
+            {
+                Type             = "add_materiel",
+                Label            = $"exists:{materiel.Id}",
+                MaterielProposal = proposal
+            };
+
+            var msg = $"🤖 **Étape 2 — Agent Base de données**\n\n" +
+                      $"Offre sélectionnée : **{offre.Fournisseur}** — {offre.PrixTotal ?? offre.PrixUnitaire ?? "prix N/A"}.\n\n" +
+                      $"J'ai pré-rempli la commande pour le matériel existant **{materiel.Designation}** ({materiel.Reference}). " +
+                      "Vérifiez les informations puis approuvez ou refusez.";
+
+            return new AgentChatResponse
+            {
+                AgentUsed        = "action",
+                Message          = msg,
+                Action           = action,
+                IdDemande        = demande.IdDemande,
+                ReferenceDemande = demande.Reference,
+                Etape            = 2
+            };
+        }
+
+        // ── Helpers parsing dates depuis offre ─────────────────────────────
+        private static DateTime? TryParseDelai(string? delai)
+        {
+            if (string.IsNullOrWhiteSpace(delai)) return null;
+            // Cherche un nombre suivi de "jour", "j", "semaine", "sem"
+            var match = System.Text.RegularExpressions.Regex.Match(
+                delai.ToLower(),
+                @"(\d+)\s*(jour|j\b|semaine|sem|month|mois)");
+            if (!match.Success) return null;
+            if (!int.TryParse(match.Groups[1].Value, out var n)) return null;
+            var unit = match.Groups[2].Value;
+            return unit.StartsWith("sem")  ? DateTime.UtcNow.AddDays(n * 7)
+                 : unit.StartsWith("mois") || unit.StartsWith("month") ? DateTime.UtcNow.AddMonths(n)
+                 : DateTime.UtcNow.AddDays(n);
+        }
+
+        private static DateTime? TryParseGarantie(string? garantie)
+        {
+            if (string.IsNullOrWhiteSpace(garantie)) return null;
+            var match = System.Text.RegularExpressions.Regex.Match(
+                garantie.ToLower(),
+                @"(\d+)\s*(an|année|year|mois|month)");
+            if (!match.Success) return null;
+            if (!int.TryParse(match.Groups[1].Value, out var n)) return null;
+            return match.Groups[2].Value.StartsWith("mois") || match.Groups[2].Value.StartsWith("month")
+                ? DateTime.UtcNow.AddMonths(n)
+                : DateTime.UtcNow.AddYears(n);
         }
 
         // ── Alertes initiales à l'ouverture du chat ───────────────────────
@@ -178,7 +374,6 @@ namespace AssetFlow.Infrastructure.Services
                         var existant = await _db.Materiels
                             .FirstOrDefaultAsync(m => m.Reference.ToLower() == p.Reference.Trim().ToLower());
 
-                        // ── NOUVEAU : bloquer la création, seuls les matériels existants sont autorisés ──
                         if (existant == null)
                             return Fail("❌ Création de nouveaux matériels non autorisée. Le matériel doit déjà exister en base.");
 
@@ -224,6 +419,19 @@ namespace AssetFlow.Infrastructure.Services
                                 DateFinGarantie     = p.Commande.DateFinGarantie,
                                 NumerosSerie        = p.Commande.NumerosSerie
                             });
+
+                            // ── NOUVEAU : si la commande provient d'une demande d'achat, marquer comme "commande" ──
+                            if (request.IdDemandeOrigine.HasValue && request.IdDemandeOrigine.Value > 0)
+                            {
+                                try
+                                {
+                                    await _demandeService.ChangerStatutAsync(
+                                        request.IdDemandeOrigine.Value,
+                                        "commande",
+                                        request.Utilisateur);
+                                }
+                                catch { /* on ne bloque pas le succès commande pour cela */ }
+                            }
                         }
 
                         return new AgentApprovalResponse

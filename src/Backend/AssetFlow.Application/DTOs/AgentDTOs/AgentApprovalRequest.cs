@@ -9,5 +9,6 @@ namespace AssetFlow.Application.DTOs.AgentDtos
         public AgentMaterielProposal? MaterielProposal   { get; set; }
         public AgentCommandeProposal? CommandeProposal   { get; set; }
         public AgentArticleProposal?  ArticleProposal    { get; set; }
+        public int? IdDemandeOrigine { get; set; }
     }
 }

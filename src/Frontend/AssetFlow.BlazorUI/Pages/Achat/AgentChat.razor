@@ -1,4 +1,10 @@
 @* src/Frontend/AssetFlow.BlazorUI/Pages/Achat/AgentChat.razor *@
+@* ─────────────────────────────────────────────────────────────────────── *@
+@* MODIFIÉ — Ajouts :                                                     *@
+@*   1) Bouton « Demandes » + panneau dropdown en haut à droite            *@
+@*   2) Affichage des 5 cartes d'offres dans un message bot               *@
+@*   3) Sélection d'une carte → Étape 2 (formulaire matériel pré-rempli)  *@
+@* ─────────────────────────────────────────────────────────────────────── *@
 @page "/agent-chat"
 @using AssetFlow.BlazorUI.DTOs
 @using AssetFlow.BlazorUI.Components
@@ -118,6 +124,80 @@
         }
     </div>
 
+    @* ══════════════════════════════════════════════════════════
+       NOUVEAU — DEMANDES D'ACHAT PANEL (top-right dropdown)
+    ══════════════════════════════════════════════════════════ *@
+    <div class="ai-demandes-panel @(_demandesOpen ? "open" : "")" aria-hidden="@(!_demandesOpen)">
+        <div class="ai-demandes-header">
+            <span class="ai-demandes-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"/>
+                    <polyline points="9 11 9 5 15 5 15 11"/>
+                </svg>
+                Demandes à traiter
+                @if (_pendingDemandes.Count > 0)
+                {
+                    <span class="ai-demandes-count">@_pendingDemandes.Count</span>
+                }
+            </span>
+            <button class="ai-demandes-refresh-btn" @onclick="LoadPendingDemandes" title="Rafraîchir">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                    <path d="M21 3v5h-5"/>
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                    <path d="M8 16H3v5"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="ai-demandes-list">
+            @if (_loadingDemandes)
+            {
+                <div class="ai-history-loading">
+                    <div class="ai-history-skeleton"></div>
+                    <div class="ai-history-skeleton"></div>
+                    <div class="ai-history-skeleton"></div>
+                </div>
+            }
+            else if (_pendingDemandes.Count == 0)
+            {
+                <div class="ai-history-empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    <p>Aucune demande à traiter</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var d in _pendingDemandes)
+                {
+                    <div class="ai-demande-item" @onclick="() => ProcessDemande(d)">
+                        <div class="ai-demande-head">
+                            <span class="ai-demande-ref">@d.Reference</span>
+                            <span class="ai-demande-statut @GetStatutClass(d.Statut)">
+                                @GetStatutLabel(d.Statut)
+                            </span>
+                        </div>
+                        <div class="ai-demande-name">@d.NomProduit</div>
+                        <div class="ai-demande-meta">
+                            <span class="ai-demande-qty">Qté : @d.Quantite</span>
+                            <span class="ai-demande-by">par @d.DemandeurNom</span>
+                            <span class="ai-demande-date">@d.DateCreation.ToLocalTime().ToString("dd/MM/yy")</span>
+                        </div>
+                        <div class="ai-demande-action-hint">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                            Lancer l'agent IA
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
     @* ── Main ── *@
     <div class="ai-main">
 
@@ -162,6 +242,21 @@
                 </div>
             </div>
             <div class="ai-topbar-right">
+                @* ── NOUVEAU : bouton dropdown Demandes d'achat ── *@
+                <button class="ai-demandes-toggle-btn @(_demandesOpen ? "active" : "")"
+                        @onclick="ToggleDemandes"
+                        title="Demandes d'achat à traiter">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"/>
+                        <polyline points="9 11 9 5 15 5 15 11"/>
+                    </svg>
+                    <span>Demandes</span>
+                    @if (_pendingDemandes.Count > 0)
+                    {
+                        <span class="ai-demandes-count-badge">@_pendingDemandes.Count</span>
+                    }
+                </button>
+
                 <div class="ai-status @(_isLoading ? "status-thinking" : "status-ready")">
                     <div class="ai-status-dot"></div>
                     <span>@(_isLoading ? "Réflexion..." : "Prêt")</span>
@@ -243,6 +338,20 @@
                     </div>
                     <h2>Bonjour, je suis votre assistant AssetFlow IA</h2>
                     <p>Je peux vous aider à consulter vos données, rechercher des informations, et créer des matériels, commandes et articles.</p>
+                    @if (_pendingDemandes.Count > 0)
+                    {
+                        <div class="ai-welcome-tip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            <span>
+                                <strong>@_pendingDemandes.Count demande(s) d'achat</strong> en attente de traitement.
+                                Cliquez sur <strong>Demandes</strong> en haut à droite pour les voir.
+                            </span>
+                        </div>
+                    }
                     <div class="ai-suggestions">
                         @foreach (var s in _suggestions)
                         {
@@ -282,11 +391,165 @@
                             @((MarkupString)FormatMessage(msg.Content))
                         </div>
 
+                        @* ══════════════════════════════════════════════════
+                           NOUVEAU — 5 cartes d'offres (Étape 1)
+                        ══════════════════════════════════════════════════ *@
+                        @if (msg.OfferCards != null && msg.OfferCards.Count > 0)
+                        {
+                            <div class="ai-step-banner">
+                                <span class="ai-step-num">1</span>
+                                <span class="ai-step-label">Recherche Web — choisissez une offre</span>
+                            </div>
+                            <div class="ai-offers-grid">
+                                @foreach (var offre in msg.OfferCards)
+                                {
+                                    var isSelected = msg.SelectedOfferId == offre.Id;
+                                    var isDisabled = msg.OfferLoading || (msg.SelectedOfferId != null && !isSelected);
+
+                                    <div class="ai-offer-card @(isSelected ? "selected" : "") @(isDisabled ? "disabled" : "")"
+                                         @onclick="() => isDisabled ? Task.CompletedTask : SelectOffer(msg, offre)">
+                                        <div class="ai-offer-head">
+                                            <div class="ai-offer-fournisseur">
+                                                <div class="ai-offer-icon">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                                        <polyline points="9 22 9 12 15 12 15 22"/>
+                                                    </svg>
+                                                </div>
+                                                <div class="ai-offer-fournisseur-name">@offre.Fournisseur</div>
+                                            </div>
+                                            @if (isSelected)
+                                            {
+                                                <div class="ai-offer-selected-badge">
+                                                    @if (msg.OfferLoading)
+                                                    {
+                                                        <div class="ai-spin"></div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                                            <polyline points="20 6 9 17 4 12"/>
+                                                        </svg>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <div class="ai-offer-product">@offre.NomProduit</div>
+
+                                        @if (!string.IsNullOrWhiteSpace(offre.Description))
+                                        {
+                                            <div class="ai-offer-desc">@offre.Description</div>
+                                        }
+
+                                        <div class="ai-offer-prices">
+                                            @if (!string.IsNullOrWhiteSpace(offre.PrixTotal) && offre.PrixTotal != "N/A")
+                                            {
+                                                <div class="ai-offer-price-total">
+                                                    <span class="ai-offer-price-lbl">Total</span>
+                                                    <span class="ai-offer-price-val">@offre.PrixTotal</span>
+                                                </div>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(offre.PrixUnitaire) && offre.PrixUnitaire != "N/A")
+                                            {
+                                                <div class="ai-offer-price-unit">
+                                                    <span class="ai-offer-price-lbl">Unitaire</span>
+                                                    <span class="ai-offer-price-val">@offre.PrixUnitaire</span>
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <div class="ai-offer-meta">
+                                            @if (!string.IsNullOrWhiteSpace(offre.DelaiLivraison) && offre.DelaiLivraison != "N/A")
+                                            {
+                                                <div class="ai-offer-meta-item">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <rect x="1" y="3" width="15" height="13"/>
+                                                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                                                        <circle cx="5.5" cy="18.5" r="2.5"/>
+                                                        <circle cx="18.5" cy="18.5" r="2.5"/>
+                                                    </svg>
+                                                    @offre.DelaiLivraison
+                                                </div>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(offre.FraisLivraison) && offre.FraisLivraison != "N/A")
+                                            {
+                                                <div class="ai-offer-meta-item">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <line x1="12" y1="1" x2="12" y2="23"/>
+                                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                                    </svg>
+                                                    @offre.FraisLivraison
+                                                </div>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(offre.Garantie) && offre.Garantie != "N/A")
+                                            {
+                                                <div class="ai-offer-meta-item">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                                    </svg>
+                                                    @offre.Garantie
+                                                </div>
+                                            }
+                                        </div>
+
+                                        @if (offre.PointsForts != null && offre.PointsForts.Count > 0)
+                                        {
+                                            <div class="ai-offer-pros">
+                                                @foreach (var p in offre.PointsForts.Take(3))
+                                                {
+                                                    <span class="ai-offer-pro">@p</span>
+                                                }
+                                            </div>
+                                        }
+
+                                        @if (!string.IsNullOrWhiteSpace(offre.Url))
+                                        {
+                                            <a class="ai-offer-source" href="@offre.Url" target="_blank" rel="noopener noreferrer"
+                                               @onclick:stopPropagation="true">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                                    <polyline points="15 3 21 3 21 9"/>
+                                                    <line x1="10" y1="14" x2="21" y2="3"/>
+                                                </svg>
+                                                Voir la source
+                                            </a>
+                                        }
+
+                                        <button class="ai-offer-select-btn"
+                                                disabled="@isDisabled"
+                                                @onclick:stopPropagation="true"
+                                                @onclick="() => SelectOffer(msg, offre)">
+                                            @if (isSelected && msg.OfferLoading)
+                                            {
+                                                <div class="ai-spin"></div>
+                                                <span>Étape 2 en cours…</span>
+                                            }
+                                            else
+                                            {
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                                    <polyline points="20 6 9 17 4 12"/>
+                                                </svg>
+                                                <span>Choisir cette offre</span>
+                                            }
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        }
+
                         @* ── Formulaire d'approbation ── *@
                         @if (msg.Action != null && !msg.ActionProcessed)
                         {
                             <div class="ai-approval-form">
                                 <div class="ai-approval-header">
+                                    @if (msg.IdDemandeContext != null)
+                                    {
+                                        <div class="ai-step-banner inline">
+                                            <span class="ai-step-num">2</span>
+                                            <span class="ai-step-label">Agent Base de données — vérifier &amp; valider</span>
+                                        </div>
+                                    }
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -294,7 +557,6 @@
                                     Vérifier et approuver la proposition
                                 </div>
 
-                                @* ── Erreurs de validation ── *@
                                 @if (msg.ValidationErrors.Count > 0)
                                 {
                                     <div class="ai-form-errors">
@@ -312,16 +574,12 @@
                                     </div>
                                 }
 
-                                @* ══════════════════════════════════════════════════
-                                   add_materiel — UNIQUEMENT pour matériel existant
-                                ══════════════════════════════════════════════════ *@
                                 @if (msg.Action.Type == "add_materiel" && msg.Action.MaterielProposal != null)
                                 {
                                     var isExisting = msg.Action.Label?.StartsWith("exists:") == true;
 
                                     @if (!isExisting)
                                     {
-                                        @* ── Matériel inconnu : bloquer et informer ── *@
                                         <div class="ai-form-errors">
                                             <div class="ai-form-error-item">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -333,7 +591,6 @@
                                             </div>
                                         </div>
 
-                                        @* Bouton Refuser uniquement *@
                                         <div class="ai-approval-actions">
                                             <button class="ai-reject-btn" disabled="@_isApproving" @onclick="() => ApproveAction(msg, false)">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -346,7 +603,6 @@
                                     }
                                     else
                                     {
-                                        @* ── Matériel existant : formulaire de commande ── *@
                                         <div class="ai-form-section-title">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <rect x="2" y="3" width="20" height="14" rx="2"/>
@@ -458,7 +714,6 @@
                                             </div>
                                         }
 
-                                        @* Boutons Approuver + Refuser *@
                                         <div class="ai-approval-actions">
                                             <button class="ai-approve-btn" disabled="@_isApproving" @onclick="() => ApproveAction(msg, true)">
                                                 @if (_isApproving)
@@ -484,9 +739,6 @@
                                     }
                                 }
 
-                                @* ══════════════════════════════════════════════════
-                                   add_commande
-                                ══════════════════════════════════════════════════ *@
                                 @if (msg.Action.Type == "add_commande" && msg.Action.CommandeProposal != null)
                                 {
                                     <div class="ai-form-grid">
@@ -586,9 +838,6 @@
                                     </div>
                                 }
 
-                                @* ══════════════════════════════════════════════════
-                                   add_article
-                                ══════════════════════════════════════════════════ *@
                                 @if (msg.Action.Type == "add_article" && msg.Action.ArticleProposal != null)
                                 {
                                     @if (msg.MaterielInfo != null)

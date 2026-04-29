@@ -1,4 +1,6 @@
+// src/Frontend/AssetFlow.BlazorUI/DTOs/AgentApprovalRequest.cs
 using System.Text.Json.Serialization;
+
 namespace AssetFlow.BlazorUI.DTOs
 {
     public class AgentApprovalRequest
@@ -20,5 +22,10 @@ namespace AssetFlow.BlazorUI.DTOs
 
         [JsonPropertyName("articleProposal")]
         public AgentArticleProposal? ArticleProposal { get; set; }
+
+        // ── NOUVEAU : si l'approbation provient d'une demande d'achat,
+        //              on marque la demande comme "commande" après création.
+        [JsonPropertyName("idDemandeOrigine")]
+        public int? IdDemandeOrigine { get; set; }
     }
 }

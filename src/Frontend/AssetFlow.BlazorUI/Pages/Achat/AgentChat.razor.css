@@ -1092,3 +1092,536 @@ html.dark .ai-alertes-bar {
     }
     .ai-history-toggle-btn span { display: none; }
 }
+
+
+/* src/Frontend/AssetFlow.BlazorUI/Pages/AgentChat.razor.css                  */
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* MODIFIÉ — Ajouts en bas du fichier :                                        */
+/*   • .ai-demandes-toggle-btn / .ai-demandes-count-badge   (topbar bouton)    */
+/*   • .ai-demandes-panel et son contenu                    (panneau dropdown) */
+/*   • .ai-step-banner                                      (bandeau Étape 1/2)*/
+/*   • .ai-offers-grid / .ai-offer-card et tout son contenu (5 cartes offres)  */
+/*   • .ai-welcome-tip                                      (rappel demandes)  */
+/* Le reste du fichier d'origine est CONSERVÉ tel quel (ne rien retirer).      */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+/* ⚠️  Le contenu original (1094 lignes) doit rester intact AU-DESSUS.        */
+/*    Les styles ci-dessous viennent en COMPLÉMENT.                           */
+/*    Si vous repartez d'une copie vierge du fichier, copiez-collez tout      */
+/*    ce qui suit À LA FIN du fichier .razor.css.                             */
+
+/* ══════════════════════════════════════════
+   NOUVEAU — BOUTON DEMANDES (TOPBAR)
+══════════════════════════════════════════ */
+.ai-demandes-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    height: 36px;
+    padding: 0 .9rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: .8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s ease;
+    position: relative;
+}
+.ai-demandes-toggle-btn svg {
+    width: 16px; height: 16px;
+}
+.ai-demandes-toggle-btn:hover {
+    background: var(--surface-2);
+    border-color: #136dec55;
+    color: #136dec;
+}
+.ai-demandes-toggle-btn.active {
+    background: linear-gradient(135deg, #136dec22, #136dec44);
+    border-color: #136dec;
+    color: #136dec;
+}
+.ai-demandes-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+/* ══════════════════════════════════════════
+   NOUVEAU — PANNEAU DEMANDES (slide-in droite)
+══════════════════════════════════════════ */
+.ai-demandes-panel {
+    position: fixed;
+    top: 0;
+    right: -380px;
+    width: 380px;
+    max-width: 92vw;
+    height: 100vh;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    box-shadow: -8px 0 32px rgba(0,0,0,.18);
+    display: flex;
+    flex-direction: column;
+    z-index: 60;
+    transition: right .25s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+}
+.ai-demandes-panel.open {
+    right: 0;
+}
+
+.ai-demandes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    flex-shrink: 0;
+}
+.ai-demandes-title {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    font-size: .92rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -.2px;
+}
+.ai-demandes-title svg { width: 18px; height: 18px; color: #136dec; }
+.ai-demandes-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    margin-left: .35rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 800;
+}
+.ai-demandes-refresh-btn {
+    width: 32px; height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .15s ease;
+}
+.ai-demandes-refresh-btn:hover {
+    color: #136dec;
+    border-color: #136dec55;
+}
+.ai-demandes-refresh-btn svg { width: 14px; height: 14px; }
+
+.ai-demandes-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: .75rem;
+}
+
+.ai-demande-item {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: .85rem .95rem;
+    margin-bottom: .6rem;
+    background: var(--surface);
+    cursor: pointer;
+    transition: all .15s ease;
+    position: relative;
+}
+.ai-demande-item:hover {
+    border-color: #136dec;
+    background: linear-gradient(135deg, #136dec0a, #136dec14);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(19,109,236,.12);
+}
+
+.ai-demande-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .3rem;
+}
+.ai-demande-ref {
+    font-size: .72rem;
+    font-weight: 700;
+    color: #136dec;
+    background: #136dec15;
+    padding: .15rem .5rem;
+    border-radius: 6px;
+    letter-spacing: .3px;
+}
+.ai-demande-statut {
+    font-size: .68rem;
+    font-weight: 700;
+    padding: .15rem .55rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+}
+.ai-demande-statut.stat-pending {
+    background: #f59e0b22;
+    color: #b45309;
+}
+.ai-demande-statut.stat-progress {
+    background: #3b82f622;
+    color: #1d4ed8;
+}
+
+.ai-demande-name {
+    font-size: .92rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: .35rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.ai-demande-meta {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    flex-wrap: wrap;
+    font-size: .72rem;
+    color: var(--text-muted);
+}
+.ai-demande-meta > * {
+    display: inline-flex;
+    align-items: center;
+}
+.ai-demande-qty {
+    font-weight: 600;
+    color: var(--text);
+}
+.ai-demande-action-hint {
+    margin-top: .55rem;
+    padding-top: .55rem;
+    border-top: 1px dashed var(--border);
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .75rem;
+    font-weight: 600;
+    color: #136dec;
+}
+.ai-demande-action-hint svg { width: 12px; height: 12px; }
+
+/* ══════════════════════════════════════════
+   NOUVEAU — BANDEAU ÉTAPE 1 / ÉTAPE 2
+══════════════════════════════════════════ */
+.ai-step-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    margin: .65rem 0 .7rem;
+    padding: .4rem .85rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #136dec18, #6366f118);
+    border: 1px solid #136dec33;
+    color: #136dec;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: -.1px;
+}
+.ai-step-banner.inline { margin: 0 0 .6rem; }
+.ai-step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: #136dec;
+    color: #fff;
+    font-size: .75rem;
+    font-weight: 800;
+}
+.ai-step-label { font-weight: 700; }
+
+/* ══════════════════════════════════════════
+   NOUVEAU — GRID 5 CARTES OFFRES
+══════════════════════════════════════════ */
+.ai-offers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: .85rem;
+    margin: .25rem 0 .5rem;
+    width: 100%;
+}
+
+.ai-offer-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 1rem .85rem;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    cursor: pointer;
+    transition: all .2s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+}
+.ai-offer-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    padding: 1px;
+    background: linear-gradient(135deg, transparent, transparent);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .2s;
+}
+.ai-offer-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(19,109,236,.18);
+    border-color: #136dec88;
+}
+.ai-offer-card.selected {
+    border-color: #136dec;
+    background: linear-gradient(135deg, #136dec0c, #6366f10c);
+    box-shadow: 0 8px 24px rgba(19,109,236,.22);
+}
+.ai-offer-card.disabled {
+    opacity: .55;
+    pointer-events: none;
+    filter: saturate(.5);
+}
+
+.ai-offer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .65rem;
+}
+.ai-offer-fournisseur {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    min-width: 0;
+}
+.ai-offer-icon {
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #136dec22, #6366f122);
+    color: #136dec;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.ai-offer-icon svg { width: 16px; height: 16px; }
+.ai-offer-fournisseur-name {
+    font-size: .88rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -.2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ai-offer-selected-badge {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.ai-offer-selected-badge svg { width: 14px; height: 14px; }
+
+.ai-offer-product {
+    font-size: .9rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: .35rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.ai-offer-desc {
+    font-size: .76rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-bottom: .65rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.ai-offer-prices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem .85rem;
+    padding: .55rem .65rem;
+    margin-bottom: .65rem;
+    background: var(--surface-2);
+    border-radius: 9px;
+    border: 1px dashed var(--border);
+}
+.ai-offer-price-total,
+.ai-offer-price-unit {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.ai-offer-price-lbl {
+    font-size: .62rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+.ai-offer-price-total .ai-offer-price-val {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #136dec;
+    letter-spacing: -.4px;
+}
+.ai-offer-price-unit .ai-offer-price-val {
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.ai-offer-meta {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+    margin-bottom: .65rem;
+}
+.ai-offer-meta-item {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+.ai-offer-meta-item svg {
+    width: 13px; height: 13px;
+    color: #136dec;
+    flex-shrink: 0;
+}
+
+.ai-offer-pros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .3rem;
+    margin-bottom: .7rem;
+}
+.ai-offer-pro {
+    font-size: .68rem;
+    font-weight: 600;
+    padding: .15rem .55rem;
+    border-radius: 999px;
+    background: #10b98115;
+    color: #047857;
+    border: 1px solid #10b98133;
+}
+
+.ai-offer-source {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .7rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    margin-bottom: .55rem;
+    font-weight: 500;
+}
+.ai-offer-source svg { width: 11px; height: 11px; }
+.ai-offer-source:hover { color: #136dec; }
+
+.ai-offer-select-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    width: 100%;
+    height: 38px;
+    margin-top: auto;
+    border: none;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #136dec, #6366f1);
+    color: #fff;
+    font-size: .82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+}
+.ai-offer-select-btn svg { width: 14px; height: 14px; }
+.ai-offer-select-btn:hover:not(:disabled) {
+    box-shadow: 0 6px 16px rgba(19,109,236,.35);
+    transform: translateY(-1px);
+}
+.ai-offer-select-btn:disabled {
+    opacity: .65;
+    cursor: not-allowed;
+}
+.ai-offer-card.selected .ai-offer-select-btn {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+/* ══════════════════════════════════════════
+   NOUVEAU — TIP DEMANDES SUR L'ÉCRAN D'ACCUEIL
+══════════════════════════════════════════ */
+.ai-welcome-tip {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: .65rem;
+    margin: .85rem auto 0;
+    padding: .8rem 1rem;
+    max-width: 540px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f59e0b14, #ef444414);
+    border: 1px solid #f59e0b44;
+    color: var(--text);
+    font-size: .85rem;
+    text-align: left;
+    line-height: 1.45;
+}
+.ai-welcome-tip svg {
+    width: 18px; height: 18px;
+    color: #b45309;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* ══════════════════════════════════════════
+   NOUVEAU — RESPONSIVE
+══════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .ai-offers-grid {
+        grid-template-columns: 1fr;
+    }
+    .ai-demandes-toggle-btn span:not(.ai-demandes-count-badge) {
+        display: none;
+    }
+    .ai-demandes-panel { width: 100vw; right: -100vw; }
+}

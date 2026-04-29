@@ -1,10 +1,10 @@
-// src/Backend/AssetFlow.Infrastructure/Services/WebSearchAgentService.cs
 using AssetFlow.Application.DTOs.AgentDtos;
 using AssetFlow.Application.Interfaces;
 using Microsoft.Extensions.Configuration;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace AssetFlow.Infrastructure.Services
 {
@@ -27,12 +27,8 @@ namespace AssetFlow.Infrastructure.Services
 
             try
             {
-                // ── 1. Résoudre la vraie requête de recherche via le contexte ──
-                // Si la question est vague ("le meilleur ?", "compare-les"), on la résout
-                // grâce à l'historique avant de lancer la recherche Tavily.
                 var resolvedQuery = await ResolveQueryWithContextAsync(query, history);
 
-                // ── 2. Tavily Search ──────────────────────────────────────────
                 var http    = _factory.CreateClient();
                 var payload = new
                 {
@@ -75,7 +71,6 @@ namespace AssetFlow.Infrastructure.Services
                     }
                 }
 
-                // ── 3. Synthèse via LLM avec historique ──────────────────────
                 var groqKey    = _config["GroqApiKey"];
                 var mistralKey = _config["MistralApiKey"];
 
@@ -141,13 +136,188 @@ Termine par une section '## Sources' avec les liens.";
             }
         }
 
+        // ════════════════════════════════════════════════════════════════════
+        //  ── NOUVEAU : SearchOffersAsync — recherche structurée 5 offres ──
+        // ════════════════════════════════════════════════════════════════════
+        public async Task<List<OffreSearchResultDto>> SearchOffersAsync(
+            string nomProduit, int quantite, string? description = null)
+        {
+            var tavilyKey = _config["Tavily:ApiKey"];
+            var groqKey   = _config["GroqApiKey"];
+
+            // Si aucune clé : renvoie 5 offres "placeholder" claires (jamais d'erreur silencieuse)
+            if (string.IsNullOrWhiteSpace(tavilyKey) || string.IsNullOrWhiteSpace(groqKey))
+            {
+                return BuildFallbackOffers(nomProduit, quantite,
+                    "⚠️ Clé Tavily ou Groq manquante — offres exemples affichées.");
+            }
+
+            try
+            {
+                // 1) Tavily : on cible explicitement les fournisseurs / e-commerce
+                var http  = _factory.CreateClient();
+                var query = $"{nomProduit} prix fournisseur achat professionnel {DateTime.UtcNow.Year}";
+                if (!string.IsNullOrWhiteSpace(description))
+                    query += $" {description}";
+
+                var payload = new
+                {
+                    api_key             = tavilyKey,
+                    query               = query,
+                    search_depth        = "advanced",
+                    include_answer      = false,
+                    include_raw_content = false,
+                    max_results         = 8
+                };
+
+                var tavilyResp = await http.PostAsJsonAsync("https://api.tavily.com/search", payload);
+                if (!tavilyResp.IsSuccessStatusCode)
+                    return BuildFallbackOffers(nomProduit, quantite,
+                        $"⚠️ Tavily a renvoyé {tavilyResp.StatusCode} — offres exemples.");
+
+                var tavilyJson = await tavilyResp.Content.ReadAsStringAsync();
+                using var doc  = JsonDocument.Parse(tavilyJson);
+
+                var sources = new List<object>();
+                if (doc.RootElement.TryGetProperty("results", out var results))
+                {
+                    int i = 0;
+                    foreach (var r in results.EnumerateArray())
+                    {
+                        if (++i > 8) break;
+                        sources.Add(new
+                        {
+                            title   = r.TryGetProperty("title",   out var t) ? t.GetString() : "",
+                            url     = r.TryGetProperty("url",     out var u) ? u.GetString() : "",
+                            content = r.TryGetProperty("content", out var c)
+                                ? (c.GetString() ?? "")[..Math.Min(400, (c.GetString() ?? "").Length)]
+                                : ""
+                        });
+                    }
+                }
+
+                if (sources.Count == 0)
+                    return BuildFallbackOffers(nomProduit, quantite,
+                        "⚠️ Aucun résultat web pertinent — offres exemples.");
+
+                // 2) Groq : extrait 5 offres structurées en JSON strict
+                var llmHttp = _factory.CreateClient();
+                llmHttp.DefaultRequestHeaders.Add("Authorization", $"Bearer {groqKey}");
+
+                var sourcesJson = JsonSerializer.Serialize(sources);
+
+                var prompt = $@"Tu es un acheteur professionnel. À partir des résultats web ci-dessous,
+extrait EXACTEMENT 5 offres pour le produit suivant :
+
+Produit : {nomProduit}
+Quantité demandée : {quantite}
+{(string.IsNullOrWhiteSpace(description) ? "" : $"Description : {description}")}
+
+Résultats web (JSON) :
+{sourcesJson}
+
+Réponds UNIQUEMENT avec un tableau JSON de 5 objets (sans markdown, sans texte autour) :
+[
+  {{
+    ""fournisseur"":     ""Nom fournisseur (déduit du domaine ou du titre)"",
+    ""nomProduit"":      ""Nom exact ou très proche du produit demandé"",
+    ""description"":     ""Courte description (1 phrase max)"",
+    ""prixUnitaire"":    ""Prix unitaire ex. '4 200 MAD' (si trouvé sinon 'N/A')"",
+    ""prixTotal"":       ""Prix total pour {quantite} unités si calculable, sinon 'N/A'"",
+    ""fraisLivraison"":  ""ex. 'Gratuit', '150 MAD', 'N/A'"",
+    ""delaiLivraison"":  ""ex. '3 à 5 jours', '2 semaines', 'N/A'"",
+    ""garantie"":        ""ex. '2 ans constructeur', '1 an', 'N/A'"",
+    ""url"":             ""URL de la source"",
+    ""devise"":          ""MAD"",
+    ""pointsForts"":     [""Atout 1 court"", ""Atout 2 court"", ""Atout 3 court""]
+  }},
+  ... (5 au total)
+]
+
+Si une info n'est PAS trouvée, mets ""N/A"" plutôt qu'inventer. Pour pointsForts, déduis du contexte
+(garantie, livraison rapide, prix bas, fournisseur reconnu, etc.). Toujours en français.";
+
+                var llmPayload = new
+                {
+                    model       = "llama-3.3-70b-versatile",
+                    max_tokens  = 2000,
+                    temperature = 0.2,
+                    messages    = new[] { new { role = "user", content = prompt } }
+                };
+
+                var llmResp = await llmHttp.PostAsync(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    new StringContent(JsonSerializer.Serialize(llmPayload), Encoding.UTF8, "application/json"));
+
+                if (!llmResp.IsSuccessStatusCode)
+                    return BuildFallbackOffers(nomProduit, quantite,
+                        $"⚠️ Groq a renvoyé {llmResp.StatusCode} — offres exemples.");
+
+                var llmJson = await llmResp.Content.ReadAsStringAsync();
+                using var llmDoc = JsonDocument.Parse(llmJson);
+                var raw = llmDoc.RootElement
+                    .GetProperty("choices")[0]
+                    .GetProperty("message")
+                    .GetProperty("content")
+                    .GetString() ?? "[]";
+
+                raw = Regex.Replace(raw, @"```json|```", "").Trim();
+
+                // tolère un objet wrapper {"offres":[…]} ou un tableau direct
+                if (raw.StartsWith("{"))
+                {
+                    var match = Regex.Match(raw, @"\[[\s\S]*\]");
+                    if (match.Success) raw = match.Value;
+                }
+
+                var opts   = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var offres = JsonSerializer.Deserialize<List<OffreSearchResultDto>>(raw, opts)
+                             ?? new List<OffreSearchResultDto>();
+
+                // garantir un id stable + max 5
+                foreach (var o in offres)
+                    if (string.IsNullOrWhiteSpace(o.Id))
+                        o.Id = Guid.NewGuid().ToString("N")[..8];
+
+                if (offres.Count == 0)
+                    return BuildFallbackOffers(nomProduit, quantite,
+                        "⚠️ Le LLM n'a renvoyé aucune offre — offres exemples.");
+
+                return offres.Take(5).ToList();
+            }
+            catch (Exception ex)
+            {
+                return BuildFallbackOffers(nomProduit, quantite,
+                    $"⚠️ Erreur recherche : {ex.Message}");
+            }
+        }
+
+        // ── Fallback offres (jamais silencieux : on l'indique dans la description) ──
+        private static List<OffreSearchResultDto> BuildFallbackOffers(
+            string nomProduit, int quantite, string raison)
+        {
+            var fournisseurs = new[] { "Fournisseur A", "Fournisseur B", "Fournisseur C", "Fournisseur D", "Fournisseur E" };
+            return fournisseurs.Select((f, i) => new OffreSearchResultDto
+            {
+                Id              = Guid.NewGuid().ToString("N")[..8],
+                Fournisseur     = f,
+                NomProduit      = nomProduit,
+                Description     = raison,
+                PrixUnitaire    = "N/A",
+                PrixTotal       = "N/A",
+                FraisLivraison  = "N/A",
+                DelaiLivraison  = "N/A",
+                Garantie        = "N/A",
+                Devise          = "MAD",
+                PointsForts     = new List<string> { "Offre exemple", "À configurer" }
+            }).ToList();
+        }
+
         // ── Résoudre une question vague grâce au contexte ────────────────────
-        // Ex: "c'est quoi le meilleur ?" → "meilleur PC Asus gaming 2024"
         private async Task<string> ResolveQueryWithContextAsync(string query, List<AgentChatHistory>? history)
         {
             if (history == null || history.Count == 0) return query;
 
-            // Si la question est déjà explicite (>= 5 mots significatifs), pas besoin de résolution
             var words = query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (words.Length >= 5) return query;
 
@@ -198,7 +368,6 @@ Réponds UNIQUEMENT avec la requête de recherche (pas d'explication, pas de gui
             catch { return query; }
         }
 
-        // ── Formater l'historique pour injection dans le prompt de synthèse ──
         private static string BuildHistoryForLlm(List<AgentChatHistory>? history)
         {
             if (history == null || history.Count <= 1) return string.Empty;
@@ -215,7 +384,6 @@ Réponds UNIQUEMENT avec la requête de recherche (pas d'explication, pas de gui
             return sb.ToString();
         }
 
-        // ── Groq ─────────────────────────────────────────────────────────────
         private async Task<string> CallGroqAsync(string key, string system, string user)
         {
             var http = _factory.CreateClient();
@@ -246,7 +414,6 @@ Réponds UNIQUEMENT avec la requête de recherche (pas d'explication, pas de gui
                 .GetString() ?? "Pas de réponse.";
         }
 
-        // ── Mistral ───────────────────────────────────────────────────────────
         private async Task<string> CallMistralAsync(string key, string system, string user)
         {
             var http = _factory.CreateClient("MistralClient");

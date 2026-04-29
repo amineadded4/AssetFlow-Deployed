@@ -5,12 +5,13 @@ using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using System.Text.RegularExpressions;
 
 namespace AssetFlow.BlazorUI.Pages.Achat
 {
-    public partial class AgentChat : ComponentBase
+    public partial class AgentChat : ComponentBase, IAsyncDisposable
     {
         [Inject] private AgentChatService     AgentSvc      { get; set; } = default!;
         [Inject] private ConversationService  ConvSvc       { get; set; } = default!;
@@ -18,6 +19,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         [Inject] private ILocalStorageService LocalStorage  { get; set; } = default!;
         [Inject] private StockAlertService    StockAlertSvc { get; set; } = default!;
         [Inject] private FournisseurService   FournisseurSvc { get; set; } = default!;
+        [Inject] private NavigationManager    Navigation    { get; set; } = default!;
 
         private List<FournisseurDto> _fournisseurs = new();
 
@@ -34,9 +36,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             public List<string>              ValidationErrors { get; set; } = new();
             public Dictionary<string,string> FieldErrors      { get; set; } = new();
 
-            // ── 4 cartes d'offres (lecture seule) + contexte demande ──
-            // OfferCards : ancien champ, maintenu pour rétro-compat (mono-matériel).
-            // OffersByMateriel : NOUVEAU — un groupe par matériel (multi-matériel).
             public List<OffreSearchResultDto>?       OfferCards        { get; set; }
             public List<MaterielOffersGroupDto>?     OffersByMateriel  { get; set; }
             public int                               ActiveMaterielTab { get; set; } = 0;
@@ -77,11 +76,14 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private string  _editingTitle         = string.Empty;
         private List<ConversationSummary> _conversations = new();
 
-        // ── NOUVEAU : State demandes d'achat ─────────────────────────────────
+        // ── State demandes d'achat ────────────────────────────────────────────
         private bool                     _demandesOpen     = false;
         private bool                     _loadingDemandes  = false;
         private List<DemandePendingDto>  _pendingDemandes  = new();
         private int?                     _currentDemandeId = null;
+
+        // ── SignalR ───────────────────────────────────────────────────────────
+        private HubConnection? _hubConnection;
 
         private readonly List<string> _suggestions = new()
         {
@@ -118,17 +120,74 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             try { _fournisseurs = await FournisseurSvc.GetAllAsync(); }
             catch { }
 
-            // Charger la liste des conversations depuis Redis
             if (_userId > 0)
                 await LoadConversationList();
 
-            // ── NOUVEAU : précharger les demandes d'achat à traiter ──
             await LoadPendingDemandes();
+
+            // ── SignalR — écoute les nouvelles demandes et alertes stock ───────
+            await ConnecterSignalR();
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             await ScrollToBottom();
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        //  SIGNALR — temps réel
+        // ════════════════════════════════════════════════════════════════════
+
+        private async Task ConnecterSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try
+                        {
+                            return await JS.InvokeAsync<string?>("eval",
+                                "localStorage.getItem('access_token') || localStorage.getItem('token')");
+                        }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            // ── Nouvelle demande d'achat créée → recharger le badge + dropdown ──
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        // Recharge les demandes en attente (badge du dropdown)
+                        await LoadPendingDemandes();
+                        // Recharge les alertes stock (badge latéral)
+                        await LoadInitialAlerts();
+                    }
+                    catch { }
+                    finally { StateHasChanged(); }
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+            }
+            catch { /* SignalR non critique — le chat fonctionne sans */ }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_hubConnection is not null)
+            {
+                try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
+                await _hubConnection.DisposeAsync();
+            }
         }
 
         // ── Alertes stock ────────────────────────────────────────────────────
@@ -143,13 +202,12 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         }
 
         // ════════════════════════════════════════════════════════════════════
-        //  ── NOUVEAU : DEMANDES D'ACHAT ─────────────────────────────────────
+        //  DEMANDES D'ACHAT
         // ════════════════════════════════════════════════════════════════════
 
         private void ToggleDemandes()
         {
             _demandesOpen = !_demandesOpen;
-            // Ferme les autres panneaux pour éviter la superposition
             if (_demandesOpen) { _historyOpen = false; _sidebarOpen = false; }
         }
 
@@ -175,7 +233,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             _demandesOpen = false;
             _currentDemandeId = demande.IdDemande;
 
-            // Crée la conversation si pas démarrée
             if (!_chatStarted && _userId > 0)
             {
                 var title = $"Demande {demande.Reference} — {Trunc(demande.NomProduit, 25)}";
@@ -194,7 +251,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             }
             _chatStarted = true;
 
-            // Affiche la demande comme un message utilisateur
             var lignesText = demande.Lignes.Any()
                 ? string.Join("\n", demande.Lignes.Select(l =>
                     $"• {l.NomProduit} ({l.Reference}) — Qté : {l.Quantite}"))
@@ -220,7 +276,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             StateHasChanged();
             await ScrollToBottom();
 
-            // Recherche web → 4 offres (lecture seule, plus d'étape 2)
             var resp = await AgentSvc.StartDemandeWorkflowAsync(demande.IdDemande);
             _isLoading = false;
 
@@ -251,8 +306,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
                 if (_activeConversationId != null)
                 {
-                    // NOUVEAU — sérialiser les groupes d'offres pour pouvoir
-                    // les ré-afficher au rechargement de la conversation.
                     string? offersJson = null;
                     if (resp.OffersByMateriel != null && resp.OffersByMateriel.Count > 0)
                     {
@@ -283,8 +336,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             await ScrollToBottom();
         }
 
-        /// <summary>Ferme le panneau Demandes (clic sur le backdrop).</summary>
-        /// <summary>NOUVEAU — Bascule vers l'onglet matériel sélectionné.</summary>
         private void SelectMaterielTab(ChatMessage msg, int index)
         {
             if (msg.OffersByMateriel == null) return;
@@ -350,7 +401,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     Timestamp       = m.Timestamp
                 };
 
-                // NOUVEAU — restaurer les cartes d'offres sauvegardées
                 if (!string.IsNullOrWhiteSpace(m.OffersJson))
                 {
                     try
@@ -366,7 +416,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                             chatMsg.OfferCards        = groupes[0].Offres;
                         }
                     }
-                    catch { /* JSON corrompu : on ignore */ }
+                    catch { }
                 }
 
                 _messages.Add(chatMsg);
@@ -597,7 +647,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 MaterielProposal  = msg.Action.MaterielProposal,
                 CommandeProposal  = msg.Action.CommandeProposal,
                 ArticleProposal   = msg.Action.ArticleProposal,
-                // ── NOUVEAU : transmet la demande d'origine pour MAJ statut ──
                 IdDemandeOrigine  = msg.IdDemandeContext ?? _currentDemandeId
             };
 
@@ -640,7 +689,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     if (_alertes.Count == 0) _showAlertes = false;
                 }
                 await LoadInitialAlerts();
-                // ── NOUVEAU : recharger les demandes (la statut peut être passé à "commande") ──
                 await LoadPendingDemandes();
                 _currentDemandeId = null;
             }

@@ -22,7 +22,6 @@ namespace AssetFlow.WebAPI.Controllers
         // ── Récupérer l'userId depuis le JWT ─────────────────────────────────
         private int GetUserId()
         {
-            // Chercher le claim DB userId stocké via le header ou claim custom
             var raw = User.FindFirstValue("userId")
                    ?? User.FindFirstValue("db_user_id")
                    ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -80,13 +79,14 @@ namespace AssetFlow.WebAPI.Controllers
                 ConversationId = conversationId,
                 Messages = messages.Select(m => new ConversationMessageDto
                 {
-                    Id             = m.Id,
-                    Role           = m.Role,
-                    Content        = m.Content,
-                    AgentUsed      = m.AgentUsed,
-                    Timestamp      = m.Timestamp,
-                    ActionJson     = m.ActionJson,
-                    ActionProcessed = m.ActionProcessed
+                    Id              = m.Id,
+                    Role            = m.Role,
+                    Content         = m.Content,
+                    AgentUsed       = m.AgentUsed,
+                    Timestamp       = m.Timestamp,
+                    ActionJson      = m.ActionJson,
+                    ActionProcessed = m.ActionProcessed,
+                    OffersJson      = m.OffersJson   // ← AJOUT : cartes d'offres restaurées
                 }).ToList()
             });
         }
@@ -97,13 +97,13 @@ namespace AssetFlow.WebAPI.Controllers
         {
             await _svc.AddMessageAsync(conversationId, new ConversationMessage
             {
-                Role           = req.Role,
-                Content        = req.Content,
-                AgentUsed      = req.AgentUsed,
-                ActionJson     = req.ActionJson,
+                Role            = req.Role,
+                Content         = req.Content,
+                AgentUsed       = req.AgentUsed,
+                ActionJson      = req.ActionJson,
                 ActionProcessed = req.ActionProcessed,
-                Timestamp      = DateTime.UtcNow,
-                OffersJson = req.OffersJson
+                Timestamp       = DateTime.UtcNow,
+                OffersJson      = req.OffersJson
             });
             return Ok();
         }

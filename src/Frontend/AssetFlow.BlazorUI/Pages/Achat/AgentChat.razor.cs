@@ -194,33 +194,38 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         // ── Groupement temporel des conversations (comme Claude) ─────────────
         private Dictionary<string, List<ConversationSummary>> GetGroupedConversations()
-        {
-            var now    = DateTime.UtcNow;
-            var result = new Dictionary<string, List<ConversationSummary>>();
+{
+    var today     = DateTime.Now.Date;   // heure locale, minuit
+    var result    = new Dictionary<string, List<ConversationSummary>>();
 
-            foreach (var conv in _conversations)
-            {
-                var diff = now - conv.UpdatedAt;
-                string group;
+    foreach (var conv in _conversations)
+    {
+        // Normaliser en heure locale pour comparer les dates calendaires
+        var updatedLocal = conv.UpdatedAt.Kind == DateTimeKind.Utc
+            ? conv.UpdatedAt.ToLocalTime()
+            : conv.UpdatedAt;
 
-                if (diff.TotalHours < 24)
-                    group = "Aujourd'hui";
-                else if (diff.TotalDays < 2)
-                    group = "Hier";
-                else if (diff.TotalDays <= 7)
-                    group = "Cette semaine";
-                else if (diff.TotalDays <= 30)
-                    group = "Ce mois-ci";
-                else
-                    group = conv.UpdatedAt.ToString("MMMM yyyy");
+        var convDate = updatedLocal.Date;
+        string group;
 
-                if (!result.ContainsKey(group))
-                    result[group] = new List<ConversationSummary>();
-                result[group].Add(conv);
-            }
+        if (convDate == today)
+            group = "Aujourd'hui";
+        else if (convDate == today.AddDays(-1))
+            group = "Hier";
+        else if (convDate >= today.AddDays(-7))
+            group = "Cette semaine";
+        else if (convDate >= today.AddDays(-30))
+            group = "Ce mois-ci";
+        else
+            group = updatedLocal.ToString("MMMM yyyy");
 
-            return result;
-        }
+        if (!result.ContainsKey(group))
+            result[group] = new List<ConversationSummary>();
+        result[group].Add(conv);
+    }
+
+    return result;
+}
 
         // ── Titre ────────────────────────────────────────────────────────────
         private void StartEditTitle(string convId, string currentTitle)

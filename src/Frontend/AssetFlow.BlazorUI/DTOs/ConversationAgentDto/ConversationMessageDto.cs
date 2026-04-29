@@ -9,5 +9,6 @@ namespace AssetFlow.BlazorUI.DTOs
             public DateTime Timestamp      { get; set; }
             public string?  ActionJson     { get; set; }
             public bool     ActionProcessed { get; set; }
+            public string?  OffersJson      { get; set; }
         }
 }

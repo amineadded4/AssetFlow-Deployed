@@ -102,7 +102,8 @@ namespace AssetFlow.WebAPI.Controllers
                 AgentUsed      = req.AgentUsed,
                 ActionJson     = req.ActionJson,
                 ActionProcessed = req.ActionProcessed,
-                Timestamp      = DateTime.UtcNow
+                Timestamp      = DateTime.UtcNow,
+                OffersJson = req.OffersJson
             });
             return Ok();
         }

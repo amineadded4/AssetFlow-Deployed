@@ -1,4 +1,5 @@
 
+using System.Text.Json;
 using AssetFlow.BlazorUI.DTOs;
 using AssetFlow.BlazorUI.Services;
 using Blazored.LocalStorage;
@@ -34,8 +35,12 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             public Dictionary<string,string> FieldErrors      { get; set; } = new();
 
             // ── 4 cartes d'offres (lecture seule) + contexte demande ──
-            public List<OffreSearchResultDto>? OfferCards       { get; set; }
-            public int?                        IdDemandeContext { get; set; }
+            // OfferCards : ancien champ, maintenu pour rétro-compat (mono-matériel).
+            // OffersByMateriel : NOUVEAU — un groupe par matériel (multi-matériel).
+            public List<OffreSearchResultDto>?       OfferCards        { get; set; }
+            public List<MaterielOffersGroupDto>?     OffersByMateriel  { get; set; }
+            public int                               ActiveMaterielTab { get; set; } = 0;
+            public int?                              IdDemandeContext  { get; set; }
         }
 
         private class AgentMaterielInfo
@@ -233,18 +238,45 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             {
                 _messages.Add(new ChatMessage
                 {
-                    IsUser           = false,
-                    Content          = resp.Message,
-                    AgentBadge       = "web",
-                    OfferCards       = resp.OffresWeb,
-                    IdDemandeContext = resp.IdDemande ?? demande.IdDemande,
-                    Timestamp        = DateTime.Now
+                    IsUser            = false,
+                    Content           = resp.Message,
+                    AgentBadge        = "web",
+                    OfferCards        = resp.OffresWeb,
+                    OffersByMateriel  = resp.OffersByMateriel,
+                    ActiveMaterielTab = 0,
+                    IdDemandeContext  = resp.IdDemande ?? demande.IdDemande,
+                    Timestamp         = DateTime.Now
                 });
                 _history.Add(new AgentChatHistory { Role = "assistant", Content = resp.Message });
 
                 if (_activeConversationId != null)
+                {
+                    // NOUVEAU — sérialiser les groupes d'offres pour pouvoir
+                    // les ré-afficher au rechargement de la conversation.
+                    string? offersJson = null;
+                    if (resp.OffersByMateriel != null && resp.OffersByMateriel.Count > 0)
+                    {
+                        try { offersJson = JsonSerializer.Serialize(resp.OffersByMateriel); }
+                        catch { offersJson = null; }
+                    }
+                    else if (resp.OffresWeb != null && resp.OffresWeb.Count > 0)
+                    {
+                        var fallback = new List<MaterielOffersGroupDto>
+                        {
+                            new MaterielOffersGroupDto
+                            {
+                                NomProduit = demande.NomProduit,
+                                Quantite   = demande.Quantite,
+                                Offres     = resp.OffresWeb
+                            }
+                        };
+                        try { offersJson = JsonSerializer.Serialize(fallback); }
+                        catch { offersJson = null; }
+                    }
+
                     await ConvSvc.AddMessageAsync(_activeConversationId, "assistant",
-                        resp.Message, agentUsed: "web");
+                        resp.Message, agentUsed: "web", offersJson: offersJson);
+                }
             }
 
             StateHasChanged();
@@ -252,6 +284,15 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         }
 
         /// <summary>Ferme le panneau Demandes (clic sur le backdrop).</summary>
+        /// <summary>NOUVEAU — Bascule vers l'onglet matériel sélectionné.</summary>
+        private void SelectMaterielTab(ChatMessage msg, int index)
+        {
+            if (msg.OffersByMateriel == null) return;
+            if (index < 0 || index >= msg.OffersByMateriel.Count) return;
+            msg.ActiveMaterielTab = index;
+            StateHasChanged();
+        }
+
         private void CloseDemandes()
         {
             _demandesOpen = false;
@@ -300,14 +341,35 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
             foreach (var m in msgs)
             {
-                _messages.Add(new ChatMessage
+                var chatMsg = new ChatMessage
                 {
                     IsUser          = m.Role == "user",
                     Content         = m.Content,
                     AgentBadge      = m.AgentUsed,
                     ActionProcessed = true,
                     Timestamp       = m.Timestamp
-                });
+                };
+
+                // NOUVEAU — restaurer les cartes d'offres sauvegardées
+                if (!string.IsNullOrWhiteSpace(m.OffersJson))
+                {
+                    try
+                    {
+                        var groupes = JsonSerializer.Deserialize<List<MaterielOffersGroupDto>>(
+                            m.OffersJson,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                        if (groupes != null && groupes.Count > 0)
+                        {
+                            chatMsg.OffersByMateriel  = groupes;
+                            chatMsg.ActiveMaterielTab = 0;
+                            chatMsg.OfferCards        = groupes[0].Offres;
+                        }
+                    }
+                    catch { /* JSON corrompu : on ignore */ }
+                }
+
+                _messages.Add(chatMsg);
                 _history.Add(new AgentChatHistory { Role = m.Role, Content = m.Content });
             }
 

@@ -392,114 +392,174 @@
                         </div>
 
                         @* ══════════════════════════════════════════════════
-                           MODIFIÉ — 4 cartes d'offres en LECTURE SEULE
-                           (plus d'Étape 2, plus de sélection)
-                        ══════════════════════════════════════════════════ *@
-                        @if (msg.OfferCards != null && msg.OfferCards.Count > 0)
-                        {
-                            <div class="ai-offers-grid">
-                                @foreach (var offre in msg.OfferCards)
-                                {
-                                    <div class="ai-offer-card readonly">
-                                        <div class="ai-offer-head">
-                                            <div class="ai-offer-fournisseur">
-                                                <div class="ai-offer-icon">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                                                        <polyline points="9 22 9 12 15 12 15 22"/>
-                                                    </svg>
-                                                </div>
-                                                <div class="ai-offer-fournisseur-name">@offre.Fournisseur</div>
-                                            </div>
-                                        </div>
+                             NOUVEAU — Onglets matériels + 4 offres en LECTURE SEULE
+                             Si la demande contient plusieurs matériels (Lignes),
+                             on affiche un onglet par matériel ; cliquer sur un
+                             onglet change les 4 cartes d'offres affichées dessous.
+                          ══════════════════════════════════════════════════ *@
+                          @{
+                              // Construit les groupes à afficher :
+                              //   - si OffersByMateriel existe (multi-matériel), on l'utilise
+                              //   - sinon on retombe sur OfferCards (mono, ancien comportement)
+                              List<MaterielOffersGroupDto>? groupes = msg.OffersByMateriel;
+                              if ((groupes == null || groupes.Count == 0)
+                                  && msg.OfferCards != null && msg.OfferCards.Count > 0)
+                              {
+                                  groupes = new List<MaterielOffersGroupDto>
+                                  {
+                                      new MaterielOffersGroupDto
+                                      {
+                                          NomProduit = "Matériel",
+                                          Quantite   = 0,
+                                          Offres     = msg.OfferCards
+                                      }
+                                  };
+                              }
+                          }
 
-                                        <div class="ai-offer-product">@offre.NomProduit</div>
+                          @if (groupes != null && groupes.Count > 0)
+                          {
+                              @* Onglets matériels (affichés uniquement si > 1 matériel) *@
+                              @if (groupes.Count > 1)
+                              {
+                                  <div class="ai-materiel-tabs" role="tablist">
+                                      @for (int i = 0; i < groupes.Count; i++)
+                                      {
+                                          var idx     = i;
+                                          var grp     = groupes[idx];
+                                          var active  = msg.ActiveMaterielTab == idx;
+                                          <button class="ai-materiel-tab @(active ? "active" : "")"
+                                                  role="tab"
+                                                  aria-selected="@active"
+                                                  @onclick="() => SelectMaterielTab(msg, idx)">
+                                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                  <rect x="2" y="7" width="20" height="14" rx="2"/>
+                                                  <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                                              </svg>
+                                              <span class="ai-materiel-tab-name">@grp.NomProduit</span>
+                                              <span class="ai-materiel-tab-qty">×@grp.Quantite</span>
+                                              <span class="ai-materiel-tab-count">@grp.Offres.Count offre(s)</span>
+                                          </button>
+                                      }
+                                  </div>
+                              }
 
-                                        @if (!string.IsNullOrWhiteSpace(offre.Description))
-                                        {
-                                            <div class="ai-offer-desc">@offre.Description</div>
-                                        }
+                              
+                                  var safeIdx     = Math.Max(0, Math.Min(msg.ActiveMaterielTab, groupes.Count - 1));
+                                  var activeGroup = groupes[safeIdx];
+                              
 
-                                        <div class="ai-offer-prices">
-                                            @if (!string.IsNullOrWhiteSpace(offre.PrixTotal) && offre.PrixTotal != "N/A")
-                                            {
-                                                <div class="ai-offer-price-total">
-                                                    <span class="ai-offer-price-lbl">Total</span>
-                                                    <span class="ai-offer-price-val">@offre.PrixTotal</span>
-                                                </div>
-                                            }
-                                            @if (!string.IsNullOrWhiteSpace(offre.PrixUnitaire) && offre.PrixUnitaire != "N/A")
-                                            {
-                                                <div class="ai-offer-price-unit">
-                                                    <span class="ai-offer-price-lbl">Unitaire</span>
-                                                    <span class="ai-offer-price-val">@offre.PrixUnitaire</span>
-                                                </div>
-                                            }
-                                        </div>
+                              @if (groupes.Count > 1)
+                              {
+                                  <div class="ai-materiel-active-head">
+                                      <strong>@activeGroup.NomProduit</strong>
+                                      <span class="ai-materiel-active-qty">— Quantité demandée : <b>@activeGroup.Quantite</b></span>
+                                  </div>
+                              }
 
-                                        <div class="ai-offer-meta">
-                                            @if (!string.IsNullOrWhiteSpace(offre.DelaiLivraison) && offre.DelaiLivraison != "N/A")
-                                            {
-                                                <div class="ai-offer-meta-item">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <rect x="1" y="3" width="15" height="13"/>
-                                                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
-                                                        <circle cx="5.5" cy="18.5" r="2.5"/>
-                                                        <circle cx="18.5" cy="18.5" r="2.5"/>
-                                                    </svg>
-                                                    @offre.DelaiLivraison
-                                                </div>
-                                            }
-                                            @if (!string.IsNullOrWhiteSpace(offre.FraisLivraison) && offre.FraisLivraison != "N/A")
-                                            {
-                                                <div class="ai-offer-meta-item">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <line x1="12" y1="1" x2="12" y2="23"/>
-                                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                                                    </svg>
-                                                    @offre.FraisLivraison
-                                                </div>
-                                            }
-                                            @if (!string.IsNullOrWhiteSpace(offre.Garantie) && offre.Garantie != "N/A")
-                                            {
-                                                <div class="ai-offer-meta-item">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                                    </svg>
-                                                    @offre.Garantie
-                                                </div>
-                                            }
-                                        </div>
+                              <div class="ai-offers-grid">
+                                  @foreach (var offre in activeGroup.Offres.Take(4))
+                                  {
+                                      <div class="ai-offer-card readonly">
+                                          <div class="ai-offer-head">
+                                              <div class="ai-offer-fournisseur">
+                                                  <div class="ai-offer-icon">
+                                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                                          <polyline points="9 22 9 12 15 12 15 22"/>
+                                                      </svg>
+                                                  </div>
+                                                  <div class="ai-offer-fournisseur-name">@offre.Fournisseur</div>
+                                              </div>
+                                          </div>
 
-                                        @if (offre.PointsForts != null && offre.PointsForts.Count > 0)
-                                        {
-                                            <div class="ai-offer-pros">
-                                                @foreach (var p in offre.PointsForts.Take(3))
-                                                {
-                                                    <span class="ai-offer-pro">@p</span>
-                                                }
-                                            </div>
-                                        }
+                                          <div class="ai-offer-product">@offre.NomProduit</div>
 
-                                        @if (!string.IsNullOrWhiteSpace(offre.Url))
-                                        {
-                                            <a class="ai-offer-source" href="@offre.Url" target="_blank" rel="noopener noreferrer"
-                                               @onclick:stopPropagation="true">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                                                    <polyline points="15 3 21 3 21 9"/>
-                                                    <line x1="10" y1="14" x2="21" y2="3"/>
-                                                </svg>
-                                                Voir la source
-                                            </a>
-                                        }
+                                          @if (!string.IsNullOrWhiteSpace(offre.Description))
+                                          {
+                                              <div class="ai-offer-desc">@offre.Description</div>
+                                          }
 
-                                    </div>
-                                }
-                            </div>
-                        }
+                                          <div class="ai-offer-prices">
+                                              @if (!string.IsNullOrWhiteSpace(offre.PrixTotal) && offre.PrixTotal != "N/A")
+                                              {
+                                                  <div class="ai-offer-price-total">
+                                                      <span class="ai-offer-price-lbl">Total</span>
+                                                      <span class="ai-offer-price-val">@offre.PrixTotal</span>
+                                                  </div>
+                                              }
+                                              @if (!string.IsNullOrWhiteSpace(offre.PrixUnitaire) && offre.PrixUnitaire != "N/A")
+                                              {
+                                                  <div class="ai-offer-price-unit">
+                                                      <span class="ai-offer-price-lbl">Unitaire</span>
+                                                      <span class="ai-offer-price-val">@offre.PrixUnitaire</span>
+                                                  </div>
+                                              }
+                                          </div>
 
-                        @* ── Formulaire d'approbation ── *@
+                                          <div class="ai-offer-meta">
+                                              @if (!string.IsNullOrWhiteSpace(offre.DelaiLivraison) && offre.DelaiLivraison != "N/A")
+                                              {
+                                                  <div class="ai-offer-meta-item">
+                                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                          <rect x="1" y="3" width="15" height="13"/>
+                                                          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                                                          <circle cx="5.5" cy="18.5" r="2.5"/>
+                                                          <circle cx="18.5" cy="18.5" r="2.5"/>
+                                                      </svg>
+                                                      @offre.DelaiLivraison
+                                                  </div>
+                                              }
+                                              @if (!string.IsNullOrWhiteSpace(offre.FraisLivraison) && offre.FraisLivraison != "N/A")
+                                              {
+                                                  <div class="ai-offer-meta-item">
+                                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                          <line x1="12" y1="1" x2="12" y2="23"/>
+                                                          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                                      </svg>
+                                                      @offre.FraisLivraison
+                                                  </div>
+                                              }
+                                              @if (!string.IsNullOrWhiteSpace(offre.Garantie) && offre.Garantie != "N/A")
+                                              {
+                                                  <div class="ai-offer-meta-item">
+                                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                                      </svg>
+                                                      @offre.Garantie
+                                                  </div>
+                                              }
+                                          </div>
+
+                                          @if (offre.PointsForts != null && offre.PointsForts.Count > 0)
+                                          {
+                                              <div class="ai-offer-pros">
+                                                  @foreach (var p in offre.PointsForts.Take(3))
+                                                  {
+                                                      <span class="ai-offer-pro">@p</span>
+                                                  }
+                                              </div>
+                                          }
+
+                                          @if (!string.IsNullOrWhiteSpace(offre.Url))
+                                          {
+                                              <a class="ai-offer-source" href="@offre.Url" target="_blank" rel="noopener noreferrer"
+                                                 @onclick:stopPropagation="true">
+                                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                                      <polyline points="15 3 21 3 21 9"/>
+                                                      <line x1="10" y1="14" x2="21" y2="3"/>
+                                                  </svg>
+                                                  Voir la source
+                                              </a>
+                                          }
+
+                                      </div>
+                                  }
+                              </div>
+                          }
+
+                                                  @* ── Formulaire d'approbation ── *@
                         @if (msg.Action != null && !msg.ActionProcessed)
                         {
                             <div class="ai-approval-form">

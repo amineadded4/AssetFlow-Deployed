@@ -46,8 +46,12 @@ namespace AssetFlow.BlazorUI.Services
         }
 
         // ── Ajouter un message ───────────────────────────────────────────────
+        // MODIFIÉ — nouveau paramètre optionnel `offersJson` pour persister
+        // les cartes d'offres (JSON sérialisé de List<MaterielOffersGroupDto>)
+        // dans l'historique Redis de la conversation.
         public async Task AddMessageAsync(string conversationId, string role, string content,
-            string? agentUsed = null, string? actionJson = null, bool actionProcessed = false)
+            string? agentUsed = null, string? actionJson = null, bool actionProcessed = false,
+            string? offersJson = null)
         {
             try
             {
@@ -58,7 +62,8 @@ namespace AssetFlow.BlazorUI.Services
                     content,
                     agentUsed,
                     actionJson,
-                    actionProcessed
+                    actionProcessed,
+                    offersJson    // ← NOUVEAU
                 });
             }
             catch { /* silencieux — la conversation locale continue */ }
@@ -94,5 +99,4 @@ namespace AssetFlow.BlazorUI.Services
             catch { }
         }
     }
-
 }

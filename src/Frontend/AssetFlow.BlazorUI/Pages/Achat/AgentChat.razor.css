@@ -1380,6 +1380,126 @@ html.dark .ai-alertes-bar {
 /* ══════════════════════════════════════════
    MODIFIÉ — GRID 4 CARTES OFFRES (LECTURE SEULE)
 ══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════
+   NOUVEAU — Onglets matériels (multi-matériel)
+   Affichés uniquement si la demande d'achat contient plusieurs
+   matériels (Lignes). Cliquer sur un onglet change les 4 cartes
+   d'offres affichées dessous.
+═══════════════════════════════════════════════════════════════════ */
+.ai-materiel-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 14px;
+    padding: 6px;
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 12px;
+}
+
+.ai-materiel-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: #ffffff;
+    color: #475569;
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.18s ease;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.ai-materiel-tab:hover {
+    background: #f8fafc;
+    border-color: rgba(59, 130, 246, 0.35);
+    color: #1e293b;
+    transform: translateY(-1px);
+}
+
+.ai-materiel-tab.active {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.30);
+}
+
+.ai-materiel-tab.active:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.38);
+}
+
+.ai-materiel-tab svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.ai-materiel-tab-name {
+    font-weight: 600;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ai-materiel-tab-qty {
+    font-size: 12px;
+    opacity: 0.85;
+    padding: 2px 6px;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 5px;
+}
+
+.ai-materiel-tab:not(.active) .ai-materiel-tab-qty {
+    background: rgba(15, 23, 42, 0.06);
+}
+
+.ai-materiel-tab-count {
+    font-size: 11px;
+    opacity: 0.75;
+    font-weight: 500;
+}
+
+/* En-tête du matériel actif (rappel au-dessus de la grille) */
+.ai-materiel-active-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0 4px 10px;
+    padding: 6px 10px;
+    border-left: 3px solid #2563eb;
+    background: rgba(37, 99, 235, 0.05);
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    color: #1e293b;
+}
+
+.ai-materiel-active-head strong {
+    color: #0f172a;
+    font-size: 14px;
+}
+
+.ai-materiel-active-qty {
+    color: #64748b;
+    font-size: 12px;
+}
+
+/* Responsive : onglets compacts sur mobile */
+@media (max-width: 640px) {
+    .ai-materiel-tab {
+        padding: 6px 10px;
+        font-size: 12px;
+        gap: 6px;
+    }
+    .ai-materiel-tab-name { max-width: 110px; }
+    .ai-materiel-tab-count { display: none; }
+    .ai-materiel-active-head { font-size: 12px; }
+}
+
 .ai-offers-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));

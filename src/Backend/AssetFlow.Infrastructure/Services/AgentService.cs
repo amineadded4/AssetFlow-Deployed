@@ -164,49 +164,87 @@ namespace AssetFlow.Infrastructure.Services
                 .ToList();
         }
 
-        // ── Recherche web → 4 offres (lecture seule, plus d'étape 2) ───────
-        public async Task<AgentChatResponse> StartDemandeWorkflowAsync(int idDemande)
-        {
-            var demande = await _demandeService.GetByIdAsync(idDemande);
-            if (demande == null)
-            {
-                return new AgentChatResponse
-                {
-                    AgentUsed = "db",
-                    Message   = $"❌ Demande d'achat #{idDemande} introuvable."
-                };
-            }
+        // ── Recherche web → 4 offres PAR MATÉRIEL (lecture seule) ──────────
+          // Une demande d'achat peut contenir plusieurs lignes (matériels). On
+          // lance la recherche d'offres pour CHAQUE ligne en parallèle et on
+          // retourne un groupe par matériel. Le frontend affiche ensuite un
+          // onglet par matériel et 4 cartes d'offres pour celui sélectionné.
+          public async Task<AgentChatResponse> StartDemandeWorkflowAsync(int idDemande)
+          {
+              var demande = await _demandeService.GetByIdAsync(idDemande);
+              if (demande == null)
+              {
+                  return new AgentChatResponse
+                  {
+                      AgentUsed = "db",
+                      Message   = $"❌ Demande d'achat #{idDemande} introuvable."
+                  };
+              }
 
-            // Si la demande contient des lignes multiples, on prend la première comme produit principal.
-            // Pour une recherche plus complète, on pourra étendre à toutes les lignes.
-            var nomProduit = demande.Lignes.Any()
-                ? demande.Lignes.First().NomProduit
-                : demande.NomProduit;
+              // ── Construire la liste des matériels à rechercher ──────────────
+              // Si la demande possède des lignes, une par ligne. Sinon, un seul
+              // groupe à partir des champs racine de la demande.
+              var lignes = demande.Lignes.Any()
+                  ? demande.Lignes.Select(l => new
+                      {
+                          Reference   = l.Reference   ?? string.Empty,
+                          NomProduit  = string.IsNullOrWhiteSpace(l.NomProduit) ? demande.NomProduit : l.NomProduit,
+                          Quantite    = l.Quantite > 0 ? l.Quantite : demande.Quantite,
+                          Description = l.Description ?? demande.Description
+                      }).ToList()
+                  : new[]
+                    {
+                        new
+                        {
+                            Reference   = string.Empty,
+                            NomProduit  = demande.NomProduit,
+                            Quantite    = demande.Quantite,
+                            Description = demande.Description
+                        }
+                    }.ToList();
 
-            var quantite = demande.Lignes.Any()
-                ? demande.Lignes.Sum(l => l.Quantite)
-                : demande.Quantite;
+              // ── Lancer toutes les recherches d'offres en parallèle ──────────
+              var groupTasks = lignes.Select(async l => new MaterielOffersGroup
+              {
+                  Reference   = l.Reference,
+                  NomProduit  = l.NomProduit,
+                  Quantite    = l.Quantite,
+                  Description = l.Description,
+                  Offres      = await _webSearch.SearchOffersAsync(l.NomProduit, l.Quantite, l.Description)
+              });
 
-            var description = demande.Description
-                ?? (demande.Lignes.FirstOrDefault()?.Description);
+              var groups = (await Task.WhenAll(groupTasks)).ToList();
 
-            // Appel WebSearch agent qui retourne 4 offres structurées
-            var offres = await _webSearch.SearchOffersAsync(nomProduit, quantite, description);
+              // ── Construire le message d'intro selon mono ou multi-matériel ──
+              string introMsg;
+              if (groups.Count > 1)
+              {
+                  introMsg =
+                      $"📋 **Demande d'achat {demande.Reference}** — **{groups.Count} matériels**\n\n" +
+                      "🔎 **Recherche Web** : j'ai trouvé **4 offres pour chaque matériel**. " +
+                      "Cliquez sur le **nom d'un matériel** ci-dessous pour afficher ses propositions.";
+              }
+              else
+              {
+                  var g = groups[0];
+                  introMsg =
+                      $"📋 **Demande d'achat {demande.Reference}** — {g.NomProduit} (×{g.Quantite})\n\n" +
+                      $"🔎 **Recherche Web** : j'ai trouvé **{g.Offres.Count} offre(s)** correspondant à votre besoin. " +
+                      "Voici les meilleures propositions du marché.";
+              }
 
-            var introMsg = $"📋 **Demande d'achat {demande.Reference}** — {nomProduit} (×{quantite})\n\n" +
-                           $"🔎 **Recherche Web** : j'ai trouvé **{offres.Count} offre(s)** correspondant à votre besoin. " +
-                           "Voici les meilleures propositions du marché.";
-
-            return new AgentChatResponse
-            {
-                AgentUsed     = "web",
-                Message       = introMsg,
-                OffresWeb     = offres,
-                IdDemande     = demande.IdDemande,
-                ReferenceDemande = demande.Reference,
-                Etape         = 1
-            };
-        }
+              return new AgentChatResponse
+              {
+                  AgentUsed        = "web",
+                  Message          = introMsg,
+                  OffersByMateriel = groups,
+                  // rétro-compat : OffresWeb = offres du 1ᵉʳ matériel
+                  OffresWeb        = groups.FirstOrDefault()?.Offres ?? new List<OffreSearchResultDto>(),
+                  IdDemande        = demande.IdDemande,
+                  ReferenceDemande = demande.Reference,
+                  Etape            = 1
+              };
+          }
 
         // ── Étape 2 : Offre choisie → pré-remplit le formulaire matériel + commande ──
         public async Task<AgentChatResponse> SelectOfferAsync(int idDemande, OffreSearchResultDto offre)

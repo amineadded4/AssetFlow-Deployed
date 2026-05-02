@@ -12,5 +12,7 @@ namespace AssetFlow.Domain.Entities
         public string?  Details      { get; set; }                 // description courte
         public int?     UserId       { get; set; }
         public User?    User         { get; set; }
+        public string?  IpAddress    { get; set; }
+        public string?  GeoLocation  { get; set; }
     }
 }

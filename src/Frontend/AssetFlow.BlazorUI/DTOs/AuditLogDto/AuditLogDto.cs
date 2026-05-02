@@ -10,5 +10,7 @@ namespace AssetFlow.BlazorUI.DTOs
         public string   Categorie   { get; set; } = string.Empty;
         public string   Entite      { get; set; } = string.Empty;
         public string?  Details     { get; set; }
+        public string?  IpAddress   { get; set; }
+        public string?  GeoLocation { get; set; }
     }
 }

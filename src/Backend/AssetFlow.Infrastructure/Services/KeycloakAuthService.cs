@@ -7,6 +7,7 @@ using AssetFlow.Domain.Entities;
 using AssetFlow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Http;
 
 namespace AssetFlow.Infrastructure.Services
 {
@@ -17,19 +18,36 @@ namespace AssetFlow.Infrastructure.Services
         private readonly IConfiguration _config;
         private readonly IAuditLogService _audit;
         private readonly IDashboardNotifier _notifier;
+        private readonly IHttpContextAccessor  _httpContextAccessor; 
+        private readonly GeoIpService          _geoIp;               
 
         private string KeycloakUrl => _config["Keycloak:Authority"]!;
         private string ClientId => _config["Keycloak:ClientId"]!;
         private string ClientSecret => _config["Keycloak:ClientSecret"]!;
 
-        public KeycloakAuthService(HttpClient httpClient, AppDbContext dbContext, IConfiguration config, IAuditLogService audit, IDashboardNotifier notifier)
+        public KeycloakAuthService(HttpClient httpClient, AppDbContext dbContext, IConfiguration config, IAuditLogService audit, IDashboardNotifier notifier, IHttpContextAccessor httpContextAccessor,GeoIpService geoIp)
         {
             _httpClient = httpClient;
             _dbContext = dbContext;
             _config = config;
             _audit = audit;
             _notifier = notifier;
+            _httpContextAccessor  = httpContextAccessor;
+            _geoIp                = geoIp;
+        }
+        // Helper privé pour récupérer l'IP
+        private string GetClientIp()
+        {
+            var ctx = _httpContextAccessor.HttpContext;
+            if (ctx == null) return "unknown";
 
+            // En entreprise → X-Forwarded-For si proxy interne
+            var forwarded = ctx.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(forwarded))
+                return forwarded.Split(',')[0].Trim();
+
+            // IP directe (privée en réseau local) → la plus utile en entreprise
+            return ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         }
 
         // Login : appelle Keycloak avec email+password, récupère le token JWT
@@ -70,6 +88,11 @@ namespace AssetFlow.Infrastructure.Services
             // ===== VÉRIFIER LE RÔLE =====
             if (!string.Equals(user.Role, request.Role, StringComparison.OrdinalIgnoreCase))
                 return null; // Rôle incorrect → login refusé
+            
+            var ip = GetClientIp();
+            Console.WriteLine($"IP est comme suit: {ip}");
+            // Vérifier consentement user
+            var ipToLog = user.ConsentIpTracking ? ip : null;
 
             await _audit.LogAsync(new CreateAuditLogDto
             {
@@ -79,7 +102,8 @@ namespace AssetFlow.Infrastructure.Services
                 Categorie   = IAuditLogService.Categories.Inscription,
                 Entite      = "Session Utilisateur",
                 Details     = "Authentification réussie via Keycloak SSO",
-                UserId      = user.Id
+                UserId      = user.Id,
+                IpAddress   = ipToLog,
             });
             await _notifier.NotifyAsync();
             await _notifier.NotifyITAsync();
@@ -169,7 +193,8 @@ namespace AssetFlow.Infrastructure.Services
                 Department = request.Department,
                 Role = request.RequestedRole,
                 IsApproved = false,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                ConsentIpTracking = request.ConsentIpTracking,
             };
 
             _dbContext.Users.Add(user);
@@ -185,7 +210,7 @@ namespace AssetFlow.Infrastructure.Services
                 Categorie   = IAuditLogService.Categories.Inscription,
                 Entite      = "Session Utilisateur",
                 Details     = $"Nouvel utilisateur enregistré : rôle {user.Role}",
-                UserId      = user.Id
+                UserId      = user.Id,
             });
 
             return new RegisterResponseDto

@@ -571,3 +571,19 @@ html.dark .audit-modal { box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
     .audit-table td:nth-child(1) { display: none; }
     .audit-count-bar { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
 }
+
+.audit-ip-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+.audit-ip {
+    font-size: 0.75rem;
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    color: var(--text);
+}
+.audit-geo {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+}

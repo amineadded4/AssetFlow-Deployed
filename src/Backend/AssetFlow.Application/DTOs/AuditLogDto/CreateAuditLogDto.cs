@@ -9,5 +9,7 @@ namespace AssetFlow.Application.DTOs
         public string   Entite      { get; set; } = string.Empty;
         public string?  Details     { get; set; }
         public int?     UserId      { get; set; }
+        public string? IpAddress    { get; set; }
+        public string? GeoLocation  { get; set; }
     }
 }

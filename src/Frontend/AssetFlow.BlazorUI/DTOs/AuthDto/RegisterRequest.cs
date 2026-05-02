@@ -8,5 +8,6 @@ namespace AssetFlow.BlazorUI.DTOs
         public string Password      { get; set; } = string.Empty;
         public string Department    { get; set; } = string.Empty;
         public string RequestedRole { get; set; } = string.Empty;
+        public bool   ConsentIpTracking { get; set; } = false;
     }
 }

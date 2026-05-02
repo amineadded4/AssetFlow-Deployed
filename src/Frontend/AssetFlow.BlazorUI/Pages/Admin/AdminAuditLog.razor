@@ -181,6 +181,7 @@
                                 <th>UTILISATEUR</th>
                                 <th>ACTION</th>
                                 <th>ENTITÉ CONCERNÉE</th>
+                                <th>IP / LOCALISATION</th>
                                 <th>DÉTAILS</th>
                             </tr>
                         </thead>
@@ -210,6 +211,20 @@
                                         </div>
                                     </td>
                                     <td class="audit-entite">@log.Entite</td>
+                                    <td class="audit-ip-cell">
+                                        @if (!string.IsNullOrEmpty(log.IpAddress))
+                                        {
+                                            <span class="audit-ip">@log.IpAddress</span>
+                                            @if (!string.IsNullOrEmpty(log.GeoLocation))
+                                            {
+                                                <span class="audit-geo">📍 @log.GeoLocation</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="audit-details-empty">—</span>
+                                        }
+                                    </td>
                                     <td class="audit-details-cell">
                                         @if (!string.IsNullOrEmpty(log.Details))
                                         {
@@ -309,6 +324,14 @@
                 <div class="audit-modal-row">
                     <span class="audit-modal-label">Entité</span>
                     <span class="audit-modal-value">@DetailLog.Entite</span>
+                </div>
+                <div class="audit-modal-row">
+                    <span class="audit-modal-label">IP / Localisation</span>
+                    <span class="audit-modal-value mono">
+                        @(DetailLog.IpAddress ?? "Non collectée")
+                        @if (!string.IsNullOrEmpty(DetailLog.GeoLocation))
+                        { <text> — @DetailLog.GeoLocation</text> }
+                    </span>
                 </div>
                 <div class="audit-modal-row full">
                     <span class="audit-modal-label">Détails complets</span>

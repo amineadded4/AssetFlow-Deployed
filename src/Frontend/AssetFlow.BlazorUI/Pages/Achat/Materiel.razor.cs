@@ -154,6 +154,19 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         protected override async Task OnInitializedAsync()
         {
+            try
+            {
+                var theme = await JS.InvokeAsync<string?>("eval",
+                    "localStorage.getItem('theme')");
+                if (theme == "dark")
+                    await JS.InvokeVoidAsync("eval",
+                        "document.documentElement.classList.add('dark')");
+                else
+                    await JS.InvokeVoidAsync("eval",
+                        "document.documentElement.classList.remove('dark')");
+            }
+            catch { }
+
             await ChargerInfosUtilisateur();
             await Task.WhenAll(ChargerDonnees(), ChargerFournisseurs());
             await ConnecterSignalR();

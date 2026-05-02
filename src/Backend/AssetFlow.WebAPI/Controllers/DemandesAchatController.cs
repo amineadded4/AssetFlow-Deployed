@@ -131,7 +131,7 @@ namespace AssetFlow.WebApi.Controllers
             Quantite     = d.Lignes.Any() ? d.Lignes.Sum(l => l.Quantite) : d.Quantite,
             Description  = d.Description,
             Statut       = d.Statut,
-            DateCreation = d.DateCreation,
+            DateCreation = DateTime.SpecifyKind(d.DateCreation, DateTimeKind.Local),
             DemandeurNom = d.DemandeurNom,
             MotifRefus   = d.MotifRefus,
             Lignes = d.Lignes.Select(l => new LigneDemandeDto

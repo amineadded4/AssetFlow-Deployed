@@ -140,7 +140,7 @@ namespace AssetFlow.Infrastructure.Services
             
             if (demande != null && demande.VuParAchatLe == null)
             {
-                demande.VuParAchatLe = DateTime.UtcNow;
+                demande.VuParAchatLe = DateTime.Now;
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyAsync();
                 await _notifier.NotifyITAsync();

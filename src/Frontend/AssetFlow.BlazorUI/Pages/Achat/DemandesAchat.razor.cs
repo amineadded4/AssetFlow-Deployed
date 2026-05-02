@@ -435,7 +435,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 Quantite     = dto.Quantite,
                 Description  = dto.Description,
                 Statut       = dto.Statut,
-                DateCreation = DateTime.SpecifyKind(dto.DateCreation, DateTimeKind.Utc).ToLocalTime(),
+                DateCreation = dto.DateCreation,
                 DemandeurNom = dto.DemandeurNom,
                 Initiales    = initiales,
                 MotifRefus   = dto.MotifRefus,

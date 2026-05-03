@@ -200,12 +200,9 @@ html.dark .stk-select {
     top: 0; left: 0; right: 0;
     height: 3px;
     border-radius: var(--stk-radius-lg) var(--stk-radius-lg) 0 0;
-    opacity: 0;
-    transition: opacity .2s;
 }
 
 .stk-kpi:hover { box-shadow: var(--stk-shadow-md); transform: translateY(-2px); }
-.stk-kpi:hover::before { opacity: 1; }
 
 html.dark .stk-kpi {
     background: #111827;

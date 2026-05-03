@@ -8,120 +8,229 @@
     justify-content: center;
     padding: 2rem;
     transition: background var(--transition);
-    outline: none; /* nécessaire pour focus + keydown */
+    outline: none;
+    position: relative;
+    overflow: hidden;
 }
+
+/* Halos de fond */
+.bg-blob1 {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 55% 45% at 8% 15%, rgba(19,109,236,0.1) 0%, transparent 55%),
+        radial-gradient(ellipse 45% 40% at 92% 85%, rgba(124,58,237,0.09) 0%, transparent 50%),
+        radial-gradient(ellipse 35% 30% at 55% 95%, rgba(16,185,129,0.07) 0%, transparent 45%);
+    pointer-events: none;
+    z-index: 0;
+}
+html.dark .bg-blob1 {
+    background:
+        radial-gradient(ellipse 55% 45% at 8% 15%, rgba(19,109,236,0.16) 0%, transparent 55%),
+        radial-gradient(ellipse 45% 40% at 92% 85%, rgba(124,58,237,0.13) 0%, transparent 50%),
+        radial-gradient(ellipse 35% 30% at 55% 95%, rgba(16,185,129,0.09) 0%, transparent 45%);
+}
+.bg-blob2, .bg-blob3 { display: none; }
 
 .role-select-header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 2.8rem;
     animation: slideUp 0.5s ease 0.1s both;
+    z-index: 1;
+    position: relative;
 }
 
 .role-select-logo {
-    width: 300px;
-    height: 200px;
+    width: 220px;
+    height: 180px;
     object-fit: contain;
-    margin-bottom: 1rem;
-    filter: drop-shadow(0 4px 16px rgba(19, 109, 236, 0.4));
+    display: block;
+    margin: 0 auto 0.6rem;
+    filter: drop-shadow(0 4px 18px rgba(19,109,236,0.3));
 }
-
-.role-select-title {
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: var(--text);
-    letter-spacing: -0.5px;
-}
-.role-select-title span { color: var(--primary); }
 
 .role-select-subtitle {
-    color: var(--text-faint);
+    color: var(--text-muted);
     font-size: 0.9rem;
-    margin-top: 0.4rem;
+    margin-top: 0.3rem;
 }
 
+/* Conteneur des cartes */
 .roles-container {
     display: flex;
-    gap: 1.5rem;
+    gap: 1.25rem;
     justify-content: center;
     flex-wrap: wrap;
     animation: slideUp 0.5s ease 0.25s both;
+    z-index: 1;
+    position: relative;
 }
 
+/* Carte */
 .role-card {
-    width: 230px;
-    padding: 2rem 1.5rem 1.5rem;
+    width: 210px;
     background: var(--surface);
-    border: 2px solid var(--border);
-    border-radius: var(--radius-xl);
-    text-align: center;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
     cursor: pointer;
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0.6rem;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+html.dark .role-card {
+    box-shadow: 0 2px 20px rgba(0,0,0,0.25);
 }
 .role-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 16px 40px rgba(19,109,236,0.13);
+    border-color: rgba(19,109,236,0.35);
 }
 html.dark .role-card:hover {
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 16px 40px rgba(19,109,236,0.2);
 }
 
-.role-icon-container {
-    width: 60px;
-    height: 60px;
-    border-radius: var(--radius-lg);
+/* Barre couleur en haut de la carte */
+.card-top-accent {
+    height: 3px;
+    width: 100%;
+    flex-shrink: 0;
+}
+
+/* Corps de la carte */
+.card-body {
+    padding: 1.4rem 1.25rem 1.25rem;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 0.25rem;
-}
-.role-icon-container svg { width: 32px; height: 32px; }
-
-.role-title {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: var(--text);
-}
-
-.role-description-text {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    line-height: 1.55;
+    flex-direction: column;
     flex: 1;
 }
 
+/* Icône */
+.role-icon-container {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.9rem;
+    flex-shrink: 0;
+}
+.role-icon-container svg {
+    width: 22px;
+    height: 22px;
+}
+
+.role-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.35rem;
+}
+
+.role-description-text {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 0.9rem;
+    flex: 1;
+}
+
+/* Liste de fonctionnalités */
+.role-features {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 0.9rem;
+}
+
+.feat-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+.feat-row svg {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+}
+
+/* Filet séparateur */
+.card-divider {
+    height: 1px;
+    background: var(--border);
+    margin-bottom: 0.9rem;
+}
+
+/* Bouton */
 .btn-role {
     width: 100%;
     padding: 0.65rem;
     border: none;
-    border-radius: var(--radius);
+    border-radius: 11px;
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
     color: white;
-    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     transition: opacity 0.2s, transform 0.1s;
+    letter-spacing: 0.1px;
+}
+.btn-role svg {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 .btn-role:hover  { opacity: 0.88; }
 .btn-role:active { transform: scale(0.98); }
 
+/* Séparateur bas de page */
+.role-sep {
+    width: 460px;
+    max-width: 90%;
+    height: 1px;
+    background: var(--border);
+    margin: 2rem 0 1rem;
+    z-index: 1;
+    position: relative;
+}
+
+/* Footer admin hint */
 .admin-hint {
-    margin-top: 2.5rem;
     text-align: center;
     color: var(--text-faint);
     font-size: 0.78rem;
     animation: slideUp 0.5s ease 0.45s both;
+    z-index: 1;
     position: relative;
+}
+.admin-kbd {
+    display: inline-block;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-family: monospace;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin: 0 2px;
 }
 
 /* ============================================================
-   MODAL ADMIN
+   MODAL ADMIN — inchangée, conservez tout le CSS existant
+   à partir d'ici
    ============================================================ */
 
-/* Overlay sombre */
 .admin-modal-overlay {
     position: fixed;
     inset: 0;
@@ -135,13 +244,8 @@ html.dark .role-card:hover {
     padding: 1rem;
     animation: overlayIn 0.22s ease;
 }
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
 
-@keyframes overlayIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
-/* Boîte du modal */
 .admin-modal {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -153,396 +257,192 @@ html.dark .role-card:hover {
     animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
 }
-
 html.dark .admin-modal {
     box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6);
     border-color: #1e2d42;
 }
-
 @keyframes modalIn {
     from { opacity: 0; transform: scale(0.88) translateY(20px); }
-    to   { opacity: 1; transform: scale(1)    translateY(0); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* En-tête modal */
 .admin-modal-header {
     display: flex;
     align-items: center;
     gap: 1rem;
     margin-bottom: 1.5rem;
 }
-
 .admin-modal-icon {
-    width: 48px;
-    height: 48px;
+    width: 48px; height: 48px;
     border-radius: var(--radius-lg);
     background: rgba(239, 68, 68, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
-
 .admin-modal-icon svg {
-    width: 22px;
-    height: 22px;
-    stroke: #EF4444;
-    fill: none;
-    stroke-width: 1.75;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    width: 22px; height: 22px;
+    stroke: #EF4444; fill: none;
+    stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
 }
-
 .admin-modal-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: -0.3px;
+    font-size: 1.1rem; font-weight: 700;
+    color: var(--text); letter-spacing: -0.3px;
 }
-
 .admin-modal-subtitle {
-    font-size: 0.78rem;
-    color: var(--text-faint);
-    margin-top: 0.1rem;
+    font-size: 0.78rem; color: var(--text-faint); margin-top: 0.1rem;
 }
-
-/* Bouton fermer */
 .admin-modal-close {
-    position: absolute;
-    top: 1.1rem;
-    right: 1.1rem;
-    width: 32px;
-    height: 32px;
+    position: absolute; top: 1.1rem; right: 1.1rem;
+    width: 32px; height: 32px;
     border-radius: var(--radius);
     border: 1px solid var(--border);
     background: var(--surface-2);
     color: var(--text-muted);
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     transition: background var(--transition), color var(--transition);
     padding: 0;
 }
-.admin-modal-close:hover {
-    background: var(--border);
-    color: var(--text);
-}
-.admin-modal-close svg {
-    width: 14px;
-    height: 14px;
-    stroke: currentColor;
-    fill: none;
-}
+.admin-modal-close:hover { background: var(--border); color: var(--text); }
+.admin-modal-close svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
 
-/* Alerte erreur */
 .admin-alert-error {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    display: flex; align-items: center; gap: 0.5rem;
     padding: 0.6rem 0.875rem;
     border-radius: var(--radius);
     background: var(--error-bg);
     border: 1px solid var(--error-border);
     color: var(--error);
-    font-size: 0.82rem;
-    margin-bottom: 1rem;
+    font-size: 0.82rem; margin-bottom: 1rem;
 }
-.admin-alert-error svg {
-    width: 15px;
-    height: 15px;
-    stroke: currentColor;
-    fill: none;
-    flex-shrink: 0;
-}
+.admin-alert-error svg { width: 15px; height: 15px; stroke: currentColor; fill: none; flex-shrink: 0; }
 
-/* Formulaire */
-.admin-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
-    margin-bottom: 1.25rem;
-}
-
-.admin-input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-}
-
+.admin-form { display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1.25rem; }
+.admin-input-group { display: flex; flex-direction: column; gap: 0.3rem; }
 .admin-field-label {
-    font-size: 0.74rem;
-    font-weight: 600;
+    font-size: 0.74rem; font-weight: 600;
     color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
+    text-transform: uppercase; letter-spacing: 0.4px;
 }
-
-.admin-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
+.admin-input-wrapper { position: relative; display: flex; align-items: center; }
 .admin-input-icon {
-    position: absolute;
-    left: 0.875rem;
-    width: 16px;
-    height: 16px;
-    stroke: var(--text-faint);
-    fill: none;
-    stroke-width: 1.75;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    pointer-events: none;
-    flex-shrink: 0;
+    position: absolute; left: 0.875rem;
+    width: 16px; height: 16px;
+    stroke: var(--text-faint); fill: none;
+    stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
+    pointer-events: none; flex-shrink: 0;
 }
-
 .admin-form-input {
     width: 100%;
     padding: 0.65rem 2.75rem 0.65rem 2.6rem;
     background: var(--input-bg);
     border: 1px solid var(--input-border);
     border-radius: var(--radius-lg);
-    font-size: 0.9rem;
-    color: var(--text);
+    font-size: 0.9rem; color: var(--text);
     transition: border-color var(--transition), box-shadow var(--transition);
     outline: none;
 }
 .admin-form-input::placeholder { color: var(--text-faint); }
-.admin-form-input:focus {
-    border-color: #EF4444;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
-}
-.admin-form-input.has-error {
-    border-color: var(--error);
-}
+.admin-form-input:focus { border-color: #EF4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
+.admin-form-input.has-error { border-color: var(--error); }
+.admin-error-text { color: var(--error); font-size: 0.73rem; }
 
-.admin-error-text {
-    color: var(--error);
-    font-size: 0.73rem;
-}
-
-/* Toggle mot de passe */
 .admin-toggle-password {
-    position: absolute;
-    right: 0.85rem;
-    background: none;
-    border: none;
-    cursor: pointer;
+    position: absolute; right: 0.85rem;
+    background: none; border: none; cursor: pointer;
     color: var(--text-faint);
-    display: flex;
-    align-items: center;
-    padding: 0;
+    display: flex; align-items: center; padding: 0;
     transition: color var(--transition);
 }
 .admin-toggle-password:hover { color: var(--text-muted); }
 .admin-toggle-password svg {
-    width: 17px;
-    height: 17px;
-    stroke: currentColor;
-    fill: none;
-    stroke-width: 1.75;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    width: 17px; height: 17px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
 }
 
-/* Bouton de connexion admin */
 .admin-btn-login {
-    width: 100%;
-    padding: 0.8rem;
-    background: #EF4444;
-    color: white;
-    border: none;
-    border-radius: var(--radius-lg);
-    font-size: 0.92rem;
-    font-weight: 600;
+    width: 100%; padding: 0.8rem;
+    background: #EF4444; color: white;
+    border: none; border-radius: var(--radius-lg);
+    font-size: 0.92rem; font-weight: 600;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
     transition: background var(--transition), box-shadow var(--transition), transform 0.1s;
-    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+    box-shadow: 0 4px 14px rgba(239,68,68,0.3);
     letter-spacing: 0.2px;
 }
-.admin-btn-login:hover:not(:disabled) {
-    background: #dc2626;
-    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
-}
+.admin-btn-login:hover:not(:disabled) { background: #dc2626; box-shadow: 0 6px 20px rgba(239,68,68,0.4); }
 .admin-btn-login:active:not(:disabled) { transform: scale(0.99); }
-.admin-btn-login:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-    box-shadow: none;
-}
+.admin-btn-login:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
 .admin-btn-login svg {
-    width: 17px;
-    height: 17px;
-    stroke: currentColor;
-    fill: none;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    width: 17px; height: 17px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
 }
 
-/* Spinner de chargement */
 .admin-spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.35);
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.35);
     border-top-color: white;
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
     flex-shrink: 0;
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Pied du modal */
 .admin-modal-footer {
-    text-align: center;
-    font-size: 0.72rem;
-    color: var(--text-faint);
-    margin-top: 1rem;
+    text-align: center; font-size: 0.72rem;
+    color: var(--text-faint); margin-top: 1rem;
 }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
-@media (max-width: 768px) {
-    .role-select-logo        { width: 200px; height: 130px; }
-    .role-select-header      { margin-bottom: 2rem; }
-    .role-card               { width: 100%; max-width: 320px; }
-    .roles-container         { flex-direction: column; align-items: center; gap: 1rem; }
-
-    .admin-modal             { padding: 1.5rem; }
-    .admin-modal-title       { font-size: 1rem; }
-}
-
-@media (max-width: 480px) {
-    .role-select-page        { padding: 1.5rem 1rem; }
-    .role-select-logo        { width: 160px; height: 100px; }
-    .role-select-title       { font-size: 1.75rem; }
-
-    .admin-modal-overlay     { padding: 0.75rem; }
-    .admin-modal             { padding: 1.25rem; max-width: 100%; }
-    .admin-modal-header      { gap: 0.75rem; }
-    .admin-modal-icon        { width: 40px; height: 40px; }
-    .admin-modal-icon svg    { width: 18px; height: 18px; }
-    .admin-btn-login         { font-size: 0.875rem; padding: 0.75rem; }
-}
-
-/* ============================================================
-   Ajouts à RoleSelect.razor.css
-   Collez ces styles à la fin de votre fichier existant
-   ============================================================ */
-
-/* ── Onglets ── */
+/* Onglets */
 .admin-tabs {
-    display: flex;
-    gap: 0.5rem;
+    display: flex; gap: 0.5rem;
     margin-bottom: 1.25rem;
     background: var(--surface-2);
     border-radius: var(--radius-lg);
     padding: 0.3rem;
 }
-
 .admin-tab {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
     padding: 0.55rem 0.5rem;
-    border-radius: var(--radius);
-    border: none;
-    background: transparent;
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
+    border-radius: var(--radius); border: none;
+    background: transparent; color: var(--text-muted);
+    font-size: 0.8rem; font-weight: 600; cursor: pointer;
     transition: all var(--transition);
 }
-.admin-tab svg {
-    width: 15px; height: 15px;
-    stroke: currentColor; fill: none;
-    stroke-width: 1.75; flex-shrink: 0;
-}
+.admin-tab svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.75; flex-shrink: 0; }
 .admin-tab:hover { color: var(--text); }
-.admin-tab.active {
-    background: var(--surface);
-    color: var(--primary);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-}
+.admin-tab.active { background: var(--surface); color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 .admin-tab.active svg { stroke: var(--primary); }
 
-/* ── Caméra ── */
+/* Caméra */
 .face-camera-container {
-    position: relative;
-    width: 100%;
-    height: 200px;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    background: #000;
-    margin-bottom: 1rem;
+    position: relative; width: 100%; height: 200px;
+    border-radius: var(--radius-lg); overflow: hidden;
+    background: #000; margin-bottom: 1rem;
 }
-
-.face-canvas {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
+.face-canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
 .face-camera-placeholder {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    color: #555;
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.5rem; color: #555;
 }
-.face-camera-placeholder svg {
-    width: 36px; height: 36px;
-    stroke: #555; fill: none;
-    stroke-width: 1.5;
-}
+.face-camera-placeholder svg { width: 36px; height: 36px; stroke: #555; fill: none; stroke-width: 1.5; }
 .face-camera-placeholder p { font-size: 0.8rem; }
 
-/* ── Status visage ── */
 .face-status {
-    position: absolute;
-    bottom: 0.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.3rem 0.75rem;
-    border-radius: 99px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    white-space: nowrap;
+    position: absolute; bottom: 0.5rem; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 0.35rem;
+    padding: 0.3rem 0.75rem; border-radius: 99px;
+    font-size: 0.75rem; font-weight: 600; white-space: nowrap;
     transition: all 0.3s ease;
 }
 .face-status svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.face-status.waiting { background: rgba(0,0,0,0.6); color: rgba(255,255,255,0.7); }
+.face-status.detected { background: rgba(0,255,136,0.2); color: #00ff88; border: 1px solid rgba(0,255,136,0.4); }
 
-.face-status.waiting {
-    background: rgba(0,0,0,0.6);
-    color: rgba(255,255,255,0.7);
-}
-.face-status.detected {
-    background: rgba(0, 255, 136, 0.2);
-    color: #00ff88;
-    border: 1px solid rgba(0, 255, 136, 0.4);
-}
-
-/* ── Bouton face (violet) ── */
 .admin-btn-face {
     background: #7C3AED !important;
     box-shadow: 0 4px 14px rgba(124,58,237,0.3) !important;
@@ -550,4 +450,23 @@ html.dark .admin-modal {
 .admin-btn-face:hover:not(:disabled) {
     background: #6d28d9 !important;
     box-shadow: 0 6px 20px rgba(124,58,237,0.4) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .role-select-logo  { width: 90px; height: 90px; }
+    .role-card         { width: 100%; max-width: 320px; }
+    .roles-container   { flex-direction: column; align-items: center; gap: 1rem; }
+    .admin-modal       { padding: 1.5rem; }
+}
+@media (max-width: 480px) {
+    .role-select-page  { padding: 1.5rem 1rem; }
+    .role-select-logo  { width: 75px; height: 75px; }
+    .admin-modal-overlay { padding: 0.75rem; }
+    .admin-modal       { padding: 1.25rem; max-width: 100%; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
 }

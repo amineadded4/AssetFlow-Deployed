@@ -69,24 +69,50 @@
 
             </div>
 
-            <button class="btn-primary" @onclick="HandleLogin" disabled="@IsLoading">
-                @(IsLoading ? "Connexion en cours..." : "Se connecter")
+            <button class="btn-primary"
+                    style="background-color: @RoleColor; box-shadow: 0 4px 20px @RoleColorShadow;"
+                    @onclick="HandleLogin" disabled="@IsLoading">
+                @if (IsLoading)
+                {
+                    <span>Connexion en cours...</span>
+                }
+                else
+                {
+                    <svg viewBox="0 0 24 24">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                        <polyline points="10 17 15 12 10 7"/>
+                        <line x1="15" y1="12" x2="3" y2="12"/>
+                    </svg>
+                    <span>Se connecter</span>
+                }
             </button>
 
             <div class="divider"><span>OU</span></div>
 
-            @* Lien vers Register *@
             <p class="text-center">
                 Pas encore de compte ? <a href="/register" class="link">Créer un compte</a>
             </p>
 
-            @* Badges rôles *@
-            <div style="margin-top:1.5rem;">
-                <p style="font-size:0.72rem;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:0.5rem;">Accès par rôle</p>
-                <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:0.4rem;">
-                    @foreach (var r in new[]{"Admin","IT","Équipe Achat","Employé"})
+            <div class="roles-chips-wrap">
+                <p class="roles-chips-label">Accès par rôle</p>
+                <div class="roles-chips-row">
+                    @foreach (var r in new[]
                     {
-                        <span style="padding:0.3rem 0.8rem;border-radius:var(--radius);background:var(--surface-2);border:1px solid var(--border);color:var(--text-muted);font-size:0.76rem;font-weight:600;">@r</span>
+                        ("Admin",        "#EF4444", "/login?role=Admin"),
+                        ("IT",           "#7C3AED", "/login?role=IT"),
+                        ("Équipe Achat", "#136dec", "/login?role=EquipeAchat"),
+                        ("Employé",      "#F59E0B", "/login?role=Employe"),
+                    })
+                    {
+                        var isActive = RoleLabel == r.Item1;
+                        <a href="@r.Item3"
+                           style="padding:0.3rem 0.85rem; border-radius:var(--radius);
+                                  font-size:0.76rem; font-weight:600; text-decoration:none;
+                                  border:1px solid @(isActive ? r.Item2 : "var(--border)");
+                                  color:@(isActive ? r.Item2 : "var(--text-muted)");
+                                  background:@(isActive ? r.Item2 + "18" : "var(--surface-2)");">
+                            @r.Item1
+                        </a>
                     }
                 </div>
             </div>

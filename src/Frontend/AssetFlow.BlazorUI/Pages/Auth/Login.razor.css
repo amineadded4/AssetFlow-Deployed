@@ -5,7 +5,7 @@
     overflow: hidden;
 }
 
-/* === PANNEAU GAUCHE NAVY === */
+/* === PANNEAU GAUCHE NAVY — inchangé === */
 .left-panel {
     width: 32%;
     background: var(--navy);
@@ -47,14 +47,6 @@ html.dark .left-panel { background: #060d18; }
     height: 200px;
     object-fit: contain;
     filter: drop-shadow(0 0 22px rgba(19,109,236,0.6));
-}
-
-.panel-app-name {
-    font-size: 2rem;
-    font-weight: 800;
-    color: white;
-    letter-spacing: -0.5px;
-    text-align: center;
 }
 
 .panel-app-subtitle {
@@ -117,73 +109,193 @@ html.dark .left-panel { background: #060d18; }
 .feature-text-block h4 { font-size: 0.875rem; font-weight: 600; color: white; }
 .feature-text-block p  { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
 
-/* === PANNEAU DROIT === */
+/* === PANNEAU DROIT — fond gris qui remplit toute la zone === */
 .right-panel {
     flex: 1;
-    background: var(--surface);
+    background: #eef1f8;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 1.5rem 3.5rem;
+    padding: 2rem;
     overflow-y: auto;
     position: relative;
     transition: background var(--transition);
 }
 
-.form-container {
-    width: 100%;
-    max-width: 420px;
-    animation: slideUp 0.5s ease 0.2s both;
+html.dark .right-panel {
+    background: #0c1422;
 }
 
-.form-header { margin-bottom: 1.5rem; }
+/* === CARTE FORMULAIRE — flottante sur le fond gris === */
+.form-container {
+    width: 100%;
+    max-width: 460px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem 2.25rem;
+    box-shadow: 0 8px 48px rgba(0, 0, 0, 0.10);
+    animation: slideUp 0.5s ease 0.2s both;
+    transition: background var(--transition), border-color var(--transition);
+}
+
+html.dark .form-container {
+    box-shadow: 0 8px 48px rgba(0, 0, 0, 0.40);
+}
+
+.form-header { margin-bottom: 1.75rem; }
 
 .form-title {
-    font-size: 1.8rem;
+    font-size: 1.9rem;
     font-weight: 700;
     color: var(--text);
     letter-spacing: -0.5px;
+    margin-bottom: 0.2rem;
 }
 
 .form-subtitle {
     color: var(--text-muted);
     font-size: 0.875rem;
-    margin-top: 0.25rem;
 }
 
+/* === OPTIONS (mot de passe oublié) === */
 .form-options {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 0.6rem 0;
+    justify-content: flex-end;
+    margin: 0.5rem 0 0.25rem;
     float: right;
 }
 
+/* === BOUTON CONNEXION === */
+.btn-primary {
+    width: 100%;
+    padding: 0.85rem;
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: opacity 0.2s, transform 0.1s;
+    letter-spacing: 0.1px;
+    margin-top: 0.25rem;
+}
+
+.btn-primary svg {
+    width: 17px; height: 17px;
+    stroke: white; fill: none;
+    stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.btn-primary:hover:not(:disabled) { opacity: 0.88; }
+.btn-primary:active:not(:disabled) { transform: scale(0.99); }
+.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* === DIVIDER === */
 .divider {
     display: flex; align-items: center;
-    gap: 0.75rem; margin: 1rem 0;
+    gap: 0.75rem; margin: 1.1rem 0;
     color: var(--text-faint); font-size: 0.8rem;
 }
 .divider::before, .divider::after {
     content: ''; flex: 1; height: 1px; background: var(--border);
 }
 
-.text-center { text-align: center; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 20px; }
+.text-center {
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+}
 
+/* === CHIPS RÔLES === */
+.roles-chips-wrap { margin-top: 1.25rem; }
+
+.roles-chips-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+    margin-bottom: 0.6rem;
+}
+
+.roles-chips-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+/* === BACK LINK === */
 .back-link { text-align: center; margin-top: 1rem; }
-.back-link a { color: var(--text-faint); text-decoration: none; font-size: 0.83rem; transition: color var(--transition); }
+.back-link a {
+    color: var(--text-faint);
+    text-decoration: none;
+    font-size: 0.83rem;
+    transition: color var(--transition);
+}
 .back-link a:hover { color: var(--text-muted); }
 
-.legal-footer { position: absolute; bottom: 1rem; text-align: center; width: 100%; }
+/* === FOOTER === */
+.legal-footer {
+    position: absolute;
+    bottom: 1rem;
+    left: 0; right: 0;
+    text-align: center;
+}
 .legal-footer p { font-size: 0.72rem; color: var(--text-faint); }
+
+/* === ICÔNE ŒIL — zone de clic 32×32 avec hover === */
+.password-eye-btn {
+    position: absolute;
+    right: 0.65rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 7px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-faint);
+    transition: color var(--transition), background var(--transition);
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.password-eye-btn:hover {
+    color: var(--text-muted);
+    background: var(--surface-2);
+}
+
+.password-eye-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    display: block;
+    pointer-events: none;
+}
 
 /* === RESPONSIVE === */
 @media (max-width: 1024px) {
     .left-panel { width: 36%; padding: 2rem 1.5rem; }
     .panel-logo { width: 220px; height: 150px; }
     .role-desc-text { display: none; }
-    .right-panel { padding: 1.5rem 2.5rem; }
+    .right-panel { padding: 1.5rem; }
 }
 
 @media (max-width: 768px) {
@@ -202,17 +314,14 @@ html.dark .left-panel { background: #060d18; }
     }
 
     .panel-logo { width: 90px; height: 56px; flex-shrink: 0; }
-    .panel-app-subtitle, .role-desc-text, .features-list, .panel-app-name { display: none; }
+    .panel-app-subtitle, .role-desc-text, .features-list { display: none; }
     .role-badge { padding: 0.25rem 0.875rem; font-size: 0.8rem; }
 
-    .right-panel { flex: 1; padding: 1.5rem 1.25rem 3rem; justify-content: flex-start; overflow-y: visible; }
+    .right-panel { flex: 1; padding: 1.5rem 1.25rem 4rem; justify-content: flex-start; }
     .form-container { max-width: 100%; animation: none; }
     .form-title { font-size: 1.5rem; }
     .form-header { margin-bottom: 1.25rem; }
-    .form-input { padding: 0.75rem 1rem; font-size: 1rem; }
-    .btn-primary { padding: 0.875rem; font-size: 1rem; }
     .legal-footer { position: relative; bottom: auto; padding: 1.5rem 0 0.5rem; }
-    .theme-toggle { top: auto; bottom: 1rem; right: 1rem; width: 40px; height: 40px; }
 }
 
 @media (max-width: 480px) {
@@ -220,4 +329,10 @@ html.dark .left-panel { background: #060d18; }
     .panel-logo { width: 72px; height: 44px; }
     .right-panel { padding: 1.25rem 1rem 3rem; }
     .form-title { font-size: 1.35rem; }
+    .form-container { padding: 1.75rem 1.25rem; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
 }

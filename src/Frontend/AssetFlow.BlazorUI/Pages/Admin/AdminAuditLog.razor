@@ -10,7 +10,7 @@
         <div class="audit-page">
 
             @* ── EN-TÊTE ── *@
-            <div class="audit-header">
+            <header class="audit-header">
                 <div class="audit-header-left">
                     <button class="audit-hamburger" @onclick="() => _sidebarOpen = !_sidebarOpen">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
@@ -19,7 +19,7 @@
                             <line x1="3" y1="18" x2="21" y2="18"/>
                         </svg>
                     </button>
-                    <div>
+                    <div class="audit-header-text">
                         <h1 class="audit-title">Journal d'Audit</h1>
                         <p class="audit-subtitle">Historique complet des actions système pour la conformité et la sécurité.</p>
                     </div>
@@ -49,8 +49,7 @@
                         Actualiser
                     </button>
                     <button class="audit-btn-clean" @onclick="OuvrirCleanModal">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" 
-                            stroke-linecap="round" stroke-linejoin="round">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="3 6 5 6 21 6"/>
                             <path d="M19 6l-1 14H6L5 6"/>
                             <path d="M10 11v6M14 11v6"/>
@@ -59,11 +58,10 @@
                         Nettoyer
                     </button>
                 </div>
-            </div>
+            </header>
 
             @* ── FILTRES ── *@
             <div class="audit-filters">
-                @* Période *@
                 <div class="audit-filter-item date-range">
                     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="4" width="18" height="18" rx="2"/>
@@ -76,7 +74,6 @@
                     <input type="date" class="audit-date-input" @bind="FilterDateFin" @bind:event="onchange" @oninput="OnFilterChanged" />
                 </div>
 
-                @* Catégorie *@
                 <div class="audit-filter-item">
                     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M4 6h16M7 12h10M10 18h4"/>
@@ -91,7 +88,6 @@
                     </select>
                 </div>
 
-                @* Action *@
                 <div class="audit-filter-item">
                     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3"/>
@@ -110,7 +106,6 @@
                     </select>
                 </div>
 
-                @* Recherche *@
                 <div class="audit-filter-item search-item">
                     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8"/>
@@ -128,7 +123,6 @@
                     }
                 </div>
 
-                @* Bouton reset filtres *@
                 @if (HasActiveFilters)
                 {
                     <button class="audit-reset-filters" @onclick="ResetFilters">
@@ -175,9 +169,11 @@
                 else if (Result == null || !Result.Items.Any())
                 {
                     <div class="audit-empty">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
-                        </svg>
+                        <div class="audit-empty-icon-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+                            </svg>
+                        </div>
                         <p>Aucune entrée trouvée</p>
                         <p class="audit-empty-hint">Essayez d'élargir les filtres de recherche.</p>
                     </div>
@@ -219,7 +215,16 @@
                                             <span class="audit-badge cat @GetCatClass(log.Categorie)">@GetCatLabel(log.Categorie)</span>
                                         </div>
                                     </td>
-                                    <td class="audit-entite">@log.Entite</td>
+                                    <td class="audit-entite">
+                                        <div class="audit-entite-wrap">
+                                            <div class="audit-entite-icon">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                                                </svg>
+                                            </div>
+                                            <span>@log.Entite</span>
+                                        </div>
+                                    </td>
                                     <td class="audit-details-cell">
                                         @if (!string.IsNullOrEmpty(log.Details))
                                         {
@@ -250,19 +255,11 @@
                     <button class="audit-page-btn" @onclick="() => GoToPage(CurrentPage - 1)" disabled="@(CurrentPage == 1)">
                         <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
-
                     @foreach (var p in GetPageNumbers())
                     {
-                        if (p == -1)
-                        {
-                            <span class="audit-page-dots">…</span>
-                        }
-                        else
-                        {
-                            <button class="audit-page-btn @(p == CurrentPage ? "active" : "")" @onclick="() => GoToPage(p)">@p</button>
-                        }
+                        if (p == -1) { <span class="audit-page-dots">…</span> }
+                        else { <button class="audit-page-btn @(p == CurrentPage ? "active" : "")" @onclick="() => GoToPage(p)">@p</button> }
                     }
-
                     <button class="audit-page-btn" @onclick="() => GoToPage(CurrentPage + 1)" disabled="@(CurrentPage == Result.TotalPages)">
                         <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
@@ -328,13 +325,25 @@
         </div>
     </div>
 }
+
+@* ── MODAL NETTOYAGE ── *@
 @if (_showCleanModal)
 {
     <div class="audit-modal-overlay" @onclick="() => _showCleanModal = false">
         <div class="audit-modal clean-modal" @onclick:stopPropagation="true">
 
             <div class="audit-modal-header">
-                <h2 class="audit-modal-title">🗑️ Nettoyer le Journal</h2>
+                <div class="audit-modal-title-block">
+                    <div class="clean-modal-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14H6L5 6"/>
+                            <path d="M10 11v6M14 11v6"/>
+                            <path d="M9 6V4h6v2"/>
+                        </svg>
+                    </div>
+                    <h2 class="audit-modal-title">Nettoyer le Journal</h2>
+                </div>
                 <button class="audit-modal-close" @onclick="() => _showCleanModal = false">
                     <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round">
                         <path d="M18 6 6 18M6 6l12 12"/>
@@ -342,7 +351,6 @@
                 </button>
             </div>
 
-            @* Stats *@
             @if (_stats != null)
             {
                 <div class="clean-stats">
@@ -361,9 +369,7 @@
                     @if (_stats.PlusAncienneEntree.HasValue)
                     {
                         <div class="clean-stat-item">
-                            <span class="clean-stat-value">
-                                @_stats.PlusAncienneEntree.Value.ToString("dd/MM/yyyy")
-                            </span>
+                            <span class="clean-stat-value">@_stats.PlusAncienneEntree.Value.ToString("dd/MM/yyyy")</span>
                             <span class="clean-stat-label">Plus ancienne</span>
                         </div>
                     }
@@ -372,34 +378,26 @@
 
             <div class="audit-modal-body">
 
-                @* Option 1 — Avant date *@
                 <div class="clean-option">
                     <div class="clean-option-header">
                         <span class="clean-option-title">Supprimer avant une date</span>
-                        <span class="clean-option-desc">
-                            Supprime toutes les entrées antérieures à la date choisie
-                        </span>
+                        <span class="clean-option-desc">Supprime toutes les entrées antérieures à la date choisie</span>
                     </div>
                     <div class="clean-option-controls">
-                        <input type="date" class="audit-date-input clean-date"
-                               @bind="_cleanDate" />
-                        <button class="clean-btn warn" @onclick="SupprimerAvantDate"
-                                disabled="@_cleanLoading">
+                        <input type="date" class="audit-date-input clean-date" @bind="_cleanDate" />
+                        <button class="clean-btn warn" @onclick="SupprimerAvantDate" disabled="@_cleanLoading">
                             Supprimer
                         </button>
                     </div>
                 </div>
 
-                @* Option 2 — Par catégorie *@
                 <div class="clean-option">
                     <div class="clean-option-header">
                         <span class="clean-option-title">Supprimer par catégorie</span>
-                        <span class="clean-option-desc">
-                            Supprime toutes les entrées d'une catégorie spécifique
-                        </span>
+                        <span class="clean-option-desc">Supprime toutes les entrées d'une catégorie spécifique</span>
                     </div>
                     <div class="clean-option-controls">
-                        <select class="audit-select" value="@_cleanCategorie" 
+                        <select class="audit-select" value="@_cleanCategorie"
                                 @onchange="e => _cleanCategorie = e.Value?.ToString() ?? string.Empty">
                             <option value="">-- Choisir --</option>
                             <option value="Authentification">Authentification</option>
@@ -415,21 +413,25 @@
                     </div>
                 </div>
 
-                @* Option 3 — Tout supprimer *@
                 <div class="clean-option danger">
                     <div class="clean-option-header">
-                        <span class="clean-option-title">⚠️ Tout supprimer</span>
-                        <span class="clean-option-desc">
-                            Supprime TOUTES les entrées du journal. Action irréversible.
-                        </span>
+                        <div class="clean-danger-title-row">
+                            <div class="clean-danger-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                    <line x1="12" y1="9" x2="12" y2="13"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
+                            </div>
+                            <span class="clean-option-title danger-title">Tout supprimer</span>
+                        </div>
+                        <span class="clean-option-desc">Supprime TOUTES les entrées du journal. Action irréversible.</span>
                     </div>
-                    <button class="clean-btn danger" @onclick="SupprimerTout"
-                            disabled="@_cleanLoading">
+                    <button class="clean-btn danger full-width" @onclick="SupprimerTout" disabled="@_cleanLoading">
                         Vider le journal
                     </button>
                 </div>
 
-                @* Message résultat *@
                 @if (!string.IsNullOrEmpty(_cleanMessage))
                 {
                     <div class="@(_cleanSuccess ? "audit-alert-success" : "audit-alert-error")">

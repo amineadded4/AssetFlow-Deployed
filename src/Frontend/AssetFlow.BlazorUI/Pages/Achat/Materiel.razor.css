@@ -173,10 +173,10 @@ html.dark .sk-shell::before {
 
 .sk-topbar-left  { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
 .sk-topbar-title {
-    font-size: 17px; font-weight: 800;
+    font-size: 17px; font-weight: 700;
     color: var(--text-primary); white-space: nowrap;
     letter-spacing: -0.4px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    background: var(--text-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

@@ -16,7 +16,7 @@ namespace AssetFlow.BlazorUI.Pages.Auth
         private string Password { get; set; } = string.Empty;
         private string ConfirmPassword { get; set; } = string.Empty;
         private string Department { get; set; } = string.Empty;
-        private string SelectedRole { get; set; } = "IT"; // Rôle sélectionné par défaut
+        private string SelectedRole { get; set; } = "IT";
         private bool AcceptTerms { get; set; } = false;
 
         // États UI
@@ -24,18 +24,33 @@ namespace AssetFlow.BlazorUI.Pages.Auth
         private string ErrorMessage { get; set; } = string.Empty;
         private string SuccessMessage { get; set; } = string.Empty;
 
+        // Couleur dynamique selon le rôle sélectionné (comme Login)
+        private string RoleColor => SelectedRole switch
+        {
+            "IT"          => "#7C3AED",
+            "EquipeAchat" => "#136dec",
+            "Employe"     => "#F59E0B",
+            _             => "#2563EB"
+        };
+
+        private string RoleColorShadow => SelectedRole switch
+        {
+            "IT"          => "rgba(124,58,237,0.35)",
+            "EquipeAchat" => "rgba(19,109,236,0.35)",
+            "Employe"     => "rgba(245,158,11,0.35)",
+            _             => "rgba(37,99,235,0.35)"
+        };
+
         /// Calcule la force du mot de passe (1=faible, 2=moyen, 3=fort)
         private int PasswordStrength
         {
             get
             {
                 if (string.IsNullOrEmpty(Password)) return 0;
-
                 int score = 0;
-                if (Password.Length >= 8) score++;                        // Longueur
-                if (Password.Any(char.IsUpper)) score++;                  // Majuscule
-                if (Password.Any(char.IsDigit)) score++;                  // Chiffre
-
+                if (Password.Length >= 8) score++;
+                if (Password.Any(char.IsUpper)) score++;
+                if (Password.Any(char.IsDigit)) score++;
                 return score;
             }
         }
@@ -45,8 +60,6 @@ namespace AssetFlow.BlazorUI.Pages.Auth
         {
             ErrorMessage = string.Empty;
             SuccessMessage = string.Empty;
-
-            // === Validations ===
 
             if (string.IsNullOrWhiteSpace(FirstName) || string.IsNullOrWhiteSpace(LastName))
             {
@@ -78,7 +91,6 @@ namespace AssetFlow.BlazorUI.Pages.Auth
                 return;
             }
 
-            // === Appel API ===
             IsLoading = true;
 
             var request = new RegisterRequest
@@ -97,7 +109,6 @@ namespace AssetFlow.BlazorUI.Pages.Auth
 
             if (success)
             {
-                // Afficher le message de succès et rediriger après 2 secondes
                 SuccessMessage = message;
                 await Task.Delay(2000);
                 Navigation.NavigateTo("/");

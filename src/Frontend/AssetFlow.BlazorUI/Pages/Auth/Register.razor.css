@@ -1,10 +1,19 @@
-/* === LAYOUT (partagé avec Login — même structure) === */
-.login-page {
-    display: flex;
-    min-height: 100vh;
+/* === LOCK global scroll — seul le panneau droit défile === */
+:host, html, body {
+    height: 100%;
     overflow: hidden;
 }
 
+/* === LAYOUT 2 COLONNES — identique à Login === */
+.login-page {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* =============================================
+   PANNEAU GAUCHE NAVY — inchangé
+   ============================================= */
 .left-panel {
     width: 32%;
     background: var(--navy);
@@ -14,8 +23,11 @@
     align-items: center;
     justify-content: center;
     padding: 2.5rem;
-    position: relative;
+    position: sticky;
+    top: 0;
+    height: 100vh;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 html.dark .left-panel { background: #060d18; }
@@ -46,14 +58,6 @@ html.dark .left-panel { background: #060d18; }
     height: 200px;
     object-fit: contain;
     filter: drop-shadow(0 0 22px rgba(19,109,236,0.6));
-}
-
-.panel-app-name {
-    font-size: 2rem;
-    font-weight: 800;
-    color: white;
-    letter-spacing: -0.5px;
-    text-align: center;
 }
 
 .panel-app-subtitle {
@@ -90,62 +94,123 @@ html.dark .left-panel { background: #060d18; }
 .feature-text-block h4 { font-size: 0.875rem; font-weight: 600; color: white; }
 .feature-text-block p  { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
 
-/* === PANNEAU DROIT === */
+/* =============================================
+   PANNEAU DROIT — fond gris, scroll uniquement ici
+   ============================================= */
 .right-panel {
     flex: 1;
-    background: var(--surface);
+    background: #eef1f8;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem 3.5rem;
-    overflow-y: auto;
-    position: relative;
+    height: 100vh;
+    overflow: hidden;
     transition: background var(--transition);
 }
 
-.form-container {
-    width: 100%;
-    max-width: 420px;
-    animation: slideUp 0.5s ease 0.2s both;
+html.dark .right-panel {
+    background: #0c1422;
 }
 
-.form-header { margin-bottom: 1.5rem; }
+/* Zone scrollable — prend tout l'espace restant au-dessus du footer */
+.right-panel-scroll {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2.5rem 3rem;
+}
+
+.right-panel-scroll::-webkit-scrollbar { width: 5px; }
+.right-panel-scroll::-webkit-scrollbar-track { background: transparent; }
+.right-panel-scroll::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.15);
+    border-radius: 99px;
+}
+html.dark .right-panel-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+}
+
+/* =============================================
+   CARTE FORMULAIRE FLOTTANTE — comme Login
+   ============================================= */
+.form-container {
+    width: 100%;
+    max-width: 620px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem 2.75rem;
+    box-shadow: 0 8px 48px rgba(0, 0, 0, 0.10);
+    animation: slideUp 0.5s ease 0.2s both;
+    transition: background var(--transition), border-color var(--transition);
+}
+
+html.dark .form-container {
+    box-shadow: 0 8px 48px rgba(0, 0, 0, 0.40);
+}
+
+.form-header { margin-bottom: 1.75rem; }
 
 .form-title {
-    font-size: 1.8rem;
+    font-size: 1.9rem;
     font-weight: 700;
     color: var(--text);
     letter-spacing: -0.5px;
+    margin-bottom: 0.2rem;
 }
 
-.form-subtitle { color: var(--text-muted); font-size: 0.875rem; margin-top: 0.25rem; }
+.form-subtitle { color: var(--text-muted); font-size: 0.875rem; }
 
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+/* === GRILLE 2 COLONNES === */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
 
-.legal-footer { position: absolute; bottom: 1rem; text-align: center; width: 100%; }
-.legal-footer p { font-size: 0.72rem; color: var(--text-faint); }
+/* === BOUTON PRINCIPAL — couleur injectée via style inline === */
+.btn-primary {
+    width: 100%;
+    padding: 0.85rem;
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: opacity 0.2s, transform 0.1s;
+    letter-spacing: 0.1px;
+    margin-top: 0.25rem;
+}
+.btn-primary:hover:not(:disabled) { opacity: 0.88; }
+.btn-primary:active:not(:disabled) { transform: scale(0.99); }
+.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
 
-.text-center { text-align: center; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 20px; }
-
+/* === DIVIDER === */
 .divider {
     display: flex; align-items: center;
-    gap: 0.75rem; margin: 1rem 0;
+    gap: 0.75rem; margin: 1.1rem 0;
     color: var(--text-faint); font-size: 0.8rem;
 }
-.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-.checkbox-label {
-    display: flex; align-items: center; gap: 0.5rem;
-    font-size: 0.83rem; color: var(--text-muted); cursor: pointer;
+.divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
 }
-.checkbox-label input[type="checkbox"] { accent-color: var(--primary); }
 
-/* === SPÉCIFIQUE REGISTER === */
+.text-center {
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
 
-/* Barre de force mot de passe */
-.password-strength { margin-bottom: 0.5rem; }
-.strength-bar { display: flex; gap: 3px; margin-bottom: 0.2rem; }
+/* === BARRE DE FORCE MOT DE PASSE === */
+.password-strength { margin-bottom: 0.75rem; }
+.strength-bar { display: flex; gap: 3px; margin-bottom: 0.25rem; }
 .strength-segment {
     flex: 1; height: 3px; background: var(--border);
     border-radius: 99px; transition: background 0.3s ease;
@@ -154,55 +219,101 @@ html.dark .left-panel { background: #060d18; }
 .strength-segment.active.medium { background: #f97316; }
 .strength-segment.active.strong { background: #22c55e; }
 
-/* Sélection de rôle */
-.role-selection { margin-bottom: 0.5rem; }
+/* === SÉLECTION RÔLE === */
+.role-selection { margin-bottom: 0.75rem; }
 .role-cards-row { display: flex; gap: 0.5rem; margin-top: 0.35rem; }
 
 .role-card-small {
     flex: 1; padding: 0.6rem 0.4rem;
-    border: 2px solid var(--border); border-radius: var(--radius-lg);
-    cursor: pointer; display: flex; flex-direction: column;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    display: flex; flex-direction: column;
     align-items: center; text-align: center; gap: 0.25rem;
-    transition: border-color var(--transition), background var(--transition);
+    transition: border-color 0.2s ease, background 0.2s ease;
     background: var(--surface);
 }
-.role-card-small.selected { border-color: var(--primary); background: rgba(19,109,236,0.06); }
 .role-card-small svg {
-    width: 20px; height: 20px; stroke: var(--text-muted); fill: none;
+    width: 20px; height: 20px;
+    stroke: var(--text-muted); fill: none;
     stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
+    transition: stroke 0.2s ease;
 }
-.role-card-small.selected svg { stroke: var(--primary); }
 .role-card-small input[type="radio"] { display: none; }
 .role-card-small strong { font-size: 0.78rem; font-weight: 700; color: var(--text); display: block; }
 .role-card-small small  { font-size: 0.68rem; color: var(--text-faint); display: block; }
 
-/* Info box */
+/* === INFO BOX — couleur injectée via style inline === */
 .info-box {
     display: flex; gap: 0.5rem; align-items: flex-start;
-    padding: 0.6rem 0.875rem;
-    background: rgba(19,109,236,0.07);
-    border: 1px solid rgba(19,109,236,0.18);
+    padding: 0.65rem 0.875rem;
     border-radius: var(--radius-lg);
-    font-size: 0.8rem; color: var(--primary);
-    margin: 0.5rem 0; line-height: 1.5;
-}
-.info-box svg {
-    width: 15px; height: 15px; stroke: var(--primary); fill: none;
-    stroke-width: 2; flex-shrink: 0; margin-top: 1px;
+    border: 1px solid;
+    font-size: 0.8rem;
+    margin: 0.5rem 0 0.75rem;
+    line-height: 1.5;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-/* === RESPONSIVE === */
+/* === CHECKBOX === */
+.checkbox-label {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.83rem; color: var(--text-muted); cursor: pointer;
+    margin-bottom: 0.75rem;
+}
+.checkbox-label input[type="checkbox"] { accent-color: var(--primary); }
+
+/* === FOOTER FIXE EN BAS DU PANNEAU DROIT === */
+.legal-footer {
+    flex-shrink: 0;
+    padding: 0.85rem;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    background: #eef1f8;
+    transition: background var(--transition);
+}
+html.dark .legal-footer { background: #0c1422; }
+.legal-footer p { font-size: 0.72rem; color: var(--text-faint); }
+
+/* === ICÔNE ŒIL === */
+.password-eye-btn {
+    position: absolute;
+    right: 0.65rem; top: 50%;
+    transform: translateY(-50%);
+    width: 32px; height: 32px;
+    border-radius: 7px;
+    background: transparent; border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-faint);
+    transition: color var(--transition), background var(--transition);
+    padding: 0; flex-shrink: 0;
+}
+.password-eye-btn:hover { color: var(--text-muted); background: var(--surface-2); }
+.password-eye-btn svg {
+    width: 18px; height: 18px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
+    display: block; pointer-events: none;
+}
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
 @media (max-width: 1024px) {
     .left-panel { width: 36%; padding: 2rem 1.5rem; }
     .panel-logo { width: 220px; height: 150px; }
-    .right-panel { padding: 1.5rem 2.5rem; }
+    .right-panel-scroll { padding: 1.5rem 2rem; }
+    .form-container { max-width: 520px; }
 }
 
 @media (max-width: 768px) {
-    .login-page { flex-direction: column; overflow-y: auto; }
+    :host, html, body { height: auto; overflow: auto; }
+    .login-page { flex-direction: column; height: auto; }
 
     .left-panel {
-        width: 100%; min-height: auto; padding: 1rem 1.5rem;
+        width: 100%; height: auto; padding: 1rem 1.5rem;
+        position: relative;
         flex-direction: row; justify-content: center;
     }
     .left-panel::after { display: none; }
@@ -214,26 +325,33 @@ html.dark .left-panel { background: #060d18; }
     }
 
     .panel-logo { width: 90px; height: 56px; flex-shrink: 0; }
-    .panel-app-subtitle, .features-list, .panel-app-name { display: none; }
+    .panel-app-subtitle, .features-list { display: none; }
 
-    .right-panel { flex: 1; padding: 1.5rem 1.25rem 3rem; justify-content: flex-start; overflow-y: visible; }
-    .form-container { max-width: 100%; animation: none; }
+    .right-panel { height: auto; overflow-y: auto; }
+    .right-panel-scroll {
+        overflow-y: visible;
+        padding: 1.5rem 1.25rem 1rem;
+    }
+    .form-container { max-width: 100%; animation: none; padding: 2rem 1.5rem; }
     .form-title { font-size: 1.5rem; }
     .form-header { margin-bottom: 1.25rem; }
     .form-row { grid-template-columns: 1fr; gap: 0; }
-    .form-input { padding: 0.75rem 1rem; font-size: 1rem; }
-    .btn-primary { padding: 0.875rem; font-size: 1rem; }
-    .legal-footer { position: relative; bottom: auto; padding: 1.5rem 0 0.5rem; }
-    .theme-toggle { top: auto; bottom: 1rem; right: 1rem; width: 40px; height: 40px; }
+    .legal-footer { position: relative; }
 }
 
 @media (max-width: 480px) {
     .left-panel { padding: 0.875rem 1rem; }
     .panel-logo { width: 72px; height: 44px; }
-    .right-panel { padding: 1.25rem 1rem 3rem; }
+    .right-panel-scroll { padding: 1.25rem 1rem 0.5rem; }
     .form-title { font-size: 1.35rem; }
+    .form-container { padding: 1.75rem 1.25rem; }
     .role-cards-row { gap: 0.35rem; }
     .role-card-small { padding: 0.5rem 0.3rem; }
     .role-card-small strong { font-size: 0.72rem; }
     .role-card-small small { display: none; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
 }

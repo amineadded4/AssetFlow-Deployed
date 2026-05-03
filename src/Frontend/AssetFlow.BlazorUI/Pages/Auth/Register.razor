@@ -3,7 +3,7 @@
 
 <div class="login-page">
 
-    @* PANNEAU GAUCHE NAVY *@
+    @* PANNEAU GAUCHE NAVY — inchangé *@
     <div class="left-panel">
         <div class="left-panel-content">
 
@@ -13,7 +13,6 @@
             <ul class="features-list">
                 <li class="feature-item">
                     <div class="feature-icon-box">
-                        @* Icône automatisation / Engrenage *@
                         <svg viewBox="0 0 24 24">
                             <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/>
                             <path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/>
@@ -27,7 +26,6 @@
                 </li>
                 <li class="feature-item">
                     <div class="feature-icon-box">
-                        @* Icône IA *@
                         <svg viewBox="0 0 24 24">
                             <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/>
                             <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/>
@@ -41,7 +39,6 @@
                 </li>
                 <li class="feature-item">
                     <div class="feature-icon-box">
-                        @* Icône Alertes *@
                         <svg viewBox="0 0 24 24">
                             <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
                             <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
@@ -57,121 +54,130 @@
         </div>
     </div>
 
-    @* PANNEAU DROIT — COMPACT pour éviter le scroll *@
+    @* PANNEAU DROIT — fond gris + carte flottante, scroll uniquement sur la form *@
     <div class="right-panel">
-        <div class="form-container">
+        <div class="right-panel-scroll">
+            <div class="form-container">
 
-            <div class="form-header">
-                <h1 class="form-title">Créer un compte</h1>
-                <p class="form-subtitle">Remplissez le formulaire pour demander l'accès au système.</p>
-            </div>
-
-            @if (!string.IsNullOrEmpty(SuccessMessage))
-            {
-                <div class="alert alert-success">@SuccessMessage</div>
-            }
-            @if (!string.IsNullOrEmpty(ErrorMessage))
-            {
-                <div class="alert alert-error">@ErrorMessage</div>
-            }
-
-            @* Prénom + Nom *@
-            <div class="form-row">
-                <InputField Label="Prénom" Placeholder="Mohamed" @bind-Value="FirstName" />
-                <InputField Label="Nom" Placeholder="Maddeh" @bind-Value="LastName" />
-            </div>
-
-            @* Email *@
-            <InputField Label="Adresse email" Placeholder="nom@example.com"
-                @bind-Value="Email" InputType="email"
-                HelperText="Vous recevrez une confirmation par email" />
-
-            @* Mot de passe sur 2 colonnes *@
-            <div class="form-row">
-                <InputField Label="Mot de passe" Placeholder="••••••••"
-                    @bind-Value="Password" InputType="password" ShowPasswordToggle="true" />
-                <InputField Label="Confirmer" Placeholder="••••••••"
-                    @bind-Value="ConfirmPassword" InputType="password" ShowPasswordToggle="true" />
-            </div>
-
-            @* Barre de force compacte *@
-            <div class="password-strength">
-                <div class="strength-bar">
-                    <div class="strength-segment @(PasswordStrength >= 1 ? "active weak" : "")"></div>
-                    <div class="strength-segment @(PasswordStrength >= 2 ? "active medium" : "")"></div>
-                    <div class="strength-segment @(PasswordStrength >= 3 ? "active strong" : "")"></div>
+                <div class="form-header">
+                    <h1 class="form-title">Créer un compte</h1>
+                    <p class="form-subtitle">Remplissez le formulaire pour demander l'accès au système.</p>
                 </div>
-                <small style="color:var(--text-faint);font-size:0.72rem;">Min. 8 caractères, 1 majuscule, 1 chiffre</small>
-            </div>
 
-            @* Département *@
-            <InputField Label="Département" Placeholder="Ex: IT, Production, Logistique" @bind-Value="Department" />
+                @if (!string.IsNullOrEmpty(SuccessMessage))
+                {
+                    <div class="alert alert-success">@SuccessMessage</div>
+                }
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="alert alert-error">@ErrorMessage</div>
+                }
 
-            @* Sélection rôle avec SVG icons *@
-            <div class="role-selection">
-                <label class="field-label">Rôle demandé</label>
-                <div class="role-cards-row">
-
-                    <div class="role-card-small @(SelectedRole == "IT" ? "selected" : "")"
-                         @onclick='() => SelectedRole = "IT"'>
-                        <input type="radio" name="role" />
-                        @* Icône moniteur *@
-                        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-                        <strong>IT</strong>
-                        <small>Matériel & demandes</small>
-                    </div>
-
-                    <div class="role-card-small @(SelectedRole == "EquipeAchat" ? "selected" : "")"
-                         @onclick='() => SelectedRole = "EquipeAchat"'>
-                        <input type="radio" name="role" />
-                        @* Icône panier *@
-                        <svg viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                        <strong>Équipe Achat</strong>
-                        <small>Offres & stock</small>
-                    </div>
-
-                    <div class="role-card-small @(SelectedRole == "Employe" ? "selected" : "")"
-                         @onclick='() => SelectedRole = "Employe"'>
-                        <input type="radio" name="role" />
-                        @* Icône utilisateur *@
-                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        <strong>Employé</strong>
-                        <small>Consultation</small>
-                    </div>
-
+                @* Prénom + Nom *@
+                <div class="form-row">
+                    <InputField Label="Prénom" Placeholder="Mohamed" @bind-Value="FirstName" />
+                    <InputField Label="Nom" Placeholder="Maddeh" @bind-Value="LastName" />
                 </div>
+
+                @* Email *@
+                <InputField Label="Adresse email" Placeholder="nom@example.com"
+                    @bind-Value="Email" InputType="email"
+                    HelperText="Vous recevrez une confirmation par email" />
+
+                @* Mot de passe sur 2 colonnes *@
+                <div class="form-row">
+                    <InputField Label="Mot de passe" Placeholder="••••••••"
+                        @bind-Value="Password" InputType="password" ShowPasswordToggle="true" />
+                    <InputField Label="Confirmer" Placeholder="••••••••"
+                        @bind-Value="ConfirmPassword" InputType="password" ShowPasswordToggle="true" />
+                </div>
+
+                @* Barre de force *@
+                <div class="password-strength">
+                    <div class="strength-bar">
+                        <div class="strength-segment @(PasswordStrength >= 1 ? "active weak" : "")"></div>
+                        <div class="strength-segment @(PasswordStrength >= 2 ? "active medium" : "")"></div>
+                        <div class="strength-segment @(PasswordStrength >= 3 ? "active strong" : "")"></div>
+                    </div>
+                    <small style="color:var(--text-faint);font-size:0.72rem;">Min. 8 caractères, 1 majuscule, 1 chiffre</small>
+                </div>
+
+                @* Département *@
+                <InputField Label="Département" Placeholder="Ex: IT, Production, Logistique" @bind-Value="Department" />
+
+                @* Sélection rôle *@
+                <div class="role-selection">
+                    <label class="field-label">Rôle demandé</label>
+                    <div class="role-cards-row">
+
+                        <div class="role-card-small @(SelectedRole == "IT" ? "selected" : "")"
+                             style="@(SelectedRole == "IT" ? $"border-color:#7C3AED;background:rgba(124,58,237,0.06);" : "")"
+                             @onclick='() => SelectedRole = "IT"'>
+                            <input type="radio" name="role" />
+                            <svg viewBox="0 0 24 24" style="@(SelectedRole == "IT" ? "stroke:#7C3AED;" : "")">
+                                <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                            </svg>
+                            <strong>IT</strong>
+                            <small>Matériel & demandes</small>
+                        </div>
+
+                        <div class="role-card-small @(SelectedRole == "EquipeAchat" ? "selected" : "")"
+                             style="@(SelectedRole == "EquipeAchat" ? $"border-color:#136dec;background:rgba(19,109,236,0.06);" : "")"
+                             @onclick='() => SelectedRole = "EquipeAchat"'>
+                            <input type="radio" name="role" />
+                            <svg viewBox="0 0 24 24" style="@(SelectedRole == "EquipeAchat" ? "stroke:#136dec;" : "")">
+                                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+                            </svg>
+                            <strong>Équipe Achat</strong>
+                            <small>Offres & stock</small>
+                        </div>
+
+                        <div class="role-card-small @(SelectedRole == "Employe" ? "selected" : "")"
+                             style="@(SelectedRole == "Employe" ? $"border-color:#F59E0B;background:rgba(245,158,11,0.06);" : "")"
+                             @onclick='() => SelectedRole = "Employe"'>
+                            <input type="radio" name="role" />
+                            <svg viewBox="0 0 24 24" style="@(SelectedRole == "Employe" ? "stroke:#F59E0B;" : "")">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            <strong>Employé</strong>
+                            <small>Consultation</small>
+                        </div>
+
+                    </div>
+                </div>
+
+                @* Info approbation *@
+                <div class="info-box" style="border-color:@(RoleColor)30;background:@(RoleColor)10;color:@RoleColor;">
+                    <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:@RoleColor;fill:none;stroke-width:2;flex-shrink:0;margin-top:1px;">
+                        <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+                    </svg>
+                    <span>Votre demande sera examinée par un administrateur avant activation.</span>
+                </div>
+
+                @* Conditions *@
+                <label class="checkbox-label">
+                    <input type="checkbox" @bind="AcceptTerms" />
+                    J'accepte les conditions d'utilisation et la politique de confidentialité
+                </label>
+
+                @* Bouton — couleur dynamique selon le rôle *@
+                <button class="btn-primary"
+                        style="background-color:@RoleColor; box-shadow:0 4px 20px @RoleColorShadow;"
+                        @onclick="HandleRegister"
+                        disabled="@(IsLoading || !AcceptTerms)">
+                    @(IsLoading ? "Création en cours..." : "Créer mon compte")
+                </button>
+
+                <div class="divider"><span>OU</span></div>
+
+                <p class="text-center">
+                    Vous avez déjà un compte ? <a href="/" class="link">Se connecter</a>
+                </p>
+
             </div>
-
-            @* Info approbation avec SVG *@
-            <div class="info-box">
-                <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:var(--primary);fill:none;stroke-width:2;flex-shrink:0;margin-top:1px;">
-                    <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
-                </svg>
-                <span>Votre demande sera examinée par un administrateur avant activation.</span>
-            </div>
-
-            @* Conditions *@
-            <label class="checkbox-label">
-                <input type="checkbox" @bind="AcceptTerms" />
-                J'accepte les conditions d'utilisation et la politique de confidentialité
-            </label>
-
-            @* Bouton *@
-            <button class="btn-primary" @onclick="HandleRegister" disabled="@(IsLoading || !AcceptTerms)">
-                @(IsLoading ? "Création en cours..." : "Créer mon compte")
-            </button>
-
-            <div class="divider"><span>OU</span></div>
-
-            <p class="text-center">
-                Vous avez déjà un compte ? <a href="/" class="link">Se connecter</a>
-            </p>
-
         </div>
 
-        <div class="legal-footer">
-            <p>© 2025 AssetFlow Technologies. Tous droits réservés.</p>
-        </div>
+        <div class="legal-footer"><p>© 2025 AssetFlow Technologies. Tous droits réservés.</p></div>
     </div>
 
 </div>

@@ -56,7 +56,8 @@ html.dark .admin-main::before {
    PAGE
 ══════════════════════════════════════════════════════ */
 .audit-page {
-    padding: 2rem 2.5rem;
+    padding: 1.5rem 2.5rem 2rem 2.5rem;
+    padding-right: 5rem;          /* espace libre pour le theme-toggle fixe */
     min-height: 100vh;
     background: transparent;
     position: relative;
@@ -83,6 +84,7 @@ html.dark .admin-main::before {
     flex-wrap: wrap;
     padding-bottom: 1.5rem;
     border-bottom: 1px solid var(--border);
+    min-height: 48px;   /* même hauteur que le theme-toggle = alignement garanti */
 }
 
 .audit-header-left {
@@ -744,6 +746,7 @@ html.dark .clean-option { border-color: rgba(255,255,255,0.07); }
     .clean-modal { width: calc(100vw - 1.5rem); }
     .clean-stats { flex-wrap: wrap; }
     .clean-stat-item { min-width: 45%; border-bottom: 1px solid var(--border); }
+    .audit-page { padding: 1.25rem 1rem; padding-right: 4rem; }
 }
 
 @media (max-width: 480px) {

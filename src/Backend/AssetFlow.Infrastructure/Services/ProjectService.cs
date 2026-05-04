@@ -109,7 +109,8 @@ namespace AssetFlow.Infrastructure.Services
                     QuantiteAffectee = a.QuantiteAffectee,
                     DateAffectation  = a.DateAffectation,
                     DateRetourPrevue = a.DateRetour,
-                    Etat             = a.Etat.ToString()
+                    Etat             = a.Etat.ToString(),
+                    ImageUrl = a.Materiel.ImageUrl
                 })
                 .ToListAsync();
 

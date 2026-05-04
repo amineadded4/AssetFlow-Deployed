@@ -9,5 +9,6 @@ namespace AssetFlow.Application.DTOs
         public DateTime DateAffectation  { get; set; }
         public DateTime? DateRetourPrevue { get; set; }
         public string   Etat             { get; set; } = string.Empty;
+        public string?  ImageUrl         { get; set; }
     }
 }

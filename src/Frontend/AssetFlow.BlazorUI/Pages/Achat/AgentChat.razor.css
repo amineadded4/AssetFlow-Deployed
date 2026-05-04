@@ -323,7 +323,7 @@ html.dark .ai-history-count,
 }
 .ai-clear-btn:hover {
     /* color: white; */
-    background: linear-gradient(135deg, var(--ai-blue), #6366f1);
+    background: rgba(19, 109, 236, .18);
     border-color: transparent;
     box-shadow: 0 4px 14px rgba(19,109,236,.35);
 }

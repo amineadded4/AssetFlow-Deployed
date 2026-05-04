@@ -34,7 +34,7 @@ namespace AssetFlow.BlazorUI.Components
 
         private bool   _drawerOpen      = false;
         private string _nomUtilisateur  = "Agent Achat";
-        private string _roleUtilisateur = "Service Achat";
+        private string _roleUtilisateur = "";
         private string _initiales       = "AA";
         private int    _currentUserId   = 0;
 
@@ -62,7 +62,7 @@ namespace AssetFlow.BlazorUI.Components
                         : _nomUtilisateur[..Math.Min(2, _nomUtilisateur.Length)].ToUpper();
                 }
                 if (!string.IsNullOrWhiteSpace(role))
-                    _roleUtilisateur = Nettoyer(role);
+                    _roleUtilisateur = "Equipe Achat";
             }
             catch { }
 

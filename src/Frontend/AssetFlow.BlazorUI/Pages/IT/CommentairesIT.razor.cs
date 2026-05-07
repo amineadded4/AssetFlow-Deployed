@@ -186,7 +186,19 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
         private void OnSearchInput(ChangeEventArgs e) { SearchQuery = e.Value?.ToString() ?? string.Empty; _ = ChargerCommentaires(); }
         private void ClearSearch() { SearchQuery = string.Empty; _ = ChargerCommentaires(); }
-        private void SetRoleFiltre(string role) { _roleFiltre = role; AppliquerFiltres(); StateHasChanged(); }
+        private void SetRoleFiltre(string role) { _roleFiltre = role; AppliquerFiltres(); StateHasChanged(); _ = ReRenderDonuts(); }
+
+        private async Task ReRenderDonuts()
+        {
+            // Laisser Blazor reconstruire le DOM avant de re-injecter les charts
+            await Task.Yield();
+            var ids = CommentairesFiltres
+                .GroupBy(c => c.MaterielId)
+                .Select(g => g.Key)
+                .Where(id => SentimentDisponible.Contains(id) && Sentiments.ContainsKey(id));
+            foreach (var id in ids)
+                await RenderApexDonut(id, Sentiments[id]);
+        }
         private void ResetFiltres() { SearchQuery = string.Empty; _roleFiltre = string.Empty; _ = ChargerCommentaires(); }
 
         private async Task AnalyserSentiment(int materielId)

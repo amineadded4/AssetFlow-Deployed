@@ -472,7 +472,9 @@ html.dark .chart-header {
     font-family: inherit;
 }
 .mini-select:focus, .mini-select:hover { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(19,109,236,0.09); }
-html.dark .mini-select { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+html.dark .mini-select { background: #1a2540; color: var(--text-primary); }
+html.dark .mini-select option { background: #1a2540; color: #e8f0fe; }
+html.dark .mini-select option:checked { background: #1A6BDB; color: #ffffff; }
 
 .mini-date {
     padding: 0.3rem 0.625rem;

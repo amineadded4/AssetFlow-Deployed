@@ -575,7 +575,9 @@ html.dark .it-chart-header {
     box-shadow: 0 0 0 3px rgba(19,109,236,0.09);
 }
 html.dark .it-mini-select,
-html.dark .it-mini-date { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+html.dark .it-mini-date { background: #1a2540; color: #e8f0fe; }
+html.dark .it-mini-select option { background: #1a2540; color: #e8f0fe; }
+html.dark .it-mini-select option:checked { background: #136dec; color: #ffffff; }
 .it-mini-select-wide { min-width: 160px; }
 
 .it-btn-apply {

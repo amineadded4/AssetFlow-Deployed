@@ -449,9 +449,12 @@ html.dark .mda-search-input {
 }
 
 html.dark .mda-sort-select {
-    background: rgba(255,255,255,0.05);
+    background: #1a2540;
     border-color: var(--mda-border-dk);
+    color: #e8f0fe;
 }
+html.dark .mda-sort-select option { background: #1a2540; color: #e8f0fe; }
+html.dark .mda-sort-select option:checked { background: #2563eb; color: #ffffff; }
 
 .mda-sort-select:focus {
     border-color: var(--mda-blue);

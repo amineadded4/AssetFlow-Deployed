@@ -759,7 +759,17 @@ html.dark .sk-panel-icon { background: rgba(74,143,232,0.12); border-color: rgba
     outline: none; width: 100%;
     transition: border-color var(--t), box-shadow var(--t), background var(--t);
 }
-html.dark .sk-inp { background: rgba(255,255,255,0.04); }
+html.dark .sk-inp { background: rgba(255,255,255,0.04); color: var(--text-primary); }
+/* Fix dropdown options visibility in dark mode */
+html.dark .sk-inp option {
+    background: #1a2540;
+    color: #e8f0fe;
+}
+html.dark .sk-inp option:checked,
+html.dark .sk-inp option:hover {
+    background: #1A6BDB;
+    color: #ffffff;
+}
 .sk-inp::placeholder { color: var(--text-hint); font-weight: 400; }
 .sk-inp:focus {
     border-color: var(--primary-light);
@@ -822,7 +832,7 @@ html.dark .sk-inp { background: rgba(255,255,255,0.04); }
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
     transition: all var(--t);
-    min-height: 140px; position: relative; overflow: hidden;
+    min-height: 140px; position: relative; overflow: visible;
 }
 .sk-upload-zone:hover, .sk-upload-zone.drag-over {
     border-color: var(--primary-light);

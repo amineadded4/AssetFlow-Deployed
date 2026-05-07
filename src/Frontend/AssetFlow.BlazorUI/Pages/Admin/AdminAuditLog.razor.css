@@ -229,6 +229,18 @@ html.dark .audit-filters {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(19,109,236,0.1);
 }
+html.dark .audit-filter-item {
+    background: #1a2540;
+    border-color: rgba(255,255,255,0.1);
+}
+html.dark .audit-filter-item svg { stroke: #8fa3c0; }
+html.dark .audit-date-input,
+html.dark .audit-search-input { color: #e8f0fe; }
+html.dark .audit-date-input::placeholder,
+html.dark .audit-search-input::placeholder { color: #3d5270; }
+html.dark .audit-select { color: #e8f0fe; }
+html.dark .audit-select option { background: #1a2540; color: #e8f0fe; }
+html.dark .audit-select option:checked { background: #136dec; color: #ffffff; }
 .audit-filter-item svg { width: 14px; height: 14px; stroke: var(--text-faint); fill: none; flex-shrink: 0; }
 
 .audit-date-input,

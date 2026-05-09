@@ -1132,7 +1132,7 @@ html.dark .oda-chat-welcome {
 }
 html.dark .oda-chat-msg-bot .oda-chat-msg-bubble { background: #1c2128; border-color: rgba(255,255,255,0.05); }
 .oda-chat-msg-user .oda-chat-msg-bubble {
-    background: linear-gradient(135deg, var(--oda-indigo), var(--oda-indigo-deep));
+    background: linear-gradient(135deg, rgb(37, 99, 235), rgb(67, 56, 202)) !important;
     color: #fff;
     border-bottom-right-radius: var(--oda-r-xs);
     box-shadow: 0 2px 8px rgba(79,70,229,0.3);

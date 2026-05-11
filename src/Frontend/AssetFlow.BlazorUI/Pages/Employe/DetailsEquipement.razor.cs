@@ -3,21 +3,21 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Text;
 using AssetFlow.BlazorUI.DTOs;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AssetFlow.BlazorUI.Pages.Employe
 {
-    public partial class DetailsEquipement
+    public partial class DetailsEquipement : IAsyncDisposable
     {
         // ── Injections ─────────────────────────────────────────
-        [Inject] private EmployeService  EmployeService  { get; set; } = default!;
-        [Inject] private IncidentService IncidentService { get; set; } = default!;
-        [Inject] private NavigationManager Navigation    { get; set; } = default!;
-        [Inject] private IJSRuntime JS                   { get; set; } = default!;
+        [Inject] private EmployeService    EmployeService  { get; set; } = default!;
+        [Inject] private IncidentService   IncidentService { get; set; } = default!;
+        [Inject] private NavigationManager Navigation      { get; set; } = default!;
+        [Inject] private IJSRuntime        JS              { get; set; } = default!;
 
-        // ── Paramètre URL ──────────────────────────────────────
+        // ── Paramètres URL ─────────────────────────────────────
         [Parameter] public int AffectationId { get; set; }
-        [Parameter] public int ArticleId { get; set; } = 0;
-
+        [Parameter] public int ArticleId     { get; set; } = 0;
 
         // ── Données équipement ─────────────────────────────────
         private EquipementAffecteDto? Equipement    { get; set; }
@@ -34,19 +34,31 @@ namespace AssetFlow.BlazorUI.Pages.Employe
         // ── QR Code ────────────────────────────────────────────
         private string FicheUrl => $"{Navigation.BaseUri}fiche/{AffectationId}/article/{ArticleId}";
         private string QrSvg    { get; set; } = string.Empty;
-        private bool _menuOpen = false;
+        private bool   _menuOpen = false;
 
-        // ── Init ───────────────────────────────────────────────
+        // ── SignalR ────────────────────────────────────────────
+        private HubConnection? _hubConnection;
+
+        // ── Toast ──────────────────────────────────────────────
+        private string _toastMsg  = string.Empty;
+        private string _toastType = "toast-success";
+        private System.Timers.Timer? _toastTimer;
+
+        // ══════════════════════════════════════════════════════
+        // Init
+        // ══════════════════════════════════════════════════════
+
         protected override async Task OnInitializedAsync()
         {
             UserName = await EmployeService.GetCurrentUserNameAsync();
             UserRole = await EmployeService.GetCurrentUserRoleAsync();
 
-            // Charger équipement et incidents en parallèle
             await Task.WhenAll(
                 ChargerEquipement(),
                 ChargerIncidents()
             );
+
+            await ConnecterSignalR();
         }
 
         protected override void OnParametersSet()
@@ -54,7 +66,86 @@ namespace AssetFlow.BlazorUI.Pages.Employe
             QrSvg = BuildQrSvg(FicheUrl);
         }
 
-        // ── Chargement équipement ──────────────────────────────
+        // ══════════════════════════════════════════════════════
+        // SignalR — écoute DashboardUpdated (NotifyAsync)
+        // Émis à chaque SignalerIncident ET ChangerStatut côté IT
+        // ══════════════════════════════════════════════════════
+
+        private async Task ConnecterSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try
+                        {
+                            return await JS.InvokeAsync<string?>("eval",
+                                "localStorage.getItem('access_token') || localStorage.getItem('token')");
+                        }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            // DashboardUpdated est émis par NotifyAsync() :
+            //   → quand l'employé signale un incident (SignalerIncidentAsync)
+            //   → quand l'IT change le statut (ChangerStatutAsync / ResolveAllByArticleAsync)
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        var nouveauxIncidents = await IncidentService.GetIncidentsByAffectationAsync(AffectationId);
+
+                        bool aChange = DetecterChangement(Incidents, nouveauxIncidents);
+                        if (!aChange) return;
+
+                        Incidents = nouveauxIncidents;
+
+                        // Recharger l'équipement : son état Panne/Bon a pu changer
+                        await ChargerEquipement();
+                    }
+                    catch { /* silencieux — mise à jour non critique */ }
+                    finally
+                    {
+                        StateHasChanged();
+                    }
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+            }
+            catch { /* page reste fonctionnelle en mode statique si SignalR indisponible */ }
+        }
+
+        // ══════════════════════════════════════════════════════
+        // Détection de changement — évite un re-render inutile
+        // sur les broadcasts qui ne concernent pas cet équipement
+        // ══════════════════════════════════════════════════════
+
+        private static bool DetecterChangement(List<IncidentDto> anciens, List<IncidentDto> nouveaux)
+        {
+            if (anciens.Count != nouveaux.Count) return true;
+
+            var ancienMap = anciens.ToDictionary(i => i.Id, i => i.Statut);
+            foreach (var n in nouveaux)
+            {
+                if (!ancienMap.TryGetValue(n.Id, out var ancienStatut)) return true;
+                if (ancienStatut != n.Statut)                           return true;
+            }
+            return false;
+        }
+
+        // ══════════════════════════════════════════════════════
+        // Chargement
+        // ══════════════════════════════════════════════════════
+
         private async Task ChargerEquipement()
         {
             IsLoading = true;
@@ -72,7 +163,6 @@ namespace AssetFlow.BlazorUI.Pages.Employe
             }
         }
 
-        // ── Chargement incidents ───────────────────────────────
         private async Task ChargerIncidents()
         {
             IsLoadingIncidents = true;
@@ -90,13 +180,19 @@ namespace AssetFlow.BlazorUI.Pages.Employe
             }
         }
 
-        // ── Navigation ─────────────────────────────────────────
+        // ══════════════════════════════════════════════════════
+        // Navigation
+        // ══════════════════════════════════════════════════════
+
         private void NaviguerVersSignalement()
         {
             Navigation.NavigateTo($"/employe/incident/{AffectationId}/article/{ArticleId}");
         }
 
-        // ── Helpers UI ─────────────────────────────────────────
+        // ══════════════════════════════════════════════════════
+        // UI helpers
+        // ══════════════════════════════════════════════════════
+
         private string GetInitials()
         {
             var parts = UserName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -119,11 +215,11 @@ namespace AssetFlow.BlazorUI.Pages.Employe
         /// </summary>
         private string GetIncidentDotClass(string statut) => statut switch
         {
-            "Resolu"   => "resolu",
-            "Cloture"  => "cloture",
-            "EnCours"  => "encours",
-            "EnAttente"=> "attente",
-            _          => "attente"
+            "Resolu"    => "resolu",
+            "Cloture"   => "cloture",
+            "EnCours"   => "encours",
+            "EnAttente" => "attente",
+            _           => "attente"
         };
 
         /// <summary>
@@ -136,11 +232,30 @@ namespace AssetFlow.BlazorUI.Pages.Employe
             return "critique";
         }
 
-        // ── Impression QR ──────────────────────────────────────
+        private void AfficherToast(string msg, string type)
+        {
+            _toastMsg  = msg;
+            _toastType = type;
+            StateHasChanged();
+
+            _toastTimer?.Dispose();
+            _toastTimer = new System.Timers.Timer(3000) { AutoReset = false };
+            _toastTimer.Elapsed += async (_, _) =>
+            {
+                _toastMsg = string.Empty;
+                await InvokeAsync(StateHasChanged);
+            };
+            _toastTimer.Start();
+        }
+
+        // ══════════════════════════════════════════════════════
+        // Impression QR
+        // ══════════════════════════════════════════════════════
+
         private async Task ImprimerQR()
         {
             var designation = Equipement?.Designation ?? "Équipement";
-            var reference   = Equipement?.NumeroSerie   ?? "";
+            var reference   = Equipement?.NumeroSerie ?? "";
 
             var printHtml = $@"<!DOCTYPE html>
 <html lang=""fr"">
@@ -179,12 +294,15 @@ namespace AssetFlow.BlazorUI.Pages.Employe
             ");
         }
 
-        // ── Génération QR Code SVG ─────────────────────────────
+        // ══════════════════════════════════════════════════════
+        // QR Code SVG — génération
+        // ══════════════════════════════════════════════════════
+
         private string BuildQrSvg(string url)
         {
             const int Size   = 25;
             const int CellPx = 8;
-            const int Margin  = 16;
+            const int Margin = 16;
 
             var grid = new bool[Size, Size];
 
@@ -266,6 +384,21 @@ namespace AssetFlow.BlazorUI.Pages.Employe
                     if (r == -1 || r == 7 || c == -1 || c == 7)
                         g[rr, cc] = false;
                 }
+        }
+
+        // ══════════════════════════════════════════════════════
+        // Dispose
+        // ══════════════════════════════════════════════════════
+
+        public async ValueTask DisposeAsync()
+        {
+            _toastTimer?.Dispose();
+
+            if (_hubConnection is not null)
+            {
+                try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
+                await _hubConnection.DisposeAsync();
+            }
         }
     }
 }

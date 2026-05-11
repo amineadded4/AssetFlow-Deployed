@@ -414,6 +414,46 @@ html.dark .incidents-section-header {
 }
 
 /* ── TIMELINE ── */
+.incidents-timeline-scroll {
+    max-height: 480px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* Scrollbar fine et discrète */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(19,109,236,0.25) transparent;
+}
+.incidents-timeline-scroll::-webkit-scrollbar {
+    width: 5px;
+}
+.incidents-timeline-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.incidents-timeline-scroll::-webkit-scrollbar-thumb {
+    background: rgba(19,109,236,0.25);
+    border-radius: 9999px;
+}
+.incidents-timeline-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(19,109,236,0.45);
+}
+/* Fondu en bas pour indiquer qu'il y a du contenu à scroller */
+.incidents-timeline-scroll-wrap {
+    position: relative;
+}
+.incidents-timeline-scroll-wrap::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 48px;
+    background: linear-gradient(to bottom, transparent, var(--surface));
+    pointer-events: none;
+    border-radius: 0 0 20px 20px;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+html.dark .incidents-timeline-scroll-wrap::after {
+    background: linear-gradient(to bottom, transparent, #1a2332);
+}
+
 .incidents-timeline {
     padding: 1.5rem;
     display: flex; flex-direction: column;

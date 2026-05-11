@@ -3,20 +3,21 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Text;
 using AssetFlow.BlazorUI.DTOs;
+using Microsoft.AspNetCore.SignalR.Client;
+
 namespace AssetFlow.BlazorUI.Pages.Achat
 {
-    public partial class DetailsEquipement
+    public partial class DetailsEquipement : IAsyncDisposable
     {
         // ── Injections ─────────────────────────────────────────
-        [Inject] private EmployeService  EmployeService  { get; set; } = default!;
-        [Inject] private IncidentService IncidentService { get; set; } = default!;
-        [Inject] private NavigationManager Navigation    { get; set; } = default!;
-        [Inject] private IJSRuntime JS                   { get; set; } = default!;
+        [Inject] private EmployeService    EmployeService  { get; set; } = default!;
+        [Inject] private IncidentService   IncidentService { get; set; } = default!;
+        [Inject] private NavigationManager Navigation      { get; set; } = default!;
+        [Inject] private IJSRuntime        JS              { get; set; } = default!;
 
-        // ── Paramètre URL ──────────────────────────────────────
+        // ── Paramètres URL ─────────────────────────────────────
         [Parameter] public int AffectationId { get; set; }
-        [Parameter] public int ArticleId { get; set; } = 0;
-
+        [Parameter] public int ArticleId     { get; set; } = 0;
 
         // ── Données équipement ─────────────────────────────────
         private EquipementAffecteDto? Equipement    { get; set; }
@@ -27,31 +28,43 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         private bool              IsLoadingIncidents { get; set; } = true;
 
         // ── Infos utilisateur ──────────────────────────────────
-        private string UserName { get; set; } = "Utilisateur";
-        private string UserRole { get; set; } = "Employé";
+        private string UserName      { get; set; } = "Utilisateur";
+        private string UserRole      { get; set; } = "Employé";
+        private bool   _roleCharge   = false;
+        private bool   _estAdmin     => UserRole.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+
+        // ── Sidebar ────────────────────────────────────────────
+        private bool _sidebarOpen = false;
+        private void ToggleSidebar() => _sidebarOpen = !_sidebarOpen;
 
         // ── QR Code ────────────────────────────────────────────
         private string FicheUrl => $"{Navigation.BaseUri}fiche/{AffectationId}/article/{ArticleId}";
         private string QrSvg    { get; set; } = string.Empty;
-        private bool        _sidebarOpen     = false;
 
-        private bool _estAdmin => UserRole.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+        // ── SignalR ────────────────────────────────────────────
+        private HubConnection? _hubConnection;
 
-        private void ToggleSidebar() => _sidebarOpen  = !_sidebarOpen;
-        private bool _roleCharge = false;
+        // ── Toast ──────────────────────────────────────────────
+        private string _toastMsg  = string.Empty;
+        private string _toastType = "toast-success";
+        private System.Timers.Timer? _toastTimer;
 
-        // ── Init ───────────────────────────────────────────────
+        // ══════════════════════════════════════════════════════
+        // Init
+        // ══════════════════════════════════════════════════════
+
         protected override async Task OnInitializedAsync()
         {
-            UserName = await EmployeService.GetCurrentUserNameAsync();
-            UserRole = await EmployeService.GetCurrentUserRoleAsync();
-            _roleCharge = true; 
+            UserName    = await EmployeService.GetCurrentUserNameAsync();
+            UserRole    = await EmployeService.GetCurrentUserRoleAsync();
+            _roleCharge = true;
 
-            // Charger équipement et incidents en parallèle
             await Task.WhenAll(
                 ChargerEquipement(),
                 ChargerIncidents()
             );
+
+            await ConnecterSignalR();
         }
 
         protected override void OnParametersSet()
@@ -59,7 +72,85 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             QrSvg = BuildQrSvg(FicheUrl);
         }
 
-        // ── Chargement équipement ──────────────────────────────
+        // ══════════════════════════════════════════════════════
+        // SignalR — même pattern que la page Employé
+        // Écoute DashboardUpdated (NotifyAsync) :
+        //   → émis quand un incident est signalé
+        //   → émis quand l'IT change le statut d'un incident
+        // ══════════════════════════════════════════════════════
+
+        private async Task ConnecterSignalR()
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        try
+                        {
+                            return await JS.InvokeAsync<string?>("eval",
+                                "localStorage.getItem('access_token') || localStorage.getItem('token')");
+                        }
+                        catch { return null; }
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+
+            _hubConnection.On("DashboardUpdated", async () =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        var nouveauxIncidents = await IncidentService.GetIncidentsByAffectationAsync(AffectationId);
+
+                        bool aChange = DetecterChangement(Incidents, nouveauxIncidents);
+                        if (!aChange) return;
+
+                        Incidents = nouveauxIncidents;
+
+                        // Recharger l'équipement : son état Panne/Bon a pu changer
+                        await ChargerEquipement();
+                    }
+                    catch { /* silencieux — mise à jour non critique */ }
+                    finally
+                    {
+                        StateHasChanged();
+                    }
+                });
+            });
+
+            try
+            {
+                await _hubConnection.StartAsync();
+                await _hubConnection.InvokeAsync("JoinDashboard");
+            }
+            catch { /* page reste fonctionnelle en mode statique si SignalR indisponible */ }
+        }
+
+        // ══════════════════════════════════════════════════════
+        // Détection de changement — évite un re-render inutile
+        // sur les broadcasts qui ne concernent pas cet équipement
+        // ══════════════════════════════════════════════════════
+
+        private static bool DetecterChangement(List<IncidentDto> anciens, List<IncidentDto> nouveaux)
+        {
+            if (anciens.Count != nouveaux.Count) return true;
+
+            var ancienMap = anciens.ToDictionary(i => i.Id, i => i.Statut);
+            foreach (var n in nouveaux)
+            {
+                if (!ancienMap.TryGetValue(n.Id, out var ancienStatut)) return true;
+                if (ancienStatut != n.Statut)                           return true;
+            }
+            return false;
+        }
+
+        // ══════════════════════════════════════════════════════
+        // Chargement
+        // ══════════════════════════════════════════════════════
+
         private async Task ChargerEquipement()
         {
             IsLoading = true;
@@ -77,7 +168,6 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             }
         }
 
-        // ── Chargement incidents ───────────────────────────────
         private async Task ChargerIncidents()
         {
             IsLoadingIncidents = true;
@@ -95,11 +185,19 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             }
         }
 
-        // ── Navigation ─────────────────────────────────────────
+        // ══════════════════════════════════════════════════════
+        // Navigation
+        // ══════════════════════════════════════════════════════
+
         private void NaviguerVersSignalement()
         {
             Navigation.NavigateTo($"/achat/incident/{AffectationId}/article/{ArticleId}");
         }
+
+        // ══════════════════════════════════════════════════════
+        // UI helpers
+        // ══════════════════════════════════════════════════════
+
         private string GetInitials()
         {
             var parts = UserName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -120,11 +218,11 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         // Couleur du point de la timeline selon le statut de l'incident
         private string GetIncidentDotClass(string statut) => statut switch
         {
-            "Resolu"   => "resolu",
-            "Cloture"  => "cloture",
-            "EnCours"  => "encours",
-            "EnAttente"=> "attente",
-            _          => "attente"
+            "Resolu"    => "resolu",
+            "Cloture"   => "cloture",
+            "EnCours"   => "encours",
+            "EnAttente" => "attente",
+            _           => "attente"
         };
 
         // Classe CSS pour le badge d'urgence
@@ -135,11 +233,30 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             return "critique";
         }
 
-        // ── Impression QR ──────────────────────────────────────
+        private void AfficherToast(string msg, string type)
+        {
+            _toastMsg  = msg;
+            _toastType = type;
+            StateHasChanged();
+
+            _toastTimer?.Dispose();
+            _toastTimer = new System.Timers.Timer(3000) { AutoReset = false };
+            _toastTimer.Elapsed += async (_, _) =>
+            {
+                _toastMsg = string.Empty;
+                await InvokeAsync(StateHasChanged);
+            };
+            _toastTimer.Start();
+        }
+
+        // ══════════════════════════════════════════════════════
+        // Impression QR
+        // ══════════════════════════════════════════════════════
+
         private async Task ImprimerQR()
         {
             var designation = Equipement?.Designation ?? "Équipement";
-            var reference   = Equipement?.NumeroSerie   ?? "";
+            var reference   = Equipement?.NumeroSerie ?? "";
 
             var printHtml = $@"<!DOCTYPE html>
 <html lang=""fr"">
@@ -178,12 +295,15 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             ");
         }
 
-        // ── Génération QR Code SVG ─────────────────────────────
+        // ══════════════════════════════════════════════════════
+        // QR Code SVG — génération
+        // ══════════════════════════════════════════════════════
+
         private string BuildQrSvg(string url)
         {
             const int Size   = 25;
             const int CellPx = 8;
-            const int Margin  = 16;
+            const int Margin = 16;
 
             var grid = new bool[Size, Size];
 
@@ -265,6 +385,21 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                     if (r == -1 || r == 7 || c == -1 || c == 7)
                         g[rr, cc] = false;
                 }
+        }
+
+        // ══════════════════════════════════════════════════════
+        // Dispose
+        // ══════════════════════════════════════════════════════
+
+        public async ValueTask DisposeAsync()
+        {
+            _toastTimer?.Dispose();
+
+            if (_hubConnection is not null)
+            {
+                try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
+                await _hubConnection.DisposeAsync();
+            }
         }
     }
 }

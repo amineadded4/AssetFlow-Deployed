@@ -232,7 +232,7 @@
                                     </div>
                                     <p class="inc-desc">@incLocal.Description</p>
                                     <div class="inc-card-footer">
-                                        <span class="inc-date">@incLocal.DateIncident.ToString("dd/MM/yyyy HH:mm")</span>
+                                        <span class="inc-date">@incLocal.DateIncident.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
                                         @if (nbActifsLocal > 1 && (incLocal.Statut == "EnAttente" || incLocal.Statut == "EnCours"))
                                         {
                                             <div class="inc-card-actions">

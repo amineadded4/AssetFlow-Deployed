@@ -11,15 +11,18 @@ namespace AssetFlow.Infrastructure.Services
         private readonly AppDbContext _context;
         private readonly IDashboardNotifier _notifier;
         private readonly IArticleBiographieService _biographie;
+        private readonly ITeamsIncidentNotifier _teamsNotifier;
 
         public IncidentService(
             AppDbContext context,
             IDashboardNotifier notifier,
-            IArticleBiographieService biographie)
+            IArticleBiographieService biographie,
+            ITeamsIncidentNotifier teamsNotifier)
         {
             _context    = context;
             _notifier   = notifier;
             _biographie = biographie;
+            _teamsNotifier = teamsNotifier;
         }
 
         public async Task<SignalerIncidentResponseDto> SignalerIncidentAsync(SignalerIncidentRequestDto request)
@@ -220,6 +223,8 @@ namespace AssetFlow.Infrastructure.Services
                     if (!autresActifs && incident.Article != null)
                         incident.Article.Etat = EtatArticle.Bon;
                 }
+                await _teamsNotifier.NotifierIncidentResoluAsync(incidentId, dto.CommentairesResolution);
+                Console.WriteLine($"[IncidentService] Incident #{incidentId} résolu — notification Teams envoyée.");
             }
 
             await _context.SaveChangesAsync();

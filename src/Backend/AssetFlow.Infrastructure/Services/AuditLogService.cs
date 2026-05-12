@@ -43,10 +43,15 @@ namespace AssetFlow.Infrastructure.Services
 
             // ── Filtres ──
             if (query.DateDebut.HasValue)
-                q = q.Where(l => l.Timestamp >= query.DateDebut.Value);
-
+            {
+                var d = DateTime.SpecifyKind(query.DateDebut.Value, DateTimeKind.Utc);
+                q = q.Where(l => l.Timestamp >= d);
+            }
             if (query.DateFin.HasValue)
-                q = q.Where(l => l.Timestamp <= query.DateFin.Value.AddDays(1));
+            {
+                var d = DateTime.SpecifyKind(query.DateFin.Value.AddDays(1), DateTimeKind.Utc);
+                q = q.Where(l => l.Timestamp <= d);
+            }
 
             if (!string.IsNullOrWhiteSpace(query.Utilisateur) && query.Utilisateur != "Tous les utilisateurs")
                 q = q.Where(l => l.Email == query.Utilisateur || l.Utilisateur.Contains(query.Utilisateur));
@@ -98,8 +103,9 @@ namespace AssetFlow.Infrastructure.Services
 
         public async Task<int> SupprimerAvantDateAsync(DateTime date)
         {
+            var utcDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
             var logs = await _db.AuditLogs
-                .Where(l => l.Timestamp < date)
+                .Where(l => l.Timestamp < utcDate)
                 .ToListAsync();
 
             _db.AuditLogs.RemoveRange(logs);
@@ -138,8 +144,8 @@ namespace AssetFlow.Infrastructure.Services
         public async Task<AuditLogStatsDto> GetStatsAsync()
         {
             var now   = DateTime.UtcNow;
-            var today = now.Date;
-            var month = new DateTime(now.Year, now.Month, 1);
+            var today = DateTime.SpecifyKind(now.Date, DateTimeKind.Utc);
+            var month = DateTime.SpecifyKind(new DateTime(now.Year, now.Month, 1), DateTimeKind.Utc);
 
             var parCategorie = await _db.AuditLogs
                 .GroupBy(l => l.Categorie)

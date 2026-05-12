@@ -530,9 +530,9 @@ html.dark .it-chart-header {
 /* Corps graphe */
 .it-chart-body {
     width: 100%;
-    height: 290px;
+    height: 320px;
     flex-shrink: 0;
-    padding: 8px 4px 4px;
+    padding: 1px 4px 4px;
     overflow: hidden;
     position: relative;
 }

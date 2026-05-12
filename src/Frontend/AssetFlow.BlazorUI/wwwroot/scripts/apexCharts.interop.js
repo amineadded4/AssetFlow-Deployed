@@ -90,7 +90,15 @@ window.ApexInterop = (function () {
     function renderDemandesParSemaine(containerId, data, dark) {
         if (!data || !data.length) return;
         const p = _p(dark); const base = _base(containerId, dark, 220);
-        _render(containerId, { ...base, series: [{ name: 'En attente', data: data.map(d => d.enAttente) }, { name: 'Commandée', data: data.map(d => d.commande) }, { name: 'Traitée', data: data.map(d => d.traite) }], chart: { ...base.chart, type: 'area', stacked: true }, colors: [C.amber, C.indigo, C.emerald], fill: { type: 'gradient', gradient: { opacityFrom: 0.55, opacityTo: 0.05 } }, stroke: { curve: 'smooth', width: 2 }, xaxis: { categories: data.map(d => d.semaine), labels: { style: { colors: p.label, fontSize: '11px' } }, axisBorder: { color: p.grid }, axisTicks: { color: p.grid } }, yaxis: { labels: { style: { colors: p.label } }, min: 0 }, legend: { position: 'top', labels: { colors: p.label }, fontSize: '11px' }, tooltip: { theme: dark ? 'dark' : 'light', shared: true, intersect: false } });
+        _render(containerId, { ...base, series: [{ name: 'En attente', data: data.map(d => d.enAttente) }, { name: 'Commandée', data: data.map(d => d.commande) }, { name: 'Traitée', data: data.map(d => d.traite) }], chart: { ...base.chart, type: 'area', stacked: true }, colors: [C.amber, C.indigo, C.emerald], fill: { type: 'gradient', gradient: { opacityFrom: 0.55, opacityTo: 0.05 } }, stroke: { curve: 'smooth', width: 2 }, xaxis: { categories: data.map(d => d.semaine), labels: { style: { colors: p.label, fontSize: '11px' } }, axisBorder: { color: p.grid }, axisTicks: { color: p.grid } }, yaxis: {
+    labels: {
+        style: { colors: p.label },
+        formatter: v => Number.isInteger(v) ? v : ''
+    },
+    min: 0,
+    forceNiceScale: true,
+    tickAmount: 'dataPoints',
+}, legend: { position: 'top', labels: { colors: p.label }, fontSize: '11px' }, tooltip: { theme: dark ? 'dark' : 'light', shared: true, intersect: false } });
     }
 
     // function renderAffectationMateriel(containerId, data, dark, filtre) {

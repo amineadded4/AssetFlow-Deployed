@@ -255,7 +255,15 @@ window.ApexITInterop = (function () {
                 axisBorder: { color: p.grid },
                 axisTicks:  { color: p.grid },
             },
-            yaxis: { labels: { style: { colors: p.label } }, min: 0 },
+            yaxis: {
+                labels: {
+                    style: { colors: p.label },
+                    formatter: v => Number.isInteger(v) ? v : ''
+                },
+                min: 0,
+                forceNiceScale: true,
+                tickAmount: 'dataPoints',
+            },
             legend: { show: false },
             dataLabels: {
                 enabled:   true,

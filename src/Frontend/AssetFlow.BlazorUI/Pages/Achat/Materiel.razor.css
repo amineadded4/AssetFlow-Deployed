@@ -853,7 +853,7 @@ html.dark .sk-inp option:hover {
     border: 2px solid var(--bg-panel);
     box-shadow: 0 2px 8px rgba(184,45,45,0.3);
 }
-.sk-remove-img svg { width: 12px; height: 12px; fill: none; stroke: #fff; stroke-width: 3; }
+.sk-remove-img svg { width: 12px; height: 12px; fill: none; stroke: gray !important; stroke-width: 3; }
 
 /* Toggle commande */
 .sk-commande-toggle {

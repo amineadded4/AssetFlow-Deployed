@@ -252,13 +252,13 @@ namespace AssetFlow.BlazorUI.Pages.IT
                     }).ToList()
                 });
 
-                SuccessMessage   = "Demande soumise avec succès !";
+                await AfficherSucces("Demande soumise avec succès !");
                 _showCreatePanel = false;
                 await LoadDemandesAsync();
             }
             catch
             {
-                ErrorMessage = "Erreur lors de la soumission. Veuillez réessayer.";
+                await AfficherErreur("Erreur lors de la soumission. Veuillez réessayer.");
             }
             finally
             {
@@ -345,13 +345,13 @@ namespace AssetFlow.BlazorUI.Pages.IT
                     }).ToList()
                 });
 
-                SuccessMessage = "Demande modifiée avec succès !";
+                await AfficherSucces("Demande soumise avec succès !");
                 _showEditPanel = false;
                 await LoadDemandesAsync();
             }
             catch
             {
-                ErrorMessage = "Erreur lors de la modification. Veuillez réessayer.";
+                await AfficherErreur("Erreur lors de la soumission. Veuillez réessayer.");
             }
             finally
             {
@@ -387,14 +387,14 @@ namespace AssetFlow.BlazorUI.Pages.IT
             try
             {
                 await DemandeService.DeleteDemandeAsync(_demandeASupprimer.IdDemande);
-                SuccessMessage     = $"Demande \"{_demandeASupprimer.NomProduit}\" supprimée avec succès.";
+                await AfficherSucces($"Demande \"{_demandeASupprimer.NomProduit}\" supprimée avec succès.");
                 _showDeleteModal   = false;
                 _demandeASupprimer = null;
                 await LoadDemandesAsync();
             }
             catch
             {
-                ErrorMessage = "Erreur lors de la suppression. Veuillez réessayer.";
+                await AfficherErreur("Erreur lors de la suppression. Veuillez réessayer.");
             }
             finally
             {
@@ -436,6 +436,25 @@ namespace AssetFlow.BlazorUI.Pages.IT
             if (diff.TotalDays    < 7)   return $"il y a {(int)diff.TotalDays} jours";
             if (diff.TotalDays    < 30)  return $"il y a {(int)(diff.TotalDays / 7)} semaine(s)";
             return $"il y a {(int)(diff.TotalDays / 30)} mois";
+        }
+        private async Task AfficherSucces(string message)
+        {
+            SuccessMessage = message;
+            ErrorMessage   = string.Empty;
+            StateHasChanged();
+            await Task.Delay(3500);
+            SuccessMessage = string.Empty;
+            StateHasChanged();
+        }
+
+        private async Task AfficherErreur(string message)
+        {
+            ErrorMessage   = message;
+            SuccessMessage = string.Empty;
+            StateHasChanged();
+            await Task.Delay(3500);
+            ErrorMessage = string.Empty;
+            StateHasChanged();
         }
 
         // ── Modèles formulaire ───────────────────────────────────

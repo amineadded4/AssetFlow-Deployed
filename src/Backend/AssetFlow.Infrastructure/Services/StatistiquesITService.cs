@@ -72,32 +72,26 @@ namespace AssetFlow.Infrastructure.Services
                 .OrderByDescending(x => x.Count)
                 .Take(10)
                 .ToListAsync();
-
+                
             // ── Équipements par catégorie ─────────────────────────
-            var equipementsParCategorie = await _db.Materiels
-                .GroupBy(m => m.Categorie)
-                .Select(g => new
+            var tousLesArticles = await _db.ArticlesIndividuels
+                .Join(
+                    _db.Materiels,
+                    a => a.MaterielId,
+                    m => m.Id,
+                    (a, m) => new { Categorie = m.Categorie, Statut = a.Statut }
+                )
+                .ToListAsync();
+
+            var equipDtos = tousLesArticles
+                .GroupBy(a => a.Categorie)
+                .Select(g => new CategorieEquipementDto
                 {
                     Categorie = g.Key,
                     Total     = g.Count(),
+                    Affectes  = g.Count(a => a.Statut == StatutArticle.Affecte),
                 })
-                .ToListAsync();
-
-            var affectesParCategorie = await _db.ArticlesIndividuels
-                .Where(a => a.Statut == StatutArticle.Affecte)
-                .Include(a => a.Materiel)
-                .GroupBy(a => a.Materiel.Categorie)
-                .Select(g => new { Categorie = g.Key, Count = g.Count() })
-                .ToListAsync();
-
-            var affectesMap = affectesParCategorie.ToDictionary(x => x.Categorie, x => x.Count);
-
-            var equipDtos = equipementsParCategorie.Select(e => new CategorieEquipementDto
-            {
-                Categorie = e.Categorie,
-                Total     = e.Total,
-                Affectes  = affectesMap.GetValueOrDefault(e.Categorie, 0),
-            }).ToList();
+                .ToList();
 
             // ── Demandes d'achat en attente ───────────────────────
             var demandesEnAttente = await _db.DemandeAchat

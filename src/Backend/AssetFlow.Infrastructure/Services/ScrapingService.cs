@@ -35,7 +35,17 @@ public class ScrapingService : IScrapingService
             var count  = reponse.TryGetProperty("nombre_resultats", out var n) ? n.GetInt32() : 0;
 
             if (succes)
-                await _redis.SaveResultatAsync(json);
+            {
+                try
+                {
+                    await _redis.SaveResultatAsync(json);
+                }
+                catch (Exception redisEx)
+                {
+                    Console.WriteLine($"[Redis] Erreur sauvegarde : {redisEx.Message}");
+                    // On continue quand même — Redis non critique ici
+                }
+            }
 
             await _notifier.NotifierTermineAsync(groupId, new ScrapingNotificationDto
             {

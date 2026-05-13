@@ -32,7 +32,6 @@ builder.Services.AddHttpClient("PythonScraper", client =>
 {
     var scraperUrl = builder.Configuration["ScraperUrl"] ?? "http://localhost:5000/";
     client.BaseAddress = new Uri(scraperUrl);
-    client.DefaultRequestHeaders.Add("ngrok-skip-browser-warning", "true");
     client.Timeout = TimeSpan.FromMinutes(5);
 });
 

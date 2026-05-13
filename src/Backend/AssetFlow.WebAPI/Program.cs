@@ -197,7 +197,8 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "http://localhost:5001",    // Blazor HTTP (launchSettings)
-                "https://localhost:7020"  // Blazor HTTPS (launchSettings)
+                "https://localhost:7020" , // Blazor HTTPS (launchSettings)
+                ""
             )
             .AllowAnyHeader()
             .AllowAnyMethod()

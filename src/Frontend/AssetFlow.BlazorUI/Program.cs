@@ -18,6 +18,7 @@ builder.Services.AddScoped<AuthTokenHandler>();
 builder.Services.AddHttpClient("ApiClient", client =>
 {
     client.BaseAddress = new Uri("https://pleuropneumonic-ferromagnetic-conrad.ngrok-free.dev/");
+    client.DefaultRequestHeaders.Add("ngrok-skip-browser-warning", "true");
     client.Timeout = TimeSpan.FromMinutes(2);
 })
 .AddHttpMessageHandler<AuthTokenHandler>();
@@ -31,6 +32,7 @@ builder.Services.AddHttpClient("PythonScraper", client =>
 {
     var scraperUrl = builder.Configuration["ScraperUrl"] ?? "http://localhost:5000/";
     client.BaseAddress = new Uri(scraperUrl);
+    client.DefaultRequestHeaders.Add("ngrok-skip-browser-warning", "true");
     client.Timeout = TimeSpan.FromMinutes(5);
 });
 

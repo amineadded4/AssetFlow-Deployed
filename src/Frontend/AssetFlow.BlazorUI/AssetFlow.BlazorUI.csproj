@@ -5,7 +5,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
-  </PropertyGroup>
+    <BlazorCacheBootResources>false</BlazorCacheBootResources>
+    <WasmFingerprintAssets>false</WasmFingerprintAssets>
+    <Optimize>false</Optimize>
+    <RunAOTCompilation>false</RunAOTCompilation>
+</PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.3.0" />

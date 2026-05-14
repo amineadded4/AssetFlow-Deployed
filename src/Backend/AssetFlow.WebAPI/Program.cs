@@ -25,12 +25,31 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
     var connStr = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379";
-    var options = ConfigurationOptions.Parse(connStr);
-    options.AbortOnConnectFail = false;
-    options.Ssl = connStr.StartsWith("rediss://");
+    
+    ConfigurationOptions options;
+    
+    if (connStr.StartsWith("rediss://") || connStr.StartsWith("redis://"))
+    {
+        // Parser l'URL manuellement pour Upstash
+        var uri = new Uri(connStr);
+        options = new ConfigurationOptions
+        {
+            EndPoints = { { uri.Host, uri.Port } },
+            Password = uri.UserInfo.Split(':').LastOrDefault(),
+            Ssl = connStr.StartsWith("rediss://"),
+            AbortOnConnectFail = false,
+            ConnectTimeout = 10000,
+            SyncTimeout = 10000,
+        };
+    }
+    else
+    {
+        options = ConfigurationOptions.Parse(connStr);
+        options.AbortOnConnectFail = false;
+    }
+    
     return ConnectionMultiplexer.Connect(options);
 });
-
 // === AUTHENTIFICATION JWT — accepte Keycloak ET FaceAuth ===
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer("Keycloak", options =>

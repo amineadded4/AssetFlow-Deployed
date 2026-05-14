@@ -18,58 +18,70 @@ namespace AssetFlow.Infrastructure.Services
         private readonly IAuditLogService _audit;
         private readonly IDashboardNotifier _notifier;
 
-        private string KeycloakUrl => _config["Keycloak:Authority"]!;
-        private string ClientId => _config["Keycloak:ClientId"]!;
-        private string ClientSecret => _config["Keycloak:ClientSecret"]!;
+        // ── Clés de configuration ────────────────────────────────────────────
+        // Authority = "https://<votre-keycloak>.onrender.com/realms/assetflow"
+        private string KeycloakUrl    => _config["Keycloak:Authority"]!;
+        private string ClientId       => _config["Keycloak:ClientId"]!;
+        private string ClientSecret   => _config["Keycloak:ClientSecret"]!;
 
-        public KeycloakAuthService(HttpClient httpClient, AppDbContext dbContext, IConfiguration config, IAuditLogService audit, IDashboardNotifier notifier)
+        // Base de l'instance Keycloak (sans le /realms/…)
+        // Ex : "https://<votre-keycloak>.onrender.com"
+        private string KeycloakBase   => _config["Keycloak:BaseUrl"]!;
+
+        // Realm configuré dans Keycloak (ex : "assetflow")
+        private string Realm          => _config["Keycloak:Realm"]!;
+
+        // Credentials du compte admin Keycloak
+        private string AdminUsername  => _config["Keycloak:AdminUsername"]!;
+        private string AdminPassword  => _config["Keycloak:AdminPassword"]!;
+
+        public KeycloakAuthService(
+            HttpClient httpClient,
+            AppDbContext dbContext,
+            IConfiguration config,
+            IAuditLogService audit,
+            IDashboardNotifier notifier)
         {
             _httpClient = httpClient;
-            _dbContext = dbContext;
-            _config = config;
-            _audit = audit;
-            _notifier = notifier;
-
+            _dbContext  = dbContext;
+            _config     = config;
+            _audit      = audit;
+            _notifier   = notifier;
         }
 
-        // Login : appelle Keycloak avec email+password, récupère le token JWT
+        // ── LOGIN ────────────────────────────────────────────────────────────
         public async Task<LoginResponseDto?> LoginAsync(LoginRequestDto request)
         {
             var tokenUrl = $"{KeycloakUrl}/protocol/openid-connect/token";
 
             var formData = new Dictionary<string, string>
             {
-                { "grant_type", "password" },
-                { "client_id", ClientId },
+                { "grant_type",    "password" },
+                { "client_id",     ClientId   },
                 { "client_secret", ClientSecret },
-                { "username", request.Email },
-                { "password", request.Password },
-                { "scope", "openid profile email roles" }
+                { "username",      request.Email },
+                { "password",      request.Password },
+                { "scope",         "openid profile email roles" }
             };
 
             var response = await _httpClient.PostAsync(
                 tokenUrl,
-                new FormUrlEncodedContent(formData)
-            );
+                new FormUrlEncodedContent(formData));
 
             if (!response.IsSuccessStatusCode)
                 return null;
 
             var json = await response.Content.ReadAsStringAsync();
-            var keycloakResponse = JsonSerializer.Deserialize<KeycloakTokenResponse>(json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var keycloakResponse = JsonSerializer.Deserialize<KeycloakTokenResponse>(
+                json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (keycloakResponse == null) return null;
 
-            // ===== RÉCUPÉRER L'UTILISATEUR DEPUIS SQL SERVER =====
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (user == null) return null;
 
-            // Si l'utilisateur n'existe pas en base (ne devrait pas arriver)
-            if (user == null)
-                return null;
-            // ===== VÉRIFIER LE RÔLE =====
             if (!string.Equals(user.Role, request.Role, StringComparison.OrdinalIgnoreCase))
-                return null; // Rôle incorrect → login refusé
+                return null;
 
             await _audit.LogAsync(new CreateAuditLogDto
             {
@@ -81,21 +93,23 @@ namespace AssetFlow.Infrastructure.Services
                 Details     = "Authentification réussie via Keycloak SSO",
                 UserId      = user.Id
             });
+
             await _notifier.NotifyAsync();
             await _notifier.NotifyITAsync();
 
             return new LoginResponseDto
             {
-                UserId = user.Id,  // ← ID DE L'UTILISATEUR
-                AccessToken = keycloakResponse.access_token,
+                UserId       = user.Id,
+                AccessToken  = keycloakResponse.access_token,
                 RefreshToken = keycloakResponse.refresh_token,
-                ExpiresIn = keycloakResponse.expires_in,
-                Role = request.Role,
-                FullName = $"{user.FirstName} {user.LastName}",
-                Email = user.Email
+                ExpiresIn    = keycloakResponse.expires_in,
+                Role         = request.Role,
+                FullName     = $"{user.FirstName} {user.LastName}",
+                Email        = user.Email
             };
         }
-        // Register : crée l'utilisateur dans Keycloak + SQL Server
+
+        // ── REGISTER ─────────────────────────────────────────────────────────
         public async Task<RegisterResponseDto> RegisterAsync(RegisterRequestDto request)
         {
             var exists = await _dbContext.Users.AnyAsync(u => u.Email == request.Email);
@@ -106,15 +120,16 @@ namespace AssetFlow.Infrastructure.Services
             if (adminToken == null)
                 return new RegisterResponseDto { Success = false, Message = "Erreur connexion Keycloak admin." };
 
-            var createUserUrl = $"http://localhost:8080/admin/realms/assetflow/users";
+            // ── Création de l'utilisateur dans Keycloak ──────────────────────
+            var createUserUrl = $"{KeycloakBase}/admin/realms/{Realm}/users";
 
             var keycloakUser = new
             {
-                username = request.Email,
-                email = request.Email,
-                firstName = request.FirstName,
-                lastName = request.LastName,
-                enabled = true,
+                username    = request.Email,
+                email       = request.Email,
+                firstName   = request.FirstName,
+                lastName    = request.LastName,
+                enabled     = true,
                 credentials = new[]
                 {
                     new { type = "password", value = request.Password, temporary = false }
@@ -126,54 +141,57 @@ namespace AssetFlow.Infrastructure.Services
 
             var createResponse = await _httpClient.PostAsync(
                 createUserUrl,
-                new StringContent(JsonSerializer.Serialize(keycloakUser), Encoding.UTF8, "application/json")
-            );
+                new StringContent(JsonSerializer.Serialize(keycloakUser), Encoding.UTF8, "application/json"));
 
             if (!createResponse.IsSuccessStatusCode)
                 return new RegisterResponseDto { Success = false, Message = "Erreur création compte Keycloak." };
-            // Après création réussie, récupérer l'ID Keycloak du user
-            var getUsersUrl = $"http://localhost:8080/admin/realms/assetflow/users?username={Uri.EscapeDataString(request.Email)}";
+
+            // ── Récupération de l'ID Keycloak du nouvel utilisateur ──────────
+            var getUsersUrl = $"{KeycloakBase}/admin/realms/{Realm}/users?username={Uri.EscapeDataString(request.Email)}";
             var getUsersResp = await _httpClient.GetAsync(getUsersUrl);
-            var usersJson = await getUsersResp.Content.ReadAsStringAsync();
-            var users = JsonSerializer.Deserialize<List<KeycloakUserInfo>>(usersJson,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var usersJson    = await getUsersResp.Content.ReadAsStringAsync();
+            var users        = JsonSerializer.Deserialize<List<KeycloakUserInfo>>(
+                usersJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             var keycloakUserId = users?.FirstOrDefault()?.Id;
 
             if (keycloakUserId != null)
             {
-                // Récupérer l'ID du rôle
-                var roleUrl = $"http://localhost:8080/admin/realms/assetflow/roles/{request.RequestedRole}";
+                // ── Récupération et assignation du rôle ──────────────────────
+                var roleUrl  = $"{KeycloakBase}/admin/realms/{Realm}/roles/{request.RequestedRole}";
                 var roleResp = await _httpClient.GetAsync(roleUrl);
+
                 if (roleResp.IsSuccessStatusCode)
                 {
                     var roleJson = await roleResp.Content.ReadAsStringAsync();
-                    var role = JsonSerializer.Deserialize<KeycloakRoleInfo>(roleJson,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    var role     = JsonSerializer.Deserialize<KeycloakRoleInfo>(
+                        roleJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                     if (role != null)
                     {
-                        // Assigner le rôle au user
-                        var assignUrl = $"http://localhost:8080/admin/realms/assetflow/users/{keycloakUserId}/role-mappings/realm";
+                        var assignUrl    = $"{KeycloakBase}/admin/realms/{Realm}/users/{keycloakUserId}/role-mappings/realm";
                         var rolesPayload = JsonSerializer.Serialize(new[] { new { id = role.Id, name = role.Name } });
-                        await _httpClient.PostAsync(assignUrl,
+                        await _httpClient.PostAsync(
+                            assignUrl,
                             new StringContent(rolesPayload, Encoding.UTF8, "application/json"));
                     }
                 }
             }
 
+            // ── Persistance en base locale ───────────────────────────────────
             var user = new User
             {
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Email = request.Email,
+                FirstName  = request.FirstName,
+                LastName   = request.LastName,
+                Email      = request.Email,
                 Department = request.Department,
-                Role = request.RequestedRole,
+                Role       = request.RequestedRole,
                 IsApproved = false,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt  = DateTime.UtcNow
             };
 
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
+
             await _notifier.NotifyAsync();
             await _notifier.NotifyITAsync();
 
@@ -195,37 +213,41 @@ namespace AssetFlow.Infrastructure.Services
             };
         }
 
+        // ── ADMIN TOKEN ──────────────────────────────────────────────────────
         private async Task<string?> GetAdminTokenAsync()
         {
-            var tokenUrl = "http://localhost:8080/realms/master/protocol/openid-connect/token";
+            // Le realm "master" est toujours utilisé pour l'admin Keycloak
+            var tokenUrl = $"{KeycloakBase}/realms/master/protocol/openid-connect/token";
 
             var formData = new Dictionary<string, string>
             {
-                { "grant_type", "password"    },
-                { "client_id",  "admin-cli"   },
-                { "username",   "Amine" },
-                { "password",   "Password123" }
+                { "grant_type", "password"     },
+                { "client_id",  "admin-cli"    },
+                { "username",   AdminUsername  },
+                { "password",   AdminPassword  }
             };
 
             using var freshClient = new HttpClient();
             var response = await freshClient.PostAsync(tokenUrl, new FormUrlEncodedContent(formData));
             if (!response.IsSuccessStatusCode) return null;
 
-            var json = await response.Content.ReadAsStringAsync();
-            var tokenResponse = JsonSerializer.Deserialize<KeycloakTokenResponse>(json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var json          = await response.Content.ReadAsStringAsync();
+            var tokenResponse = JsonSerializer.Deserialize<KeycloakTokenResponse>(
+                json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             return tokenResponse?.access_token;
         }
 
+        // ── DTOs internes ────────────────────────────────────────────────────
         private class KeycloakTokenResponse
         {
-            public string access_token { get; set; } = string.Empty;
+            public string access_token  { get; set; } = string.Empty;
             public string refresh_token { get; set; } = string.Empty;
-            public int expires_in { get; set; }
+            public int    expires_in    { get; set; }
         }
-        // Classes helper
-        private class KeycloakUserInfo { public string Id { get; set; } = string.Empty; }
-        private class KeycloakRoleInfo  { public string Id { get; set; } = string.Empty; public string Name { get; set; } = string.Empty; }
-        }
+
+        private class KeycloakUserInfo { public string Id   { get; set; } = string.Empty; }
+        private class KeycloakRoleInfo  { public string Id   { get; set; } = string.Empty;
+                                          public string Name { get; set; } = string.Empty; }
+    }
 }

@@ -25,6 +25,11 @@ namespace AssetFlow.Infrastructure.Services
             _biographie = biographie;
         }
 
+        // ── Helper : force UTC ────────────────────────────────────────────────
+        private static DateTime  ToUtc(DateTime  dt) => DateTime.SpecifyKind(dt,       DateTimeKind.Utc);
+        private static DateTime? ToUtc(DateTime? dt) => dt.HasValue ? DateTime.SpecifyKind(dt.Value, DateTimeKind.Utc) : null;
+        // ─────────────────────────────────────────────────────────────────────
+
         private static ArticleDto ToArticleDto(ArticleIndividuel a) => new()
         {
             Id             = a.Id,
@@ -182,15 +187,6 @@ namespace AssetFlow.Infrastructure.Services
             return result.OrderBy(r => r.Designation).ThenByDescending(r => r.DateAchat);
         }
 
-        // ══════════════════════════════════════════════════════════════════════
-        //  CRÉER — Fournisseur OPTIONNEL
-        //  Logique de résolution :
-        //    1. FournisseurId > 0 et existe en base  → utiliser directement
-        //    2. FournisseurId = 0 + NomFournisseurLibre non vide
-        //       a. Chercher par nom (insensible à la casse)
-        //       b. Si introuvable → créer à la volée
-        //    3. Rien du tout → FournisseurId = null (autorisé)
-        // ══════════════════════════════════════════════════════════════════════
         public async Task<CommandeReponseDto> CreerAsync(CreerCommandeDto dto)
         {
             // ── Matériel obligatoire ──────────────────────────────────────────
@@ -204,7 +200,6 @@ namespace AssetFlow.Infrastructure.Services
 
             if (dto.FournisseurId > 0)
             {
-                // Cas 1 : id explicite fourni
                 fournisseur = await _db.Fournisseurs.FindAsync(dto.FournisseurId);
                 if (fournisseur is null)
                     return new CommandeReponseDto
@@ -216,21 +211,18 @@ namespace AssetFlow.Infrastructure.Services
             }
             else if (!string.IsNullOrWhiteSpace(dto.NomFournisseurLibre))
             {
-                // Cas 2 : nom libre → chercher ou créer
                 var nom = dto.NomFournisseurLibre.Trim();
                 fournisseur = await _db.Fournisseurs
                     .FirstOrDefaultAsync(f => f.Nom.ToLower() == nom.ToLower());
 
                 if (fournisseur is null)
                 {
-                    // Créer à la volée AVANT la transaction principale
                     fournisseur = new Fournisseur { Nom = nom };
                     _db.Fournisseurs.Add(fournisseur);
                     await _db.SaveChangesAsync();
                 }
                 fournisseurIdFinal = fournisseur.IdFournisseur;
             }
-            // Cas 3 : ni id ni nom → fournisseurIdFinal reste null
 
             // ── Unicité numéro commande ───────────────────────────────────────
             if (await _db.Commandes.AnyAsync(c => c.NumeroCommande == dto.NumeroCommande.Trim()))
@@ -267,15 +259,24 @@ namespace AssetFlow.Infrastructure.Services
             await using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
+                // ── Normalisation UTC de toutes les dates entrantes ───────────
+                var dateAchat       = dto.DateAchat == default
+                                        ? DateTime.UtcNow
+                                        : ToUtc(dto.DateAchat);          // ← UTC
+                var dateLivraison   = ToUtc(dto.DateLivraison);           // ← UTC
+                var dateFinGarantie = ToUtc(dto.DateFinGarantie);         // ← UTC
+                var dateRef         = dateLivraison ?? dateAchat;         // ← déjà UTC
+                // ─────────────────────────────────────────────────────────────
+
                 var commande = new Commande
                 {
                     NumeroCommande  = dto.NumeroCommande.Trim(),
                     MaterielId      = dto.MaterielId,
-                    FournisseurId   = fournisseurIdFinal,   // null autorisé
+                    FournisseurId   = fournisseurIdFinal,
                     QuantiteAchetee = dto.QuantiteAchetee,
-                    DateAchat       = dto.DateAchat == default ? DateTime.UtcNow : dto.DateAchat,
-                    DateLivraison   = dto.DateLivraison,
-                    DateFinGarantie = dto.DateFinGarantie
+                    DateAchat       = dateAchat,         // ← UTC
+                    DateLivraison   = dateLivraison,     // ← UTC
+                    DateFinGarantie = dateFinGarantie    // ← UTC
                 };
                 _db.Commandes.Add(commande);
                 await _db.SaveChangesAsync();
@@ -300,8 +301,7 @@ namespace AssetFlow.Infrastructure.Services
                 await _db.SaveChangesAsync();
 
                 // ── Biographie ────────────────────────────────────────────────
-                var dateRef     = dto.DateLivraison ?? dto.DateAchat;
-                var nomFourn    = fournisseur?.Nom ?? "—";
+                var nomFourn = fournisseur?.Nom ?? "—";
 
                 foreach (var article in nouveauxArticles)
                 {
@@ -310,7 +310,7 @@ namespace AssetFlow.Infrastructure.Services
                         ArticleId     = article.Id,
                         TypeEvenement = TypeEvenementArticle.Acquisition,
                         UtilisateurId = null,
-                        DateEvenement = dateRef,
+                        DateEvenement = dateRef,     // ← déjà UTC
                         Description   = $"Commande {commande.NumeroCommande} — {nomFourn}"
                     });
 
@@ -319,7 +319,7 @@ namespace AssetFlow.Infrastructure.Services
                         ArticleId     = article.Id,
                         TypeEvenement = TypeEvenementArticle.MiseEnStock,
                         UtilisateurId = null,
-                        DateEvenement = dateRef,
+                        DateEvenement = dateRef,     // ← déjà UTC
                         Description   = $"Mis en stock — {materiel.Designation}"
                     });
                 }
@@ -373,7 +373,7 @@ namespace AssetFlow.Infrastructure.Services
                 return new CommandeReponseDto { Succes = false, Message = "Ce numéro de commande est déjà utilisé." };
 
             // ── Résolution fournisseur (optionnel, même logique) ──────────────
-            int? fournisseurIdFinal = commande.FournisseurId; // conserver l'existant par défaut
+            int? fournisseurIdFinal = commande.FournisseurId;
 
             if (dto.FournisseurId > 0)
             {
@@ -400,9 +400,9 @@ namespace AssetFlow.Infrastructure.Services
 
             commande.NumeroCommande  = numTrimmed;
             commande.FournisseurId   = fournisseurIdFinal;
-            commande.DateAchat       = dto.DateAchat;
-            commande.DateLivraison   = dto.DateLivraison;
-            commande.DateFinGarantie = dto.DateFinGarantie;
+            commande.DateAchat       = ToUtc(dto.DateAchat);        // ← UTC
+            commande.DateLivraison   = ToUtc(dto.DateLivraison);    // ← UTC
+            commande.DateFinGarantie = ToUtc(dto.DateFinGarantie);  // ← UTC
 
             await _db.SaveChangesAsync();
             await _notifier.NotifyAsync();
@@ -474,8 +474,8 @@ namespace AssetFlow.Infrastructure.Services
 
             return new CommandeReponseDto
             {
-                Succes     = true,
-                Message    = $"Commande {commande.NumeroCommande} supprimée."
+                Succes  = true,
+                Message = $"Commande {commande.NumeroCommande} supprimée."
             };
         }
     }

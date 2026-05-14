@@ -21,7 +21,7 @@ namespace AssetFlow.Infrastructure.Services
                 SenderId   = senderId,
                 ReceiverId = receiverId,
                 Content    = content.Trim(),
-                SentAt     = DateTime.Now,
+                SentAt     = DateTime.UtcNow,  // ← UTC
                 IsRead     = false
             };
 
@@ -35,17 +35,16 @@ namespace AssetFlow.Infrastructure.Services
         public async Task<ChatMessagePayload> SendVoiceMessageAsync(
             int senderId, int receiverId, string audioBase64, int durationSeconds)
         {
-            // Limiter à 60 secondes côté serveur (sécurité)
             if (durationSeconds > 60) durationSeconds = 60;
 
             var msg = new ChatMessage
             {
                 SenderId             = senderId,
                 ReceiverId           = receiverId,
-                Content              = string.Empty,      // vide pour les vocaux
+                Content              = string.Empty,
                 AudioData            = audioBase64,
                 AudioDurationSeconds = durationSeconds,
-                SentAt               = DateTime.Now,
+                SentAt               = DateTime.UtcNow,  // ← UTC
                 IsRead               = false
             };
 

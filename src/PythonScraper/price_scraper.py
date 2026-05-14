@@ -71,79 +71,93 @@ def get_soup(url: str) -> BeautifulSoup | None:
 # =============================================================================
 
 def scraper_mytek(nom_article: str) -> list:
-    url_categorie = trouver_url_categorie(nom_article, MYTEK_CATEGORIES)
-    if url_categorie:
-        url = url_categorie
-        par_categorie = True
-        print(f"\n[MyTek] ✅ Catégorie → {url}")
-    else:
-        url = f"https://www.mytek.tn/myteksearch/index/productsearch/?q={nom_article.replace(' ', '+')}"
-        par_categorie = False
-        print(f"\n[MyTek] ⚠ Fallback → {url}")
+    print(f"\n[MyTek] 🔍 Recherche via API REST → {nom_article}")
 
-    soup = get_soup(url)
-    if not soup:
+    headers_api = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json",
+        "X-Requested-With": "XMLHttpRequest"
+    }
+
+    # ÉTAPE 1 — API REST Magento pour avoir les IDs + noms
+    search_url = (
+        "https://www.mytek.tn/rest/default/V1/products"
+        "?searchCriteria[filterGroups][0][filters][0][field]=name"
+        f"&searchCriteria[filterGroups][0][filters][0][value]=%25{nom_article.replace(' ', '%20')}%25"
+        "&searchCriteria[filterGroups][0][filters][0][conditionType]=like"
+        "&searchCriteria[filterGroups][0][filters][1][field]=status"
+        "&searchCriteria[filterGroups][0][filters][1][value]=1"
+        "&searchCriteria[filterGroups][0][filters][1][conditionType]=eq"
+        "&searchCriteria[pageSize]=48"
+        "&fields=items[id,sku,name,price,status]"
+    )
+
+    try:
+        r = requests.get(search_url, headers=headers_api, timeout=20)
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        print(f"[MyTek] ❌ Erreur API REST : {e}")
         return []
 
-    produits = soup.select("div.product-container")
-    print(f"[MyTek] {len(produits)} produit(s)")
+    items_rest = data.get("items", [])
+    print(f"[MyTek] {len(items_rest)} produit(s) depuis API REST")
+
+    if not items_rest:
+        return []
+
+    # ÉTAPE 2 — API volatile pour prix final + stock
+    ids = [str(item["id"]) for item in items_rest if "id" in item]
+    noms  = {str(item["id"]): item.get("name", nom_article) for item in items_rest}
+    skus  = {str(item["id"]): item.get("sku", "") for item in items_rest}
+
+    api_url = f"https://www.mytek.tn/api/products/volatile?ids={','.join(ids)}"
+    try:
+        r2 = requests.get(api_url, headers=headers_api, timeout=20)
+        r2.raise_for_status()
+        volatile_data = r2.json()
+    except Exception as e:
+        print(f"[MyTek] ⚠ API volatile échouée, utilisation prix REST : {e}")
+        volatile_data = {"items": []}
+
+    # Construire dict prix/stock depuis volatile
+    volatile_map = {}
+    for v in volatile_data.get("items", []):
+        pid = str(v.get("id", ""))
+        volatile_map[pid] = {
+            "prix":  v.get("final_price") or v.get("price"),
+            "stock": v.get("erpstock", {}).get("label", "Non indiqué") if isinstance(v.get("erpstock"), dict) else "Non indiqué"
+        }
 
     resultats = []
-    mots = [m for m in nom_article.lower().split() if len(m) > 3]
+    for item in items_rest:
+        pid  = str(item.get("id", ""))
+        nom  = noms.get(pid, nom_article)
+        sku  = skus.get(pid, "")
+        lien = f"https://www.mytek.tn/catalog/product/view/id/{pid}"
 
-    for produit in produits:
-        # NOM
-        nom_el = produit.select_one("a.product-item-link")
-        nom = nom_el.text.strip() if nom_el else nom_article
+        # Prix : volatile en priorité, sinon REST
+        if pid in volatile_map and volatile_map[pid]["prix"]:
+            prix  = volatile_map[pid]["prix"]
+            stock = volatile_map[pid]["stock"]
+        else:
+            prix  = item.get("price")
+            stock = "Non indiqué"
 
-        if par_categorie and len(mots) >= 2:
-            if not any(m in nom.lower() for m in mots):
-                continue
-
-        # PRIX
-        prix_el = produit.select_one("span.final-price")
-        if not prix_el:
+        if not prix:
             continue
-        try:
-            prix_txt = prix_el.text
-            prix_clean = (
-                prix_txt
-                .replace("DT", "").replace("TND", "")
-                .replace("\xa0", "").replace("\u202f", "").replace("\u2009", "")
-                .replace(" ", "").replace("\t", "").strip()
-                .replace(",", ".")
-            )
-            parties = prix_clean.split(".")
-            if len(parties) > 2:
-                prix_clean = "".join(parties[:-1]) + "." + parties[-1]
-            prix = float(prix_clean)
-        except Exception as e:
-            print(f"  [MyTek] ⚠ Prix introuvable : {nom[:50]} ({e})")
-            continue
-
-        # STOCK
-        stock = "Non indiqué"
-        stock_el = produit.select_one("div.stock")
-        if stock_el:
-            classes = stock_el.get("class", [])
-            if "availables" in classes:     stock = "En stock"
-            elif "incoming" in classes:     stock = "En arrivage"
-            elif "out-of-stock" in classes: stock = "Épuisé"
-            elif "special-order" in classes: stock = "Sur commande"
-
-        # LIEN
-        lien = nom_el.get("href", url) if nom_el else url
 
         resultats.append({
-            "site": "MyTek",
-            "nom_produit": nom,
-            "prix": round(prix, 3),
-            "devise": "TND",
-            "stock": stock,
-            "url": lien,
+            "site":          "MyTek",
+            "nom_produit":   nom,
+            "prix":          round(float(prix), 3),
+            "devise":        "TND",
+            "stock":         stock,
+            "url":           lien,
             "date_scraping": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
 
+    print(f"[MyTek] ✅ {len(resultats)} résultat(s)")
     return resultats
 
 

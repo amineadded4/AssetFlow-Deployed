@@ -16,6 +16,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         [Inject] private AssetFlow.BlazorUI.Services.ArticleService     ArticleSvc     { get; set; } = default!;
         [Inject] private IJSRuntime JS { get; set; } = default!;
         [Inject] private ILocalStorageService        LocalStorage     { get; set; } = default!;
+        [Inject] private HttpClient Http { get; set; } = default!;
 
         // ── formulaire matériel ─────────────────────────────────
         private class FormulaireVm
@@ -161,8 +162,9 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         private async Task ConnecterSignalR()
         {
+            var hubUrl = Http.BaseAddress!.ToString().TrimEnd('/') + "/dashboardhub";
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                .WithUrl(hubUrl, options =>
                 {
                     options.AccessTokenProvider = async () =>
                     {

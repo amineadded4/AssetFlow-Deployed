@@ -11,12 +11,10 @@ public class ScrapingBackgroundService : IAsyncDisposable
     private readonly HttpClient _http;
     public string? GroupId { get; private set; }
 
-    // État observable
     public bool EnCours { get; private set; } = false;
     public string? QueryEnCours { get; private set; }
     public ScrapingResultatDto? DernierResultat { get; private set; }
 
-    // Events
     public event Action? OnChanged;
     public event Action<ScrapingResultatDto>? OnTermine;
 
@@ -27,13 +25,14 @@ public class ScrapingBackgroundService : IAsyncDisposable
 
     public async Task InitAsync(string token)
     {
-        // ── Éviter double initialisation
         if (_hub != null) return;
 
         GroupId = Guid.NewGuid().ToString("N");
 
+        var hubUrl = _http.BaseAddress!.ToString().TrimEnd('/') + "/scrapinghub";
+
         _hub = new HubConnectionBuilder()
-            .WithUrl("http://localhost:5235/scrapinghub", opts =>
+            .WithUrl(hubUrl, opts =>
                 opts.AccessTokenProvider = () => Task.FromResult<string?>(token))
             .WithAutomaticReconnect()
             .Build();
@@ -43,25 +42,20 @@ public class ScrapingBackgroundService : IAsyncDisposable
             EnCours = false;
             QueryEnCours = null;
 
-            if (notif.Succes && !string.IsNullOrEmpty(notif.JsonResultat))
-            {
-                DernierResultat = new ScrapingResultatDto
+            DernierResultat = notif.Succes && !string.IsNullOrEmpty(notif.JsonResultat)
+                ? new ScrapingResultatDto
                 {
-                    Succes = true,
-                    Query = notif.Query,
+                    Succes          = true,
+                    Query           = notif.Query,
                     NombreResultats = notif.NombreResultats,
-                    JsonResultat = notif.JsonResultat
-                };
-            }
-            else
-            {
-                DernierResultat = new ScrapingResultatDto
+                    JsonResultat    = notif.JsonResultat
+                }
+                : new ScrapingResultatDto
                 {
                     Succes = false,
-                    Query = notif.Query,
+                    Query  = notif.Query,
                     Erreur = notif.Erreur
                 };
-            }
 
             OnChanged?.Invoke();
             OnTermine?.Invoke(DernierResultat);
@@ -74,14 +68,14 @@ public class ScrapingBackgroundService : IAsyncDisposable
     public async Task LancerAsync(string query)
     {
         if (EnCours) return;
-        EnCours = true;
+        EnCours      = true;
         QueryEnCours = query;
         DernierResultat = null;
         OnChanged?.Invoke();
 
         await _http.PostAsJsonAsync("api/scraping/lancer", new
         {
-            Query = query,
+            Query   = query,
             GroupId = GroupId
         });
     }

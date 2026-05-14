@@ -13,6 +13,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         [Inject] private NavigationManager Navigation     { get; set; } = default!;
         [Inject] private ILocalStorageService LocalStorage   { get; set; } = default!;
         [Inject] private IJSRuntime JS { get; set; } = default!;
+        [Inject] private HttpClient Http { get; set; } = default!;
         // ── Données ────────────────────────────────────────────
         private List<MaterielAffecteGroupeDto> MaterielsGroupes        { get; set; } = new();
         private List<MaterielAffecteGroupeDto> MaterielsGroupesFiltres { get; set; } = new();
@@ -59,8 +60,9 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         }
         private async Task ConnecterSignalR()
         {
+            var hubUrl = Http.BaseAddress!.ToString().TrimEnd('/') + "/dashboardhub";
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                .WithUrl(hubUrl, options =>
                 {
                     options.AccessTokenProvider = async () =>
                     {

@@ -14,6 +14,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         [Inject] private ILocalStorageService        LocalStorage     { get; set; } = default!;
         [Inject] private NavigationManager           Navigation       { get; set; } = default!;
         [Inject] private IJSRuntime                  JS               { get; set; } = default!;
+        [Inject] private HttpClient                  Http             { get; set; } = default!;
 
         // ── Mode toggle ──
         private bool ModeProjet { get; set; } = false;
@@ -141,8 +142,9 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
         private async Task ConnecterSignalR()
         {
+            var hubUrl = Http.BaseAddress!.ToString().TrimEnd('/') + "/dashboardhub";
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                .WithUrl(hubUrl, options =>
                 {
                     options.AccessTokenProvider = async () =>
                     {

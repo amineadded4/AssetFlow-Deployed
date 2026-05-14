@@ -10,6 +10,7 @@ namespace AssetFlow.BlazorUI.Pages.Admin
     {
         [Inject] private AuditLogService AuditService { get; set; } = default!;
         [Inject] private IJSRuntime            JS           { get; set; } = default!;
+        [Inject] private HttpClient            Http         { get; set; } = default!;
 
         // ── État ──
         private AuditLogPagedDto? Result       { get; set; }
@@ -130,8 +131,9 @@ namespace AssetFlow.BlazorUI.Pages.Admin
         // ── SignalR ──
         private async Task ConnecterSignalR()
         {
+            var hubUrl = Http.BaseAddress!.ToString().TrimEnd('/') + "/dashboardhub";
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                .WithUrl(hubUrl, options =>
                 {
                     options.AccessTokenProvider = async () =>
                     {

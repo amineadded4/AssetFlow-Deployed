@@ -22,6 +22,7 @@ namespace AssetFlow.BlazorUI.Pages.Admin
     {
         [Inject] private ProjectClientService ProjectService { get; set; } = default!;
         [Inject] private IJSRuntime JS { get; set; } = default!;
+        [Inject] private HttpClient Http { get; set; } = default!;
 
         // ── État liste ──
         private List<ProjectDto> Projects     { get; set; } = new();
@@ -53,8 +54,9 @@ namespace AssetFlow.BlazorUI.Pages.Admin
         }
         private async Task ConnecterSignalR()
         {
+            var hubUrl = Http.BaseAddress!.ToString().TrimEnd('/') + "/dashboardhub";
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                .WithUrl(hubUrl, options =>
                 {
                     options.AccessTokenProvider = async () =>
                     {

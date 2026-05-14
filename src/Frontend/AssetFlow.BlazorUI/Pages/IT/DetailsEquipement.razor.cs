@@ -14,6 +14,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         [Inject] private IncidentService   IncidentService { get; set; } = default!;
         [Inject] private NavigationManager Navigation      { get; set; } = default!;
         [Inject] private IJSRuntime        JS              { get; set; } = default!;
+        [Inject] private HttpClient        Http            { get; set; } = default!;
 
         // ── Paramètres URL ─────────────────────────────────────
         [Parameter] public int AffectationId { get; set; }
@@ -73,8 +74,48 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
         private async Task ConnecterSignalR()
         {
+                var hubUrl = Http.BaseAddress!.ToString().TrimEnd('/') + "/dashboardhub";
+                _hubConnection = new HubConnectionBuilder()
+                    .WithUrl(hubUrl, options =>
+                    {
+                        options.AccessTokenProvider = async () =>
+                        {
+                            try
+                            {
+                                return await JS.InvokeAsync<string?>("eval",
+                                    "localStorage.getItem('access_token') || localStorage.getItem('token')");
+                            }
+                            catch { return null; }
+                        };
+                    })
+                    .WithAutomaticReconnect()
+                    .Build();
+    
+                _hubConnection.On("DashboardITUpdated", async () =>
+                {
+                    await InvokeAsync(async () =>
+                    {
+                        try
+                        {
+                            var nouveauxIncidents = await IncidentService.GetIncidentsByAffectationAsync(AffectationId);
+    
+                            bool aChange = DetecterChangement(Incidents, nouveauxIncidents);
+                            if (!aChange) return;
+    
+                            Incidents = nouveauxIncidents;
+    
+                            // Recharger l'équipement car son état (Panne/Bon) a pu changer
+                            await ChargerEquipement();
+                        }
+                        catch { /* silencieux */ }
+                        finally
+                        {
+                            StateHasChanged();
+                        }
+                    });
+                });
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                .WithUrl(hubUrl, options =>
                 {
                     options.AccessTokenProvider = async () =>
                     {

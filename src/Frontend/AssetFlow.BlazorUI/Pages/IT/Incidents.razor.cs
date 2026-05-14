@@ -12,6 +12,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         [Inject] private ITIncidentService    Svc          { get; set; } = default!;
         [Inject] private ILocalStorageService LocalStorage  { get; set; } = default!;
         [Inject] private IJSRuntime JS { get; set; } = default!;
+        [Inject] private HttpClient Http { get; set; } = default!;
 
         private List<IncidentEmployeDto> _allEmployes = new();
         private string FiltreRole { get; set; } = "tous";
@@ -100,8 +101,9 @@ namespace AssetFlow.BlazorUI.Pages.IT
 
         private async Task ConnecterSignalR()
         {
+            var hubUrl = Http.BaseAddress!.ToString().TrimEnd('/') + "/dashboardhub";
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:5235/dashboardhub", options =>
+                .WithUrl(hubUrl, options =>
                 {
                     options.AccessTokenProvider = async () =>
                     {

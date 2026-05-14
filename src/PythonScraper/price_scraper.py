@@ -71,26 +71,51 @@ def get_soup(url: str) -> BeautifulSoup | None:
 # =============================================================================
 
 def scraper_mytek(nom_article: str) -> list:
-    print(f"\n[MyTek] 🔍 Recherche via API REST → {nom_article}")
-
     headers_api = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "application/json",
         "X-Requested-With": "XMLHttpRequest"
     }
 
-    # ÉTAPE 1 — API REST Magento pour avoir les IDs + noms
-    search_url = (
-        "https://www.mytek.tn/rest/default/V1/products"
-        "?searchCriteria[filterGroups][0][filters][0][field]=name"
-        f"&searchCriteria[filterGroups][0][filters][0][value]=%25{nom_article.replace(' ', '%20')}%25"
-        "&searchCriteria[filterGroups][0][filters][0][conditionType]=like"
-        "&searchCriteria[filterGroups][0][filters][1][field]=status"
-        "&searchCriteria[filterGroups][0][filters][1][value]=1"
-        "&searchCriteria[filterGroups][0][filters][1][conditionType]=eq"
-        "&searchCriteria[pageSize]=48"
-        "&fields=items[id,sku,name,price,status]"
-    )
+    # Extraire category_id depuis l'URL catégorie si disponible
+    url_categorie = trouver_url_categorie(nom_article, MYTEK_CATEGORIES)
+    category_id = None
+    if url_categorie:
+        import re
+        match = re.search(r'category_ids%5D=(\d+)', url_categorie)
+        if match:
+            category_id = match.group(1)
+            print(f"\n[MyTek] ✅ Catégorie ID={category_id} → {url_categorie}")
+        else:
+            print(f"\n[MyTek] ✅ Catégorie trouvée mais sans ID → fallback nom")
+    else:
+        print(f"\n[MyTek] ⚠ Pas de catégorie → recherche par nom")
+
+    # Construire l'URL API selon ce qu'on a
+    if category_id:
+        search_url = (
+            "https://www.mytek.tn/rest/default/V1/products"
+            "?searchCriteria[filterGroups][0][filters][0][field]=category_id"
+            f"&searchCriteria[filterGroups][0][filters][0][value]={category_id}"
+            "&searchCriteria[filterGroups][0][filters][0][conditionType]=eq"
+            "&searchCriteria[filterGroups][1][filters][0][field]=status"
+            "&searchCriteria[filterGroups][1][filters][0][value]=1"
+            "&searchCriteria[filterGroups][1][filters][0][conditionType]=eq"
+            "&searchCriteria[pageSize]=48"
+            "&fields=items[id,name,price,status]"
+        )
+    else:
+        search_url = (
+            "https://www.mytek.tn/rest/default/V1/products"
+            "?searchCriteria[filterGroups][0][filters][0][field]=name"
+            f"&searchCriteria[filterGroups][0][filters][0][value]=%25{nom_article.replace(' ', '%20')}%25"
+            "&searchCriteria[filterGroups][0][filters][0][conditionType]=like"
+            "&searchCriteria[filterGroups][1][filters][0][field]=status"
+            "&searchCriteria[filterGroups][1][filters][0][value]=1"
+            "&searchCriteria[filterGroups][1][filters][0][conditionType]=eq"
+            "&searchCriteria[pageSize]=48"
+            "&fields=items[id,name,price,status]"
+        )
 
     try:
         r = requests.get(search_url, headers=headers_api, timeout=20)
@@ -102,14 +127,12 @@ def scraper_mytek(nom_article: str) -> list:
 
     items_rest = data.get("items", [])
     print(f"[MyTek] {len(items_rest)} produit(s) depuis API REST")
-
     if not items_rest:
         return []
 
-    # ÉTAPE 2 — API volatile pour prix final + stock
+    # API volatile pour prix final + stock
     ids = [str(item["id"]) for item in items_rest if "id" in item]
-    noms  = {str(item["id"]): item.get("name", nom_article) for item in items_rest}
-    skus  = {str(item["id"]): item.get("sku", "") for item in items_rest}
+    noms = {str(item["id"]): item.get("name", nom_article) for item in items_rest}
 
     api_url = f"https://www.mytek.tn/api/products/volatile?ids={','.join(ids)}"
     try:
@@ -117,10 +140,9 @@ def scraper_mytek(nom_article: str) -> list:
         r2.raise_for_status()
         volatile_data = r2.json()
     except Exception as e:
-        print(f"[MyTek] ⚠ API volatile échouée, utilisation prix REST : {e}")
+        print(f"[MyTek] ⚠ API volatile échouée : {e}")
         volatile_data = {"items": []}
 
-    # Construire dict prix/stock depuis volatile
     volatile_map = {}
     for v in volatile_data.get("items", []):
         pid = str(v.get("id", ""))
@@ -129,14 +151,20 @@ def scraper_mytek(nom_article: str) -> list:
             "stock": v.get("erpstock", {}).get("label", "Non indiqué") if isinstance(v.get("erpstock"), dict) else "Non indiqué"
         }
 
+    # Filtre par mots-clés si pas de category_id (fallback nom)
+    mots = [m for m in nom_article.lower().split() if len(m) > 2]
+
     resultats = []
     for item in items_rest:
         pid  = str(item.get("id", ""))
         nom  = noms.get(pid, nom_article)
-        sku  = skus.get(pid, "")
         lien = f"https://www.mytek.tn/catalog/product/view/id/{pid}"
 
-        # Prix : volatile en priorité, sinon REST
+        # Filtrer par mots-clés uniquement si recherche par nom (pas catégorie)
+        if not category_id and mots:
+            if not any(m in nom.lower() for m in mots):
+                continue
+
         if pid in volatile_map and volatile_map[pid]["prix"]:
             prix  = volatile_map[pid]["prix"]
             stock = volatile_map[pid]["stock"]

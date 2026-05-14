@@ -17,8 +17,7 @@ builder.Services.AddScoped<AuthTokenHandler>();
 // === HTTP CLIENT — API .NET (avec token automatique) ===
 builder.Services.AddHttpClient("ApiClient", client =>
 {
-    client.BaseAddress = new Uri("https://pleuropneumonic-ferromagnetic-conrad.ngrok-free.dev/");
-    client.DefaultRequestHeaders.Add("ngrok-skip-browser-warning", "true");
+    client.BaseAddress = new Uri("https://assetflow-ci6i.onrender.com/");
     client.Timeout = TimeSpan.FromMinutes(2);
 })
 .AddHttpMessageHandler<AuthTokenHandler>();

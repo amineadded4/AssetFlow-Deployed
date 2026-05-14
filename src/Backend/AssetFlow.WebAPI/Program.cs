@@ -258,12 +258,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("BlazorPolicy");
-// Temporaire pour ngrok
-app.Use(async (context, next) =>
-{
-    context.Response.Headers["ngrok-skip-browser-warning"] = "true";
-    await next();
-});
 app.UseAuthentication();
 app.UseAuthorization();          // ← UseAuthorization AVANT MapHub
 

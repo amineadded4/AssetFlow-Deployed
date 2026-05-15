@@ -78,5 +78,6 @@ builder.Services.AddSingleton<UnreadMessagesService>();
 builder.Services.AddScoped<ConversationService>();
 // Singleton car partagé entre pages (navigation sans rechargement)
 builder.Services.AddSingleton<ScrapingBackgroundService>();
+builder.Services.AddTransient<AuthTokenHandler>();
 
 await builder.Build().RunAsync();

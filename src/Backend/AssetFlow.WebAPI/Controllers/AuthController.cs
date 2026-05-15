@@ -50,5 +50,12 @@ namespace AssetFlow.WebAPI.Controllers
             // 201 Created avec message de succès
             return Created("", result);
         }
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
+        {
+            var result = await _authService.RefreshAsync(request.RefreshToken);
+            if (result == null) return Unauthorized();
+            return Ok(result);
+        }
     }
 }

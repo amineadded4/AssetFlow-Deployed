@@ -212,6 +212,35 @@ namespace AssetFlow.Infrastructure.Services
                 Message = "Compte créé. En attente d'approbation par l'administrateur."
             };
         }
+        // KeycloakAuthService.cs — ajouter RefreshAsync
+        public async Task<LoginResponseDto?> RefreshAsync(string refreshToken)
+        {
+            var tokenUrl = $"{KeycloakUrl}/protocol/openid-connect/token";
+
+            var formData = new Dictionary<string, string>
+            {
+                { "grant_type",    "refresh_token" },
+                { "client_id",     ClientId        },
+                { "client_secret", ClientSecret    },  // ← reste côté backend
+                { "refresh_token", refreshToken    }
+            };
+
+            var response = await _httpClient.PostAsync(tokenUrl, new FormUrlEncodedContent(formData));
+            if (!response.IsSuccessStatusCode) return null;
+
+            var json = await response.Content.ReadAsStringAsync();
+            var keycloakResponse = JsonSerializer.Deserialize<KeycloakTokenResponse>(
+                json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (keycloakResponse == null) return null;
+
+            return new LoginResponseDto
+            {
+                AccessToken  = keycloakResponse.access_token,
+                RefreshToken = keycloakResponse.refresh_token,
+                ExpiresIn    = keycloakResponse.expires_in
+            };
+        }
 
         // ── ADMIN TOKEN ──────────────────────────────────────────────────────
         private async Task<string?> GetAdminTokenAsync()

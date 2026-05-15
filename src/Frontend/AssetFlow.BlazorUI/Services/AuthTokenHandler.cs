@@ -8,11 +8,13 @@ namespace AssetFlow.BlazorUI.Services
     {
         private readonly ILocalStorageService _localStorage;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _config;
 
-        public AuthTokenHandler(ILocalStorageService localStorage, IHttpClientFactory httpClientFactory)
+        public AuthTokenHandler(ILocalStorageService localStorage, IHttpClientFactory httpClientFactory,IConfiguration config)
         {
             _localStorage = localStorage;
             _httpClientFactory = httpClientFactory;
+            _config = config;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(
@@ -59,47 +61,35 @@ namespace AssetFlow.BlazorUI.Services
 
         // Appelle Keycloak avec le refresh_token pour obtenir un nouveau access_token.
         private async Task<string?> TryRefreshTokenAsync()
+    {
+        var refreshToken = await _localStorage.GetItemAsync<string>("refresh_token");
+        if (string.IsNullOrEmpty(refreshToken)) return null;
+
+        try
         {
-            var refreshToken = await _localStorage.GetItemAsync<string>("refresh_token");
-            if (string.IsNullOrEmpty(refreshToken)) return null;
+            var apiUrl = _config["ApiUrl"]!; 
 
-            try
-            {
-                using var rawClient = new HttpClient();
+            using var rawClient = new HttpClient();
+            rawClient.BaseAddress = new Uri(apiUrl);
 
-                var formData = new Dictionary<string, string>
-                {
-                    { "grant_type",    "refresh_token"                                          },
-                    { "client_id",     "assetflow-client"                                       },
-                    { "client_secret", "6ejwoHkAwcC2lyhXP0Td5ygJexf3nLUm"                      },
-                    { "refresh_token", refreshToken                                             }
-                };
+            var response = await rawClient.PostAsJsonAsync("api/auth/refresh",
+                new { RefreshToken = refreshToken });
 
-                var response = await rawClient.PostAsync(
-                    "https://assetflow-etmn.onrender.com/realms/assetflow/protocol/openid-connect/token",
-                    new FormUrlEncodedContent(formData)
-                );
+            if (!response.IsSuccessStatusCode) return null;
 
-                if (!response.IsSuccessStatusCode) return null;
+            var result = await response.Content.ReadFromJsonAsync<KeycloakTokenResponse>(
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                var json   = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<KeycloakTokenResponse>(json,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (result == null) return null;
 
-                if (result == null) return null;
+            await _localStorage.SetItemAsync("access_token",     result.access_token);
+            await _localStorage.SetItemAsync("refresh_token",    result.refresh_token);
+            await _localStorage.SetItemAsync("token_expires_at", GetTokenExpiry(result.access_token));
 
-                // ✅ Fix du bug de date — décoder l'expiration depuis le JWT lui-même
-                await _localStorage.SetItemAsync("access_token",     result.access_token);
-                await _localStorage.SetItemAsync("refresh_token",    result.refresh_token);
-                await _localStorage.SetItemAsync("token_expires_at", GetTokenExpiry(result.access_token));
-
-                return result.access_token;
-            }
-            catch
-            {
-                return null;
-            }
+            return result.access_token;
         }
+        catch { return null; }
+    }
         private static string GetTokenExpiry(string accessToken)
         {
             try

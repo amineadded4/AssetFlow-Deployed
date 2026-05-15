@@ -4,10 +4,6 @@
 <RoleAuthGuard AllowedRoles="@(new[]{"EquipeAchat","Admin"})">
     <div class="employe-layout">
 
-        @* === SIDEBAR === *@
-        @if (_sidebarOpen)
-        { <div class="sidebar-overlay" @onclick="ToggleSidebar"></div> }
-
         @if (_estAdmin)
         {
             <AdminSidebar ForceOpen="_sidebarOpen" />

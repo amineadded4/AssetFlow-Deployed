@@ -26,6 +26,7 @@ namespace AssetFlow.WebAPI.Controllers
             return Ok(equipements);
         }
         // GET api/employe/equipements/detail/{affectationId}
+        [AllowAnonymous]
         [HttpGet("equipements/detail/{affectationId}")]
         public async Task<IActionResult> GetEquipementDetail(int affectationId, [FromQuery] int articleId = 0)
         {

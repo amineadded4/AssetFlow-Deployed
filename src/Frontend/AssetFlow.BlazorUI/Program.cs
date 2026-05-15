@@ -17,10 +17,17 @@ builder.Services.AddScoped<AuthTokenHandler>();
 // === HTTP CLIENT — API .NET (avec token automatique) ===
 builder.Services.AddHttpClient("ApiClient", client =>
 {
-    client.BaseAddress = new Uri("https://assetflow-ci6i.onrender.com/");
+    client.BaseAddress =  new Uri(builder.Configuration["ApiUrl"] ?? "http://localhost:5001/");
     client.Timeout = TimeSpan.FromMinutes(2);
 })
 .AddHttpMessageHandler<AuthTokenHandler>();
+
+// HTTP CLIENT public (sans token) — pour les fiches QR code
+builder.Services.AddHttpClient("PublicClient", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiUrl"] ?? "http://localhost:5001/");
+    client.Timeout = TimeSpan.FromMinutes(2);
+});
 
 // Rendre ce client disponible comme HttpClient par défaut
 builder.Services.AddScoped(sp =>

@@ -9,12 +9,14 @@ namespace AssetFlow.BlazorUI.Services
         private readonly HttpClient           _http;
         private readonly IJSRuntime           _js;
         private readonly ILocalStorageService _localStorage;
+        private readonly HttpClient _publicHttp;
 
-        public EmployeService(HttpClient http, IJSRuntime js, ILocalStorageService localStorage)
+        public EmployeService(HttpClient http, IJSRuntime js, ILocalStorageService localStorage,IHttpClientFactory httpClientFactory)
         {
             _http         = http;
             _js           = js;
             _localStorage = localStorage;
+            _publicHttp = httpClientFactory.CreateClient("PublicClient");
         }
 
         // ── Matériels groupés ─────────────────────────────────
@@ -45,7 +47,7 @@ namespace AssetFlow.BlazorUI.Services
 
         public async Task<EquipementAffecteDto?> GetEquipementDetailAsync(int affectationId, int articleId = 0)
         {
-            return await _http.GetFromJsonAsync<EquipementAffecteDto>(
+            return await _publicHttp.GetFromJsonAsync<EquipementAffecteDto>(
                 $"api/employe/equipements/detail/{affectationId}?articleId={articleId}");
         }
 

@@ -10,9 +10,9 @@ app = Flask(__name__)
 CORS(app)
 
 # ✅ AJOUTER CETTE ROUTE
-@app.route('/')
+@app.route('/', methods=['GET', 'HEAD'])
 def health():
-    return jsonify({'status': 'ok', 'service': 'AssetFlow Scraper'}), 200
+    return jsonify({'service': 'AssetFlow Scraper', 'status': 'ok'}), 200
 
 
 def nettoyer_query(query: str) -> str:

@@ -66,7 +66,8 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
             // ── Init SignalR scraping background
             var token = await LocalStorage.GetItemAsync<string>("access_token") ?? "";
-            await ScrapingBg.InitAsync(token);
+            var userId = await LocalStorage.GetItemAsync<int>("user_id");
+            await ScrapingBg.InitAsync(token, userId.ToString());
 
             // ── S'abonner aux résultats
             ScrapingBg.OnTermine += OnScrapingTermine;
@@ -80,16 +81,16 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             catch { }
 
             // ── Si résultat en cache Redis, le charger
-            await ChargerDepuisCache();
+            await ChargerDepuisCache(userId.ToString());
         }
 
         // ── Charger le cache Redis au démarrage
-        private async Task ChargerDepuisCache()
+        private async Task ChargerDepuisCache(string userId)
         {
             try
             {
-                var http = HttpFactory.CreateClient("ApiClient");
-                var response = await http.GetAsync("api/scraping/cache");
+                var http     = HttpFactory.CreateClient("ApiClient");
+                var response = await http.GetAsync($"api/scraping/cache?userId={userId}");
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();

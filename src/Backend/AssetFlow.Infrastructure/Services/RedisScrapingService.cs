@@ -7,28 +7,26 @@ namespace AssetFlow.Infrastructure.Services;
 public class RedisScrapingService : IRedisScrapingService
 {
     private readonly IDatabase _db;
-    // Clé fixe unique — toujours écrasée
-    private const string KEY = "scraping:dernier_resultat";
+    private const string KEY_PREFIX = "scraping:user:";
 
     public RedisScrapingService(IConnectionMultiplexer redis)
     {
         _db = redis.GetDatabase();
     }
 
-    public async Task SaveResultatAsync(string jsonValue)
+    public async Task SaveResultatAsync(string jsonValue, string userId = "global")
     {
-        // Expiry 24h + écrase l'ancienne valeur
-        await _db.StringSetAsync(KEY, jsonValue, TimeSpan.FromDays(1));
+        await _db.StringSetAsync($"{KEY_PREFIX}{userId}", jsonValue, TimeSpan.FromDays(1));
     }
 
-    public async Task<string?> GetResultatAsync()
+    public async Task<string?> GetResultatAsync(string userId = "global")
     {
-        var val = await _db.StringGetAsync(KEY);
+        var val = await _db.StringGetAsync($"{KEY_PREFIX}{userId}");
         return val.IsNullOrEmpty ? null : val.ToString();
     }
 
-    public async Task DeleteResultatAsync()
+    public async Task DeleteResultatAsync(string userId = "global")
     {
-        await _db.KeyDeleteAsync(KEY);
+        await _db.KeyDeleteAsync($"{KEY_PREFIX}{userId}");
     }
 }

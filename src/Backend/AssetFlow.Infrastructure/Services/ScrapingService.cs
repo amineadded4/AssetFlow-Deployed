@@ -22,7 +22,7 @@ public class ScrapingService : IScrapingService
         _notifier = notifier;
     }
 
-    public async Task LancerScrapingAsync(string query, string groupId)
+    public async Task LancerScrapingAsync(string query, string groupId, string userId)
     {
         try
         {
@@ -30,29 +30,25 @@ public class ScrapingService : IScrapingService
             var reponse = await http.GetFromJsonAsync<JsonElement>(
                 $"scrape?q={Uri.EscapeDataString(query)}");
 
-            var json = reponse.GetRawText();
+            var json   = reponse.GetRawText();
             var succes = reponse.TryGetProperty("succes", out var s) && s.GetBoolean();
             var count  = reponse.TryGetProperty("nombre_resultats", out var n) ? n.GetInt32() : 0;
 
             if (succes)
             {
-                try
-                {
-                    await _redis.SaveResultatAsync(json);
-                }
+                try { await _redis.SaveResultatAsync(json, userId); }
                 catch (Exception redisEx)
                 {
                     Console.WriteLine($"[Redis] Erreur sauvegarde : {redisEx.Message}");
-                    // On continue quand même — Redis non critique ici
                 }
             }
 
             await _notifier.NotifierTermineAsync(groupId, new ScrapingNotificationDto
             {
-                Succes = succes,
-                Query = query,
+                Succes          = succes,
+                Query           = query,
                 NombreResultats = count,
-                JsonResultat = succes ? json : string.Empty
+                JsonResultat    = succes ? json : string.Empty
             });
         }
         catch (Exception ex)
@@ -60,14 +56,12 @@ public class ScrapingService : IScrapingService
             await _notifier.NotifierTermineAsync(groupId, new ScrapingNotificationDto
             {
                 Succes = false,
-                Query = query,
+                Query  = query,
                 Erreur = ex.Message
             });
         }
     }
 
-    public async Task<string?> GetCachedResultAsync(string query)
-    {
-        return await _redis.GetResultatAsync();
-    }
+    public async Task<string?> GetCachedResultAsync(string userId)
+        => await _redis.GetResultatAsync(userId);
 }

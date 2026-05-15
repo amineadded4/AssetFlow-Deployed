@@ -9,7 +9,8 @@ public class ScrapingBackgroundService : IAsyncDisposable
 {
     private HubConnection? _hub;
     private readonly HttpClient _http;
-    public string? GroupId { get; private set; }
+    public string? GroupId  { get; private set; }
+    public string? UserId   { get; private set; }  // ← NOUVEAU
 
     public bool EnCours { get; private set; } = false;
     public string? QueryEnCours { get; private set; }
@@ -23,11 +24,12 @@ public class ScrapingBackgroundService : IAsyncDisposable
         _http = factory.CreateClient("ApiClient");
     }
 
-    public async Task InitAsync(string token)
+    public async Task InitAsync(string token, string userId)  // ← userId en paramètre
     {
         if (_hub != null) return;
 
         GroupId = Guid.NewGuid().ToString("N");
+        UserId  = userId;  // ← stocker
 
         var hubUrl = _http.BaseAddress!.ToString().TrimEnd('/') + "/scrapinghub";
 
@@ -39,7 +41,7 @@ public class ScrapingBackgroundService : IAsyncDisposable
 
         _hub.On<ScrapingNotificationDto>("ScrapingTermine", notif =>
         {
-            EnCours = false;
+            EnCours      = false;
             QueryEnCours = null;
 
             DernierResultat = notif.Succes && !string.IsNullOrEmpty(notif.JsonResultat)
@@ -68,15 +70,16 @@ public class ScrapingBackgroundService : IAsyncDisposable
     public async Task LancerAsync(string query)
     {
         if (EnCours) return;
-        EnCours      = true;
-        QueryEnCours = query;
+        EnCours         = true;
+        QueryEnCours    = query;
         DernierResultat = null;
         OnChanged?.Invoke();
 
         await _http.PostAsJsonAsync("api/scraping/lancer", new
         {
             Query   = query,
-            GroupId = GroupId
+            GroupId = GroupId,
+            UserId  = UserId   // ← envoyer au backend
         });
     }
 

@@ -81,7 +81,8 @@ namespace AssetFlow.BlazorUI.Components
             StockAlertSvc.OnChanged += OnStockAlertChanged;
 
             var token = await LocalStorage.GetItemAsync<string>("access_token") ?? "";
-            await ScrapingBg.InitAsync(token);
+            var userId = await LocalStorage.GetItemAsync<int>("user_id");
+            await ScrapingBg.InitAsync(token, userId.ToString());
             // Demander permission notification
             await JS.InvokeAsync<string>("requestNotificationPermission");
 

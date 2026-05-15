@@ -109,13 +109,19 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
                 if (res.Succes && !string.IsNullOrEmpty(res.JsonResultat))
                 {
+                    _circuitBreaker.EnregistrerSucces(); // ← succès
                     AppliquerResultats(res.JsonResultat, res.Query);
                     AfficherToast($"{res.NombreResultats} résultat(s) trouvé(s)", "ws-toast-success");
                 }
                 else
                 {
+                    _circuitBreaker.EnregistrerEchec(); // ← échec → circuit breaker
                     _resultats = new();
-                    AfficherToast(res.Erreur ?? "Échec du scraping", "ws-toast-error");
+                    // Remplacer le message technique par le message circuit breaker
+                    var msg = _circuitBreaker.Etat == CircuitState.Open
+                        ? _circuitBreaker.MessageUtilisateur
+                        : "Le service de recherche est momentanément indisponible. Veuillez réessayer.";
+                    AfficherToast(msg, "ws-toast-error");
                 }
 
                 StateHasChanged();
@@ -188,15 +194,23 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
             try
             {
-                // Lance en background — répond immédiatement
-                // L'utilisateur peut naviguer librement
                 await ScrapingBg.LancerAsync(_nomRecherche);
-                // _chargement reste true jusqu'à OnScrapingTermine
             }
-            catch (Exception ex)
+            catch (HttpRequestException ex) when ((int?)ex.StatusCode >= 500 || (int?)ex.StatusCode >= 400 || ex.StatusCode == null)
             {
                 _chargement = false;
-                AfficherToast($"Erreur : {ex.Message}", "ws-toast-error");
+                _circuitBreaker.EnregistrerEchec();
+                var msg = _circuitBreaker.Etat == CircuitState.Open
+                    ? _circuitBreaker.MessageUtilisateur
+                    : "Le service de recherche est momentanément indisponible. Veuillez réessayer.";
+                AfficherToast(msg, "ws-toast-error");
+                StateHasChanged();
+            }
+            catch (Exception)
+            {
+                _chargement = false;
+                _circuitBreaker.EnregistrerEchec();
+                AfficherToast("Le service de recherche est momentanément indisponible. Veuillez réessayer.", "ws-toast-error");
                 StateHasChanged();
             }
         }

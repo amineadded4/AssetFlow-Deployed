@@ -40,6 +40,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         // ── QR Code ────────────────────────────────────────────
         private string FicheUrl => $"{Navigation.BaseUri}fiche/{AffectationId}/article/{ArticleId}";
+        private bool _qrGenere = false;
 
         // ── SignalR ────────────────────────────────────────────
         private HubConnection? _hubConnection;
@@ -69,9 +70,14 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            if (firstRender)
+            if (!IsLoading && Equipement != null && !_qrGenere)
             {
-                await JS.InvokeVoidAsync("generateQrCode", "qr-canvas", FicheUrl);
+                _qrGenere = true;
+                try
+                {
+                    await JS.InvokeVoidAsync("generateQrCode", "qr-canvas", FicheUrl);
+                }
+                catch { }
             }
         }
 
@@ -264,7 +270,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
             // Récupérer le canvas comme image base64
             var dataUrl = await JS.InvokeAsync<string>("eval",
-                "document.getElementById('qr-canvas').toDataURL('image/png')");
+                "document.getElementById('qr-canvas').querySelector('img')?.src ?? ''");
 
             var printHtml = $@"<!DOCTYPE html>
         <html lang=""fr"">

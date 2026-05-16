@@ -341,7 +341,7 @@ html.dark .legal-footer { background: #0c1422; }
 
 @media (max-width: 480px) {
     .left-panel { padding: 0.875rem 1rem; }
-    .panel-logo { width: 72px; height: 44px; }
+    .panel-logo { width: 272px; height: 94px; }
     .right-panel-scroll { padding: 1.25rem 1rem 0.5rem; }
     .form-title { font-size: 1.35rem; }
     .form-container { padding: 1.75rem 1.25rem; }

@@ -326,10 +326,11 @@ html.dark .form-container {
 
 @media (max-width: 480px) {
     .left-panel { padding: 0.875rem 1rem; }
-    .panel-logo { width: 72px; height: 44px; }
+    .panel-logo { width: 272px; height: 94px; }
     .right-panel { padding: 1.25rem 1rem 3rem; }
     .form-title { font-size: 1.35rem; }
     .form-container { padding: 1.75rem 1.25rem; }
+    .role-badge {display: none;}
 }
 
 @keyframes slideUp {

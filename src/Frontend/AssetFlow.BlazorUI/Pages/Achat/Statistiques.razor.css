@@ -571,7 +571,23 @@ html.dark .mini-date { background: rgba(255,255,255,0.05); color: var(--text-pri
     .charts-grid-1 .chart-body { height: 225px; }
     .inline-filters { gap: 3px; }
     .mini-date { max-width: 118px; }
+    .chart-title-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    .chart-title-row .chart-title {
+        white-space: normal;   /* autorise le wrap du texte */
+        overflow: visible;
+        text-overflow: unset;
+        font-size: 0.75rem;
+    }
+    .filter-chips,
+    .inline-filters {
+        width: 100%;
+    }
 }
+
 
 @media (max-width: 480px) {
     .kpi-row { grid-template-columns: 1fr 1fr; }

@@ -19,10 +19,6 @@
     @* ══════════════════════════════════════════════════════════
        HISTORY PANEL
     ══════════════════════════════════════════════════════════ *@
-    @if (_historyOpen)
-    {
-        <div class="ai-history-overlay" @onclick="ToggleHistory"></div>
-    }
     <div class="ai-history-panel @(_historyOpen ? "open" : "")" aria-hidden="@(!_historyOpen)">
         <div class="ai-history-header">
             <span class="ai-history-title">

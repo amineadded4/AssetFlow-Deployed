@@ -1688,7 +1688,7 @@ html.dark .ai-demandes-panel {
     .ai-topbar-right .ai-status,
     .ai-topbar-right .ai-clear-btn { display: none !important; }
     .ai-brand-sub, .ai-disclaimer, .ai-agent-hint { display: none; }
-    .ai-topbar { padding: .6rem .9rem; }
+    .ai-topbar { padding: .9rem .9rem; }
     .ai-messages-wrap { padding: 1.1rem .9rem; }
     .ai-input-area { padding: .65rem .9rem .9rem; }
     .ai-alertes-bar { padding: .6rem .9rem; }
@@ -1723,15 +1723,16 @@ html.dark .ai-demandes-panel {
     .ai-materiel-tab-count { display: none; }
 
     .ai-history-toggle-btn { padding: 0 .55rem; }
-    .ai-demandes-toggle-btn { padding: 0 .55rem; }
+    .ai-demandes-toggle-btn { padding: 0 .55rem; margin-right: 15px;}
 }
 
 @media (max-width: 480px) {
-    .ai-topbar { padding: .5rem .7rem; gap: .5rem; }
+    .ai-topbar { padding: .9rem .7rem; gap: .5rem; }
     .ai-topbar-right { gap: .35rem; margin-right: 48px; }
     .ai-brand-title { font-size: .85rem; }
     .ai-brand-title {display: none;}
     .ai-brand-icon {display: none;}
+    .ai-demandes-toggle-btn { padding: 0 .55rem; margin-right: 15px;}
 }
 
 .ai-history-overlay {

@@ -102,7 +102,7 @@ html.dark .admin-sidebar {
 }
 
 .sidebar-logo {
-    width: 130px;
+    width: 200px;
     height: auto;
     object-fit: contain;
     filter: drop-shadow(0 0 16px var(--sb-logo-glow));

@@ -841,4 +841,44 @@ html.dark .incident-desc { color: rgba(251,146,60,0.7); }
     .incidents-section-header, .specs-header { padding: 0.875rem 1rem; }
     .incidents-timeline { padding: 1rem; }
     .spec-lbl { font-size: 0.72rem; }
+
+    .detail-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* La photo ne dépasse pas */
+    .equip-photo-box {
+        width: 100% !important;
+        max-width: 100% !important;
+        aspect-ratio: 4/3;   /* moins haute sur mobile */
+    }
+
+    /* Le tableau specs : réduit les paddings pour tenir dans l'écran */
+    .spec-lbl {
+        padding: 0.65rem 0.75rem !important;
+        width: 42% !important;
+        font-size: 0.68rem !important;
+    }
+    .spec-val {
+        padding: 0.65rem 0.75rem !important;
+        font-size: 0.8rem !important;
+    }
+
+    /* Cards col-right en colonne simple */
+    .col-right {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Specs card et incidents section pleine largeur */
+    .specs-card,
+    .incidents-section,
+    .qr-card,
+    .incident-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
 }

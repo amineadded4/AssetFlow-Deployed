@@ -263,7 +263,7 @@ html.dark .layout-shell::before {
 .error-state p { font-size: 0.875rem; }
 .btn-retry {
     padding: 8px 20px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover)) !important;
     color: #fff;
     border-radius: var(--radius-md);
     font-size: 0.8rem; font-weight: 600;
@@ -580,4 +580,5 @@ html.dark .mini-date { background: rgba(255,255,255,0.05); color: var(--text-pri
     .chart-title { font-size: 0.72rem; }
     .mini-label  { display: none; }
     .kpi-val     { font-size: 1.2rem; }
+    .topbar-role-badge { display: none; }
 }

@@ -729,6 +729,38 @@ html.dark .btn-statut-en_cours_traitement.statut-actif { color: #22d3ee; backgro
     .detail-header { position: static; }
     .gestion-grid { grid-template-columns: 1fr; }
     .modal-pdf { width: 96vw; height: 85vh; }
-    .articles-head-multi, .article-row-multi, .article-total-row { grid-template-columns: 24px 1fr 45px 100px !important; }
+    .articles-head-multi, .article-row-multi, .article-total-row { 
+    grid-template-columns: 24px 1fr 45px 100px !important; 
+}
     .article-row-multi .article-line-ref, .articles-head-multi span:nth-child(2), .article-row-multi .article-line-desc, .articles-head-multi span:nth-child(4) { display: none; }
+    .article-total-row {
+        display: flex !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        gap: 10px !important;
+        padding: 12px 16px !important;
+    }
+    .article-total-row > * {
+        display: none !important;
+    }
+    .article-total-label,
+    .article-total-qty {
+        display: inline !important;
+    }
+}
+@media (max-width: 480px) {
+    .article-total-row {
+        display: flex !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        gap: 10px !important;
+        padding: 12px 16px !important;
+    }
+    .article-total-row > * {
+        display: none !important;
+    }
+    .article-total-label,
+    .article-total-qty {
+        display: inline !important;
+    }
 }

@@ -889,4 +889,6 @@ html.dark .form-inp { background: var(--bg-input); }
     .kpi-value  { font-size: 26px; }
     .hero-title { font-size: 20px; }
     .detail-grid { grid-template-columns: 1fr; }
+    .btn-add {margin-right: 50px;}
+    .search-wrap {display: none;}
 }

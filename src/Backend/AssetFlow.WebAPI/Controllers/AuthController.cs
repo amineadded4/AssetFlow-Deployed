@@ -55,7 +55,12 @@ namespace AssetFlow.WebAPI.Controllers
         {
             var result = await _authService.RefreshAsync(request.RefreshToken);
             if (result == null) return Unauthorized();
-            return Ok(result);
+            
+            return Ok(new {
+                access_token  = result.AccessToken,
+                refresh_token = result.RefreshToken,
+                expires_in    = result.ExpiresIn
+            });
         }
     }
 }

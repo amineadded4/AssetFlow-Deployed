@@ -814,10 +814,7 @@ html.dark .incident-desc { color: rgba(251,146,60,0.7); }
 
 @media (max-width: 900px) {
     .detail-grid { grid-template-columns: 1fr; }
-    .col-right {
-        display: grid; grid-template-columns: 1fr 1fr;
-        gap: 1rem; position: static;
-    }
+    .col-right { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; position: static; }
     .incidents-timeline::before { display: none; }
 }
 
@@ -825,7 +822,7 @@ html.dark .incident-desc { color: rgba(251,146,60,0.7); }
     .topbar-menu-btn { display: flex; }
     .detail-header { padding: 0 1rem; }
     .breadcrumb-current { max-width: 160px; }
-    .detail-content { padding: 1rem; }
+    .detail-content { padding: 0.875rem; }
     .equip-title { font-size: 1.35rem; }
     .equip-heading { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
     .col-right { grid-template-columns: 1fr; }
@@ -835,65 +832,91 @@ html.dark .incident-desc { color: rgba(251,146,60,0.7); }
 }
 
 @media (max-width: 480px) {
-    /* Conteneurs — bloque tout débordement horizontal */
-    .employe-layout,
-    .detail-main,
+
+    /* ── 1. Bloque tout débordement horizontal sur TOUS les ancêtres ── */
+    .employe-layout {
+        overflow-x: hidden;
+        max-width: 100vw;
+        box-sizing: border-box;
+    }
+    .detail-main {
+        overflow-x: hidden;
+        min-width: 0;
+        max-width: 100%;
+    }
     .detail-content {
-        overflow-x: hidden !important;
-        max-width: 100vw !important;
+        overflow-x: hidden;
+        padding: 0.6rem !important;
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
     }
 
-    .detail-content { padding: 0.75rem !important; }
-
-    /* Grille : 1 colonne, 100% */
+    /* ── 2. Grille full-width, 1 colonne ── */
     .detail-grid {
-        grid-template-columns: 1fr !important;
-        gap: 0.875rem !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        box-sizing: border-box;
     }
 
-    .col-left, .col-right {
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
+    /* ── 3. Toutes les colonnes et cards full-width ── */
+    .col-left,
+    .col-right {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        gap: 0.75rem;
     }
+    .col-right { grid-template-columns: 1fr; }
 
-    .col-right { grid-template-columns: 1fr !important; }
-
-    /* Photo */
-    .equip-photo-box {
-        width: 100% !important;
-        max-width: 100% !important;
-        aspect-ratio: 4/3 !important;
-    }
-
-    /* Specs card et toutes les cards */
     .specs-card,
     .incidents-section,
     .qr-card,
     .incident-card {
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-        border-radius: 14px !important;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        border-radius: 12px;
+        overflow: hidden;
     }
 
-    /* Tableau specs — réduit paddings */
+    /* ── 4. Photo ── */
+    .equip-photo-box {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        aspect-ratio: 4/3;
+        border-radius: 12px;
+    }
+
+    /* ── 5. Tableau specs — cellules compactes ── */
+    .specs-table {
+        width: 100%;
+        table-layout: fixed;   /* empêche le tableau de déborder */
+    }
     .spec-lbl {
-        padding: 0.6rem 0.75rem !important;
-        width: 42% !important;
-        font-size: 0.68rem !important;
+        padding: 0.55rem 0.6rem;
+        width: 40%;
+        font-size: 0.65rem;
+        word-break: break-word;
     }
     .spec-val {
-        padding: 0.6rem 0.75rem !important;
-        font-size: 0.78rem !important;
+        padding: 0.55rem 0.6rem;
+        font-size: 0.75rem;
+        word-break: break-word;
     }
+    .spec-mono { font-size: 0.7rem; letter-spacing: 0; }
 
-    /* Header specs et incidents */
+    /* ── 6. Headers cards ── */
     .specs-header,
-    .incidents-section-header { padding: 0.75rem 1rem !important; }
+    .incidents-section-header { padding: 0.65rem 0.85rem; }
 
-    .equip-title { font-size: 1.1rem !important; }
+    /* ── 7. Titres ── */
+    .equip-title { font-size: 1.05rem; }
+    .equip-ref { font-size: 0.72rem; }
 }

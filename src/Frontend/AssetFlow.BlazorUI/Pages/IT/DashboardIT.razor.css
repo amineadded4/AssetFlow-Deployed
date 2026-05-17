@@ -530,9 +530,9 @@ html.dark .it-chart-header {
 /* Corps graphe */
 .it-chart-body {
     width: 100%;
-    height: 320px;
+    height: 290px;
     flex-shrink: 0;
-    padding: 1px 4px 4px;
+    padding: 8px 4px 4px;
     overflow: hidden;
     position: relative;
 }
@@ -808,12 +808,34 @@ html.dark ::deep .it-heatmap-legend-cell[data-level="4"] { background: #ef4444; 
     .it-inline-filters { gap: 3px; }
     .it-mini-date { max-width: 118px; }
     .it-last-update { display: none; }
+    .it-chart-title-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    .it-chart-title-row .it-chart-title {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+        font-size: 0.75rem;
+    }
+    .it-inline-filters { width: 100%; }
+    .it-heatmap-container,
+    ::deep .it-heatmap-container {
+        align-items: flex-start;   /* ← Jan visible à gauche, scroll vers Déc */
+    }
+    .it-heatmap-months,
+    .it-heatmap-body {
+        width: auto;               /* ← laisse min-width gérer la taille */
+    }
 }
 @media (max-width: 480px) {
     .it-kpi-row { grid-template-columns: 1fr 1fr; }
-    .it-chart-body { height: 210px; }
+    .it-chart-body { height: 210px;padding: 1px; }
     .it-grid-1 .it-chart-body { height: 195px; }
     .it-chart-title { font-size: 0.72rem; }
     .it-mini-label  { display: none; }
     .it-kpi-val     { font-size: 1.2rem; }
+    .it-topbar-role-badge {display: none;}
+    .it-kpi-card {gap:0.500rem;}
 }

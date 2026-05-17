@@ -302,20 +302,38 @@ html.dark .form-container {
     .login-page { flex-direction: column; overflow-y: auto; }
 
     .left-panel {
-        width: 100%; min-height: auto; padding: 1rem 1.5rem;
-        flex-direction: row; justify-content: center;
+        width: 100%;
+        min-height: auto;
+        height: auto;
+        padding: 0.75rem 1.25rem;      /* padding réduit = panel plus compact */
+        flex-direction: row;
+        justify-content: flex-start;   /* ← logo aligné à GAUCHE */
+        align-items: center;
     }
     .left-panel::after { display: none; }
 
     .left-panel-content {
-        flex-direction: row; align-items: center;
-        justify-content: center; gap: 1rem;
-        max-width: 100%; animation: none;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;   /* ← contenu collé à gauche */
+        gap: 0.75rem;
+        max-width: 100%;
+        animation: none;
     }
 
-    .panel-logo { width: 90px; height: 56px; flex-shrink: 0; }
-    .panel-app-subtitle, .role-desc-text, .features-list { display: none; }
-    .role-badge { padding: 0.25rem 0.875rem; font-size: 0.8rem; }
+    .panel-logo {
+        width: 130px;                  /* grand et visible */
+        height: auto;
+        flex-shrink: 0;
+        position: relative;
+        bottom: 8px;
+        right: 18px;
+    }
+
+    .panel-app-subtitle,
+    .role-desc-text,
+    .features-list,
+    .role-badge { display: none; }     /* on cache tout sauf le logo */
 
     .right-panel { flex: 1; padding: 1.5rem 1.25rem 4rem; justify-content: flex-start; }
     .form-container { max-width: 100%; animation: none; }
@@ -325,12 +343,27 @@ html.dark .form-container {
 }
 
 @media (max-width: 480px) {
-    .left-panel { padding: 0.875rem 1rem; }
-    .panel-logo { width: 272px; height: 94px; }
+    .left-panel {
+        padding: 0.6rem 1rem;          /* encore plus compact sur petit écran */
+    }
+
+    .panel-logo {
+        width: 120px;
+        height: auto;
+    }
+
     .right-panel { padding: 1.25rem 1rem 3rem; }
     .form-title { font-size: 1.35rem; }
     .form-container { padding: 1.75rem 1.25rem; }
-    .role-badge {display: none;}
+
+    .left-panel-content {
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.75rem;
+        max-width: 100%;
+        animation: none;
+    }
 }
 
 @keyframes slideUp {

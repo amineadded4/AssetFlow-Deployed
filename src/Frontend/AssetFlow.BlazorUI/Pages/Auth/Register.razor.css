@@ -309,23 +309,38 @@ html.dark .legal-footer { background: #0c1422; }
 
 @media (max-width: 768px) {
     :host, html, body { height: auto; overflow: auto; }
-    .login-page { flex-direction: column; height: auto; }
+    .login-page { flex-direction: column; height: auto; overflow-y: auto; }
 
     .left-panel {
-        width: 100%; height: auto; padding: 1rem 1.5rem;
+        width: 100%;
+        min-height: auto;
+        height: auto;
+        padding: 0.75rem 1.25rem;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
         position: relative;
-        flex-direction: row; justify-content: center;
     }
     .left-panel::after { display: none; }
 
     .left-panel-content {
-        flex-direction: row; align-items: center;
-        justify-content: center; gap: 1rem;
-        max-width: 100%; animation: none;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.75rem;
+        max-width: 100%;
+        animation: none;
     }
 
-    .panel-logo { width: 90px; height: 56px; flex-shrink: 0; }
-    .panel-app-subtitle, .features-list { display: none; }
+    .panel-logo {
+        width: 130px;
+        height: auto;
+        flex-shrink: 0;
+    }
+
+    .panel-app-subtitle,
+    .features-list,
+    .role-badge { display: none; }
 
     .right-panel { height: auto; overflow-y: auto; }
     .right-panel-scroll {
@@ -336,12 +351,30 @@ html.dark .legal-footer { background: #0c1422; }
     .form-title { font-size: 1.5rem; }
     .form-header { margin-bottom: 1.25rem; }
     .form-row { grid-template-columns: 1fr; gap: 0; }
-    .legal-footer { position: relative; }
+    .legal-footer { position: relative; bottom: auto; padding: 1.5rem 0 0.5rem; }
 }
 
 @media (max-width: 480px) {
-    .left-panel { padding: 0.875rem 1rem; }
-    .panel-logo { width: 272px; height: 94px; }
+    .left-panel { padding: 0.6rem 1rem; }
+
+    .panel-logo {
+        width: 130px;                  /* grand et visible */
+        height: auto;
+        flex-shrink: 0;
+        position: relative;
+        bottom: 8px;
+        right: 18px;
+    }
+
+    .left-panel-content {
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.75rem;
+        max-width: 100%;
+        animation: none;
+    }
+
     .right-panel-scroll { padding: 1.25rem 1rem 0.5rem; }
     .form-title { font-size: 1.35rem; }
     .form-container { padding: 1.75rem 1.25rem; }

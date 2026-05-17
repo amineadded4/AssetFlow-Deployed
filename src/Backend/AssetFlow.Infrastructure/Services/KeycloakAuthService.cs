@@ -266,65 +266,43 @@ namespace AssetFlow.Infrastructure.Services
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null) return true; // Ne pas révéler si l'email existe
 
-            // Générer token 6 chiffres
             var token = new Random().Next(100000, 999999).ToString();
             user.PasswordResetToken = token;
             user.PasswordResetTokenExpiry = DateTime.UtcNow.AddMinutes(15);
             await _dbContext.SaveChangesAsync();
 
-            // Envoyer email via Keycloak Admin (ou SMTP direct)
-            // Ici on utilise l'API Keycloak pour envoyer un email custom
-            var adminToken = await GetAdminTokenAsync();
-            if (adminToken == null) return false;
-
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", adminToken);
-
-            var getUserUrl = $"{KeycloakBase}/admin/realms/{Realm}/users?email={Uri.EscapeDataString(email)}";
-            var resp = await _httpClient.GetAsync(getUserUrl);
-            var json = await resp.Content.ReadAsStringAsync();
-            var users = JsonSerializer.Deserialize<List<KeycloakUserInfo>>(
-                json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            var keycloakUserId = users?.FirstOrDefault()?.Id;
-            if (keycloakUserId == null) return false;
-
-            // Envoyer email avec le token via SMTP
+            // ← Plus besoin du bloc Keycloak, on envoie directement
             await SendResetEmailAsync(email, token, user.FirstName);
             return true;
         }
 
         private async Task SendResetEmailAsync(string email, string token, string firstName)
         {
-            var apiKey  = _config["Brevo:ApiKey"]!;
-            var from    = _config["Brevo:From"]!;
-            var fromName= _config["Brevo:FromName"] ?? "AssetFlow";
+            var apiKey   = _config["Brevo:ApiKey"]!;
+            var from     = _config["Brevo:From"]!;
+            var fromName = _config["Brevo:FromName"] ?? "AssetFlow";
 
             var payload = new
             {
                 sender = new { name = fromName, email = from },
                 to = new[] { new { email = email, name = firstName } },
                 subject = "AssetFlow — Code de réinitialisation",
-                htmlContent = $@"
-                    <div style='font-family:sans-serif;max-width:480px;margin:auto'>
-                        <h2 style='color:#0d1b35'>Réinitialisation de mot de passe</h2>
-                        <p>Bonjour {firstName},</p>
-                        <p>Votre code de réinitialisation est :</p>
-                        <div style='font-size:2.5rem;font-weight:700;letter-spacing:0.5rem;
-                                    color:#136dec;text-align:center;padding:1rem;
-                                    background:#f0f4ff;border-radius:12px;margin:1rem 0'>
-                            {token}
-                        </div>
-                        <p style='color:#666'>Ce code expire dans <strong>15 minutes</strong>.</p>
-                        <p style='color:#999;font-size:0.8rem'>
-                            Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.
-                        </p>
-                    </div>"
+                htmlContent = $@"<div style='font-family:sans-serif;max-width:480px;margin:auto'>
+                    <h2 style='color:#0d1b35'>Réinitialisation de mot de passe</h2>
+                    <p>Bonjour {firstName},</p>
+                    <p>Votre code de réinitialisation est :</p>
+                    <div style='font-size:2.5rem;font-weight:700;letter-spacing:0.5rem;
+                                color:#136dec;text-align:center;padding:1rem;
+                                background:#f0f4ff;border-radius:12px;margin:1rem 0'>{token}</div>
+                    <p style='color:#666'>Ce code expire dans <strong>15 minutes</strong>.</p>
+                    <p style='color:#999;font-size:0.8rem'>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
+                </div>"
             };
 
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("api-key", apiKey);
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("api-key", apiKey);
 
-            var response = await client.PostAsync(
+            var response = await httpClient.PostAsync(
                 "https://api.brevo.com/v3/smtp/email",
                 new StringContent(
                     JsonSerializer.Serialize(payload),

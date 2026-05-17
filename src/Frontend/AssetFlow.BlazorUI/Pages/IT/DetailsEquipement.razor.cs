@@ -288,40 +288,29 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private async Task ImprimerQR()
         {
             var designation = Equipement?.Designation ?? "Équipement";
-            var reference   = Equipement?.NumeroSerie ?? "";
+            var reference   = Equipement?.NumeroSerie ?? "Non renseigné";
 
-            // Récupérer le canvas comme image base64
-            var dataUrl = await JS.InvokeAsync<string>("eval",
-                "document.getElementById('qr-canvas').querySelector('img')?.src ?? ''");
-
-            var printHtml = $@"<!DOCTYPE html>
-        <html lang=""fr"">
-        <head>
-        <meta charset=""utf-8""/>
-        <title>QR — {designation}</title>
-        <style>
-            body {{ font-family: sans-serif; display: flex; flex-direction: column;
-                    align-items: center; padding: 2rem; background: white; color: #111; }}
-            h2  {{ font-size: 1.2rem; font-weight: 800; margin: 1rem 0 0.25rem; }}
-            p   {{ font-size: 0.8rem; color: #555; margin: 0; }}
-            code{{ font-size: 0.65rem; color: #333; margin-top: 0.75rem; display: block; }}
-            @media print {{ body {{ padding: 0; }} }}
-        </style>
-        </head>
-        <body>
-        <img src=""{dataUrl}"" width=""200"" height=""200"" />
-        <h2>{designation}</h2>
-        <p>Numéro de série : {reference}</p>
-        <code>{FicheUrl}</code>
-        <script>window.onload = () => window.print();<\/script>
-        </body>
-        </html>";
-
-            await JS.InvokeVoidAsync("eval", $@"
-                var w = window.open('','_blank','width=400,height=500');
-                w.document.write({System.Text.Json.JsonSerializer.Serialize(printHtml)});
-                w.document.close();
+            // Récupérer l'image QR
+            var dataUrl = await JS.InvokeAsync<string>("eval", @"
+                (function() {
+                    var el = document.getElementById('qr-canvas');
+                    if (!el) return '';
+                    if (el.tagName === 'CANVAS') return el.toDataURL('image/png');
+                    var img = el.querySelector('img');
+                    if (img) return img.src;
+                    if (el.tagName === 'IMG') return el.src;
+                    return '';
+                })()
             ");
+
+            if (string.IsNullOrEmpty(dataUrl))
+            {
+                AfficherToast("QR Code introuvable. Veuillez patienter et réessayer.", "toast-error");
+                return;
+            }
+
+            // Déléguer toute la logique d'ouverture au JS (Blob URL)
+            await JS.InvokeVoidAsync("printQrCode", dataUrl, designation, reference, FicheUrl);
         }
 
         // ══════════════════════════════════════════════════════

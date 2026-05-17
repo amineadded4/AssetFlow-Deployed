@@ -268,7 +268,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             var designation = Equipement?.Designation ?? "Équipement";
             var reference   = Equipement?.NumeroSerie ?? "Non renseigné";
 
-            // Récupérer le dataUrl du QR
+            // Récupérer l'image QR
             var dataUrl = await JS.InvokeAsync<string>("eval", @"
                 (function() {
                     var el = document.getElementById('qr-canvas');
@@ -287,7 +287,7 @@ namespace AssetFlow.BlazorUI.Pages.Achat
                 return;
             }
 
-            // Tout déléguer au JS : ouverture + écriture en synchrone
+            // Déléguer toute la logique d'ouverture au JS (Blob URL)
             await JS.InvokeVoidAsync("printQrCode", dataUrl, designation, reference, FicheUrl);
         }
 

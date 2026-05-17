@@ -1,13 +1,4 @@
 window.printQrCode = function (dataUrl, designation, reference, ficheUrl) {
-
-    // 1. Ouvrir la fenêtre EN PREMIER — synchrone, avant tout await
-    //    Le popup blocker laisse passer window.open() appelé ici
-    var w = window.open('', '_blank');
-    if (!w) {
-        alert("Veuillez autoriser les popups pour imprimer le QR Code.");
-        return;
-    }
-
     var html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -38,8 +29,17 @@ window.printQrCode = function (dataUrl, designation, reference, ficheUrl) {
 </body>
 </html>`;
 
-    // 2. Écrire le HTML dans la fenêtre déjà ouverte
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
+    // Blob URL — seule méthode qui fonctionne sur PC + Android + iOS
+    var blob    = new Blob([html], { type: 'text/html' });
+    var blobUrl = URL.createObjectURL(blob);
+
+    // Ouvrir dans un nouvel onglet
+    var w = window.open(blobUrl, '_blank');
+
+    // Libérer le blob après chargement
+    if (w) {
+        w.addEventListener('load', function() {
+            URL.revokeObjectURL(blobUrl);
+        });
+    }
 };

@@ -172,7 +172,11 @@
             });
         };
     </script>
-
+    <script>
+        document.addEventListener('paste', function(e) {
+            window.__pastedText = e.clipboardData.getData('text');
+        });
+    </script>
 </body>
 
 </html>

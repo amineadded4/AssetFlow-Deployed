@@ -38,6 +38,8 @@ namespace AssetFlow.Infrastructure.Data
                 entity.Property(u => u.LastName).IsRequired().HasMaxLength(100);
                 entity.Property(u => u.Role).IsRequired().HasMaxLength(50);
                 entity.HasIndex(u => u.Email).IsUnique();
+                entity.Property(u => u.PasswordResetToken).HasMaxLength(6).IsRequired(false);
+                entity.Property(u => u.PasswordResetTokenExpiry).IsRequired(false);
             });
 
             // === MATERIEL ===

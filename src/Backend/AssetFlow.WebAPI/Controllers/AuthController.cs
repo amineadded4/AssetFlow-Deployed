@@ -45,11 +45,13 @@ namespace AssetFlow.WebAPI.Controllers
             var result = await _authService.RegisterAsync(request);
 
             if (!result.Success)
-                return BadRequest(new { success = false, message = result.Message });
+                return BadRequest(result.Message);
 
             // 201 Created avec message de succès
             return Created("", result);
         }
+
+        // AuthController.cs
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
         {
@@ -61,6 +63,21 @@ namespace AssetFlow.WebAPI.Controllers
                 refresh_token = result.RefreshToken,
                 expires_in    = result.ExpiresIn
             });
+        }
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Email)) return BadRequest("Email requis.");
+            await _authService.ForgotPasswordAsync(request.Email);
+            return Ok();
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            var (success, message) = await _authService.ResetPasswordAsync(request);
+            if (!success) return BadRequest(message);
+            return Ok(message);
         }
     }
 }

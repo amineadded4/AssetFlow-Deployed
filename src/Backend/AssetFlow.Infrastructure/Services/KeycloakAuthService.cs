@@ -19,19 +19,14 @@ namespace AssetFlow.Infrastructure.Services
         private readonly IDashboardNotifier _notifier;
 
         // ── Clés de configuration ────────────────────────────────────────────
-        // Authority = "https://<votre-keycloak>.onrender.com/realms/assetflow"
         private string KeycloakUrl    => _config["Keycloak:Authority"]!;
         private string ClientId       => _config["Keycloak:ClientId"]!;
         private string ClientSecret   => _config["Keycloak:ClientSecret"]!;
 
-        // Base de l'instance Keycloak (sans le /realms/…)
-        // Ex : "https://<votre-keycloak>.onrender.com"
         private string KeycloakBase   => _config["Keycloak:BaseUrl"]!;
 
-        // Realm configuré dans Keycloak (ex : "assetflow")
         private string Realm          => _config["Keycloak:Realm"]!;
 
-        // Credentials du compte admin Keycloak
         private string AdminUsername  => _config["Keycloak:AdminUsername"]!;
         private string AdminPassword  => _config["Keycloak:AdminPassword"]!;
 
@@ -265,6 +260,119 @@ namespace AssetFlow.Infrastructure.Services
                 json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             return tokenResponse?.access_token;
+        }
+        public async Task<bool> ForgotPasswordAsync(string email)
+        {
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null) return true; // Ne pas révéler si l'email existe
+
+            // Générer token 6 chiffres
+            var token = new Random().Next(100000, 999999).ToString();
+            user.PasswordResetToken = token;
+            user.PasswordResetTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+            await _dbContext.SaveChangesAsync();
+
+            // Envoyer email via Keycloak Admin (ou SMTP direct)
+            // Ici on utilise l'API Keycloak pour envoyer un email custom
+            var adminToken = await GetAdminTokenAsync();
+            if (adminToken == null) return false;
+
+            _httpClient.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", adminToken);
+
+            var getUserUrl = $"{KeycloakBase}/admin/realms/{Realm}/users?email={Uri.EscapeDataString(email)}";
+            var resp = await _httpClient.GetAsync(getUserUrl);
+            var json = await resp.Content.ReadAsStringAsync();
+            var users = JsonSerializer.Deserialize<List<KeycloakUserInfo>>(
+                json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var keycloakUserId = users?.FirstOrDefault()?.Id;
+            if (keycloakUserId == null) return false;
+
+            // Envoyer email avec le token via SMTP
+            await SendResetEmailAsync(email, token, user.FirstName);
+            return true;
+        }
+
+        private async Task SendResetEmailAsync(string email, string token, string firstName)
+        {
+            using var smtpClient = new System.Net.Mail.SmtpClient(_config["Smtp:Host"])
+            {
+                Port = int.Parse(_config["Smtp:Port"] ?? "587"),
+                Credentials = new System.Net.NetworkCredential(
+                    _config["Smtp:Username"],
+                    _config["Smtp:Password"]),
+                EnableSsl = true
+            };
+
+            var body = $@"
+                <div style='font-family:sans-serif;max-width:480px;margin:auto'>
+                    <h2 style='color:#0d1b35'>Réinitialisation de mot de passe</h2>
+                    <p>Bonjour {firstName},</p>
+                    <p>Votre code de réinitialisation est :</p>
+                    <div style='font-size:2.5rem;font-weight:700;letter-spacing:0.5rem;
+                                color:#136dec;text-align:center;padding:1rem;
+                                background:#f0f4ff;border-radius:12px;margin:1rem 0'>
+                        {token}
+                    </div>
+                    <p style='color:#666'>Ce code expire dans <strong>15 minutes</strong>.</p>
+                    <p style='color:#999;font-size:0.8rem'>
+                        Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.
+                    </p>
+                </div>";
+
+            var message = new System.Net.Mail.MailMessage
+            {
+                From       = new System.Net.Mail.MailAddress(_config["Smtp:From"]!),
+                Subject    = "AssetFlow — Code de réinitialisation",
+                Body       = body,
+                IsBodyHtml = true
+            };
+            message.To.Add(email);
+
+            await smtpClient.SendMailAsync(message);
+        }
+
+        public async Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordRequest request)
+        {
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (user == null)
+                return (false, "Email introuvable.");
+
+            if (user.PasswordResetToken != request.Token)
+                return (false, "Code incorrect.");
+
+            if (user.PasswordResetTokenExpiry < DateTime.UtcNow)
+                return (false, "Code expiré. Veuillez recommencer.");
+
+            // Changer le mot de passe dans Keycloak
+            var adminToken = await GetAdminTokenAsync();
+            if (adminToken == null) return (false, "Erreur serveur.");
+
+            _httpClient.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", adminToken);
+
+            var getUserUrl = $"{KeycloakBase}/admin/realms/{Realm}/users?email={Uri.EscapeDataString(request.Email)}";
+            var resp = await _httpClient.GetAsync(getUserUrl);
+            var json = await resp.Content.ReadAsStringAsync();
+            var users = JsonSerializer.Deserialize<List<KeycloakUserInfo>>(
+                json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var keycloakUserId = users?.FirstOrDefault()?.Id;
+            if (keycloakUserId == null) return (false, "Utilisateur introuvable.");
+
+            var resetUrl = $"{KeycloakBase}/admin/realms/{Realm}/users/{keycloakUserId}/reset-password";
+            var payload  = JsonSerializer.Serialize(new { type = "password", value = request.NewPassword, temporary = false });
+            var resetResp = await _httpClient.PutAsync(resetUrl,
+                new StringContent(payload, Encoding.UTF8, "application/json"));
+
+            if (!resetResp.IsSuccessStatusCode)
+                return (false, "Erreur lors du changement de mot de passe.");
+
+            // Nettoyer le token
+            user.PasswordResetToken       = null;
+            user.PasswordResetTokenExpiry = null;
+            await _dbContext.SaveChangesAsync();
+
+            return (true, "Mot de passe modifié avec succès.");
         }
 
         // ── DTOs internes ────────────────────────────────────────────────────

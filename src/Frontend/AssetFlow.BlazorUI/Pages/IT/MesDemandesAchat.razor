@@ -91,6 +91,10 @@
                         <option value="produit_asc">Produit A→Z</option>
                         <option value="quantite_desc">Quantité ↓</option>
                     </select>
+                    <button class="mda-btn-new add" @onclick="OpenCreatePanel">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Nouvelle demande
+                    </button>
                 </div>
             </div>
 
@@ -338,7 +342,7 @@
                             { <button class="mda-ligne-del" @onclick="() => SupprimerLigne(ligne)"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button> }
                         </div>
                         <div class="mda-ligne-row-inputs">
-                            <div class="mda-field" style="flex:1">
+                            <div class="mda-field mda-field-product" style="flex:1">
                                 <label class="mda-field-label">Produit <span class="mda-required">*</span></label>
                                 <input type="text" class="mda-field-input @(!string.IsNullOrEmpty(ligne.Erreur) ? "input-error" : "")" placeholder="Ex: RAM DDR4 32GB" @bind="ligne.NomProduit" @bind:event="oninput" />
                             </div>
@@ -405,7 +409,7 @@
                             { <button class="mda-ligne-del" @onclick="() => SupprimerLigneEdit(ligne)"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button> }
                         </div>
                         <div class="mda-ligne-row-inputs">
-                            <div class="mda-field" style="flex:1">
+                            <div class="mda-field mda-field-product" style="flex:1">
                                 <label class="mda-field-label">Produit <span class="mda-required">*</span></label>
                                 <input type="text" class="mda-field-input @(!string.IsNullOrEmpty(ligne.Erreur) ? "input-error" : "")" @bind="ligne.NomProduit" @bind:event="oninput" />
                             </div>

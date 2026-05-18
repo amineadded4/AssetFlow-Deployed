@@ -1389,6 +1389,7 @@ html.dark .mda-ligne-form {
 .mda-ligne-row-inputs { display: flex; gap: 10px; align-items: flex-end; }
 .mda-field-qty { width: 80px; flex-shrink: 0; }
 
+
 .mda-btn-add-ligne-full {
     display: flex;
     align-items: center;
@@ -1706,7 +1707,7 @@ html.dark .mda-modal-cancel {
 }
 
 .mda-hamburger span { display: block; width: 18px; height: 2px; background: var(--text); border-radius: 2px; }
-
+.add {display: none;}
 /* ══════════════════════════════════════
    ANIMATIONS
 ══════════════════════════════════════ */
@@ -1735,11 +1736,50 @@ html.dark .mda-modal-cancel {
     .mda-hamburger     { display: flex; }
     .mda-header        { padding: 14px 16px; }
     .mda-btn-new-desktop { display: none; }
-    .mda-btn-new-mobile  { display: flex; width: 100%; justify-content: center; margin-right: 0; padding: 9px 16px; margin-top: 10px; }
+    .mda-btn-new-mobile  { display: none; }
     .mda-stats-bar     { padding: 12px 16px; }
-    .mda-toolbar       { padding: 12px 16px; }
+    .mda-toolbar       { padding: 12px 16px; gap: 8px; }
     .mda-content       { padding: 16px 16px 20px; }
     .mda-create-panel.open { width: 100%; position: absolute; right: 0; top: 0; bottom: 0; z-index: 100; }
+
+    /* Bouton + dans la toolbar à côté de "Plus récent" */
+    .mda-sort-wrap::after {
+        content: '';
+    }
+    .mda-toolbar {
+        display: flex;
+        align-items: center;
+    }
+    .mda-sort-wrap {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .add {display: flex;}
+    .mda-field-product {display: flex;width: 100%;}
+}
+
+@media (max-width: 480px) {
+    .mda-btn-new-toolbar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        padding: 0;
+        background: linear-gradient(135deg, #136dec, #3B82F6);
+        border: none;
+        box-shadow: 0 4px 14px rgba(19,109,236,0.38);
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .mda-btn-new-toolbar svg {
+        width: 18px; height: 18px;
+        stroke: #fff; fill: none;
+        stroke-width: 2.5; stroke-linecap: round;
+    }
+    .add {display: flex;}
 }
 
 @media (max-width: 640px) {

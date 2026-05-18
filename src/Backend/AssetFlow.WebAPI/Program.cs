@@ -221,7 +221,7 @@ builder.Services.AddCors(options =>
             .WithOrigins(
                 "http://localhost:5001",    // Blazor HTTP (launchSettings)
                 "https://localhost:7020" , // Blazor HTTPS (launchSettings)
-                "https://assetflow-frontend-dfuz.onrender.com"
+                builder.Configuration["AppUrl"]!
             )
             .AllowAnyHeader()
             .AllowAnyMethod()

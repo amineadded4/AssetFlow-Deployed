@@ -10,6 +10,10 @@ obj/
 .DS_Store
 Thumbs.dbwwwroot/lib/
 
-# Configuration sensible
+# Garder les appsettings wwwroot (pas sensibles)
+!wwwroot/appsettings.json
+!wwwroot/appsettings.*.json
+
+# Exclure seulement les appsettings serveur
 appsettings.json
-appsettings.*.json
+appsettings.Development.json

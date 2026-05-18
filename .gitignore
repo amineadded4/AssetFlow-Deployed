@@ -12,3 +12,4 @@ Thumbs.dbwwwroot/lib/
 
 # Configuration sensible
 appsettings.json
+appsettings.*.json

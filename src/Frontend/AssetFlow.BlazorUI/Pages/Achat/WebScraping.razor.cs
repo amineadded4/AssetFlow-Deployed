@@ -368,14 +368,17 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             return v;
         }
 
-        private async void AfficherToast(string msg, string type)
+        private void AfficherToast(string msg, string type)
         {
             _toastMsg = msg;
             _toastType = type;
             StateHasChanged();
-            await Task.Delay(3500);
-            _toastMsg = string.Empty;
-            StateHasChanged();
+            _ = Task.Delay(3500).ContinueWith(_ =>
+                InvokeAsync(() =>
+                {
+                    _toastMsg = string.Empty;
+                    StateHasChanged();
+                }));
         }
 
         // ── Méthodes JS (theme)

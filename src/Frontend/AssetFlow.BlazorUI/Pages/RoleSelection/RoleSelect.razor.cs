@@ -40,6 +40,8 @@ namespace AssetFlow.BlazorUI.Pages.RoleSelection
         private bool   MediaPipeReady   { get; set; } = false;
         private bool   CameraStarted    { get; set; } = false;
         private DotNetObjectReference<RoleSelect>? _dotnetRef;
+        private int      _logoTapCount  = 0;
+        private DateTime _lastLogoTap   = DateTime.MinValue;
 
         // ── Keydown page principale ──
         private void HandleKeyDown(KeyboardEventArgs e)
@@ -58,6 +60,23 @@ namespace AssetFlow.BlazorUI.Pages.RoleSelection
             if (KeyBuffer.EndsWith("admin"))
             {
                 KeyBuffer = string.Empty;
+                OpenAdminModal();
+            }
+        }
+        private void HandleLogoTap()
+        {
+            if (ShowAdminModal) return;
+
+            var now = DateTime.Now;
+            if ((now - _lastLogoTap).TotalMilliseconds > 2000)
+                _logoTapCount = 0;
+
+            _lastLogoTap = now;
+            _logoTapCount++;
+
+            if (_logoTapCount >= 5)
+            {
+                _logoTapCount = 0;
                 OpenAdminModal();
             }
         }

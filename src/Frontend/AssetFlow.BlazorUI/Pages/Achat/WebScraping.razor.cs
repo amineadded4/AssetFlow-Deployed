@@ -109,20 +109,27 @@ namespace AssetFlow.BlazorUI.Pages.Achat
 
                 if (res.Succes && !string.IsNullOrEmpty(res.JsonResultat))
                 {
-                    _circuitBreaker.EnregistrerSucces(); // ← succès
+                    _circuitBreaker.EnregistrerSucces();
                     AppliquerResultats(res.JsonResultat, res.Query);
-                    AfficherToast($"{res.NombreResultats} résultat(s) trouvé(s)", "ws-toast-success");
+                    AfficherToast($"✅ {res.NombreResultats} résultat(s) trouvé(s) pour \"{res.Query}\"", "ws-toast-success");
                 }
                 else
                 {
-                    _circuitBreaker.EnregistrerEchec(); // ← échec → circuit breaker
+                    _circuitBreaker.EnregistrerEchec();
                     _resultats = new();
-                    // Remplacer le message technique par le message circuit breaker
                     var msg = _circuitBreaker.Etat == CircuitState.Open
                         ? _circuitBreaker.MessageUtilisateur
-                        : "Le service de recherche est momentanément indisponible. Veuillez réessayer.";
+                        : "Le service de recherche est momentanément indisponible.";
                     AfficherToast(msg, "ws-toast-error");
                 }
+
+                // Notification navigateur (desktop uniquement, silencieux sur mobile)
+                try
+                {
+                    _ = JS.InvokeVoidAsync("scrapingNotifyBrowser",
+                        res.Succes, res.Query, res.NombreResultats);
+                }
+                catch { }
 
                 StateHasChanged();
             });

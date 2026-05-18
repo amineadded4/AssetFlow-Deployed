@@ -734,3 +734,14 @@ html.dark .ws-modal-sites { background: rgba(255,255,255,0.04); }
 @media (max-width: 540px)  {
     .ws-role-badge {display: none;}
 }
+@media (max-width: 540px) {
+    .ws-toast {
+        bottom: 1rem;
+        left: 1rem;
+        right: 1rem;
+        width: auto;
+        font-size: 14px;
+        padding: 14px 16px;
+        z-index: 9999;
+    }
+}

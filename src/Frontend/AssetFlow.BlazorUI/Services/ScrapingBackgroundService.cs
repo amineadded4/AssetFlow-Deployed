@@ -13,6 +13,7 @@ public class ScrapingBackgroundService : IAsyncDisposable
     public string? UserId   { get; private set; }  // ← NOUVEAU
 
     public bool EnCours { get; private set; } = false;
+    public bool ResultatsPrets => DernierResultat != null && !EnCours;
     public string? QueryEnCours { get; private set; }
     public ScrapingResultatDto? DernierResultat { get; private set; }
 

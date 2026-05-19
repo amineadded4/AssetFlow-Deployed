@@ -13,13 +13,33 @@
         </div>
     </div>
 }
+else if (ScrapingSvc.ResultatsPrets && isMobile)
+{
+    <div class="sgt-container sgt-success">
+        <div class="sgt-icon">✓</div>
+        <div class="sgt-body">
+            <span class="sgt-title">Résultats de Scraping prêt</span>
+            <span class="sgt-sub">@ScrapingSvc.QueryEnCours</span>
+        </div>
+        <a href="/achat/web-scraping" class="sgt-action">Voir</a>
+        <button class="sgt-close" @onclick="Fermer">×</button>
+    </div>
+}
 
 @code {
+    private bool isMobile;
+    private bool visible = true;
     protected override void OnInitialized()
     {
         ScrapingSvc.OnChanged += OnChanged;
         ScrapingSvc.OnTermine += OnTermine;
     }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            isMobile = await JS.InvokeAsync<bool>("eval", "window.innerWidth <= 480");
+    }
+    private void Fermer() => visible = false;
 
     private void OnChanged() => InvokeAsync(StateHasChanged);
 

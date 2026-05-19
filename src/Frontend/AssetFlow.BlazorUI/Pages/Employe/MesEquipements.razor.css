@@ -946,9 +946,13 @@ html.dark .existant-content { border-color: rgba(255,255,255,0.07); }
     .employe-content { padding: 1rem; }
     .employe-header { padding: 0 1rem; }
     .modal-container { max-height: 95vh; }
-    .articles-table-header { grid-template-columns: 2fr 1fr; }
-    .article-row { grid-template-columns: 2fr 1fr; }
-    .article-date, .article-action { display: none; }
+    .modal-body {
+        overflow-x: auto;
+    }
+    .articles-table-header,
+    .articles-list {
+        min-width: 480px; /* toutes les colonnes restent visibles */
+    }
 }
 @media (max-width: 768px) {
     .emp-hamburger-btn { display: flex; }

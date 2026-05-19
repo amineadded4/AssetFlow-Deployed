@@ -244,5 +244,24 @@ namespace AssetFlow.Infrastructure.Services
                 };
             }
         }
+        public async Task<IEnumerable<MaterielAlerteDto>> GetAlertesStockAsync()
+        {
+            var list = await _db.Materiels
+                .AsNoTracking()
+                .Where(m => m.QuantiteStock <= m.QuantiteMin)
+                .OrderBy(m => m.QuantiteStock)
+                .ToListAsync();
+
+            return list.Select(m => new MaterielAlerteDto
+            {
+                Reference     = m.Reference,
+                Designation   = m.Designation,
+                Categorie     = m.Categorie,
+                QuantiteStock = m.QuantiteStock,
+                QuantiteMin   = m.QuantiteMin,
+                Emplacement   = m.Emplacement ?? "—",
+                Niveau        = m.QuantiteStock == 0 ? "🔴 Critique" : "🟡 Alerte"
+            });
+        }
     }
 }

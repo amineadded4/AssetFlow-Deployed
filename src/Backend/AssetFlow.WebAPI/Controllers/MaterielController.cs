@@ -77,5 +77,9 @@ namespace AssetFlow.WebAPI.Controllers
             var result = await _svc.SupprimerAvecCascadeAsync(userName,id);
             return result.Succes ? Ok(result) : BadRequest(result);
         }
-    }
+        [HttpGet("alertes-stock")]
+        [AllowAnonymous] // Power Automate appelle sans token
+        public async Task<IActionResult> AlertesStock()
+            => Ok(await _svc.GetAlertesStockAsync());
+            }
 }

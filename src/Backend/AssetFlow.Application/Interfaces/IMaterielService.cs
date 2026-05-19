@@ -15,5 +15,6 @@ namespace AssetFlow.Application.Interfaces
         Task<MaterielResultDto> SupprimerAvecCascadeAsync(string userName,int id);
 
         Task<MaterielStatsDto> GetStatsAsync();
+        Task<IEnumerable<MaterielAlerteDto>> GetAlertesStockAsync();
     }
 }

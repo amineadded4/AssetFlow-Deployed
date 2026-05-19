@@ -34,22 +34,22 @@
                     <line x1="3" y1="18" x2="21" y2="18"/>
                 </svg>
             </button>
-            <nav class="inc-sig-breadcrumb">
+             <nav class="inc-sig-breadcrumb">
                 <a href="/it/equipements" class="breadcrumb-back" title="Retour">
-                    <svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
+                    <svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6" /></svg>
                 </a>
-                <a href="/it/equipements" class="breadcrumb-sep">Équipements</a>
-                <svg class="breadcrumb-chevron" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+                <span class="breadcrumb-sep">Équipements</span>
                 @if (SelectedArticleId > 0)
                 {
                     var art    = Articles.FirstOrDefault(a => a.ArticleId == SelectedArticleId);
                     var nomMat = art != null ? GetDesignation(art.AffectationId) : string.Empty;
                     if (!string.IsNullOrEmpty(nomMat))
                     {
-                        <a href="/it/equipement/@(art?.AffectationId)/article/@SelectedArticleId" class="breadcrumb-sep">@nomMat</a>
-                        <svg class="breadcrumb-chevron" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+                        <svg class="breadcrumb-chevron" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6" /></svg>
+                        <a href="/it/equipement/@art!.AffectationId/article/@art.ArticleId" class="breadcrumb-link">@nomMat</a>
                     }
                 }
+                <svg class="breadcrumb-chevron" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6" /></svg>
                 <span class="breadcrumb-current">Signalement</span>
             </nav>
         </header>

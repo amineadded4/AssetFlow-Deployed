@@ -91,6 +91,12 @@ html.dark .inc-sig-header {
     gap: 0.5rem;
     font-size: 0.875rem;
 }
+.inc-sig-breadcrumb svg {
+    width: 14px; height: 14px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+}
 .breadcrumb-back {
     display: flex; align-items: center; justify-content: center;
     width: 32px; height: 32px;
@@ -113,23 +119,22 @@ html.dark .inc-sig-header {
     stroke: currentColor; fill: none;
     stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
 }
-.breadcrumb-sep {
-    color: var(--primary);
-    font-weight: 500;
-    text-decoration: none;
-    transition: opacity 0.2s;
-}
-.breadcrumb-sep:hover { opacity: 0.75; text-decoration: underline; }
+.breadcrumb-sep { color: var(--text-muted); font-weight: 500; }
 .breadcrumb-chevron {
     width: 14px; height: 14px;
     stroke: var(--text-faint); fill: none;
     stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
 }
 .breadcrumb-current {
-    font-weight: 700; color: var(--text);
+    font-weight: 600; color: var(--text);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     max-width: 250px;
 }
+.breadcrumb-link {
+    color: var(--text-muted); font-weight: 500;
+    text-decoration: none; transition: color 0.15s;
+}
+.breadcrumb-link:hover { color: var(--primary); }
 
 /* ══════════════════════════════════════════════
    ZONE SCROLLABLE

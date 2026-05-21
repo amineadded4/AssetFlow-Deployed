@@ -316,6 +316,7 @@
                                     <div class="stk-art-cmd">Commande : @art.NumeroCommande</div>
                                 </div>
                             </div>
+                            
                             <div class="stk-art-item-right">
                                 <span class="stk-art-badge @ArtStatutCss(art.Statut)">@art.Statut</span>
                                 @if (art.Statut != "HorsService")
@@ -325,6 +326,16 @@
                                         <svg viewBox="0 0 24 24">
                                             <circle cx="12" cy="12" r="10"/>
                                             <path d="m15 9-6 6M9 9l6 6"/>
+                                        </svg>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="stk-art-restore-btn" title="Remettre en service"
+                                            @onclick="() => DemanderRemiseEnService(art)">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                                            <path d="M3 3v5h5"/>
                                         </svg>
                                     </button>
                                 }
@@ -379,6 +390,50 @@
                         @onclick="ConfirmerHorsService">
                     @if (_horsServiceEnCours) { <div class="stk-btn-spinner"></div> }
                     Mettre hors service
+                </button>
+            </div>
+        </div>
+    </div>
+}
+@* ── MODALE CONFIRMATION REMISE EN SERVICE ── *@
+@if (_articleRemiseEnService is not null)
+{
+    <div class="stk-modal-backdrop">
+        <div class="stk-modal stk-modal-restore" @onclick:stopPropagation="true">
+
+            <div class="stk-modal-header">
+                <div class="stk-modal-icon stk-modal-icon-restore">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                        <path d="M3 3v5h5"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="stk-modal-title">Remettre en service ?</h3>
+                    <p class="stk-modal-sub">L'article redeviendra disponible en stock.</p>
+                </div>
+                <button class="stk-modal-close" @onclick="AnnulerRemiseEnService">
+                    <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="stk-hs-body">
+                <p>
+                    L'article <strong>« @(_articleRemiseEnService.NumeroSerie ?? $"Article #{_articleRemiseEnService.Id}") »</strong>
+                    sera remis à l'état <span class="stk-restore-label">Disponible</span>.
+                </p>
+                <div class="stk-restore-info">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                    Son état sera réinitialisé à <strong>Bon</strong> et le stock du matériel sera incrémenté de 1.
+                </div>
+            </div>
+
+            <div class="stk-modal-actions">
+                <button class="stk-modal-cancel" @onclick="AnnulerRemiseEnService">Annuler</button>
+                <button class="stk-modal-restore-confirm" disabled="@_remiseEnServiceEnCours"
+                        @onclick="ConfirmerRemiseEnService">
+                    @if (_remiseEnServiceEnCours) { <div class="stk-btn-spinner"></div> }
+                    Remettre en service
                 </button>
             </div>
         </div>

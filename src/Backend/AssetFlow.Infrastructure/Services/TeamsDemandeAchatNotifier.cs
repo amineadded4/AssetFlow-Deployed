@@ -49,7 +49,7 @@ namespace AssetFlow.Infrastructure.Services
                     nomProduit       = demande.NomProduit,
                     quantite         = quantite,
                     demandeurNom     = demande.DemandeurNom,
-                    dateCreation     = demande.DateCreation.ToString("dd/MM/yyyy à HH:mm"),
+                    dateCreation = demande.DateCreation.ToLocalTime().ToString("dd/MM/yyyy à HH:mm"),
                     description      = demande.Description ?? "Aucune description"
                 };
 

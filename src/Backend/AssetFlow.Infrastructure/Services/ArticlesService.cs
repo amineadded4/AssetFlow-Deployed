@@ -134,6 +134,18 @@ namespace AssetFlow.Application.Services
                 }
 
                 // 2. Passer le statut à HorsService
+                var incidentsOuverts = await _db.Incidents
+                .Where(i => i.ArticleId == id &&
+                            i.Statut != StatutIncident.Resolu &&
+                            i.Statut != StatutIncident.Cloture)
+                .ToListAsync();
+
+                foreach (var incident in incidentsOuverts)
+                {
+                    incident.Statut              = StatutIncident.Resolu;
+                    incident.DateResolution      = DateTime.Now;
+                    incident.CommentairesResolution = "Résolu automatiquement — article mis hors service.";
+                }
                 article.Statut = StatutArticle.HorsService;
 
                 // 3. Enregistrer dans la biographie
@@ -152,6 +164,51 @@ namespace AssetFlow.Application.Services
                 await tx.CommitAsync();
 
                 return (true, $"Article #{id} mis hors service.");
+            }
+            catch (Exception ex)
+            {
+                await tx.RollbackAsync();
+                return (false, $"Erreur : {ex.InnerException?.Message ?? ex.Message}");
+            }
+        }
+
+        // ── Remise en service d'un article hors service ───────────────────
+        public async Task<(bool Success, string Message)> RemettreEnServiceAsync(int id)
+        {
+            var article = await _db.ArticlesIndividuels
+                .Include(a => a.Materiel)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (article is null)
+                return (false, "Article introuvable.");
+
+            if (article.Statut != StatutArticle.HorsService)
+                return (false, "L'article n'est pas hors service.");
+
+            await using var tx = await _db.Database.BeginTransactionAsync();
+            try
+            {
+                // 1. Remettre l'état à Bon (0) et le statut à Disponible
+                article.Etat   = EtatArticle.Bon;   // enum value 0
+                article.Statut = StatutArticle.Disponible;
+
+                // 2. Incrémenter le stock du matériel
+                article.Materiel.QuantiteStock += 1;
+
+                // 3. Enregistrer dans la biographie
+                _db.ArticleHistoriques.Add(new ArticleHistorique
+                {
+                    ArticleId     = article.Id,
+                    TypeEvenement = TypeEvenementArticle.MiseEnStock,
+                    UtilisateurId = null,
+                    DateEvenement = DateTime.Now,
+                    Description   = "Remis en service — état remis à Bon, retour en stock disponible"
+                });
+
+                await _db.SaveChangesAsync();
+                await tx.CommitAsync();
+
+                return (true, $"Article #{id} remis en service avec succès.");
             }
             catch (Exception ex)
             {

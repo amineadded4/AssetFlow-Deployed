@@ -84,7 +84,7 @@ namespace AssetFlow.Infrastructure.Services
                     typeIncident   = incident.TypeIncident,
                     materielNom    = incident.Affectation?.Materiel?.Designation ?? "—",
                     commentaire    = commentaireResolution?.Trim() ?? "Aucun commentaire",
-                    dateResolution = DateTime.UtcNow.ToString("dd/MM/yyyy à HH:mm")
+                    dateResolution = DateTime.Now.ToString("dd/MM/yyyy à HH:mm")
                 };
 
                 var json    = JsonSerializer.Serialize(payload);

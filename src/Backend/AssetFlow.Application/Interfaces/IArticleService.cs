@@ -13,5 +13,6 @@ namespace AssetFlow.Application.Interfaces
         ///   – enregistre un événement dans la biographie
         /// </summary>
         Task<(bool Success, string Message)> MettreHorsServiceAsync(int id);
+        Task<(bool Success, string Message)> RemettreEnServiceAsync(int id);
     }
 }

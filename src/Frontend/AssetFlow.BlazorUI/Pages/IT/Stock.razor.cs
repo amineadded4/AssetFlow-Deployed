@@ -50,6 +50,8 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private bool              _chargementArticles    = false;
         private ArticleDto? _articleHorsService    = null;
         private bool        _horsServiceEnCours    = false;
+        private ArticleDto? _articleRemiseEnService = null;
+        private bool        _remiseEnServiceEnCours  = false;
 
         protected override async Task OnInitializedAsync()
         {
@@ -326,6 +328,40 @@ namespace AssetFlow.BlazorUI.Pages.IT
             {
                 _articleHorsService = null;
                 _horsServiceEnCours = false;
+                StateHasChanged();
+            }
+        }
+        private void DemanderRemiseEnService(ArticleDto art) => _articleRemiseEnService = art;
+        private void AnnulerRemiseEnService()                 => _articleRemiseEnService = null;
+
+        private async Task ConfirmerRemiseEnService()
+        {
+            if (_articleRemiseEnService is null) return;
+            var art = _articleRemiseEnService;
+            _remiseEnServiceEnCours = true;
+            StateHasChanged();
+
+            try
+            {
+                var (success, message) = await ArticleSvc.RemettreEnServiceAsync(art.Id);
+                if (success)
+                {
+                    var idx = _panneauArticles.IndexOf(art);
+                    if (idx >= 0) _panneauArticles[idx].Statut = "Disponible";
+
+                    AfficherToast($"Article « {art.NumeroSerie ?? $"#{art.Id}"} » remis en service.", "toast-success");
+                    await ChargerMateriels();
+                }
+                else
+                {
+                    AfficherToast(message, "toast-error");
+                }
+            }
+            catch (Exception ex) { AfficherToast($"Erreur : {ex.Message}", "toast-error"); }
+            finally
+            {
+                _articleRemiseEnService = null;
+                _remiseEnServiceEnCours = false;
                 StateHasChanged();
             }
         }

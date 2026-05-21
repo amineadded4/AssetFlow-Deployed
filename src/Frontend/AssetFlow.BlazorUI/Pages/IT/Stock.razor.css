@@ -1045,3 +1045,76 @@ html.dark .stk-hs-warning { background: rgba(217,119,6,0.10); color: #fbbf24; }
     from { opacity: 0; transform: translateX(16px) scale(0.92); }
     to   { opacity: 1; transform: translateX(0) scale(1); }
 }
+/* ── Bouton remise en service (vert) ── */
+.stk-art-restore-btn {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid transparent;
+    color: var(--text-muted, #64748b);
+    background: transparent;
+    cursor: pointer; transition: all .15s; flex-shrink: 0;
+}
+.stk-art-restore-btn svg {
+    width: 13px; height: 13px;
+    fill: none; stroke: currentColor; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+}
+.stk-art-restore-btn:hover {
+    background: rgba(5, 150, 105, 0.10);
+    color: #059669;
+    border-color: rgba(5, 150, 105, 0.25);
+    transform: scale(1.08);
+}
+html.dark .stk-art-restore-btn:hover { background: rgba(5,150,105,0.15); }
+
+/* ── Modal remise en service ── */
+.stk-modal-restore { max-width: 400px; }
+
+.stk-modal-icon-restore {
+    background: rgba(5, 150, 105, 0.10);
+    border: 1px solid rgba(5, 150, 105, 0.25);
+}
+.stk-modal-icon-restore svg {
+    stroke: #059669;
+    fill: none; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+}
+
+.stk-restore-label {
+    display: inline-block;
+    padding: 1px 8px; border-radius: 999px;
+    background: rgba(5,150,105,0.10);
+    color: #059669; font-weight: 700; font-size: 12px;
+    border: 1px solid rgba(5,150,105,0.22);
+}
+
+.stk-restore-info { align-items: flex-start; gap: 8px;
+    margin-top: 10px; padding: 10px 12px;
+    background: rgba(5,150,105,0.06);
+    border: 1px solid rgba(5,150,105,0.20);
+    border-radius: 8px;
+    font-size: 12.5px; color: #065f46; line-height: 1.5;
+}
+.stk-restore-info svg {
+    width: 15px; height: 15px; flex-shrink: 0;
+    fill: none; stroke: #059669; stroke-width: 2; margin-top: 1px;
+}
+html.dark .stk-restore-info { background: rgba(5,150,105,0.10); color: #6ee7b7; }
+
+/* Bouton confirmer remise en service */
+.stk-modal-restore-confirm {
+    flex: 2; display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 0.7rem;
+    background: linear-gradient(135deg, #059669, #047857);
+    border: none; border-radius: 0.625rem;
+    color: #fff; font-size: 0.84rem; font-weight: 700;
+    font-family: inherit; cursor: pointer; transition: all .18s;
+    box-shadow: 0 4px 14px rgba(5,150,105,0.28);
+}
+.stk-modal-restore-confirm:hover:not(:disabled) {
+    background: linear-gradient(135deg, #047857, #065f46);
+    box-shadow: 0 6px 20px rgba(5,150,105,0.38);
+    transform: translateY(-1px);
+}
+.stk-modal-restore-confirm:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }

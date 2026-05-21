@@ -43,6 +43,15 @@ namespace AssetFlow.WebAPI.Controllers
                 return message.Contains("introuvable") ? NotFound(new { Message = message }) : BadRequest(new { Message = message });
             return Ok(new { Message = message });
         }
+        [HttpPatch("{id:int}/remettre-en-service")]
+        [Authorize(Policy = "ITOrAdmin")]
+        public async Task<IActionResult> RemettreEnService(int id)
+        {
+            var (success, message) = await _articleService.RemettreEnServiceAsync(id);
+            if (!success)
+                return message.Contains("introuvable") ? NotFound(new { Message = message }) : BadRequest(new { Message = message });
+            return Ok(new { Message = message });
+        }
     }
 
     public class UpdateNumeroSerieDto

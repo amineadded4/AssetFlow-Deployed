@@ -134,8 +134,22 @@ html.dark .layout-shell::before {
 .topbar-menu-btn:hover { background: var(--bg-row-hover); border-color: var(--primary-light); }
 
 .topbar-brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.topbar-brand-icon {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-md);
+    background: rgba(19,109,236,0.10);
+    color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.topbar-brand-icon svg {
+    width: 17px; height: 17px;
+    fill: none; stroke: currentColor;
+    stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+}
+html.dark .topbar-brand-icon { background: rgba(59,130,246,0.15); }
 .topbar-brand h1 {
-    font-size: 1.15rem; font-weight: 700;
+    font-size: 1.15rem; font-weight: 600;
     color: var(--text-primary); letter-spacing: -0.03em;
 }
 .topbar-role-badge {
@@ -149,7 +163,7 @@ html.dark .topbar-role-badge { background: rgba(59,130,246,0.15); color: #60A5FA
 
 /* Recherche : flex 1 au milieu */
 .topbar-search {
-    flex: 1; position: relative; max-width: 380px; margin: 0 auto;
+    flex: 1; position: relative; max-width: 380px;
 }
 .topbar-search .search-icon {
     position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
@@ -173,7 +187,7 @@ html.dark .topbar-role-badge { background: rgba(59,130,246,0.15); color: #60A5FA
 }
 
 /* Boutons export — à droite de la row, style pill compact */
-.topbar-export-btns { display: flex; gap: 6px; flex-shrink: 0;margin-right: 50px; }
+.topbar-export-btns { display: flex; gap: 6px; flex-shrink: 0; margin-left: 350px;}
 .btn-export {
     display: flex; align-items: center; gap: 5px;
     padding: 7px 13px;
@@ -706,7 +720,7 @@ html.dark .btn-statut-en_cours_traitement.statut-actif { color: #22d3ee; backgro
     .topbar-brand { flex-shrink: 1; min-width: 0; }
     .topbar-brand h1 { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .topbar-role-badge { display: none; }
-    .topbar-export-btns { display: none; }
+    .topbar-export-btns { margin-left: 0; }
     .topbar-search-desktop { display: none; }
     .topbar-row2 { display: flex !important; flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 16px; }
     .topbar-export-btns-mobile { display: flex; gap: 6px; flex-shrink: 0; }
@@ -718,6 +732,7 @@ html.dark .btn-statut-en_cours_traitement.statut-actif { color: #22d3ee; backgro
         transition: all var(--t); white-space: nowrap;
         box-shadow: var(--shadow-card);
     }
+    .topbar-export-btns {margin-left: 0;}
     .btn-export-mobile svg { width: 13px; height: 13px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
     .btn-export-mobile:hover { border-color: var(--primary); color: var(--primary); }
     .btn-export-pdf-mobile:hover { border-color: #ef4444; color: #ef4444; }
@@ -763,4 +778,5 @@ html.dark .btn-statut-en_cours_traitement.statut-actif { color: #22d3ee; backgro
     .article-total-qty {
         display: inline !important;
     }
+    .topbar-export-btns {display: none;}
 }

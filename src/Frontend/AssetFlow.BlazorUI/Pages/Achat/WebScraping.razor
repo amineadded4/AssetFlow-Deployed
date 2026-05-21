@@ -33,6 +33,14 @@
                         </svg>
                     </button>
                     <div class="ws-topbar-brand">
+                        <div class="ws-brand-icon">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="9"/>
+                                <path d="M3 12h18"/>
+                                <path d="M12 3c-2.5 3-4 5.5-4 9s1.5 6 4 9"/>
+                                <path d="M12 3c2.5 3 4 5.5 4 9s-1.5 6-4 9"/>
+                            </svg>
+                        </div>
                         <h1>Scraping Marché</h1>
                         <span class="ws-role-badge">Recherche de prix</span>
                     </div>
@@ -328,6 +336,11 @@
                 }
             </div>
         </main>
+
+        @* @if (!string.IsNullOrEmpty(_toastMsg))
+        {
+            <div class="ws-toast @_toastType">@_toastMsg</div>
+        } *@
     </div>
 <ScrapingToastGlobal />
 </RoleAuthGuard>    

@@ -211,7 +211,7 @@ html.dark .ws-segmented { background: rgba(255,255,255,0.08); }
 .ws-search-btn {
     display: flex; align-items: center; gap: 8px;
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #136dec, #1d4ed8) !important; color: #fff;
+    background: linear-gradient(135deg,#136dec,#1d4ed8) !important; color: #fff;
     border: none; border-radius: var(--radius-md);
     font-size: 0.875rem; font-weight: 700; cursor: pointer;
     white-space: nowrap; transition: all var(--t);
@@ -717,9 +717,10 @@ html.dark .ws-modal-sites { background: rgba(255,255,255,0.04); }
     .sidebar.open { transform: translateX(0); }
     .topbar-menu-btn { display: flex; }
     .ws-content { padding: 1.25rem; gap: 1.5rem; }
-    .ws-topbar  { padding: 0 14px; }
+    .ws-topbar  { padding: 0 16px; }
     .ws-filters-panel { gap: 1.25rem; }
     .ws-filter-sep { display: none; }
+    .ws-topbar-brand h1 { font-size: 1rem; }
 }
 @media (max-width: 540px) {
     .ws-cards-grid    { grid-template-columns: 1fr; }
@@ -734,14 +735,23 @@ html.dark .ws-modal-sites { background: rgba(255,255,255,0.04); }
 @media (max-width: 540px)  {
     .ws-role-badge {display: none;}
 }
-@media (max-width: 540px) {
-    .ws-toast {
-        bottom: 1rem;
-        left: 1rem;
-        right: 1rem;
-        width: auto;
-        font-size: 14px;
-        padding: 14px 16px;
-        z-index: 9999;
-    }
+.ws-brand-icon {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-md);
+    background: rgba(19,109,236,0.10);
+    color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.ws-brand-icon svg {
+    width: 18px; height: 18px;
+    fill: none; stroke: currentColor;
+    stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+}
+html.dark .ws-brand-icon { background: rgba(61,142,245,0.15); }
+@media (max-width: 480px) {
+    .ws-topbar-brand h1  { font-size: 0.9rem; }
+    .ws-role-badge       { display: none; }
+    .ws-brand-icon       { width: 30px; height: 30px; }
+    .ws-brand-icon svg   { width: 15px; height: 15px; }
 }

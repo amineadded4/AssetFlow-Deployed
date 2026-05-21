@@ -173,7 +173,7 @@ html.dark .sk-shell::before {
 
 .sk-topbar-left  { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
 .sk-topbar-title {
-    font-size: 17px; font-weight: 700;
+    font-size: 17px; font-weight: 600;
     color: var(--text-primary); white-space: nowrap;
     letter-spacing: -0.4px;
     background: var(--text-primary);
@@ -241,7 +241,7 @@ html.dark .sk-shell::before {
     stroke: var(--text-hint); stroke-width: 2.5; stroke-linecap: round; pointer-events: none;
 }
 
-.sk-topbar-right { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
+.sk-topbar-right { display: none; }
 
 .sk-btn-export {
     display: flex; align-items: center; gap: 6px;
@@ -294,10 +294,11 @@ html.dark .sk-shell::before {
 }
 .sk-content.panel-open { margin-right: 460px; }
 
-.sk-section-header {
-    display: flex; align-items: flex-start;
-    justify-content: space-between; flex-wrap: wrap;
-    gap: 1rem; margin-bottom: 24px;
+.sk-section-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
 }
 .sk-section-title {
     font-size: 26px; font-weight: 500;
@@ -848,12 +849,12 @@ html.dark .sk-inp option:hover {
 .sk-remove-img {
     position: absolute; top: -8px; right: -8px;
     width: 26px; height: 26px; border-radius: var(--radius-full);
-    background: var(--rose); color: #fff;
+    background: var(--rose); color: gray;
     display: flex; align-items: center; justify-content: center;
     border: 2px solid var(--bg-panel);
     box-shadow: 0 2px 8px rgba(184,45,45,0.3);
 }
-.sk-remove-img svg { width: 12px; height: 12px; fill: none; stroke: gray !important; stroke-width: 3; }
+.sk-remove-img svg { width: 12px; height: 12px; fill: none; stroke: gray; stroke-width: 3; }
 
 /* Toggle commande */
 .sk-commande-toggle {
@@ -1145,4 +1146,53 @@ html.dark .art-rep        { background: rgba(212,131,26,0.12); }
     .sk-btn-export    { flex-shrink: 0; }
     .sk-cmd-table-header,
     .sk-cmd-row { grid-template-columns: 1fr 80px 1fr 80px 80px 90px 80px; font-size: 11px; }
+}
+.sk-brand-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    background: var(--primary-10);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background var(--t);
+}
+.sk-brand-icon svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+html.dark .sk-brand-icon {
+    background: var(--primary-20);
+}
+.sk-section-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+@media (max-width: 480px) {
+    .sk-section-header {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+    }
+
+    .sk-section-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .sk-btn-add {
+        flex: 1;
+        justify-content: center;
+    }
 }

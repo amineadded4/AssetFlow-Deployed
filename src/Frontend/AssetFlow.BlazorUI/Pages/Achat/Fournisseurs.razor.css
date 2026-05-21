@@ -191,6 +191,13 @@ html.dark .layout-shell::before {
 }
 
 .topbar-right { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0; }
+.topbar .hero-left { gap: 12px; }
+.topbar .hero-icon { width: 38px; height: 38px; border-radius: var(--radius-md); }
+.topbar .hero-icon svg { width: 18px; height: 18px; }
+.topbar .hero-title { font-size: 17px; font-weight: 600; letter-spacing: -0.4px; }
+.topbar .hero-sub   { font-size: 12px; margin-top: 2px; }
+
+.page-hero .search-wrap { max-width: 420px; flex: 1; }
 
 /* Bouton Nouveau Fournisseur */
 .btn-add {
@@ -361,7 +368,7 @@ html.dark .alert-error { background: rgba(176,45,45,0.12); }
 .section-header { display: flex; align-items: center; margin-bottom: 12px; }
 .section-title-group { display: flex; align-items: center; gap: 10px; }
 .section-title {
-    font-size: 17px; font-weight: 800;
+    font-size: 17px; font-weight: 600;
     color: var(--text-primary); letter-spacing: -0.3px;
 }
 .count-badge {
@@ -536,9 +543,11 @@ html.dark .act-del:hover  { background: rgba(176,45,45,0.12); }
 
 /* ── Loading / Empty ── */
 .td-loading {
-    text-align: center; padding: 56px;
+    padding: 60px 20px;
     color: var(--text-secondary); font-size: 13px;
     display: flex; align-items: center; justify-content: center; gap: 12px;
+    width: 100%;           /* ← ajoute ça */
+    text-align: center;    /* ← ajoute ça */
 }
 .td-empty { padding: 0; }
 .empty-state {
@@ -876,22 +885,77 @@ html.dark .form-inp { background: var(--bg-input); }
 }
 @media (max-width: 768px) {
     .topbar-menu-btn { display: flex; }
-    .topbar          { padding: 0 72px 0 16px; }
+
+    .topbar {
+        height: auto;
+        padding: 10px 16px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Ligne 1 : burger + titre + icône */
+    .topbar .hero-left {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* Afficher le titre et sous-titre — on retire les display:none */
+    .topbar .hero-title {
+        font-size: 15px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .topbar .hero-sub {
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .topbar .hero-icon {
+        display: flex; /* était display:none — on le remet */
+        width: 32px;
+        height: 32px;
+    }
+
+    /* Ligne 2 : bouton Nouveau Fournisseur seul */
+    .topbar-right {
+        width: 100%;
+        margin-left: 0;
+        justify-content: flex-end;
+    }
+
     .page-content    { padding: 18px 16px; }
-    .page-hero       { flex-direction: column; align-items: flex-start; gap: 12px; }
-    .kpi-card        { flex: 1 1 100%; }
-    .form-panel      { width: 100%; }
-    .form-row-2      { grid-template-columns: 1fr; }
-    .detail-panel    { flex-direction: row; align-items: center; flex-wrap: nowrap; overflow-x: auto; gap: 12px; }
-    .detail-grid     { grid-template-columns: repeat(5, minmax(100px, 1fr)); flex: 1; min-width: 0; }
-    .detail-field    { padding: 8px 12px 8px 0; }
+
+    .page-hero {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .page-hero .search-wrap { max-width: 100%; }
+    .hero-actions { justify-content: flex-start; }
+
+    .kpi-card   { flex: 1 1 100%; }
+    .form-panel { width: 100%; }
+    .form-row-2 { grid-template-columns: 1fr; }
+    .detail-panel { flex-direction: row; align-items: center; flex-wrap: nowrap; overflow-x: auto; gap: 12px; }
+    .detail-grid  { grid-template-columns: repeat(5, minmax(100px, 1fr)); flex: 1; min-width: 0; }
+    .detail-field { padding: 8px 12px 8px 0; }
 }
 @media (max-width: 480px) {
+    .hero-sub{display: none;}
+
+    /* Supprimer la marge droite aberrante du bouton */
+    .btn-add { position: relative;right: 100px; }
+
+    /* Recherche visible dans page-hero */
+    .search-wrap { display: flex; }
+
     .kpi-value  { font-size: 26px; }
     .hero-title { font-size: 20px; }
     .detail-grid { grid-template-columns: 1fr; }
-    .btn-add {margin-right: 50px;}
-    .search-wrap {display: none;}
     .detail-panel    { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 8px; padding: 12px 16px; }
     .detail-grid     { grid-template-columns: repeat(5, minmax(90px, 1fr)); }
     .detail-field    { padding: 6px 10px 6px 0; }

@@ -140,9 +140,10 @@
          @onclick:stopPropagation="true">
         <div class="ai-demandes-header">
             <span class="ai-demandes-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"/>
-                    <polyline points="9 11 9 5 15 5 15 11"/>
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <path d="M16 10a4 4 0 0 1-8 0"/>
                 </svg>
                 Demandes à traiter
                 @if (_pendingDemandes.Count > 0)
@@ -216,16 +217,39 @@
             <div class="ai-topbar-left">
                 <div class="ai-topbar-brand">
                     <div class="ai-brand-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="7" y="6" width="10" height="9" rx="2"/>
-                            <line x1="12" y1="3" x2="12" y2="6"/>
-                            <circle cx="12" cy="2.5" r="0.8" fill="currentColor"/>
-                            <circle cx="10" cy="10" r="1" fill="currentColor"/>
-                            <circle cx="14" cy="10" r="1" fill="currentColor"/>
-                            <path d="M10 13h4"/>
-                            <path d="M9 15v2a3 3 0 0 0 6 0v-2"/>
-                            <line x1="7" y1="9" x2="5" y2="9"/>
-                            <line x1="17" y1="9" x2="19" y2="9"/>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                            stroke-linecap="round" stroke-linejoin="round"
+                            style="width:20px;height:20px;overflow:visible">
+
+                            <!-- Antenne centrale -->
+                            <line x1="12" y1="1.5" x2="12" y2="4.5"/>
+                            <circle cx="12" cy="1" r="0.9" fill="currentColor" stroke="none"/>
+
+                            <!-- Antennes latérales -->
+                            <line x1="8.5" y1="4" x2="7" y2="2.5"/>
+                            <circle cx="6.6" cy="2.1" r="0.7" fill="currentColor" stroke="none"/>
+                            <line x1="15.5" y1="4" x2="17" y2="2.5"/>
+                            <circle cx="17.4" cy="2.1" r="0.7" fill="currentColor" stroke="none"/>
+
+                            <!-- Corps / tête du bot -->
+                            <rect x="5" y="4.5" width="14" height="11" rx="3"
+                                fill="rgba(19,109,236,0.15)" stroke="currentColor"/>
+
+                            <!-- Yeux lumineux -->
+                            <circle cx="9.2" cy="9.5" r="1.5" fill="currentColor" stroke="none" opacity="0.9"/>
+                            <circle cx="14.8" cy="9.5" r="1.5" fill="currentColor" stroke="none" opacity="0.9"/>
+                            <!-- Reflets pupils -->
+                            <circle cx="9.7" cy="9" r="0.45" fill="white" stroke="none"/>
+                            <circle cx="15.3" cy="9" r="0.45" fill="white" stroke="none"/>
+
+                            <!-- Sourire -->
+                            <path d="M9 12.5 Q12 14.5 15 12.5" stroke-width="1.5"/>
+
+                            <!-- Jambes / connecteurs -->
+                            <line x1="9" y1="15.5" x2="9" y2="18"/>
+                            <line x1="15" y1="15.5" x2="15" y2="18"/>
+                            <line x1="7" y1="18" x2="11" y2="18"/>
+                            <line x1="13" y1="18" x2="17" y2="18"/>
                         </svg>
                     </div>
                     <div>
@@ -254,18 +278,19 @@
             <div class="ai-topbar-right">
                 @* ── NOUVEAU : bouton dropdown Demandes d'achat ── *@
                 <button class="ai-demandes-toggle-btn @(_demandesOpen ? "active" : "")"
-                        @onclick="ToggleDemandes"
-                        title="Demandes d'achat à traiter">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"/>
-                        <polyline points="9 11 9 5 15 5 15 11"/>
-                    </svg>
-                    <span>Demandes</span>
-                    @if (_pendingDemandes.Count > 0)
-                    {
-                        <span class="ai-demandes-count-badge">@_pendingDemandes.Count</span>
-                    }
-                </button>
+                    @onclick="ToggleDemandes"
+                    title="Demandes d'achat à traiter">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <path d="M16 10a4 4 0 0 1-8 0"/>
+                </svg>
+                <span>Demandes</span>
+                @if (_pendingDemandes.Count > 0)
+                {
+                    <span class="ai-demandes-count-badge">@_pendingDemandes.Count</span>
+                }
+            </button>
 
                 <div class="ai-status @(_isLoading ? "status-thinking" : "status-ready")">
                     <div class="ai-status-dot"></div>
@@ -377,16 +402,39 @@
                     @if (!msg.IsUser)
                     {
                         <div class="ai-msg-avatar">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="7" y="6" width="10" height="9" rx="2"/>
-                                <line x1="12" y1="3" x2="12" y2="6"/>
-                                <circle cx="12" cy="2.5" r="0.8" fill="currentColor"/>
-                                <circle cx="10" cy="10" r="1" fill="currentColor"/>
-                                <circle cx="14" cy="10" r="1" fill="currentColor"/>
-                                <path d="M10 13h4"/>
-                                <path d="M9 15v2a3 3 0 0 0 6 0v-2"/>
-                                <line x1="7" y1="9" x2="5" y2="9"/>
-                                <line x1="17" y1="9" x2="19" y2="9"/>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                                stroke-linecap="round" stroke-linejoin="round"
+                                style="width:20px;height:20px;overflow:visible">
+
+                                <!-- Antenne centrale -->
+                                <line x1="12" y1="1.5" x2="12" y2="4.5"/>
+                                <circle cx="12" cy="1" r="0.9" fill="currentColor" stroke="none"/>
+
+                                <!-- Antennes latérales -->
+                                <line x1="8.5" y1="4" x2="7" y2="2.5"/>
+                                <circle cx="6.6" cy="2.1" r="0.7" fill="currentColor" stroke="none"/>
+                                <line x1="15.5" y1="4" x2="17" y2="2.5"/>
+                                <circle cx="17.4" cy="2.1" r="0.7" fill="currentColor" stroke="none"/>
+
+                                <!-- Corps / tête du bot -->
+                                <rect x="5" y="4.5" width="14" height="11" rx="3"
+                                    fill="rgba(19,109,236,0.15)" stroke="currentColor"/>
+
+                                <!-- Yeux lumineux -->
+                                <circle cx="9.2" cy="9.5" r="1.5" fill="currentColor" stroke="none" opacity="0.9"/>
+                                <circle cx="14.8" cy="9.5" r="1.5" fill="currentColor" stroke="none" opacity="0.9"/>
+                                <!-- Reflets pupils -->
+                                <circle cx="9.7" cy="9" r="0.45" fill="white" stroke="none"/>
+                                <circle cx="15.3" cy="9" r="0.45" fill="white" stroke="none"/>
+
+                                <!-- Sourire -->
+                                <path d="M9 12.5 Q12 14.5 15 12.5" stroke-width="1.5"/>
+
+                                <!-- Jambes / connecteurs -->
+                                <line x1="9" y1="15.5" x2="9" y2="18"/>
+                                <line x1="15" y1="15.5" x2="15" y2="18"/>
+                                <line x1="7" y1="18" x2="11" y2="18"/>
+                                <line x1="13" y1="18" x2="17" y2="18"/>
                             </svg>
                         </div>
                     }

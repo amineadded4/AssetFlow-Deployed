@@ -73,7 +73,7 @@ html.dark .iteq-header {
 
 .iteq-page-title {
     font-size: 17px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text);
     margin: 0;
     letter-spacing: -0.025em;
@@ -556,7 +556,7 @@ html.dark .modal-header {
 .modal-icon-comment svg { stroke: #10B981 !important; width: 19px !important; height: 19px !important; }
 
 .modal-title {
-    font-size: 1.05rem; font-weight: 800; color: var(--text);
+    font-size: 1.05rem; font-weight: 700; color: var(--text);
     margin: 0 0 0.2rem;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
@@ -953,7 +953,7 @@ html.dark .existant-content { border-color: rgba(255,255,255,0.07); }
     }
     .articles-table-header,
     .articles-list {
-        min-width: 480px; /* toutes les colonnes restent visibles */
+        min-width: 480px;
     }
 }
 @media (max-width: 768px) {
@@ -966,4 +966,28 @@ html.dark .existant-content { border-color: rgba(255,255,255,0.07); }
 @media (max-width: 768px)  {
     .modal-subtitle {font-size: 1rem;}
     .modal-title{display: none;}
+}
+.header-brand-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(19,109,236,0.10);
+    color: var(--primary, #136dec);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+}
+.header-brand-icon svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+html.dark .header-brand-icon {
+    background: rgba(19,109,236,0.18);
 }

@@ -1293,7 +1293,7 @@ html.dark .ai-demandes-panel {
 }
 .ai-demandes-title {
     display: flex; align-items: center; gap: .55rem;
-    font-size: .95rem; font-weight: 900;
+    font-size: .95rem; font-weight: 700;
     color: var(--text); letter-spacing: -.3px;
 }
 .ai-demandes-title svg { width: 18px; height: 18px; color: var(--ai-blue); }
@@ -1381,8 +1381,8 @@ html.dark .ai-demandes-panel {
 .ai-demande-statut.stat-progress { background: rgba(59,130,246,.14);  color: #1d4ed8; border: 1px solid rgba(59,130,246,.25); }
 
 .ai-demande-name {
-    font-size: .93rem; font-weight: 800;
-    color: var(--text); line-height: 1.3;
+    font-size: .93rem; font-weight: 600;
+    color: blue; line-height: 1.3;
     margin-bottom: .38rem;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -1401,8 +1401,8 @@ html.dark .ai-demandes-panel {
     padding-top: .6rem;
     border-top: 1px dashed var(--border);
     display: flex; align-items: center; gap: .35rem;
-    font-size: .74rem; font-weight: 800;
-    color: var(--ai-blue); letter-spacing: .01em;
+    font-size: .74rem; font-weight: 600;
+    color: green; letter-spacing: .01em;
 }
 .ai-demande-action-hint svg { width: 12px; height: 12px; }
 
@@ -1761,3 +1761,34 @@ html.dark .ai-demandes-panel {
     color: var(--ai-red);
 }
 .ai-history-close-btn svg { width: 13px; height: 13px; }
+
+/* ── Agent IA — icône bot spéciale ── */
+.achat-nav-link[href="/agent-chat"] .achat-nav-icon {
+    background: rgba(19, 109, 236, 0.18);
+    box-shadow: 0 0 10px rgba(19, 109, 236, 0.25);
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+}
+
+.achat-nav-link[href="/agent-chat"] .achat-nav-icon svg {
+    width: 20px;
+    height: 20px;
+    color: #60a5fa;
+    filter: drop-shadow(0 0 4px rgba(96, 165, 250, 0.6));
+}
+
+.achat-nav-link[href="/agent-chat"]:hover .achat-nav-icon {
+    background: rgba(19, 109, 236, 0.28);
+    box-shadow: 0 0 16px rgba(19, 109, 236, 0.4);
+}
+
+.achat-nav-link[href="/agent-chat"]:hover .achat-nav-icon svg {
+    filter: drop-shadow(0 0 7px rgba(96, 165, 250, 0.9));
+    color: #93c5fd;
+}
+
+.achat-nav-link[href="/agent-chat"].active .achat-nav-icon svg {
+    filter: drop-shadow(0 0 8px rgba(96, 165, 250, 1));
+    color: #ffffff;
+}

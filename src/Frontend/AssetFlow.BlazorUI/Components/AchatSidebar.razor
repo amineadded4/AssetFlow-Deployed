@@ -68,17 +68,40 @@
         </a>
         <a href="/agent-chat" class="achat-nav-link @(ActivePage=="agent" ? "active" : "")" @onclick="() => _drawerOpen = false">
             <span class="achat-nav-icon">
-                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="7" y="6" width="10" height="9" rx="2"/>
-                        <line x1="12" y1="3" x2="12" y2="6"/>
-                        <circle cx="12" cy="2.5" r="0.8" fill="currentColor"/>
-                        <circle cx="10" cy="10" r="1" fill="currentColor"/>
-                        <circle cx="14" cy="10" r="1" fill="currentColor"/>
-                        <path d="M10 13h4"/>
-                        <path d="M9 15v2a3 3 0 0 0 6 0v-2"/>
-                        <line x1="7" y1="9" x2="5" y2="9"/>
-                        <line x1="17" y1="9" x2="19" y2="9"/>
-                    </svg>
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                    stroke-linecap="round" stroke-linejoin="round"
+                    style="width:20px;height:20px;overflow:visible">
+
+                    <!-- Antenne centrale -->
+                    <line x1="12" y1="1.5" x2="12" y2="4.5"/>
+                    <circle cx="12" cy="1" r="0.9" fill="currentColor" stroke="none"/>
+
+                    <!-- Antennes latérales -->
+                    <line x1="8.5" y1="4" x2="7" y2="2.5"/>
+                    <circle cx="6.6" cy="2.1" r="0.7" fill="currentColor" stroke="none"/>
+                    <line x1="15.5" y1="4" x2="17" y2="2.5"/>
+                    <circle cx="17.4" cy="2.1" r="0.7" fill="currentColor" stroke="none"/>
+
+                    <!-- Corps / tête du bot -->
+                    <rect x="5" y="4.5" width="14" height="11" rx="3"
+                        fill="rgba(19,109,236,0.15)" stroke="currentColor"/>
+
+                    <!-- Yeux lumineux -->
+                    <circle cx="9.2" cy="9.5" r="1.5" fill="currentColor" stroke="none" opacity="0.9"/>
+                    <circle cx="14.8" cy="9.5" r="1.5" fill="currentColor" stroke="none" opacity="0.9"/>
+                    <!-- Reflets pupils -->
+                    <circle cx="9.7" cy="9" r="0.45" fill="white" stroke="none"/>
+                    <circle cx="15.3" cy="9" r="0.45" fill="white" stroke="none"/>
+
+                    <!-- Sourire -->
+                    <path d="M9 12.5 Q12 14.5 15 12.5" stroke-width="1.5"/>
+
+                    <!-- Jambes / connecteurs -->
+                    <line x1="9" y1="15.5" x2="9" y2="18"/>
+                    <line x1="15" y1="15.5" x2="15" y2="18"/>
+                    <line x1="7" y1="18" x2="11" y2="18"/>
+                    <line x1="13" y1="18" x2="17" y2="18"/>
+                </svg>
             </span>
             <span class="achat-nav-text">Agent IA</span>
             @if (_stockAlertCount > 0)

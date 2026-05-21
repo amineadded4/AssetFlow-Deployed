@@ -53,7 +53,6 @@ html.dark .msg-layout::before {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 2rem;
     flex-shrink: 0;
     gap: 1.5rem;
     position: sticky;
@@ -67,7 +66,7 @@ html.dark .msg-header {
 
 .msg-page-title {
     font-size: 1.2rem;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text);
     margin: 0;
     letter-spacing: -0.025em;
@@ -991,4 +990,23 @@ html.dark .msg-voice-preview { background: rgba(19,109,236,0.09); border-color: 
         color: var(--text-muted);
         visibility: visible;
     }
+}
+.mai-brand-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(19,109,236,0.10);
+    color: #136dec;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.mai-brand-icon svg {
+    width: 17px; height: 17px;
+    fill: none; stroke: currentColor;
+    stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+}
+html.dark .mai-brand-icon { background: rgba(59,130,246,0.15); color: #60A5FA; }
+@media (max-width: 480px) {
+    .msg-page-title  { font-size: 0.9rem; }
+    .mai-brand-icon  { width: 30px; height: 30px; }
+    .mai-brand-icon svg { width: 14px; height: 14px; }
 }

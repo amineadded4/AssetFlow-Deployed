@@ -24,13 +24,14 @@
     <main class="msg-main">
 
         <header class="msg-header">
-            @* <button class="msg-hamburger" @onclick="() => _menuOpen = !_menuOpen" aria-label="Menu">
-                <span></span><span></span><span></span>
-            </button> *@
-             <button class="aff-hamburger" @onclick="() => _menuOpen = !_menuOpen" aria-label="Menu">
+            <button class="msg-hamburger" @onclick="() => _menuOpen = !_menuOpen" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
-
+            <div class="mai-brand-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+            </div>
             <div>
                 <h1 class="msg-page-title">Messagerie</h1>
                 <p class="msg-page-sub">Communication en temps réel avec les employés</p>

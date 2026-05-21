@@ -83,8 +83,8 @@ html.dark .mai-header {
 
 /* Titre */
 .mai-page-title {
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: 1.2rem;
+    font-weight: 600;
     color: var(--text);
     margin: 0 0 2px;
     letter-spacing: -0.025em;
@@ -871,4 +871,24 @@ html.dark .mai-voice-preview-bar { background: rgba(19,109,236,0.09); border-col
     .mai-rec-label     { display: none; }
     .mai-voice         { min-width: 200px; }
     .topbar-menu-btn   { display: flex; }
+}
+
+.mai-brand-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(19,109,236,0.10);
+    color: #136dec;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.mai-brand-icon svg {
+    width: 17px; height: 17px;
+    fill: none; stroke: currentColor;
+    stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+}
+html.dark .mai-brand-icon { background: rgba(59,130,246,0.15); color: #60A5FA; }
+@media (max-width: 480px) {
+    .mai-page-title  { font-size: 0.9rem; }
+    .mai-brand-icon  { width: 30px; height: 30px; }
+    .mai-brand-icon svg { width: 14px; height: 14px; }
 }

@@ -30,16 +30,24 @@
                     <line x1="3" y1="18" x2="21" y2="18"/>
                 </svg>
             </button>
+
+            <div class="mai-brand-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+            </div>
+
             <div>
                 <h1 class="mai-page-title">Messagerie — Service IT</h1>
                 <p class="mai-page-sub">Communication avec les agents IT</p>
             </div>
+
             <div class="mai-conn-status @(_hubConnected ? "connected" : "disconnected")">
                 <span class="mai-conn-dot"></span>
                 <span>@(_hubConnected ? "En ligne" : "Reconnexion...")</span>
             </div>
         </header>
-
+        
         <div class="mai-body">
 
             @* ── COLONNE GAUCHE ── *@

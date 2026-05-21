@@ -13,7 +13,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
         [Inject] private NavigationManager           Navigation      { get; set; } = default!;
         [Inject] private ILocalStorageService        LocalStorage    { get; set; } = default!;
         [Inject] private IJSRuntime JS { get; set; } = default!;
-        [Inject] private HttpClient Http { get; set; } = default!;
 
         private bool   IsLoading      { get; set; } = true;
         private bool   _menuOpen      = false;
@@ -72,9 +71,8 @@ namespace AssetFlow.BlazorUI.Pages.IT
         }
         private async Task ConnecterSignalR()
         {
-            var hubUrl = Http.BaseAddress!.ToString().TrimEnd('/') + "/dashboardhub";
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl(hubUrl, options =>
+                .WithUrl("http://localhost:5235/dashboardhub", options =>
                 {
                     options.AccessTokenProvider = async () =>
                     {
@@ -115,6 +113,14 @@ namespace AssetFlow.BlazorUI.Pages.IT
                 try { await _hubConnection.InvokeAsync("LeaveDashboard"); } catch { }
                 await _hubConnection.DisposeAsync();
             }
+        }
+        private async void AfficherSucces(string message)
+        {
+            SuccessMessage = message;
+            StateHasChanged();
+            await Task.Delay(3500);
+            SuccessMessage = string.Empty;
+            StateHasChanged();
         }
 
         private async Task LoadDemandesAsync()
@@ -254,13 +260,13 @@ namespace AssetFlow.BlazorUI.Pages.IT
                     }).ToList()
                 });
 
-                await AfficherSucces("Demande soumise avec succès !");
+                AfficherSucces("Demande soumise avec succès !");
                 _showCreatePanel = false;
                 await LoadDemandesAsync();
             }
             catch
             {
-                await AfficherErreur("Erreur lors de la soumission. Veuillez réessayer.");
+                ErrorMessage = "Erreur lors de la soumission. Veuillez réessayer.";
             }
             finally
             {
@@ -347,13 +353,13 @@ namespace AssetFlow.BlazorUI.Pages.IT
                     }).ToList()
                 });
 
-                await AfficherSucces("Demande soumise avec succès !");
+                AfficherSucces("Demande modifiée avec succès !");
                 _showEditPanel = false;
                 await LoadDemandesAsync();
             }
             catch
             {
-                await AfficherErreur("Erreur lors de la soumission. Veuillez réessayer.");
+                ErrorMessage = "Erreur lors de la modification. Veuillez réessayer.";
             }
             finally
             {
@@ -389,14 +395,14 @@ namespace AssetFlow.BlazorUI.Pages.IT
             try
             {
                 await DemandeService.DeleteDemandeAsync(_demandeASupprimer.IdDemande);
-                await AfficherSucces($"Demande \"{_demandeASupprimer.NomProduit}\" supprimée avec succès.");
+                AfficherSucces($"Demande \"{_demandeASupprimer.NomProduit}\" supprimée avec succès.");
                 _showDeleteModal   = false;
                 _demandeASupprimer = null;
                 await LoadDemandesAsync();
             }
             catch
             {
-                await AfficherErreur("Erreur lors de la suppression. Veuillez réessayer.");
+                ErrorMessage = "Erreur lors de la suppression. Veuillez réessayer.";
             }
             finally
             {
@@ -439,25 +445,6 @@ namespace AssetFlow.BlazorUI.Pages.IT
             if (diff.TotalDays    < 7)   return $"il y a {(int)diff.TotalDays} jours";
             if (diff.TotalDays    < 30)  return $"il y a {(int)(diff.TotalDays / 7)} semaine(s)";
             return $"il y a {(int)(diff.TotalDays / 30)} mois";
-        }
-        private async Task AfficherSucces(string message)
-        {
-            SuccessMessage = message;
-            ErrorMessage   = string.Empty;
-            StateHasChanged();
-            await Task.Delay(3500);
-            SuccessMessage = string.Empty;
-            StateHasChanged();
-        }
-
-        private async Task AfficherErreur(string message)
-        {
-            ErrorMessage   = message;
-            SuccessMessage = string.Empty;
-            StateHasChanged();
-            await Task.Delay(3500);
-            ErrorMessage = string.Empty;
-            StateHasChanged();
         }
 
         // ── Modèles formulaire ───────────────────────────────────

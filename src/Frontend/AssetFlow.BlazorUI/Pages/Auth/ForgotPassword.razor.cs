@@ -43,7 +43,10 @@ namespace AssetFlow.BlazorUI.Pages.Auth
             IsLoading = false;
 
             if (response.IsSuccessStatusCode)
+            {
                 CodeSent = true;
+                Step = 2;
+            } 
             else
                 ErrorMessage = "Erreur lors de l'envoi. Vérifiez votre email.";
         }
@@ -145,6 +148,23 @@ namespace AssetFlow.BlazorUI.Pages.Auth
             "Employe"     => "rgba(245,158,11,0.35)",
             "Admin"       => "rgba(239,68,68,0.35)",
             _             => "rgba(19,109,236,0.35)"
+        };
+        private string RoleColor15 => Role switch
+        {
+            "IT"          => "rgba(124,58,237,0.08)",
+            "EquipeAchat" => "rgba(19,109,236,0.08)",
+            "Employe"     => "rgba(245,158,11,0.08)",
+            "Admin"       => "rgba(239,68,68,0.08)",
+            _             => "rgba(19,109,236,0.08)"
+        };
+
+        private string RoleColor30 => Role switch
+        {
+            "IT"          => "rgba(124,58,237,0.20)",
+            "EquipeAchat" => "rgba(19,109,236,0.20)",
+            "Employe"     => "rgba(245,158,11,0.20)",
+            "Admin"       => "rgba(239,68,68,0.20)",
+            _             => "rgba(19,109,236,0.20)"
         };
     }
 }

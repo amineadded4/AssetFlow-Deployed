@@ -793,6 +793,12 @@ namespace AssetFlow.BlazorUI.Pages.Achat
             "EnReparation" => "art-rep",
             _              => "art-disponible"
         };
+        private static string FormatStatut(string s) => s switch
+        {
+            "HorsService"  => "Hors Service",
+            "EnReparation" => "En Réparation",
+            _              => s
+        };
         private static string CatBadgeClass(string cat) => cat.ToLower() switch
         {
             var c when c.Contains("périph") || c.Contains("periph") => "cat-teal",

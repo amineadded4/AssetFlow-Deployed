@@ -606,7 +606,7 @@
                                         </div>
                                     </div>
                                     <div class="sk-art-item-right">
-                                        <span class="sk-art-badge @StatutArticleClass(art.Statut)">@art.Statut</span>
+                                        <span class="sk-art-badge @StatutArticleClass(art.Statut)">@FormatStatut(art.Statut)</span>
                                         @if (_editArticleId != art.Id)
                                         {
                                             <button class="sk-art-edit-btn" title="Modifier le numéro de série" @onclick="() => OuvrirEditArticle(art)">

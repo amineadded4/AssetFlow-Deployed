@@ -373,6 +373,12 @@ namespace AssetFlow.BlazorUI.Pages.IT
             "EnReparation" => "art-rep",
             _              => "art-dispo"
         };
+        private static string FormatStatut(string s) => s switch
+        {
+            "HorsService"  => "Hors Service",
+            "EnReparation" => "En Réparation",
+            _              => s
+        };
     }
 
     public class MaterielStatsViewModel

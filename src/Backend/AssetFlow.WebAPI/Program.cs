@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 using Microsoft.AspNetCore.SignalR;
+using AssetFlow.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -204,6 +205,7 @@ builder.Services.AddScoped<IRedisScrapingService, RedisScrapingService>();
 builder.Services.AddScoped<IScrapingService, ScrapingService>();
 builder.Services.AddScoped<ITeamsIncidentNotifier, TeamsIncidentNotifier>();
 builder.Services.AddScoped<ITeamsDemandeAchatNotifier, TeamsDemandeAchatNotifier>();
+builder.Services.AddScoped<IArticleService, ArticleService>();
 builder.Services.AddSingleton<CloudinaryService>();
 
 // === SIGNALR — limite augmentée pour les messages vocaux (base64 audio) ===

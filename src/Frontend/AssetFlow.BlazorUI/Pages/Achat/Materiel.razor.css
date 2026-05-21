@@ -1196,3 +1196,86 @@ html.dark .sk-brand-icon {
         justify-content: center;
     }
 }
+/* ── Description inline avec tooltip ── */
+.td-name-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.td-desc-trigger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 260px;
+    cursor: default;
+}
+
+.td-desc-icon {
+    color: var(--primary);
+    opacity: 0.7;
+    flex-shrink: 0;
+    transition: opacity .15s;
+}
+
+.td-desc-text {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 230px;
+    line-height: 1.4;
+    font-style: italic;
+}
+
+.td-desc-trigger:hover .td-desc-icon {
+    opacity: 1;
+    color: var(--primary);
+}
+
+/* Tooltip description complète */
+.td-desc-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    z-index: 200;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    width: 300px;
+    max-width: 320px;
+    font-size: 12.5px;
+    color: var(--text);
+    line-height: 1.6;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    white-space: normal;
+    pointer-events: none;
+    /* petit triangle */
+    --arrow-size: 6px;
+}
+
+.td-desc-tooltip::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 16px;
+    border: var(--arrow-size) solid transparent;
+    border-top-color: var(--border);
+}
+
+.td-desc-tooltip::after {
+    content: '';
+    position: absolute;
+    top: calc(100% - 1px);
+    left: 16px;
+    border: var(--arrow-size) solid transparent;
+    border-top-color: var(--surface);
+}
+
+.td-desc-trigger:hover .td-desc-tooltip {
+    display: block;
+}

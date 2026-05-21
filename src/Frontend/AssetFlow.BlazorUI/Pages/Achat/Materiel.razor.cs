@@ -213,6 +213,11 @@ namespace AssetFlow.BlazorUI.Pages.Achat
         {
             await JS.InvokeVoidAsync("eval", "document.getElementById('img-upload').click()");
         }
+        private static string TruncateDescription(string? text, int maxLength)
+        {
+            if (string.IsNullOrEmpty(text)) return string.Empty;
+            return text.Length <= maxLength ? text : text[..maxLength].TrimEnd() + "…";
+        }
 
         // ── Chargement ─────────────────────────────────────────────
         private async Task ChargerDonnees()

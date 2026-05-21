@@ -128,10 +128,22 @@
                                         </div>
                                     </td>
                                     <td class="td-ref">@lg.Reference</td>
+                                    
                                     <td>
-                                        <div class="td-name-main">@lg.Designation</div>
-                                        @if (!string.IsNullOrEmpty(lg.Description))
-                                        { <div class="td-name-sub">@lg.Description</div> }
+                                        <div class="td-name-wrap">
+                                            <div class="td-name-main">@lg.Designation</div>
+                                            @if (!string.IsNullOrEmpty(lg.Description))
+                                            {
+                                                <div class="td-desc-trigger">
+                                                    <svg class="td-desc-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                                                    <span class="td-desc-text">@TruncateDescription(lg.Description, 60)</span>
+                                                    @if (lg.Description!.Length > 60)
+                                                    {
+                                                        <div class="td-desc-tooltip">@lg.Description</div>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
                                     </td>
                                     <td>
                                         <span class="sk-cat-badge @CatBadgeClass(lg.Categorie)">@lg.Categorie</span>

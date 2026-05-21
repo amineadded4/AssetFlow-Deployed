@@ -111,7 +111,7 @@ html.dark .ai-topbar {
 
 .ai-brand-title {
     font-size: .95rem;
-    font-weight: 800;
+    font-weight: 600;
     color: var(--text);
     letter-spacing: -.4px;
     white-space: nowrap;
@@ -515,7 +515,7 @@ html.dark .ai-alertes-sticky {
 
 .ai-welcome h2 {
     font-size: 1.5rem;
-    font-weight: 900;
+    font-weight: 600;
     color: var(--text);
     letter-spacing: -.5px;
     line-height: 1.2;

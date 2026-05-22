@@ -138,10 +138,34 @@ html.dark .emp-layout::before {
 
 
 .emp-header > div:first-of-type { min-width: 0; }
+.emp-header-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.emp-topbar-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: rgba(37,99,235,0.07);
+    color: #2563EB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.emp-topbar-icon svg {
+    width: 17px; height: 17px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.9;
+    stroke-linecap: round; stroke-linejoin: round;
+}
 
 .emp-page-title {
     font-size: 15px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text);
     letter-spacing: -0.03em;
     margin: 0;
@@ -1657,91 +1681,53 @@ html.dark .emp-modal-icon {
 
 @media (max-width: 768px) {
     .emp-hamburger { display: flex; }
-
     .emp-header {
         padding: 12px 16px;
+        padding-right: 60px;
         gap: 8px 10px;
         flex-wrap: wrap;
         align-items: center;
     }
-
-    /* Title block takes remaining space on first row */
-    .emp-header > div:first-of-type {
+    .emp-header-brand {
         flex: 1;
         min-width: 0;
+        order: 1;
     }
-
-    /* Tab toggle drops to second row, full width */
     .emp-tab-toggle {
-        order: 10;
+        order: 2;
         width: 100%;
         justify-content: center;
     }
-
-    .emp-page-title { font-size: 14px; }
+    .emp-page-title { font-size: 0.9rem; }
+    .emp-page-sub { font-size: 0; }
+    .emp-page-sub::after {
+        content: "Révoquez les affectations";
+        font-size: 11px;
+        color: var(--text-3);
+    }
     .emp-header-search { display: none; }
-
-    /* Layout scrollable vertical comme Incidents */
-    .emp-layout {
-        height: auto;
-        overflow: visible;
-    }
-
-    .emp-main {
-        overflow: visible;
-    }
-
-    .emp-body {
-        grid-template-columns: 1fr;
-        padding: 12px 14px 20px;
-        overflow-y: visible;
-        height: auto;
-    }
-
-    /* Liste employés : hauteur fixe + scroll interne */
-    .emp-col-left {
-        position: static;
-        max-height: 280px;
-        overflow-y: auto;
-    }
-
+    .emp-layout { height: auto; overflow: visible; }
+    .emp-main { overflow: visible; }
+    .emp-body { grid-template-columns: 1fr; padding: 12px 14px 20px; overflow-y: visible; height: auto; }
+    .emp-col-left { position: static; max-height: 280px; overflow-y: auto; }
     .emp-list { max-height: 220px; }
-
-    /* Panneau droit : hauteur auto, tout visible */
-    .emp-col-right {
-        overflow: visible;
-        height: auto;
-        min-height: 0;
-    }
-
-    .notif-panel {
-        width: calc(100vw - 28px);
-        right: -16px;
-    }
-
+    .emp-col-right { overflow: visible; height: auto; min-height: 0; }
+    .notif-panel { width: calc(100vw - 28px); right: -16px; }
     .emp-filter-tabs { flex-wrap: wrap; }
     .emp-aff-dates { gap: 8px; }
     .notif-bell-wrapper { display: none; }
 }
-
 @media (max-width: 480px) {
-    /* Tab toggle: visible, below title row */
-    .emp-tab-toggle {
-        display: flex;
-        order: 10;
-        width: 100%;
-        justify-content: center;
+    .emp-page-sub { font-size: 0; }
+    .emp-page-sub::after {
+        content: "Révoquez les affectations";
+        font-size: 11px;
+        color: var(--text-3);
     }
-
-    /* Shorter subtitle at 480px */
+    .emp-tab-toggle { display: flex; order: 10; width: 100%; justify-content: center; }
     .emp-sub-full  { display: none; }
     .emp-sub-short { display: inline; }
-
     .emp-modal { padding: 24px 20px 22px; }
-
-    .emp-body {
-        padding: 10px 10px 20px;
-        gap: 12px;
-    }
-    .emp-detail-count{padding: 3px 5px; position: relative; bottom: 30px;}
+    .emp-body { padding: 10px 10px 20px; gap: 12px; }
+    .emp-detail-count { padding: 3px 5px; position: relative; bottom: 30px; }
 }

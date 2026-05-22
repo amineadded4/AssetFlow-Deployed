@@ -150,7 +150,6 @@ html.dark .aff-sidebar {
     padding: 0.6rem 1.2rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 1.5rem;
     flex-shrink: 0;
     flex-wrap: wrap;
@@ -163,11 +162,32 @@ html.dark .aff-header {
     border-bottom-color: rgba(255, 255, 255, 0.07);
 }
 
-.aff-header-left { min-width: 0; }
+.aff-header-left {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.aff-topbar-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: rgba(37,99,235,0.07);
+    color: #2563EB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.aff-topbar-icon svg {
+    width: 17px; height: 17px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.9;
+    stroke-linecap: round; stroke-linejoin: round;
+}
 
 .aff-page-title {
     font-size: 17px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text, #0f172a);
     margin: 0 0 2px;
     letter-spacing: -0.025em;
@@ -1245,8 +1265,21 @@ html.dark .aff-comment-ta {
 /* ══════════════════════════
    HAMBURGER + DRAWER
 ══════════════════════════ */
-.aff-hamburger { display:none; flex-direction:column; justify-content:center; gap:5px; width:36px; height:36px; background:transparent; border:none; cursor:pointer; padding:4px; flex-shrink:0; }
-.aff-hamburger span { display:block; width:22px; height:2px; background:var(--text); border-radius:2px; transition:all 0.2s; }
+.aff-hamburger {
+    display: none;
+    width: 38px; height: 38px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    flex-direction: column; align-items: center;
+    justify-content: center; gap: 5px;
+    padding: 0; flex-shrink: 0;
+}
+.aff-hamburger span {
+    display: block; width: 18px; height: 2px;
+    background: var(--text); border-radius: 2px;
+}
 
 .aff-menu-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(3px); z-index:900; display:flex; }
 .aff-menu-drawer { width:270px; height:100%; background:#0F1E3C; display:flex; flex-direction:column; box-shadow:4px 0 24px rgba(0,0,0,0.4); animation:affDrawerIn 0.22s cubic-bezier(0.16,1,0.3,1); }
@@ -1281,40 +1314,42 @@ html.dark .aff-menu-drawer { background:#060d18; }
     .aff-layout { flex-direction: column; }
     .aff-sidebar { display: none; }
     .aff-hamburger { display: flex; }
-
     .aff-header {
         padding: 0.875rem 1rem;
         padding-right: 4rem;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        align-items: center;
+        height: auto;
         gap: 0.75rem;
-        height: 100px;
     }
-
     .aff-header-left {
-        width: 100%;
-        text-align: center;
-        position: relative;
-        bottom: 45px;
-        left: 20px;
+        width: auto;
+        text-align: left;
+        position: static;
     }
-
-    .aff-tab-toggle {
-        width: 100%;
-        justify-content: center;
+    .aff-page-sub { font-size: 0; }
+    .aff-page-sub::after {
+        content: "Assignation de matériels";
+        font-size: 12px;
+        color: var(--text-muted, #64748b);
     }
-
+    .aff-tab-toggle { width: 100%; justify-content: center; }
     .aff-tab { padding: 0.4rem 0.6rem; font-size: 0.72rem; }
     .aff-tab svg { width: 13px; height: 13px; }
-
     .aff-body { padding: 1rem; gap: 1.25rem; }
-
     .aff-emp-list { max-height: 260px; }
+    .aff-page-title{ font-size: 0.9rem;}
 }
 
 @media (max-width: 480px) {
+    .aff-page-sub { font-size: 0; }
+    .aff-page-sub::after {
+        content: "Assignation de matériels";
+        font-size: 12px;
+        color: var(--text-muted, #64748b);
+    }
     .aff-tab-toggle { width: 100%; }
     .aff-tab { flex: 1; justify-content: center; }
-
     .aff-product-card { flex-direction: column; }
     .aff-product-img { width: 100%; height: 140px; }
 }

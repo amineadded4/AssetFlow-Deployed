@@ -23,12 +23,19 @@
             <button class="emp-hamburger" @onclick="() => _menuOpen = !_menuOpen" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
-            <div>
-                <h1 class="emp-page-title">Gestion des Affectations</h1>
-                <p class="emp-page-sub">
-                    <span class="emp-sub-full">Consultez et révoquez les affectations par employé ou par projet</span>
-                    <span class="emp-sub-short">Consulter et révoquer les affectations</span>
-                </p>
+            <div class="emp-header-brand">
+                <div class="emp-topbar-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <line x1="17" y1="8" x2="23" y2="14"/>
+                        <line x1="23" y1="8" x2="17" y2="14"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="emp-page-title">Gestion des Affectations</h1>
+                    <p class="emp-page-sub">Consultez et révoquez les affectations par employé ou par projet</p>
+                </div>
             </div>
 
             @* ── Toggle Employés / Projets ── *@

@@ -1108,7 +1108,7 @@ html.dark .inc-modal-field textarea {
 @media (max-width: 768px) {
     .inc-layout { flex-direction: column; }
     .inc-hamburger { display: flex; }
-    .inc-header { padding: 12px 16px; padding-right: 120px; gap: 10px; flex-wrap: wrap; }
+    .inc-header {justify-content: start; } 
     .inc-header-search { display: none; }
     .inc-body { flex-direction: column; overflow-y: auto; }
     .inc-col-employes,
@@ -1117,12 +1117,7 @@ html.dark .inc-modal-field textarea {
 }
 @media (max-width: 480px){
     .inc-header {
-    padding: 10px 16px;
-    padding-right: 140px;
-    gap: 10px;
-    flex-wrap: nowrap;
-    align-items: center;
-    height: auto;
+    justify-content: start;
 }
 
 .inc-page-title {
@@ -1372,4 +1367,25 @@ html.dark .inc-tl-card.selected {
     opacity: 1;
     stroke: var(--inc-blue);
     transform: translateX(2px);
+}
+.inc-header-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.inc-topbar-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: var(--inc-blue-bg);
+    color: var(--inc-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.inc-topbar-icon svg {
+    width: 17px; height: 17px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.9;
+    stroke-linecap: round; stroke-linejoin: round;
 }

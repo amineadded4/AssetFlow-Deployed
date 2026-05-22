@@ -28,14 +28,23 @@
                         <span></span><span></span><span></span>
                     </button>
                     <div class="mda-header-left">
-                        <h1 class="mda-page-title">Mes demandes d'achat</h1>
-                        <p class="mda-page-sub">
-                            <span class="mda-sub-full">Consultez l'état de vos demandes et accédez aux offres fournisseurs</span>
-                            <span class="mda-sub-mobile">Consultez l'état des demandes d'achat</span>
-                        </p>
+                        <div class="mda-topbar-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                                <line x1="3" y1="6" x2="21" y2="6"/>
+                                <path d="M16 10a4 4 0 0 1-8 0"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="mda-page-title">Mes demandes d'achat</h1>
+                            <p class="mda-page-sub">
+                                <span class="mda-sub-full">Consultez l'état de vos demandes et accédez aux offres fournisseurs</span>
+                                <span class="mda-sub-mobile">Consultez l'état des demandes d'achat</span>
+                            </p>
+                        </div>
                     </div>
                     <button class="mda-btn-new mda-btn-new-desktop" @onclick="OpenCreatePanel">
-                        <svg viewBox="0 0 24 24"><li ne x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         <span class="mda-btn-new-label">Nouvelle demande</span>
                     </button>
                 </div>

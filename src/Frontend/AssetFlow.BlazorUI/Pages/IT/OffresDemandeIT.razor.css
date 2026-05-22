@@ -103,8 +103,21 @@ html.dark .oda-sidebar { background: #060d18; }
 /* ══════════════════════════════════════
    HAMBURGER + DRAWER MOBILE
 ══════════════════════════════════════ */
-.oda-hamburger { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 36px; height: 36px; background: transparent; border: none; cursor: pointer; padding: 4px; flex-shrink: 0; }
-.oda-hamburger span { display: block; width: 22px; height: 2px; background: var(--text); border-radius: 2px; }
+.oda-hamburger {
+    display: none;
+    width: 38px; height: 38px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    flex-direction: column; align-items: center;
+    justify-content: center; gap: 5px;
+    padding: 0; flex-shrink: 0;
+}
+.oda-hamburger span {
+    display: block; width: 18px; height: 2px;
+    background: var(--text); border-radius: 2px;
+}
 .oda-menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(3px); z-index: 900; display: flex; }
 .oda-menu-drawer  { width: 270px; height: 100%; background: #0F1E3C; display: flex; flex-direction: column; box-shadow: 4px 0 24px rgba(0,0,0,0.4); animation: odaDrawerIn 0.22s var(--oda-spring); }
 html.dark .oda-menu-drawer { background: #060d18; }
@@ -1232,7 +1245,6 @@ html.dark .oda-chat-pdf-name { background: rgba(79,70,229,0.18); color: #A5B4FC;
 .oda-sub-mobile { display: none; }
 @media (max-width: 480px) {
     .oda-sel-details {overflow-x: auto;}
-    .oda-hamburger {position: relative; bottom: 10px;}
     .oda-pill {display: none;}
     .oda-breadcrumb { display: none; }
     .oda-sub-full   { display: none; }

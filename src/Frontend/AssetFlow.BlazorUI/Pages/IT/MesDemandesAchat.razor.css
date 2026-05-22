@@ -131,7 +131,7 @@ html.dark .mda-header {
     gap: 16px;
 }
 
-.mda-header-left { flex: 1; min-width: 0; }
+.mda-header-left { flex: 1; min-width: 0; display:flex;align-items: center;flex-shrink: 0;gap:12px }
 
 .mda-page-title {
     font-size: 18px;
@@ -1730,7 +1730,6 @@ html.dark .mda-modal-cancel {
         grid-template-columns: minmax(160px, 2fr) 70px 160px 190px;
     }
 }
-.mda-sub-mobile { display: none; }
 
 @media (max-width: 768px) {
     .mda-layout        { flex-direction: column; }
@@ -1760,6 +1759,7 @@ html.dark .mda-modal-cancel {
     .mda-field-product {display: flex;width: 100%;}
 }
 
+.mda-sub-mobile { display: none; }
 @media (max-width: 480px) {
     .mda-btn-new-toolbar {
         display: inline-flex;
@@ -1782,7 +1782,7 @@ html.dark .mda-modal-cancel {
     }
     .add {display: flex;}
     .mda-sub-full   { display: none; }
-    .mda-sub-mobile { display: inline; }
+    .mda-sub-mobile { display: none; }
 }
 
 @media (max-width: 640px) {
@@ -1794,4 +1794,21 @@ html.dark .mda-modal-cancel {
     .mda-detail-grid { grid-template-columns: 1fr 1fr; }
     .mda-ligne-row-inputs { flex-direction: column; }
     .mda-field-qty   { width: 100%; }
+}
+
+.mda-topbar-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: var(--primary-soft, rgba(37,99,235,0.08));
+    color: var(--primary, #2563eb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.mda-topbar-icon svg {
+    width: 17px; height: 17px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.9;
+    stroke-linecap: round; stroke-linejoin: round;
 }

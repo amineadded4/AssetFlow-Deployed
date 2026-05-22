@@ -262,14 +262,11 @@ html.dark .aff-sidebar { background:#060d18; }
 }
 
 .itc-page-title {
-    font-size: 1.05rem;
+    font-size: 1.2rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--text);
     margin: 0;
-    letter-spacing: -0.25px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    letter-spacing: -0.025em;
 }
 
 .itc-page-sub {
@@ -1282,7 +1279,6 @@ html.dark .offre-cb-strip-close:hover { background:rgba(255,255,255,.12); }
     }
     .itc-header-left { flex: 1 1 100%;position: relative; bottom: 48px;left:45px}
     .itc-header-right { width: 100%; }
-    .itc-topbar-icon { display: none; }
     .itc-filter-bar { padding: 0.75rem 1rem; }
     .itc-content { padding: 0.875rem 1rem 1.5rem; overflow-y: auto; }
     .itc-sent-result { grid-template-columns: 1fr; }
@@ -1343,4 +1339,5 @@ html.dark .offre-cb-strip-close:hover { background:rgba(255,255,255,.12); }
         flex-shrink: 0;
     }
     .itc-btn-refresh:hover svg { stroke: var(--c-green); }
+    .itc-page-title {font-size: 0.9rem;}
 }

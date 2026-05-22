@@ -54,7 +54,9 @@ html.dark .msg-layout::before {
     align-items: center;
     justify-content: space-between;
     flex-shrink: 0;
-    gap: 1.5rem;
+    gap: 12px;
+    padding: 0 1.1rem;
+    padding-right: 72px;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -88,7 +90,6 @@ html.dark .msg-header {
     font-weight: 700;
     border: 1px solid;
     margin-left: auto;
-    margin-right: 40px;
     letter-spacing: 0.02em;
 }
 .msg-conn-status.connected    { background: rgba(16,185,129,0.09); color: #10b981; border-color: rgba(16,185,129,0.22); }

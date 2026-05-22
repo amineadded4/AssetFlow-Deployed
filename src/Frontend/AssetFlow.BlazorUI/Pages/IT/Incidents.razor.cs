@@ -61,6 +61,7 @@ namespace AssetFlow.BlazorUI.Pages.IT
         private bool _menuOpen = false;
         private string      _roleUtilisateur = "Service IT";
         private bool _estAdmin => _roleUtilisateur.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+        private HashSet<int> _expandedMateriels = new();
 
         protected override async Task OnInitializedAsync()
         {
@@ -222,6 +223,14 @@ namespace AssetFlow.BlazorUI.Pages.IT
             LoadingMateriels    = true; StateHasChanged();
             Materiels           = await Svc.GetMaterielsAsync(emp.UtilisateurId);
             LoadingMateriels    = false; StateHasChanged();
+        }
+
+        private void ToggleExpandMateriel(int materielId)
+        {
+            if (_expandedMateriels.Contains(materielId))
+                _expandedMateriels.Remove(materielId);
+            else
+                _expandedMateriels.Add(materielId);
         }
 
         private void SelectMateriel(IncidentMaterielDto mat) => MaterielSelectionne = mat;

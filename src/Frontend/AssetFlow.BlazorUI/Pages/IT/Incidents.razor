@@ -1,1206 +1,376 @@
-/* ═══════════════════════════════════════════════════
-   Incidents.razor.css — AssetFlow
-   Design raffiné · Professionnel · Clair & Élégant
-   ═══════════════════════════════════════════════════ */
-
-/* ── Variables locales ── */
-.inc-layout {
-    --inc-blue:       #2563EB;
-    --inc-blue-light: #3B82F6;
-    --inc-blue-bg:    rgba(37,99,235,0.07);
-    --inc-green:      #059669;
-    --inc-green-bg:   rgba(5,150,105,0.08);
-    --inc-amber:      #D97706;
-    --inc-amber-bg:   rgba(217,119,6,0.08);
-    --inc-red:        #DC2626;
-    --inc-red-bg:     rgba(220,38,38,0.07);
-    --inc-gray:       #64748B;
-    --inc-radius-sm:  6px;
-    --inc-radius-md:  10px;
-    --inc-radius-lg:  14px;
-    --inc-shadow-sm:  0 1px 4px rgba(0,0,0,0.07);
-    --inc-shadow-md:  0 4px 16px rgba(0,0,0,0.09);
-    --inc-transition: all .18s cubic-bezier(.4,0,.2,1);
-}
-
-/* ═══════════════════
-   LAYOUT
-═══════════════════ */
-.inc-layout {
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-    background: var(--bg, #F4F7FB);
-}
-
-.inc-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-width: 0;
-}
-
-/* ═══════════════════
-   HEADER
-═══════════════════ */
-.inc-header {
-    background: var(--surface, #fff);
-    border-bottom: 1px solid var(--border, rgba(0,0,0,0.08));
-    padding: 14px 24px;
-    padding-right: 72px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-html.dark .inc-header {
-    background: rgba(15,22,34,0.95);
-    border-bottom-color: rgba(255,255,255,0.07);
-}
-
-.inc-page-title {
-    font-size: 17px;
-    font-weight: 700;
-    color: var(--text, #0f172a);
-    margin: 0 0 2px;
-    letter-spacing: -0.025em;
-}
-
-.inc-page-sub {
-    font-size: 12px;
-    color: var(--text-muted, #64748b);
-    margin: 0;
-}
-
-/* Barre de recherche header */
-.inc-header-search {
-    position: relative;
-    display: flex;
-    align-items: center;
-    flex: 1;
-    max-width: 300px;
-}
-
-.inc-header-search svg {
-    position: absolute;
-    left: 12px;
-    width: 14px; height: 14px;
-    stroke: var(--text-muted);
-    fill: none;
-    stroke-width: 2;
-    pointer-events: none;
-    transition: stroke .15s;
-}
-
-.inc-header-search:focus-within svg { stroke: var(--inc-blue); }
-
-.inc-header-search input {
-    width: 100%;
-    padding: 9px 12px 9px 36px;
-    background: var(--surface-2, #F4F7FB);
-    border: 1px solid var(--border, rgba(0,0,0,0.1));
-    border-radius: var(--inc-radius-md);
-    color: var(--text);
-    font-size: 12.5px;
-    font-family: inherit;
-    outline: none;
-    transition: var(--inc-transition);
-}
-
-html.dark .inc-header-search input {
-    background: rgba(255,255,255,0.05);
-    border-color: rgba(255,255,255,0.1);
-}
-
-.inc-header-search input::placeholder { color: var(--text-muted); }
-
-.inc-header-search input:focus {
-    border-color: var(--inc-blue);
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
-    background: var(--surface);
-}
-
-/* ═══════════════════
-   ALERTES
-═══════════════════ */
-.inc-alert {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 10px 24px 0;
-    padding: 10px 14px;
-    border-radius: var(--inc-radius-md);
-    font-size: 12px;
-    font-weight: 500;
-    border: 1px solid;
-    flex-shrink: 0;
-    animation: incFade .25s ease;
-}
-
-.inc-alert svg {
-    width: 14px; height: 14px;
-    stroke: currentColor; fill: none; stroke-width: 2;
-    flex-shrink: 0;
-}
-
-.inc-alert-success {
-    background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
-    color: #059669;
-    border-color: rgba(5,150,105,0.25);
-}
-
-.inc-alert-error {
-    background: linear-gradient(135deg, #FFF1F2, #FFE4E6);
-    color: #DC2626;
-    border-color: rgba(220,38,38,0.25);
-}
-
-@keyframes incFade {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ═══════════════════
-   BODY 3 COLONNES
-═══════════════════ */
-.inc-body {
-    flex: 1;
-    display: flex;
-    overflow: hidden;
-    gap: 0;
-}
-
-/* ── Colonne 1 : Employés ── */
-.inc-col-employes {
-    width: 230px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--border, rgba(0,0,0,0.08));
-    overflow: hidden;
-    background: var(--surface, #fff);
-}
-
-/* ── Colonne 2 : Matériels ── */
-.inc-col-materiels {
-    width: 250px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--border, rgba(0,0,0,0.08));
-    overflow: hidden;
-    background: var(--surface, #fff);
-}
-
-/* ── Colonne 3 : Incidents ── */
-.inc-col-incidents {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-width: 0;
-    background: var(--surface-2, #F4F7FB);
-}
-
-html.dark .inc-col-employes,
-html.dark .inc-col-materiels {
-    border-right-color: rgba(255,255,255,0.07);
-    background: #111827;
-}
-
-html.dark .inc-col-incidents {
-    background: #0d1520;
-}
-
-/* ── En-tête de colonne ── */
-.inc-col-head {
-    padding: 14px 16px 12px;
-    border-bottom: 1px solid var(--border, rgba(0,0,0,0.08));
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    flex-shrink: 0;
-    background: var(--surface, #fff);
-}
-
-html.dark .inc-col-head {
-    border-bottom-color: rgba(255,255,255,0.07);
-    background: #111827;
-}
-
-.inc-col-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text, #0f172a);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    letter-spacing: -0.01em;
-}
-
-.inc-badge-count {
-    padding: 2px 8px;
-    background: var(--inc-blue-bg);
-    color: var(--inc-blue);
-    border: 1px solid rgba(37,99,235,0.2);
-    border-radius: 999px;
-    font-size: 10px;
-    font-weight: 700;
-    white-space: nowrap;
-    flex-shrink: 0;
-    font-variant-numeric: tabular-nums;
-}
-
-/* ── Filtre rôles ── */
-.inc-role-filter {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--border, rgba(0,0,0,0.08));
-    flex-shrink: 0;
-    background: var(--surface-2, #F8FAFC);
-}
-
-html.dark .inc-role-filter {
-    background: rgba(255,255,255,0.02);
-    border-bottom-color: rgba(255,255,255,0.07);
-}
-
-.inc-role-btn {
-    padding: 3px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--border, rgba(0,0,0,0.1));
-    background: transparent;
-    color: var(--text-muted, #64748b);
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--inc-transition);
-    white-space: nowrap;
-}
-
-.inc-role-btn:hover {
-    border-color: var(--inc-blue);
-    color: var(--inc-blue);
-    background: var(--inc-blue-bg);
-}
-
-.inc-role-btn.active {
-    background: var(--inc-blue);
-    border-color: var(--inc-blue);
-    color: #fff;
-    box-shadow: 0 2px 6px rgba(37,99,235,0.3);
-}
-
-/* ── Listes scrollables ── */
-.inc-emp-list,
-.inc-mat-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.inc-emp-list::-webkit-scrollbar,
-.inc-mat-list::-webkit-scrollbar { width: 4px; }
-
-.inc-emp-list::-webkit-scrollbar-thumb,
-.inc-mat-list::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 999px;
-}
-
-/* ── Rangée employé ── */
-.inc-emp-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 11px;
-    border-radius: var(--inc-radius-md);
-    cursor: pointer;
-    border: 1px solid transparent;
-    transition: var(--inc-transition);
-}
-
-.inc-emp-row:hover {
-    background: var(--surface-2, #F8FAFC);
-    border-color: var(--border);
-}
-
-.inc-emp-row.selected {
-    background: var(--inc-blue-bg);
-    border-color: rgba(37,99,235,0.3);
-    box-shadow: var(--inc-shadow-sm);
-}
-
-html.dark .inc-emp-row.selected {
-    background: rgba(37,99,235,0.12);
-    border-color: rgba(37,99,235,0.35);
-}
-
-/* Avatar employé */
-.inc-emp-av {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: var(--surface-2, #F1F5F9);
-    border: 1.5px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-muted);
-    flex-shrink: 0;
-    letter-spacing: 0.02em;
-    transition: var(--inc-transition);
-}
-
-.inc-emp-av.sel {
-    background: var(--inc-blue);
-    color: #fff;
-    border-color: var(--inc-blue);
-    box-shadow: 0 2px 8px rgba(37,99,235,0.3);
-}
-
-.inc-emp-info { flex: 1; min-width: 0; }
-
-.inc-emp-name {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--text, #0f172a);
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.inc-emp-row.selected .inc-emp-name { color: var(--inc-blue); }
-
-.inc-emp-dept {
-    font-size: 11px;
-    color: var(--text-muted, #64748b);
-    margin: 1px 0 0;
-}
-
-/* Badge nb incidents employé */
-.inc-emp-nb {
-    min-width: 20px; height: 20px;
-    padding: 0 5px;
-    border-radius: 999px;
-    background: #EF4444;
-    color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px;
-    font-weight: 700;
-    flex-shrink: 0;
-    box-shadow: 0 1px 4px rgba(239,68,68,0.3);
-}
-
-/* ── Rangée matériel ── */
-.inc-mat-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 11px;
-    border-radius: var(--inc-radius-md);
-    cursor: pointer;
-    border: 1px solid transparent;
-    transition: var(--inc-transition);
-}
-
-.inc-mat-row:hover {
-    background: var(--surface-2, #F8FAFC);
-    border-color: var(--border);
-}
-
-.inc-mat-row.selected {
-    background: var(--inc-blue-bg);
-    border-color: rgba(37,99,235,0.3);
-    box-shadow: var(--inc-shadow-sm);
-}
-
-html.dark .inc-mat-row.selected {
-    background: rgba(37,99,235,0.12);
-    border-color: rgba(37,99,235,0.35);
-}
-
-.inc-mat-img {
-    width: 38px; height: 34px;
-    border-radius: 8px;
-    background: var(--surface-2, #F1F5F9);
-    border: 1px solid var(--border);
-    overflow: hidden;
-    flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-}
-
-.inc-mat-img img { width: 100%; height: 100%; object-fit: cover; }
-
-.inc-mat-img svg {
-    width: 18px; height: 18px;
-    stroke: var(--text-muted); fill: none; stroke-width: 1.5;
-    opacity: .4;
-}
-
-.inc-mat-info { flex: 1; min-width: 0; }
-
-.inc-mat-name {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--text, #0f172a);
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.inc-mat-ref {
-    font-size: 10.5px;
-    font-family: 'Cascadia Code', 'Consolas', monospace;
-    color: var(--text-muted);
-    margin: 1px 0 0;
-}
-
-/* Badge nb incidents matériel */
-.inc-mat-nb {
-    min-width: 20px; height: 20px;
-    padding: 0 5px;
-    border-radius: 999px;
-    background: #F59E0B;
-    color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px;
-    font-weight: 700;
-    flex-shrink: 0;
-    box-shadow: 0 1px 4px rgba(245,158,11,0.35);
-}
-
-.inc-mat-arrow {
-    width: 13px; height: 13px;
-    stroke: var(--text-muted); fill: none;
-    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-    flex-shrink: 0;
-}
-
-/* ── Placeholder ── */
-.inc-placeholder {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    color: var(--text-muted);
-    padding: 2rem;
-    text-align: center;
-}
-
-.inc-placeholder svg {
-    width: 44px; height: 44px;
-    stroke: currentColor; fill: none; stroke-width: 1.2;
-    opacity: .18;
-}
-
-.inc-placeholder p {
-    font-size: 12.5px;
-    color: var(--text-muted);
-    margin: 0;
-    line-height: 1.5;
-}
-
-/* ═══════════════════════════════
-   COLONNE INCIDENTS — DROITE
-═══════════════════════════════ */
-
-/* En-tête colonne incidents avec filtre */
-.inc-col-head .inc-filtre-tabs { display: flex; gap: 4px; }
-
-.inc-ftab {
-    padding: 4px 11px;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    color: var(--text-muted);
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--inc-transition);
-}
-
-.inc-ftab:hover { border-color: var(--inc-blue); color: var(--inc-blue); }
-
-.inc-ftab.active {
-    background: var(--inc-blue);
-    border-color: var(--inc-blue);
-    color: #fff;
-    box-shadow: 0 2px 6px rgba(37,99,235,0.28);
-}
-
-/* Scroll incidents */
-.inc-incidents-scroll {
-    flex: 1;
-    overflow-y: auto;
-    padding: 14px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.inc-incidents-scroll::-webkit-scrollbar { width: 5px; }
-.inc-incidents-scroll::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 999px;
-}
-
-/* ── En-tête article (S/N) ── */
-.inc-article-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 10px 14px;
-    background: var(--surface, #fff);
-    border: 1px solid var(--border);
-    border-radius: var(--inc-radius-md);
-    margin-top: 4px;
-    flex-wrap: wrap;
-    box-shadow: var(--inc-shadow-sm);
-}
-
-html.dark .inc-article-header {
-    background: #111827;
-    border-color: rgba(255,255,255,0.07);
-}
-
-.inc-article-header:first-child { margin-top: 0; }
-
-.inc-art-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-}
-
-.inc-art-left svg {
-    width: 15px; height: 15px;
-    stroke: var(--text-muted); fill: none;
-    stroke-width: 2; flex-shrink: 0;
-}
-
-.inc-art-sn {
-    font-family: 'Cascadia Code', 'Consolas', monospace;
-    font-size: 12.5px;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: -0.01em;
-}
-
-.inc-art-etat {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 999px;
-    letter-spacing: .02em;
-}
-
-.inc-art-etat.bon {
-    background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
-    color: #059669;
-    border: 1px solid rgba(5,150,105,0.2);
-}
-
-.inc-art-etat.panne {
-    background: linear-gradient(135deg, #FEF2F2, #FEE2E2);
-    color: #DC2626;
-    border: 1px solid rgba(220,38,38,0.2);
-}
-
-/* ── Boutons actions article ── */
-.inc-btn-resolve-all {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 12px;
-    background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
-    border: 1px solid rgba(5,150,105,0.3);
-    border-radius: var(--inc-radius-sm);
-    color: #059669;
-    font-size: 11.5px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: var(--inc-transition);
-    white-space: nowrap;
-}
-
-.inc-btn-resolve-all:hover {
-    background: #059669;
-    color: #fff;
-    border-color: transparent;
-    box-shadow: 0 2px 8px rgba(5,150,105,0.3);
-}
-
-.inc-btn-resolve-all svg {
-    width: 12px; height: 12px;
-    stroke: currentColor; fill: none; stroke-width: 2.5;
-}
-
-.inc-btn-encours {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 12px;
-    background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
-    border: 1px solid rgba(217,119,6,0.3);
-    border-radius: var(--inc-radius-sm);
-    color: #D97706;
-    font-size: 11.5px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: var(--inc-transition);
-    white-space: nowrap;
-}
-
-.inc-btn-encours:hover {
-    background: #D97706;
-    color: #fff;
-    border-color: transparent;
-    box-shadow: 0 2px 8px rgba(217,119,6,0.3);
-}
-
-.inc-btn-encours svg {
-    width: 12px; height: 12px;
-    stroke: currentColor; fill: none; stroke-width: 2;
-}
-
-.inc-btn-resolu {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 12px;
-    background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
-    border: 1px solid rgba(37,99,235,0.3);
-    border-radius: var(--inc-radius-sm);
-    color: var(--inc-blue);
-    font-size: 11.5px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: var(--inc-transition);
-    white-space: nowrap;
-}
-
-.inc-btn-resolu:hover {
-    background: var(--inc-blue);
-    color: #fff;
-    border-color: transparent;
-    box-shadow: 0 2px 8px rgba(37,99,235,0.3);
-}
-
-.inc-btn-resolu svg {
-    width: 12px; height: 12px;
-    stroke: currentColor; fill: none; stroke-width: 2.5;
-}
-
-button:disabled { opacity: .5; cursor: not-allowed; }
-
-/* ═══════════════════
-   CARTES INCIDENTS
-═══════════════════ */
-.inc-card {
-    background: var(--surface, #fff);
-    border: 1px solid var(--border);
-    border-radius: var(--inc-radius-md);
-    padding: 14px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    border-left: 3px solid var(--border);
-    transition: var(--inc-transition);
-    box-shadow: var(--inc-shadow-sm);
-    animation: incFade .2s ease both;
-}
-
-html.dark .inc-card {
-    background: #111827;
-    border-color: rgba(255,255,255,0.07);
-}
-
-.inc-card:hover {
-    box-shadow: var(--inc-shadow-md);
-    transform: translateX(2px);
-}
-
-.inc-card.en-attente { border-left-color: #F59E0B; }
-.inc-card.en-cours   { border-left-color: #3B82F6; }
-.inc-card.resolu     { border-left-color: #10B981; opacity: .72; }
-.inc-card.cloture    { border-left-color: #94A3B8; opacity: .55; }
-
-/* Top de la carte */
-.inc-card-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.inc-card-left  { display: flex; align-items: center; gap: 7px; min-width: 0; }
-.inc-card-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-
-/* Numéro incident */
-.inc-numero {
-    font-family: 'Cascadia Code', 'Consolas', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-muted);
-    letter-spacing: -0.02em;
-}
-
-/* Badge type */
-.inc-type-badge {
-    padding: 3px 9px;
-    background: var(--surface-2, #F8FAFC);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted);
-}
-
-html.dark .inc-type-badge { background: rgba(255,255,255,0.06); }
-
-/* Urgence */
-.inc-urgence {
-    padding: 3px 9px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .01em;
-}
-
-.inc-urgence.faible   { background: var(--inc-green-bg); color: var(--inc-green); border: 1px solid rgba(5,150,105,0.15); }
-.inc-urgence.moyen    { background: var(--inc-amber-bg); color: var(--inc-amber); border: 1px solid rgba(217,119,6,0.15); }
-.inc-urgence.critique { background: var(--inc-red-bg);   color: var(--inc-red);   border: 1px solid rgba(220,38,38,0.15); }
-
-/* Statut badge */
-.inc-statut-badge {
-    padding: 3px 9px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .01em;
-}
-
-.inc-statut-badge.en-attente { background: rgba(245,158,11,0.1);  color: #F59E0B;  border: 1px solid rgba(245,158,11,0.2); }
-.inc-statut-badge.en-cours   { background: rgba(59,130,246,0.1);  color: #3B82F6;  border: 1px solid rgba(59,130,246,0.2); }
-.inc-statut-badge.resolu     { background: rgba(16,185,129,0.1);  color: #10B981;  border: 1px solid rgba(16,185,129,0.2); }
-.inc-statut-badge.cloture    { background: rgba(100,116,139,0.1); color: #64748B;  border: 1px solid rgba(100,116,139,0.2); }
-
-/* Description */
-.inc-desc {
-    font-size: 12.5px;
-    color: var(--text-muted, #64748b);
-    margin: 0;
-    line-height: 1.55;
-}
-
-/* Pied de carte */
-.inc-card-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding-top: 6px;
-    border-top: 1px solid var(--border, rgba(0,0,0,0.06));
-}
-
-.inc-date {
-    font-size: 11px;
-    color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
-}
-
-.inc-card-actions { display: flex; gap: 5px; }
-
-/* Petits boutons inline */
-.inc-btn-sm {
-    padding: 4px 10px;
-    border-radius: var(--inc-radius-sm);
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: var(--inc-transition);
-    border: 1px solid;
-}
-
-.inc-btn-sm.inc-btn-encours {
-    background: rgba(245,158,11,0.08);
-    border-color: rgba(245,158,11,0.25);
-    color: #D97706;
-}
-
-.inc-btn-sm.inc-btn-encours:hover {
-    background: #D97706;
-    color: #fff;
-    border-color: transparent;
-}
-
-.inc-btn-sm.inc-btn-resolu {
-    background: rgba(37,99,235,0.08);
-    border-color: rgba(37,99,235,0.25);
-    color: var(--inc-blue);
-}
-
-.inc-btn-sm.inc-btn-resolu:hover {
-    background: var(--inc-blue);
-    color: #fff;
-    border-color: transparent;
-}
-
-.inc-comment {
-    font-size: 11.5px;
-    color: var(--text-muted);
-    font-style: italic;
-    margin: 0;
-    width: 100%;
-    padding-top: 4px;
-}
-
-/* ═══════════════════
-   ÉTATS VIDE / CHARGEMENT
-═══════════════════ */
-.inc-loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2.5rem;
-}
-
-.inc-spinner {
-    width: 22px; height: 22px;
-    border: 2.5px solid var(--border);
-    border-top-color: var(--inc-blue);
-    border-radius: 50%;
-    animation: incSpin .7s linear infinite;
-}
-
-.inc-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    padding: 2.5rem 1rem;
-    color: var(--text-muted);
-    text-align: center;
-}
-
-.inc-empty svg {
-    width: 36px; height: 36px;
-    stroke: currentColor; fill: none; stroke-width: 1.2;
-    opacity: .2;
-}
-
-.inc-empty p { font-size: 12.5px; margin: 0; }
-
-@keyframes incSpin { to { transform: rotate(360deg); } }
-
-/* ═══════════════════
-   MODAL
-═══════════════════ */
-.inc-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 1.5rem;
-    animation: incFade .18s ease;
-}
-
-.inc-modal {
-    background: var(--surface, #fff);
-    border: 1px solid var(--border);
-    border-radius: var(--inc-radius-lg);
-    padding: 28px;
-    max-width: 400px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.18);
-    animation: incSlideUp .22s cubic-bezier(.16,1,.3,1);
-}
-
-html.dark .inc-modal {
-    background: #141f2f;
-    border-color: rgba(255,255,255,0.1);
-}
-
-@keyframes incSlideUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-.inc-modal-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text);
-    margin: 0;
-    letter-spacing: -0.015em;
-}
-
-.inc-modal-title svg {
-    width: 18px; height: 18px;
-    stroke: #10B981; fill: none; stroke-width: 2.5;
-    flex-shrink: 0;
-}
-
-.inc-modal-sub {
-    font-size: 12.5px;
-    color: var(--text-muted);
-    margin: 0;
-}
-
-.inc-modal-field {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.inc-modal-field label {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .07em;
-    color: var(--text-muted);
-}
-
-.inc-modal-field textarea {
-    width: 100%;
-    padding: 10px 12px;
-    background: var(--surface-2, #F8FAFC);
-    border: 1px solid var(--border);
-    border-radius: var(--inc-radius-md);
-    color: var(--text);
-    font-size: 12.5px;
-    font-family: inherit;
-    resize: vertical;
-    outline: none;
-    transition: var(--inc-transition);
-}
-
-html.dark .inc-modal-field textarea {
-    background: rgba(255,255,255,0.04);
-    border-color: rgba(255,255,255,0.1);
-}
-
-.inc-modal-field textarea:focus {
-    border-color: var(--inc-blue);
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-}
-
-.inc-modal-actions { display: flex; gap: 8px; }
-
-.inc-modal-cancel {
-    flex: 1;
-    padding: 10px;
-    background: var(--surface-2, #F8FAFC);
-    border: 1px solid var(--border);
-    border-radius: var(--inc-radius-md);
-    color: var(--text);
-    font-size: 13px;
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-    transition: var(--inc-transition);
-}
-
-.inc-modal-cancel:hover {
-    border-color: var(--inc-blue);
-    color: var(--inc-blue);
-}
-
-.inc-modal-confirm {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 10px;
-    background: linear-gradient(135deg, #059669, #10B981);
-    border: none;
-    border-radius: var(--inc-radius-md);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    transition: var(--inc-transition);
-    box-shadow: 0 3px 10px rgba(5,150,105,0.35);
-}
-
-.inc-modal-confirm:hover {
-    background: linear-gradient(135deg, #047857, #059669);
-    box-shadow: 0 4px 14px rgba(5,150,105,0.45);
-    transform: translateY(-1px);
-}
-
-.inc-modal-confirm:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-
-.inc-btn-spinner {
-    width: 15px; height: 15px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: incSpin .7s linear infinite;
-}
-
-/* ═══════════════════
-   HAMBURGER
-═══════════════════ */
-.inc-hamburger {
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 5px;
-    width: 36px; height: 36px;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    cursor: pointer;
-    padding: 0;
-    flex-shrink: 0;
-}
-
-.inc-hamburger span {
-    display: block;
-    width: 18px; height: 2px;
-    background: var(--text);
-    border-radius: 2px;
-    transition: all .2s;
-}
-/* ═══════════════════
-   RESPONSIVE
-═══════════════════ */
-@media (max-width: 1100px) {
-    .inc-col-employes  { width: 190px; }
-    .inc-col-materiels { width: 210px; }
-}
-
-@media (max-width: 768px) {
-    .inc-layout { flex-direction: column; }
-    .inc-hamburger { display: flex; }
-    .inc-header { padding: 12px 16px; padding-right: 120px; gap: 10px; flex-wrap: wrap; }
-    .inc-header-search { display: none; }
-    .inc-body { flex-direction: column; overflow-y: auto; }
-    .inc-col-employes,
-    .inc-col-materiels { width: 100%; height: 220px; border-right: none; border-bottom: 1px solid var(--border); }
-    .inc-col-incidents { min-height: 350px; }
-}
-@media (max-width: 480px){
-    .inc-header {
-    padding: 10px 16px;
-    padding-right: 140px;
-    gap: 10px;
-    flex-wrap: nowrap;
-    align-items: center;
-    height: auto;
-}
-
-.inc-page-title {
-    font-size: 15px;
-    position: static;
-}
-
-.inc-page-sub {
-    position: static;
-    font-size: 0;
-}
-.inc-page-sub::after {
-        content: "Suivis des incidents sur articles";
-        font-size: 11px;
-        color: var(--text-muted);
-    }
-}
-/* ── Groupe matériel dans la col 2 ── */
-.inc-mat-group-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px 6px;
-    margin-top: 8px;
-    border-bottom: 1px solid var(--border, rgba(0,0,0,0.07));
-}
-.inc-mat-group-header:first-child { margin-top: 0; }
-.inc-mat-group-header .inc-mat-img {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    background: var(--surface-2, #f4f7fb);
-    border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.inc-mat-group-header .inc-mat-img img  { width: 100%; height: 100%; object-fit: cover; border-radius: 7px; }
-.inc-mat-group-header .inc-mat-img svg  { width: 16px; height: 16px; stroke: var(--text-muted); fill: none; stroke-width: 1.5; }
-.inc-mat-group-header .inc-mat-name { font-size: 12.5px; font-weight: 800; color: var(--text, #0f172a); margin: 0; }
-.inc-mat-group-header .inc-mat-ref  { font-size: 10.5px; color: var(--text-muted); margin: 1px 0 0; }
-
-/* ── Ligne affectation ── */
-.inc-aff-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 9px 12px 9px 20px;   /* indent pour marquer la hiérarchie */
-    border-left: 2px solid transparent;
-    cursor: pointer;
-    transition: all .15s;
-    gap: 8px;
-}
-.inc-aff-row:hover {
-    background: rgba(37,99,235,0.04);
-    border-left-color: rgba(37,99,235,0.3);
-}
-.inc-aff-row.selected {
-    background: rgba(37,99,235,0.08);
-    border-left-color: #2563eb;
-}
-.inc-aff-row-left {
-    display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
-}
-.inc-aff-row-left svg {
-    width: 14px; height: 14px;
-    stroke: var(--text-muted); fill: none; stroke-width: 1.75; flex-shrink: 0;
-}
-.inc-aff-date {
-    display: block;
-    font-size: 12px; font-weight: 700;
-    color: var(--text, #0f172a);
-    font-family: 'Cascadia Code', 'Consolas', monospace;
-}
-.inc-aff-qty {
-    display: block;
-    font-size: 10.5px; color: var(--text-muted);
-    margin-top: 1px;
-}
-.inc-aff-row-right {
-    display: flex; align-items: center; gap: 6px; flex-shrink: 0;
-}
-html.dark .inc-aff-row:hover    { background: rgba(37,99,235,0.08); }
-html.dark .inc-aff-row.selected { background: rgba(37,99,235,0.14); }
+@page "/it/incidents"
+@using AssetFlow.BlazorUI.Services
+@using AssetFlow.BlazorUI.Components
+
+<RoleAuthGuard AllowedRoles="@(new[]{"IT","Admin"})">
+<div class="inc-layout">
+
+    @* ── SIDEBAR ── *@
+    @if (_estAdmin)
+        {
+            <AdminSidebar ForceOpen="_menuOpen" />
+        }
+        else
+        {
+            <ITSidebar ActivePage="incidents" ForceOpen="_menuOpen" />
+        }
+
+    @* ── OVERLAY MENU MOBILE ── *@
+    @if (_menuOpen)
+    { <div  @onclick="() => _menuOpen = !_menuOpen"></div> } 
+
+    @* ── MAIN ── *@
+    <main class="inc-main">
+        <header class="inc-header">
+            <button class="inc-hamburger" @onclick="() => _menuOpen = !_menuOpen" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+            <div>
+                <h1 class="inc-page-title">Gestion des Incidents</h1>
+                <p class="inc-page-sub">Suivez et résolvez les incidents signalés par les employés</p>
+            </div>
+            <div class="inc-header-search">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="text" placeholder="Rechercher un employé..." value="@Search" @oninput="OnSearchInput" />
+            </div>
+        </header>
+
+        @* Alerts *@
+        @if (!string.IsNullOrEmpty(SuccessMsg))
+        {
+            <div class="inc-alert inc-alert-success">
+                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                @SuccessMsg
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(ErrorMsg))
+        {
+            <div class="inc-alert inc-alert-error">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+                @ErrorMsg
+            </div>
+        }
+
+        @* ── BODY 3 colonnes ── *@
+        <div class="inc-body">
+
+            @* COL 1 : Employés *@
+            <div class="inc-col-employes">
+                <div class="inc-col-head">
+                    <span class="inc-col-title">Employés</span>
+                    <span class="inc-badge-count">@Employes.Count</span>
+                </div>
+                <div class="inc-role-filter">
+                    <button class="inc-role-btn @(FiltreRole == "tous"        ? "active" : "")" @onclick='() => FiltreRole = "tous"'>Tous</button>
+                    <button class="inc-role-btn @(FiltreRole == "Employe"     ? "active" : "")" @onclick='() => FiltreRole = "Employe"'>Employés</button>
+                    <button class="inc-role-btn @(FiltreRole == "EquipeAchat" ? "active" : "")" @onclick='() => FiltreRole = "EquipeAchat"'>Achats</button>
+                    <button class="inc-role-btn @(FiltreRole == "IT"          ? "active" : "")" @onclick='() => FiltreRole = "IT"'>IT</button>
+                    <button class="inc-role-btn @(FiltreRole == "Admin"          ? "active" : "")" @onclick='() => FiltreRole = "Admin"'>Admin</button>
+
+                </div>
+                @if (LoadingEmployes)
+                {
+                    <div class="inc-loading"><div class="inc-spinner"></div></div>
+                }
+                else if (!Employes.Any())
+                {
+                    <div class="inc-empty"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><p>Aucun employé</p></div>
+                }
+                else
+                {
+                    <div class="inc-emp-list">
+                        @foreach (var emp in Employes)
+                        {
+                            var sel = EmployeSelectionne?.UtilisateurId == emp.UtilisateurId;
+                            <div class="inc-emp-row @(sel ? "selected" : "")" @onclick="() => SelectEmploye(emp)">
+                                <div class="inc-emp-av @(sel ? "sel" : "")">@emp.Initials</div>
+                                <div class="inc-emp-info">
+                                    <p class="inc-emp-name">@emp.FullName</p>
+                                    <p class="inc-emp-dept">@emp.Role</p>
+                                </div>
+                                @if (emp.NbIncidentsActifs > 0)
+                                {
+                                    <span class="inc-emp-nb">@emp.NbIncidentsActifs</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            @* COL 2 : Affectations *@
+            <div class="inc-col-materiels">
+                @if (EmployeSelectionne == null)
+                {
+                    <div class="inc-placeholder">
+                        <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        <p>Sélectionnez un employé</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="inc-col-head">
+                        <span class="inc-col-title">@EmployeSelectionne.FullName</span>
+                        <span class="inc-badge-count">@Materiels.Count affectation(s)</span>
+                    </div>
+                    @if (LoadingMateriels)
+                    {
+                        <div class="inc-loading"><div class="inc-spinner"></div></div>
+                    }
+                    else if (!Materiels.Any())
+                    {
+                        <div class="inc-empty">
+                            <svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/></svg>
+                            <p>Aucune affectation active</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="inc-mat-list">
+                            @foreach (var groupe in Materiels.GroupBy(m => m.MaterielId))
+                            {
+                                var affectations  = groupe.OrderByDescending(a => a.DateAffectation).ToList();
+                                var premierMat    = affectations.First();
+                                var matId         = premierMat.MaterielId;
+                                var expanded      = _expandedMateriels.Contains(matId);
+                                var totalActifs   = affectations.Sum(a => a.NbIncidentsActifs);
+
+                                @* ── En-tête matériel cliquable ── *@
+                                <div class="inc-mat-group-header @(expanded ? "expanded" : "")"
+                                     @onclick="() => ToggleExpandMateriel(matId)">
+                                    <div class="inc-mat-img">
+                                        @if (!string.IsNullOrEmpty(premierMat.ImageUrl))
+                                        { <img src="@premierMat.ImageUrl" alt="@premierMat.Designation" /> }
+                                        else
+                                        { <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> }
+                                    </div>
+                                    <div class="inc-mat-info">
+                                        <p class="inc-mat-name">@premierMat.Designation</p>
+                                        <p class="inc-mat-ref">@premierMat.Reference · @affectations.Count aff.</p>
+                                    </div>
+                                    <div class="inc-mat-header-right">
+                                        @if (totalActifs > 0)
+                                        {
+                                            <span class="inc-mat-nb">@totalActifs</span>
+                                        }
+                                        <svg class="inc-mat-chevron @(expanded ? "open" : "")" viewBox="0 0 24 24">
+                                            <path d="M6 9l6 6 6-6"/>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                @* ── Timeline des affectations ── *@
+                                @if (expanded)
+                                {
+                                    <div class="inc-timeline">
+                                        @for (int i = 0; i < affectations.Count; i++)
+                                        {
+                                            var aff      = affectations[i];
+                                            var sel      = MaterielSelectionne?.AffectationId == aff.AffectationId;
+                                            var isLast   = i == affectations.Count - 1;
+                                            var affLocal = aff;
+
+                                            <div class="inc-timeline-item @(isLast ? "last" : "") @(sel ? "selected" : "")"
+                                                 @onclick="() => SelectMateriel(affLocal)">
+                                                @* Ligne + point de timeline *@
+                                                <div class="inc-tl-track">
+                                                    <div class="inc-tl-dot @(sel ? "active" : "") @(affLocal.NbIncidentsActifs > 0 ? "has-incident" : "")"></div>
+                                                    @if (!isLast) { <div class="inc-tl-line"></div> }
+                                                </div>
+                                                @* Contenu *@
+                                                <div class="inc-tl-card @(sel ? "selected" : "")">
+                                                    <div class="inc-tl-card-top">
+                                                        <span class="inc-tl-date">
+                                                            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                                                            @affLocal.DateAffectation.ToLocalTime().ToString("dd/MM/yyyy")
+                                                        </span>
+                                                        @if (affLocal.NbIncidentsActifs > 0)
+                                                        {
+                                                            <span class="inc-tl-badge">@affLocal.NbIncidentsActifs incident(s)</span>
+                                                        }
+                                                    </div>
+                                                    <div class="inc-tl-card-bottom">
+                                                        <span class="inc-tl-qty">
+                                                            <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                                                            @affLocal.QuantiteAffectee article(s)
+                                                        </span>
+                                                        <svg class="inc-tl-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                }
+            </div>
+
+            @* COL 3 : Articles + Incidents *@
+            <div class="inc-col-incidents">
+                @if (MaterielSelectionne == null)
+                {
+                    <div class="inc-placeholder"><svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/></svg><p>Sélectionnez un matériel</p></div>
+                }
+                else
+                { 
+                    <div class="inc-col-head">
+                        <span class="inc-col-title">@MaterielSelectionne.Designation</span>
+                        <div class="inc-filtre-tabs">
+                            <button class="inc-ftab @(FiltreStatut == "actifs" ? "active" : "")"   @onclick='() => FiltreStatut = "actifs"'>Actifs</button>
+                            <button class="inc-ftab @(FiltreStatut == "tous" ? "active" : "")"    @onclick='() => FiltreStatut = "tous"'>Tous</button>
+                        </div>
+                    </div>
+
+                    <div class="inc-incidents-scroll">
+                        @foreach (var art in MaterielSelectionne.Articles)
+                        {
+                            var incidentsFiltres = FiltreStatut == "actifs"
+                                ? art.Incidents.Where(i => i.Statut == "EnAttente" || i.Statut == "EnCours").ToList()
+                                : art.Incidents;
+
+                            if (!incidentsFiltres.Any()) { continue; }
+
+                            @* Capturer nbActifs dans une variable locale AVANT les boucles imbriquées *@
+                            var nbActifs = art.Incidents.Count(i => i.Statut == "EnAttente" || i.Statut == "EnCours");
+                            var artLocal = art; @* Capturer art pour éviter le problème de closure *@
+
+                            @* ── Article header ── *@
+                            <div class="inc-article-header">
+                                <div class="inc-art-left">
+                                    <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                                    <span class="inc-art-sn">@artLocal.NumeroSerie</span>
+                                    <span class="inc-art-etat @(artLocal.EtatArticle == "Panne" ? "panne" : "bon")">@artLocal.EtatArticle</span>
+                                </div>
+                                @if (nbActifs > 1)
+                                {
+                                    <button class="inc-btn-resolve-all" disabled="@IsProcessing"
+                                            @onclick="() => OuvrirModalResolveAll(artLocal)">
+                                        <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                                        Tout résoudre (@nbActifs)
+                                    </button>
+                                }
+                                else if (nbActifs == 1)
+                                {
+                                    var incActif = artLocal.Incidents.First(i => i.Statut == "EnAttente" || i.Statut == "EnCours");
+                                    @if (incActif.Statut == "EnAttente")
+                                    {
+                                        <button class="inc-btn-encours" disabled="@IsProcessing"
+                                                @onclick='() => ChangerStatut(incActif.Id, artLocal, "EnCours")'>
+                                            <svg viewBox="0 0 24 24"><path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z"/><path d="M12 6v6l4 2"/></svg>
+                                            En cours
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="inc-btn-resolu" disabled="@IsProcessing"
+                                                @onclick="() => OuvrirModalResolu(incActif, artLocal)">
+                                            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                                            Résoudre
+                                        </button>
+                                    }
+                                }
+                            </div>
+
+                            @* ── Liste incidents de cet article ── *@
+                            @foreach (var inc in incidentsFiltres)
+                            {
+                                var incLocal = inc;
+                                var nbActifsLocal = nbActifs; @* Capturer pour la closure *@
+
+                                <div class="inc-card @GetStatutClass(incLocal.Statut)">
+                                    <div class="inc-card-top">
+                                        <div class="inc-card-left">
+                                            <span class="inc-numero">@incLocal.NumeroIncident</span>
+                                            <span class="inc-type-badge">@incLocal.TypeIncident</span>
+                                        </div>
+                                        <div class="inc-card-right">
+                                            <span class="inc-urgence @GetUrgenceClass(incLocal.Urgence)">@incLocal.UrgenceLabel</span>
+                                            <span class="inc-statut-badge @GetStatutClass(incLocal.Statut)">@incLocal.StatutLabel</span>
+                                        </div>
+                                    </div>
+                                    <p class="inc-desc">@incLocal.Description</p>
+                                    <div class="inc-card-footer">
+                                        <span class="inc-date">@incLocal.DateIncident.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                                        @if (nbActifsLocal > 1 && (incLocal.Statut == "EnAttente" || incLocal.Statut == "EnCours"))
+                                        {
+                                            <div class="inc-card-actions">
+                                                @if (incLocal.Statut == "EnAttente")
+                                                {
+                                                    <button class="inc-btn-sm inc-btn-encours" disabled="@IsProcessing"
+                                                            @onclick='() => ChangerStatut(incLocal.Id, artLocal, "EnCours")'>
+                                                        En cours
+                                                    </button>
+                                                }
+                                                <button class="inc-btn-sm inc-btn-resolu" disabled="@IsProcessing"
+                                                        @onclick='() => OuvrirModalResolu(incLocal, artLocal)'>
+                                                    Résoudre
+                                                </button>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(incLocal.CommentairesResolution))
+                                        {
+                                            <p class="inc-comment">💬 @incLocal.CommentairesResolution</p>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+            </div>
+
+        </div>
+    </main>
+</div>
+
+@* ── Modal Résoudre avec commentaire ── *@
+@if (ModalIncident != null)
+{
+    <div class="inc-modal-backdrop" @onclick="FermerModal">
+        <div class="inc-modal" @onclick:stopPropagation="true">
+            <h3 class="inc-modal-title">
+                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                Marquer comme résolu
+            </h3>
+            <p class="inc-modal-sub">Incident <strong>@ModalIncident.NumeroIncident</strong> · @ModalIncident.TypeIncident</p>
+            <div class="inc-modal-field">
+                <label>Commentaire de résolution (facultatif)</label>
+                <textarea rows="3" placeholder="Décrivez la solution apportée..."
+                          @bind="ModalCommentaire"></textarea>
+            </div>
+            <div class="inc-modal-actions">
+                <button class="inc-modal-cancel" @onclick="FermerModal">Annuler</button>
+                <button class="inc-modal-confirm" disabled="@IsProcessing" @onclick="ConfirmerResolu">
+                    @if (IsProcessing) { <div class="inc-btn-spinner"></div> } else { <span>Confirmer</span> }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@* ── Modal Tout résoudre ── *@
+@if (ModalArticleResolveAll != null)
+{
+    <div class="inc-modal-backdrop" @onclick="FermerModal">
+        <div class="inc-modal" @onclick:stopPropagation="true">
+            <h3 class="inc-modal-title">
+                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                Résoudre tous les incidents
+            </h3>
+            <p class="inc-modal-sub">Article <strong>@ModalArticleResolveAll.NumeroSerie</strong> · @(ModalArticleResolveAll.Incidents.Count(i => i.Statut == "EnAttente" || i.Statut == "EnCours")) incident(s) actif(s)</p>
+            <div class="inc-modal-field">
+                <label>Commentaire de résolution (facultatif)</label>
+                <textarea rows="3" placeholder="Solution apportée..." @bind="ModalCommentaire"></textarea>
+            </div>
+            <div class="inc-modal-actions">
+                <button class="inc-modal-cancel" @onclick="FermerModal">Annuler</button>
+                <button class="inc-modal-confirm" disabled="@IsProcessing" @onclick="ConfirmerResolveAll">
+                    @if (IsProcessing) { <div class="inc-btn-spinner"></div> } else { <span>Tout résoudre</span> }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+</RoleAuthGuard>

@@ -97,6 +97,15 @@ namespace AssetFlow.BlazorUI.Pages.IT
                             RuptureCritique = Tous.Count(m => m.QuantiteStock == 0)
                         };
                         AppliquerFiltres();
+
+                        // ── Sync panneau articles si ouvert ────────────────────
+                        if (_panneauArticlesOuvert)
+                        {
+                            var mat = Tous.FirstOrDefault(m =>
+                                _panneauArticlesTitre.StartsWith(m.Reference));
+                            if (mat != null)
+                                _panneauArticles = await CommandeSvc.GetArticlesByMaterielAsync(mat.Id);
+                        }
                     }
                     catch { }
                     finally

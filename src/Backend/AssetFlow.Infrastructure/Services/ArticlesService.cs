@@ -9,6 +9,7 @@ namespace AssetFlow.Application.Services
     {
         private readonly AppDbContext _db;
         public ArticleService(AppDbContext db) => _db = db;
+        private readonly IDashboardNotifier _notifier;
 
         // ── Mise à jour numéro de série ───────────────────────────────────────
         public async Task<(bool Success, string Message, string? NumeroSerie)> UpdateNumeroSerieAsync(int id, string? numeroSerie)
@@ -32,6 +33,7 @@ namespace AssetFlow.Application.Services
             }
 
             await _db.SaveChangesAsync();
+            await _notifier.NotifyITAsync();
             return (true, "Numéro de série mis à jour.", article.NumeroSerie);
         }
 
@@ -78,6 +80,7 @@ namespace AssetFlow.Application.Services
                 _db.ArticlesIndividuels.Remove(article);
 
                 await _db.SaveChangesAsync();
+                await _notifier.NotifyITAsync();
                 await tx.CommitAsync();
                 return (true, $"Article #{id} supprimé définitivement.");
             }
@@ -161,6 +164,7 @@ namespace AssetFlow.Application.Services
                 });
 
                 await _db.SaveChangesAsync();
+                await _notifier.NotifyITAsync();
                 await tx.CommitAsync();
 
                 return (true, $"Article #{id} mis hors service.");
@@ -206,10 +210,11 @@ namespace AssetFlow.Application.Services
                 });
 
                 await _db.SaveChangesAsync();
+                await _notifier.NotifyITAsync();
                 await tx.CommitAsync();
 
                 return (true, $"Article #{id} remis en service avec succès.");
-            }
+            }   
             catch (Exception ex)
             {
                 await tx.RollbackAsync();

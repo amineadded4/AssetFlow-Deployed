@@ -1,0 +1,108 @@
+/* ══════════════════════════════════════════════
+   BackButton — Bouton flottant de retour
+   Style : Minimal outline + label
+══════════════════════════════════════════════ */
+
+.back-btn {
+    position: fixed;
+    top: 0.7rem;
+    left: 1.25rem;
+    z-index: 200;
+
+    height: 44px;
+    padding: 0 16px 0 12px;
+    border-radius: 999px;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.1px;
+    white-space: nowrap;
+
+    transition: border-color 0.2s ease, background 0.2s ease,
+                color 0.2s ease, transform 0.2s ease;
+}
+
+/* Icône cercle */
+.back-btn-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: border-color 0.2s ease;
+}
+
+.back-btn-icon svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--text-muted);
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s ease, transform 0.22s cubic-bezier(.16,1,.3,1);
+}
+
+/* Label */
+.back-btn-text {
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+}
+
+/* Hover */
+.back-btn:hover {
+    border-color: var(--text-muted);
+    background: var(--surface-2);
+    color: var(--text);
+    transform: translateY(-1px);
+}
+
+.back-btn:hover .back-btn-icon {
+    border-color: var(--text-muted);
+}
+
+.back-btn:hover .back-btn-icon svg {
+    stroke: var(--text);
+    transform: translateX(-2px);
+}
+
+.back-btn:hover .back-btn-text {
+    color: var(--text);
+}
+
+/* Active */
+.back-btn:active {
+    transform: scale(0.97);
+}
+
+/* Focus clavier */
+.back-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+}
+
+/* ══ DARK MODE ══ */
+html.dark .back-btn {
+    border-color: var(--border);
+}
+html.dark .back-btn:hover {
+    border-color: var(--text-muted);
+}
+
+/* ══ RESPONSIVE — masqué sous 768px ══ */
+@media (max-width: 768px) {
+    .back-btn { display: none; }
+}

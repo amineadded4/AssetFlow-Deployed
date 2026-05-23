@@ -197,6 +197,35 @@ html.dark .mda-page-title {
 .mda-btn-new-mobile  { display: none; }
 .mda-btn-new-sm      { font-size: 12px; padding: 8px 16px; margin-top: 8px; }
 
+/* ── Toggle open/close icon ── */
+.mda-btn-new-icon {
+    position: relative;
+    width: 15px; height: 15px;
+    flex-shrink: 0;
+}
+.mda-btn-new-icon .mda-icon-plus,
+.mda-btn-new-icon .mda-icon-close {
+    position: absolute;
+    inset: 0;
+    width: 15px; height: 15px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2.5; stroke-linecap: round;
+    transition: opacity .22s var(--mda-ease), transform .3s var(--mda-spring);
+}
+.mda-btn-new-icon .mda-icon-plus  { opacity: 1;  transform: rotate(0deg)   scale(1); }
+.mda-btn-new-icon .mda-icon-close { opacity: 0;  transform: rotate(-90deg) scale(0.6); }
+
+.mda-btn-new.is-open {
+    background: linear-gradient(135deg, #4b5563, #6b7280);
+    box-shadow: 0 4px 14px rgba(75,85,99,0.35);
+}
+.mda-btn-new.is-open:hover {
+    background: linear-gradient(135deg, #374151, #4b5563);
+    box-shadow: 0 6px 20px rgba(75,85,99,0.45);
+}
+.mda-btn-new.is-open .mda-icon-plus  { opacity: 0;  transform: rotate(90deg) scale(0.6); }
+.mda-btn-new.is-open .mda-icon-close { opacity: 1;  transform: rotate(0deg)  scale(1); }
+
 /* ══════════════════════════════════════
    ALERTES
 ══════════════════════════════════════ */

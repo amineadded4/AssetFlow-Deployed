@@ -2,7 +2,7 @@
 @using AssetFlow.BlazorUI.Components
 
 <div class="login-page">
-
+    <BackButton />
     <div class="left-panel">
         <div class="left-panel-content">
             <img src="images/logo.png" alt="AssetFlow" class="panel-logo" />
@@ -98,7 +98,6 @@
                 <div class="roles-chips-row">
                     @foreach (var r in new[]
                     {
-                        ("Admin",        "#EF4444", "/login?role=Admin"),
                         ("IT",           "#7C3AED", "/login?role=IT"),
                         ("Équipe Achat", "#136dec", "/login?role=EquipeAchat"),
                         ("Employé",      "#F59E0B", "/login?role=Employe"),

@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 namespace AssetFlow.Infrastructure.Services
 {
     // Construit les graphes contextuels de la mémoire intelligente.
-    // Chaque entité (matériel, utilisateur, demande, projet) génère son propre graphe de relations.
     public class GraphService : IGraphService
     {
         private readonly AppDbContext _db;
@@ -17,7 +16,6 @@ namespace AssetFlow.Infrastructure.Services
             _db = db;
         }
 
-        // ─── Stats globales ─────────────────────────────────────────────────────
         public async Task<GraphStatsDto> GetStatsAsync()
         {
             return new GraphStatsDto
@@ -25,11 +23,11 @@ namespace AssetFlow.Infrastructure.Services
                 TotalMateriel   = await _db.Materiels.CountAsync(),
                 TotalIncidents  = await _db.Incidents.CountAsync(i => i.Statut != StatutIncident.Resolu),
                 TotalUsers      = await _db.Users.CountAsync(),
-                ActiveAnomalies = await _db.Incidents.CountAsync(i => i.Urgence >= 3 && i.Statut != StatutIncident.Resolu)
+                ActiveAnomalies = await _db.Incidents.CountAsync(i => i.Urgence > 50 && i.Statut != StatutIncident.Resolu)
             };
         }
 
-        // ─── Listes pour le panneau gauche ──────────────────────────────────────
+        // Listes pour le panneau gauche
         public async Task<List<GraphEntitySummaryDto>> GetMaterielsAsync()
         {
             var materiels = await _db.Materiels
@@ -131,7 +129,7 @@ namespace AssetFlow.Infrastructure.Services
             return result;
         }
 
-        // ─── Graphes contextuels ────────────────────────────────────────────────
+        // Graphes contextuels
 
         // Graphe d'un matériel : incidents, utilisateurs affectés, projets, commandes
         public async Task<GraphResponseDto> GetGraphForMaterielAsync(int materielId)
@@ -172,7 +170,7 @@ namespace AssetFlow.Infrastructure.Services
                     Type   = "incident",
                     Label  = inc.TypeIncident,
                     Detail = $"Urgence {inc.Urgence}/100 · {inc.Statut}",
-                    Status = inc.Urgence >= 3 ? "critical" : "warning",
+                    Status = inc.Urgence > 50 ? "critical" : "warning",
                     Weight = inc.Urgence
                 });
                 links.Add(new GraphLinkDto { Source = $"m-{materiel.Id}", Target = iId, Label = "incident signalé", Strength = 0.8 });
@@ -297,7 +295,7 @@ namespace AssetFlow.Infrastructure.Services
                 {
                     var iId = $"i-{inc.Id}";
                     if (nodes.Any(n => n.Id == iId)) continue;
-                    nodes.Add(new GraphNodeDto { Id = iId, Type = "incident", Label = inc.TypeIncident, Detail = $"Urgence {inc.Urgence}/100 · {inc.Statut}", Status = inc.Urgence >= 3 ? "critical" : "warning", Weight = inc.Urgence });
+                    nodes.Add(new GraphNodeDto { Id = iId, Type = "incident", Label = inc.TypeIncident, Detail = $"Urgence {inc.Urgence}/100 · {inc.Statut}", Status = inc.Urgence > 50 ? "critical" : "warning", Weight = inc.Urgence });
                     links.Add(new GraphLinkDto { Source = mId, Target = iId, Label = "incident", Strength = 0.8 });
                 }
 
@@ -329,7 +327,7 @@ namespace AssetFlow.Infrastructure.Services
             return new GraphResponseDto { Nodes = nodes, Links = links, Insights = new(), Stats = new() };
         }
 
-        /// <summary>Graphe d'une demande d'achat : créateur, offres</summary>
+        // Graphe d'une demande d'achat : créateur, offres
         public async Task<GraphResponseDto> GetGraphForDemandeAsync(int demandeId)
         {
             var demande = await _db.DemandeAchat
@@ -387,7 +385,7 @@ namespace AssetFlow.Infrastructure.Services
             return new GraphResponseDto { Nodes = nodes, Links = links, Insights = new(), Stats = new() };
         }
 
-        /// <summary>Graphe d'un projet : matériels affectés</summary>
+        // Graphe d'un projet : matériels affectés
         public async Task<GraphResponseDto> GetGraphForProjetAsync(int projetId)
         {
             var projet = await _db.Projects.FindAsync(projetId);
@@ -442,7 +440,7 @@ namespace AssetFlow.Infrastructure.Services
             return new GraphResponseDto { Nodes = nodes, Links = links, Insights = new(), Stats = new() };
         }
 
-        // ─── Legacy GetGraphAsync (kept for compatibility) ───────────────────────
+        // Legacy GetGraphAsync (kept for compatibility)
         public async Task<GraphResponseDto> GetGraphAsync()
         {
             var stats = await GetStatsAsync();
@@ -451,7 +449,7 @@ namespace AssetFlow.Infrastructure.Services
 
         public async Task<GraphInsightDto?> GetInsightForNodeAsync(string nodeId)
         {
-            return null; // insights supprimés dans le nouveau design
+            return null;
         }
 
         private static GraphResponseDto EmptyGraph() => new() { Nodes = new(), Links = new(), Insights = new(), Stats = new() };

@@ -1,4 +1,3 @@
-// src/Backend/AssetFlow.Infrastructure/Services/OrchestratorAgentService.cs
 using AssetFlow.Application.DTOs.AgentDtos;
 using AssetFlow.Application.Interfaces;
 using System.Text;
@@ -19,7 +18,7 @@ namespace AssetFlow.Infrastructure.Services
             _config      = config;
         }
 
-        // ── Détermine quel agent appeler (avec historique) ────────────────
+        // Détermine quel agent appeler (avec historique)
         public async Task<string> DetermineAgentAsync(string userMessage, List<AgentChatHistory>? history = null)
         {
             var groqKey = _config["GroqApiKey"];
@@ -74,7 +73,7 @@ Réponse (un seul mot):";
             return valid.Contains(result) ? result : "db";
         }
 
-        // ── Extrait une action structurée du message ──────────────────────
+        // Extrait une action structurée du message
         public async Task<AgentAction?> ExtractActionAsync(string userMessage, List<AgentChatHistory>? history = null)
         {
             var groqKey = _config["GroqApiKey"];
@@ -86,7 +85,6 @@ Réponse (un seul mot):";
             var agentType = await DetermineAgentAsync(userMessage, history);
             if (!agentType.StartsWith("action_")) return null;
 
-            // "action_add_materiel" → "add_materiel"  (pas "add_add_materiel")
             var actionType = agentType.Substring("action_".Length);
             var historyContext = BuildHistorySummary(history);
 
@@ -191,14 +189,12 @@ Réponds UNIQUEMENT avec ce JSON (sans markdown):
             catch { return null; }
         }
 
-        // ── Génère une proposition de matériel pour une alerte stock ───────
+        // Génère une proposition de matériel pour une alerte stock
         public async Task<AgentMaterielProposal> GenerateMaterielProposalAsync(AlerteStock alerte)
         {
             var groqKey = _config["GroqApiKey"];
 
-            var quantiteACommander = alerte.QuantiteMin - alerte.QuantiteStock > 0
-                ? alerte.QuantiteMin - alerte.QuantiteStock
-                : 1;
+            var quantiteACommander = alerte.QuantiteMin - alerte.QuantiteStock > 0 ? (alerte.QuantiteMin - alerte.QuantiteStock) + 1 : 1;
 
             var defaultProposal = new AgentMaterielProposal
             {
@@ -279,12 +275,19 @@ Réponds UNIQUEMENT avec ce JSON (sans markdown):
                 rawJson = Regex.Replace(rawJson, @"```json|```", "").Trim();
                 var opts   = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                 var result = JsonSerializer.Deserialize<AgentMaterielProposal>(rawJson, opts);
+                if (result != null)
+                {
+                    result.Reference  = alerte.Reference;   // garde la vraie référence
+                    if (result.Commande != null)
+                        result.Commande.QuantiteAchetee = quantiteACommander;  // force 3
+                    else
+                        result.Commande = defaultProposal.Commande;
+                }
                 return result ?? defaultProposal;
             }
             catch { return defaultProposal; }
         }
 
-        // ── Helper : résumé de l'historique pour injection dans les prompts ──
         private static string BuildHistorySummary(List<AgentChatHistory>? history)
         {
             if (history == null || history.Count == 0)

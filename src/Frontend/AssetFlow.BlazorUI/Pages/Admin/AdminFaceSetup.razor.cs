@@ -41,63 +41,63 @@ namespace AssetFlow.BlazorUI.Pages.Admin
                 Label: "Face",
                 Instruction: "Regardez droit vers la caméra",
                 SvgContent: @"
-                    <ellipse cx='30' cy='34' rx='18' ry='22' stroke='currentColor' stroke-width='1.5'/>
-                    <ellipse cx='22' cy='27' rx='4' ry='2.5' stroke='currentColor' stroke-width='1.2'/>
-                    <ellipse cx='38' cy='27' rx='4' ry='2.5' stroke='currentColor' stroke-width='1.2'/>
-                    <path d='M30 33 L27 41 Q30 43 33 41 Z' stroke='currentColor' stroke-width='1'/>
-                    <path d='M23 47 Q30 52 37 47' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/>
+                    <ellipse cx='30' cy='34' rx='18' ry='22' fill='none' stroke='currentColor' stroke-width='1.8'/>
+                    <ellipse cx='22' cy='27' rx='4' ry='3' fill='none' stroke='currentColor' stroke-width='1.4'/>
+                    <ellipse cx='38' cy='27' rx='4' ry='3' fill='none' stroke='currentColor' stroke-width='1.4'/>
+                    <path d='M26 33 L24 40 Q30 44 36 40 L34 33 Z' fill='none' stroke='currentColor' stroke-width='1.2'/>
+                    <path d='M23 47 Q30 52 37 47' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round'/>
                 "
             ),
             new FacePosition(
                 Label: "Gauche",
                 Instruction: "Tournez légèrement la tête vers la gauche",
                 SvgContent: @"
-                    <ellipse cx='27' cy='34' rx='16' ry='22' stroke='currentColor' stroke-width='1.5'/>
-                    <ellipse cx='20' cy='27' rx='3.5' ry='2.5' stroke='currentColor' stroke-width='1.2'/>
-                    <ellipse cx='33' cy='26' rx='4.5' ry='2.5' stroke='currentColor' stroke-width='1.2'/>
-                    <path d='M27 33 L24 41 Q27 43 30 41 Z' stroke='currentColor' stroke-width='1'/>
-                    <path d='M20 47 Q27 51 34 47' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/>
-                    <path d='M44 34 L50 34' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' marker-end='url(#ag)'/>
-                    <defs><marker id='ag' viewBox='0 0 6 6' refX='5' refY='3' markerWidth='4' markerHeight='4' orient='auto'><path d='M1 1L5 3L1 5' fill='none' stroke='currentColor' stroke-width='1.2'/></marker></defs>
+                    <ellipse cx='28' cy='34' rx='17' ry='22' fill='none' stroke='currentColor' stroke-width='1.8'/>
+                    <ellipse cx='20' cy='27' rx='3.5' ry='3' fill='none' stroke='currentColor' stroke-width='1.4'/>
+                    <ellipse cx='36' cy='27' rx='4.5' ry='3' fill='none' stroke='currentColor' stroke-width='1.4'/>
+                    <path d='M24 33 L22 40 Q28 44 34 40 L32 33 Z' fill='none' stroke='currentColor' stroke-width='1.2'/>
+                    <path d='M21 47 Q28 52 35 47' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round'/>
+                    <line x1='52' y1='34' x2='42' y2='34' stroke='currentColor' stroke-width='2.2' stroke-linecap='round'/>
+                    <polyline points='46,29 41,34 46,39' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/>
                 "
             ),
             new FacePosition(
                 Label: "Droite",
                 Instruction: "Tournez légèrement la tête vers la droite",
                 SvgContent: @"
-                    <ellipse cx='33' cy='34' rx='16' ry='22' stroke='currentColor' stroke-width='1.5'/>
-                    <ellipse cx='27' cy='26' rx='4.5' ry='2.5' stroke='currentColor' stroke-width='1.2'/>
-                    <ellipse cx='40' cy='27' rx='3.5' ry='2.5' stroke='currentColor' stroke-width='1.2'/>
-                    <path d='M33 33 L30 41 Q33 43 36 41 Z' stroke='currentColor' stroke-width='1'/>
-                    <path d='M26 47 Q33 51 40 47' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/>
-                    <path d='M16 34 L10 34' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' marker-end='url(#ad)'/>
-                    <defs><marker id='ad' viewBox='0 0 6 6' refX='5' refY='3' markerWidth='4' markerHeight='4' orient='auto'><path d='M5 1L1 3L5 5' fill='none' stroke='currentColor' stroke-width='1.2'/></marker></defs>
+                    <ellipse cx='32' cy='34' rx='17' ry='22' fill='none' stroke='currentColor' stroke-width='1.8'/>
+                    <ellipse cx='24' cy='27' rx='4.5' ry='3' fill='none' stroke='currentColor' stroke-width='1.4'/>
+                    <ellipse cx='40' cy='27' rx='3.5' ry='3' fill='none' stroke='currentColor' stroke-width='1.4'/>
+                    <path d='M28 33 L26 40 Q32 44 38 40 L36 33 Z' fill='none' stroke='currentColor' stroke-width='1.2'/>
+                    <path d='M25 47 Q32 52 39 47' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round'/>
+                    <line x1='8' y1='34' x2='18' y2='34' stroke='currentColor' stroke-width='2.2' stroke-linecap='round'/>
+                    <polyline points='14,29 19,34 14,39' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/>
                 "
             ),
             new FacePosition(
                 Label: "Haut",
                 Instruction: "Levez légèrement le menton vers le haut",
                 SvgContent: @"
-                    <ellipse cx='30' cy='30' rx='18' ry='20' stroke='currentColor' stroke-width='1.5'/>
-                    <ellipse cx='22' cy='24' rx='4' ry='2' stroke='currentColor' stroke-width='1.2'/>
-                    <ellipse cx='38' cy='24' rx='4' ry='2' stroke='currentColor' stroke-width='1.2'/>
-                    <path d='M30 29 L27 37 Q30 39 33 37 Z' stroke='currentColor' stroke-width='1'/>
-                    <path d='M23 43 Q30 48 37 43' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/>
-                    <path d='M30 56 L30 62' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' marker-end='url(#au)'/>
-                    <defs><marker id='au' viewBox='0 0 6 6' refX='3' refY='5' markerWidth='4' markerHeight='4' orient='auto'><path d='M1 5L3 1L5 5' fill='none' stroke='currentColor' stroke-width='1.2'/></marker></defs>
+                    <ellipse cx='30' cy='36' rx='18' ry='22' fill='none' stroke='currentColor' stroke-width='1.8'/>
+                    <ellipse cx='22' cy='29' rx='4' ry='2.5' fill='none' stroke='currentColor' stroke-width='1.4'/>
+                    <ellipse cx='38' cy='29' rx='4' ry='2.5' fill='none' stroke='currentColor' stroke-width='1.4'/>
+                    <path d='M26 35 L24 42 Q30 46 36 42 L34 35 Z' fill='none' stroke='currentColor' stroke-width='1.2'/>
+                    <path d='M23 50 Q30 55 37 50' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round'/>
+                    <line x1='30' y1='12' x2='30' y2='4' stroke='currentColor' stroke-width='2.2' stroke-linecap='round'/>
+                    <polyline points='25,9 30,4 35,9' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/>
                 "
             ),
             new FacePosition(
                 Label: "Bas",
                 Instruction: "Baissez légèrement le menton vers le bas",
                 SvgContent: @"
-                    <ellipse cx='30' cy='38' rx='18' ry='20' stroke='currentColor' stroke-width='1.5'/>
-                    <ellipse cx='22' cy='32' rx='4' ry='2' stroke='currentColor' stroke-width='1.2'/>
-                    <ellipse cx='38' cy='32' rx='4' ry='2' stroke='currentColor' stroke-width='1.2'/>
-                    <path d='M30 37 L27 45 Q30 47 33 45 Z' stroke='currentColor' stroke-width='1'/>
-                    <path d='M23 51 Q30 56 37 51' stroke='currentColor' stroke-width='1.2' stroke-linecap='round'/>
-                    <path d='M30 10 L30 16' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' marker-end='url(#ab)'/>
-                    <defs><marker id='ab' viewBox='0 0 6 6' refX='3' refY='1' markerWidth='4' markerHeight='4' orient='auto'><path d='M1 1L3 5L5 1' fill='none' stroke='currentColor' stroke-width='1.2'/></marker></defs>
+                    <ellipse cx='30' cy='30' rx='18' ry='22' fill='none' stroke='currentColor' stroke-width='1.8'/>
+                    <ellipse cx='22' cy='23' rx='4' ry='2.5' fill='none' stroke='currentColor' stroke-width='1.4'/>
+                    <ellipse cx='38' cy='23' rx='4' ry='2.5' fill='none' stroke='currentColor' stroke-width='1.4'/>
+                    <path d='M26 29 L24 36 Q30 40 36 36 L34 29 Z' fill='none' stroke='currentColor' stroke-width='1.2'/>
+                    <path d='M23 44 Q30 49 37 44' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round'/>
+                    <line x1='30' y1='56' x2='30' y2='64' stroke='currentColor' stroke-width='2.2' stroke-linecap='round'/>
+                    <polyline points='25,59 30,64 35,59' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/>
                 "
             ),
         };
